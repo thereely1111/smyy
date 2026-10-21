@@ -1,6 +1,6 @@
 # K8s 测试环境「UUID 风格智能体」= DB 行已不存在的目录残留
 
-- 取证时间：2026-10-10；集群 192.168.1.131，namespace `agent-platform`，backend 镜像 0.1.11
+- 取证时间：2026-10-10；集群 <内网地址>，namespace `agent-platform`，backend 镜像 0.1.11
 - workspace PVC：`agent-platform-workspace`（Longhorn 50Gi RWO）挂载 `/data/workspace`
 - 判据：目录名是 v4 UUID 形态 ⇒ 只能是 DB 智能体的工作区（文件型智能体 id = `UUID.nameUUIDFromBytes(目录名)`，是 v3）；
   且 `agent_configs` 全表 0 行，这 72 个 id 在 `agent_configs` / `agent_config_revisions` / `agui_events.payload` 中**零命中**，

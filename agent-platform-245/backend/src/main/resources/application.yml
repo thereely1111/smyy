@@ -9,9 +9,10 @@ spring:
     timeout-per-shutdown-phase: ${SPRING_LIFECYCLE_SHUTDOWN_TIMEOUT:250s}
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:192.168.1.245}:${DB_PORT:5432}/${DB_NAME:agent_platform_server}
-    username: ${DB_USER:agent_platform}
-    password: ${DB_PASSWORD:agent_platform}
+    # 填写：DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD（环境变量或 .env）
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agent_platform_server}
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
@@ -38,7 +39,8 @@ spring:
   # Redis 配置
   data:
     redis:
-      host: ${REDIS_HOST:192.168.1.245}
+      # 填写：REDIS_HOST / REDIS_PORT / REDIS_PASSWORD（无密码可留空）
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DB:0}
@@ -242,22 +244,22 @@ agent-platform:
     # 外部凭据加密密钥（AES-256-GCM，base64 编码 32 字节）
     # 用于加密知识库 API Key 与告警渠道凭据。生成：openssl rand -base64 32
     # ⚠️ 轮换该密钥会使存量密文全部失效，须先配过渡值再逐条重存
-    key: ${AGENT_PLATFORM_EXTERNAL_KEY:7jb4QGHPWuBtnff42adGXfyd88tQlTiOsbB5kxsPEtA=}
+    key: ${AGENT_PLATFORM_EXTERNAL_KEY:}   # 填写：openssl rand -base64 32
   auth:
     # JWT 密钥（HS256，≥ 32 字节）
     # 本地开发：export AGENT_PLATFORM_JWT_SECRET="$(openssl rand -base64 48)"
-    jwt-secret-key: ${AGENT_PLATFORM_JWT_SECRET:F1CxtLa8x6Fp0D56p4AECT/i1vkZX91tpxTyu/A+eAb5vL/OGw1QA01aZeDeUjNy}
+    jwt-secret-key: ${AGENT_PLATFORM_JWT_SECRET:}   # 填写：openssl rand -base64 48
     access-expire-minutes: ${AGENT_PLATFORM_ACCESS_EXPIRE_MINUTES:30}
     refresh-expire-days: ${AGENT_PLATFORM_REFRESH_EXPIRE_DAYS:7}
     oauth:
       # 外部鉴权服务
-      auth-server-url: ${AGENT_PLATFORM_OAUTH_SERVER_URL:http://192.168.1.96:9623/}
-      client-id: ${AGENT_PLATFORM_OAUTH_CLIENT_ID:f073ede2-2e03-4a24-87c7-094f6caf37fa}
-      client-secret: ${AGENT_PLATFORM_OAUTH_CLIENT_SECRET:bNA0qAjkSsi1F_cZQCo_xg}
+      auth-server-url: ${AGENT_PLATFORM_OAUTH_SERVER_URL:}   # 填写：认证中心地址，如 http://localhost:9623/
+      client-id: ${AGENT_PLATFORM_OAUTH_CLIENT_ID:}   # 填写：OAuth 应用 client id
+      client-secret: ${AGENT_PLATFORM_OAUTH_CLIENT_SECRET:}   # 填写：OAuth 应用 client secret
       redirect-uri: ${AGENT_PLATFORM_OAUTH_REDIRECT_URI:http://localhost:5174/auth/callback}
-      userinfo-url: ${AGENT_PLATFORM_OAUTH_USERINFO_URL:http://192.168.1.96:9623/api/user/info}
+      userinfo-url: ${AGENT_PLATFORM_OAUTH_USERINFO_URL:}   # 填写：用户信息接口地址
       # tipdm 修改密码接口 RSA 公钥
-      tipdm-public-key: ${AGENT_PLATFORM_OAUTH_TIPDM_PUBLIC_KEY:MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDb21hj4a0wDKmlPK0K/zcE5xq+OKETURb10NXetETh+puvboA+jWUUoBWRdLiKZBm4QMtU1JIFSvRQbbsIjGHJNGFCggeH60kLrJ7xjQnNgfufkp0oPL/eUzs8thO8gWNT3HROViIyLeP27gonlhkqZV76yJKM3J95ggZewZbu2wIDAQAB}
+      tipdm-public-key: ${AGENT_PLATFORM_OAUTH_TIPDM_PUBLIC_KEY:}   # 填写：RSA 公钥（可向认证中心索取）
       # 权限查询接口路径
       permissions-path: ${AGENT_PLATFORM_OAUTH_PERMISSIONS_PATH:/api/user/permissions}
       # 权限查询 scope 参数

@@ -37,15 +37,15 @@ AG-UI SSE 对话协议（`/agui/run/{agentId}`），通过动态表单、内容�
 ## 本地启动
 
 ```bash
-# 1. 后端默认连接服务器上的 PostgreSQL / Redis（192.168.1.245）
-#    PostgreSQL: 192.168.1.245:5432 / agent_platform / agent_platform / agent_platform
-#    Redis:      192.168.1.245:6379，无密码
+# 1. 后端默认连接服务器上的 PostgreSQL / Redis（<内网地址>）
+#    PostgreSQL: <内网地址>:5432 / agent_platform / agent_platform / agent_platform
+#    Redis:      <内网地址>:6379，无密码
 #    如需完全本地运行，再执行：docker compose up -d postgres
 
 # 2. 后端（:8080）
 #    Maven 直接可用：~/.m2/settings.xml 已配置
 #      localRepository -> /Volumes/Data/maven-repository
-#      Nexus mirror    -> 192.168.1.186:8081（central）
+#      Nexus mirror    -> <内网地址>:8081（central）
 cd backend
 mvn spring-boot:run
 

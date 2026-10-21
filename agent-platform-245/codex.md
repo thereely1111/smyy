@@ -68,8 +68,8 @@ docker-compose.yml               本地备用 PostgreSQL + pgvector 基础设施
 
 ```bash
 # 后端默认连接服务器基础设施，不需要先启动本地 Docker
-# PostgreSQL: 192.168.1.245:5432 / agent_platform / agent_platform / agent_platform
-# Redis:      192.168.1.245:6379，无密码
+# PostgreSQL: <内网地址>:5432 / agent_platform / agent_platform / agent_platform
+# Redis:      <内网地址>:6379，无密码
 cd backend
 mvn spring-boot:run
 
@@ -86,8 +86,8 @@ pnpm dev
 
 本地开发至少要确认：
 
-- PostgreSQL 默认连接 `192.168.1.245:5432`，数据库、用户、密码均为 `agent_platform`；远端当前基线为 PG 16.15，Flyway 已到 v53，应用启动时会继续执行仓库中 v54-v62 的迁移。
-- Redis 默认连接 `192.168.1.245:6379`，未设置密码，`REDIS_PASSWORD` 必须保持为空；权限码缓存和 `admin:access` 管理员判定依赖 Redis。
+- PostgreSQL 默认连接 `<内网地址>:5432`，数据库、用户、密码均为 `agent_platform`；远端当前基线为 PG 16.15，Flyway 已到 v53，应用启动时会继续执行仓库中 v54-v62 的迁移。
+- Redis 默认连接 `<内网地址>:6379`，未设置密码，`REDIS_PASSWORD` 必须保持为空；权限码缓存和 `admin:access` 管理员判定依赖 Redis。
 - `AGENT_PLATFORM_JWT_SECRET` 在需要登录时配置为足够长度的密钥。
 - 外部模型、向量、搜索或 OAuth 功能按需配置对应的 API Key 和服务地址。
 

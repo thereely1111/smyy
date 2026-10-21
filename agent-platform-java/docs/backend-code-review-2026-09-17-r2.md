@@ -27,7 +27,7 @@
 
 > ✅ **已于 2026-09-17 13:50 修复（`aa26602`）** —— 改为 fail-fast，见 §九。下面保留原始分析。
 >
-> 补充核实（13:20）：`application.yml:217` 为 `userinfo-url` 配了**非空默认值** `http://192.168.1.96:9623/api/user/info`，故在加载该 yml 的部署里原伪造分支**不可达**，实际严重度曾降为 P2；触发条件仅剩「显式把 `AGENT_PLATFORM_OAUTH_USERINFO_URL` 置空」。修复后该情形改为**启动失败**，比降级更稳妥。
+> 补充核实（13:20）：`application.yml:217` 为 `userinfo-url` 配了**非空默认值** `http://<内网地址>:9623/api/user/info`，故在加载该 yml 的部署里原伪造分支**不可达**，实际严重度曾降为 P2；触发条件仅剩「显式把 `AGENT_PLATFORM_OAUTH_USERINFO_URL` 置空」。修复后该情形改为**启动失败**，比降级更稳妥。
 
 - **位置**：`service/AuthService.java:393-397`（兜底）、`service/AuthService.java:418-422`（消费）、`config/AuthProperties.java`（默认值）
 - **证据**：

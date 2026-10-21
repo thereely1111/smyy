@@ -143,7 +143,7 @@ redis:
 
 ## ---------- 外部数据库 / Redis（postgres.enabled=false / redis.enabled=false 时生效） ----------
 externalDatabase:
-  host: "192.168.1.245"
+  host: ""   # 填写：数据库/Redis 主机地址
   port: 5432
   name: agent_platform
   username: agent_platform
@@ -151,7 +151,7 @@ externalDatabase:
   password: ""
 
 externalRedis:
-  host: "192.168.1.245"
+  host: ""   # 填写：数据库/Redis 主机地址
   port: 6379
   db: 0
   # 留空则取 secrets.redisPassword（可空=无密码）
@@ -168,7 +168,7 @@ secrets:
   # ⚠️ 轮换会使存量密文全部不可解密，须先配过渡值再逐条重存
   externalKey: ""
   # 内置 postgres 时作为 POSTGRES_PASSWORD 使用
-  dbPassword: "agent_platform"
+  dbPassword: ""   # 填写：数据库密码
   # 留空 = Redis 无密码
   redisPassword: ""
 

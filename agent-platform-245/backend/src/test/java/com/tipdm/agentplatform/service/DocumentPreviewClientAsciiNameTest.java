@@ -110,7 +110,7 @@ class DocumentPreviewClientAsciiNameTest {
     @Test
     void previewUrlIsPureAscii() throws Exception {
         DocumentPreviewClient client = new DocumentPreviewClient(
-                new DocumentPreviewProperties(true, "http://192.168.1.131:30182/",
+                new DocumentPreviewProperties(true, "http://127.0.0.1:30182/",
                         "http://platform.internal", 300),
                 new OutboundUrlGuard(true));
 

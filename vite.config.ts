@@ -16,10 +16,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   /** 业务侧后端（登录 / 用户 / 案例库 / 静态资源），库 = agent_platform */
   const backendTarget =
-    process.env.VITE_BACKEND_TARGET || env.VITE_BACKEND_TARGET || 'http://192.168.1.245:8085'
+    process.env.VITE_BACKEND_TARGET || env.VITE_BACKEND_TARGET || 'http://localhost:8085'   /* 填写：业务后端地址 */
   /** 智能体侧后端（AG-UI 运行流 / 会话 / 中断 / 通知流） */
   const agentTarget =
-    process.env.VITE_BACKEND_TARGET_AGENT || env.VITE_BACKEND_TARGET_AGENT || 'http://192.168.1.245:8084'
+    process.env.VITE_BACKEND_TARGET_AGENT || env.VITE_BACKEND_TARGET_AGENT || 'http://localhost:8084'   /* 填写：智能体后端地址 */
 
   /**
    * 顺序敏感：vite 按 key 定义顺序做 startsWith 匹配、首个命中即止，

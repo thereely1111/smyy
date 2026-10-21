@@ -6,7 +6,7 @@
  *   node scripts/ops/purge-sessions.mjs --user u --pass p --yes      # 真删
  *   node scripts/ops/purge-sessions.mjs --token <jwt> --match 关键词 --yes
  *
- * --base 默认 192.168.1.245:8084；--agent 按名字找智能体，--agent-id 直接给 UUID；
+ * --base 默认 localhost:8084；--agent 按名字找智能体，--agent-id 直接给 UUID；
  * --match 只删标题含关键词的（不传 = 全部）。默认只列出，加 --yes 才删，不可逆。
  */
 
@@ -18,7 +18,7 @@ function arg(name, dflt = '') {
 }
 const flag = (name) => args.includes(`--${name}`)
 
-const BASE = arg('base', process.env.SMYY_BACKEND || 'http://192.168.1.245:8084').replace(/\/+$/, '')
+const BASE = arg('base', process.env.SMYY_BACKEND || 'http://localhost:8084').replace(/\/+$/, '')
 const AGENT_NAME = arg('agent', '数学建模解答助手')
 const AGENT_ID = arg('agent-id', '')
 const MATCH = arg('match', '')

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export DB_HOST=192.168.1.245
+export DB_HOST=localhost   # 填写：数据库地址
 export DB_PORT=5432
 export DB_NAME=agent_platform_server
 

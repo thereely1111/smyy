@@ -14,18 +14,18 @@ backend:
     tag: "0.1.6"
   javaOpts: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -Duser.timezone=Asia/Shanghai"
   # 2026-09-21 线上手动添加的环境变量（Chart 未内置），升级前对账收编：
-  #  * OAuth 登录三件套（认证中心 192.168.1.96:9623）
+  #  * OAuth 登录三件套（认证中心 <内网地址>:9623）
   # ⚠️ 线上曾有 AGENT_PLATFORM_EXTERNAL_KEY 明文覆盖 Secret——2026-09-22 升级时改为
   #    直接把 Secret 的 external-key 修正为实际生效值（values-secrets.local.yaml），
   #    不再用同名 env 覆盖：Helm 战略合并按 name 合并 env 列表，同名条目会因
   #    value+valueFrom 并存被 K8s API 拒绝（UPGRADE FAILED 实测）。
   extraEnv:
     - name: AGENT_PLATFORM_OAUTH_SERVER_URL
-      value: "http://192.168.1.96:9623"
+      value: ""   # 填写：OAuth 认证中心地址
     - name: AGENT_PLATFORM_OAUTH_CLIENT_ID
-      value: "f073ede2-2e03-4a24-87c7-094f6caf37fa"
+      value: ""   # 填写：OAuth 应用 client id
     - name: AGENT_PLATFORM_OAUTH_CLIENT_SECRET
-      value: "bNA0qAjkSsi1F_cZQCo_xg"
+      value: ""   # 填写：OAuth 应用 client secret
 
 frontend:
   image:
@@ -46,7 +46,7 @@ redis:
 
 ingress:
   # 集群的 ingress-nginx 控制器过老（nginx 1.15.5，对 v1 多路径 Ingress 支持不完整，
-  # /api 路由 404），改走 NodePort 直连：http://192.168.1.131:30100/
+  # /api 路由 404），改走 NodePort 直连：http://<内网地址>:30100/
   enabled: false
 
 service:
@@ -64,6 +64,6 @@ config:
   allowPrivateOutbound: "true"  # 内网集群，允许访问内网 RAGFlow/IM 网关
   # ---- 2026-09-21 线上手动添加，收编 ----
   studioEnabled: "true"                     # AGENTSCOPE_STUDIO_ENABLED
-  studioUrl: "http://192.168.20.106:3000"   # AGENTSCOPE_STUDIO_URL
+  studioUrl: ""   # 填写：AgentScope Studio 地址   # AGENTSCOPE_STUDIO_URL
   dashscopeApiKey: "<DASHSCOPE_API_KEY>"  # DASHSCOPE_API_KEY
   bochaApiKey: "<BOCHA_API_KEY>"      # BOCHA_API_KEY（联网搜索，2026-09-23）
