@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<!--
+    阿里巴巴《Java 开发手册》Checkstyle 规约适配（社区通用模板，按本仓库情况清理）。
+    配合 maven-checkstyle-plugin 使用；Checkstyle 版本固定 9.3（见 pom），
+    10.x 起移除了本文件使用的部分模块（如 JavadocMethod 的旧用法），勿随意升级。
+-->
+<module name="Checker">
+
+    <!-- 检查文件是否以换行结束 -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <!-- 检查 property 文件中是否有相同的 key -->
+    <module name="Translation"/>
+
+    <!-- 单文件长度不超过 1500 行 -->
+    <module name="FileLength">
+        <property name="max" value="1500"/>
+    </module>
+
+    <!-- 禁止使用 Tab 缩进 -->
+    <module name="FileTabCharacter"/>
+
+    <!-- 行尾不允许尾随空格 -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="minimum" value="0"/>
+        <property name="maximum" value="0"/>
+        <property name="message" value="Line has trailing spaces."/>
+    </module>
+
+    <!-- 每行不超过 120 字符（Checkstyle 8.24+ 要求挂载在 Checker 下，不能放 TreeWalker） -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- ===== 注释检查 =====
+             注释类规则整体降为 warning（文档债，不阻断构建，逐步偿还）：
+             存量 1300+ 处缺失 javadoc，一次性补齐只会产生无信息量的注释噪声 -->
+        <!-- 方法的 javadoc -->
+        <module name="JavadocMethod">
+            <property name="severity" value="warning"/>
+            <property name="tokens" value="METHOD_DEF"/>
+        </module>
+        <!-- 类和接口的 javadoc -->
+        <module name="JavadocType">
+            <property name="severity" value="warning"/>
+        </module>
+        <!-- javadoc 格式 -->
+        <module name="JavadocStyle">
+            <property name="severity" value="warning"/>
+            <property name="checkFirstSentence" value="false"/>
+        </module>
+
+        <!-- ===== 命名检查 ===== -->
+        <!-- 局部 final 变量（含 catch 参数） -->
+        <module name="LocalFinalVariableName"/>
+        <!-- 局部非 final 变量（含 catch 参数） -->
+        <module name="LocalVariableName"/>
+        <!-- 包名全部小写：^[a-z]+(\.[a-z][a-z0-9]*)*$ -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+            <message key="name.invalidPattern" value="包名 ''{0}'' 要符合 ''{1}'' 格式."/>
+        </module>
+        <!-- static（非 static final）变量 -->
+        <module name="StaticVariableName"/>
+        <!-- 类 / 接口名：^[A-Z][a-zA-Z0-9]*$ -->
+        <module name="TypeName">
+            <property name="severity" value="warning"/>
+            <message key="name.invalidPattern" value="名称 ''{0}'' 要符合 ''{1}'' 格式."/>
+        </module>
+        <!-- 非 static 成员变量 -->
+        <module name="MemberName"/>
+        <!-- 方法名 -->
+        <module name="MethodName"/>
+        <!-- 方法参数名 -->
+        <module name="ParameterName"/>
+        <!-- 常量名全大写下划线；额外放行 log（Lombok @Slf4j 生成的日志字段，行业惯例） -->
+        <module name="ConstantName">
+            <property name="format" value="^log$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        </module>
+
+        <!-- ===== 定义检查 ===== -->
+        <!-- 数组定义风格统一为 int[] a -->
+        <module name="ArrayTypeStyle"/>
+        <!-- long 型字面量必须用大写 L -->
+        <module name="UpperEll"/>
+
+        <!-- ===== import 检查 ===== -->
+        <!-- 非法包导入（sun.* 等） -->
+        <module name="IllegalImport"/>
+        <!-- 冗余导入（java.lang、同包） -->
+        <module name="RedundantImport"/>
+        <!-- 未使用导入 -->
+        <module name="UnusedImports"/>
+
+        <!-- ===== 长度检查 ===== -->
+        <!-- 单方法不超过 150 行 -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF"/>
+            <property name="max" value="150"/>
+        </module>
+        <!-- 方法参数个数上限（放宽到 40，仅兜底；ignoreOverriddenMethods 排除重写方法） -->
+        <module name="ParameterNumber">
+            <property name="max" value="40"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+            <property name="tokens" value="METHOD_DEF"/>
+        </module>
+
+        <!-- ===== 空格检查 ===== -->
+        <!-- 方法名与左括号之间不留空格 -->
+        <module name="MethodParamPad"/>
+        <!-- 类型转换括号内不留空格 -->
+        <module name="TypecastParenPad"/>
+        <!-- 特定符号之后不留空格 -->
+        <module name="NoWhitespaceAfter"/>
+        <!-- 特定符号之前不留空格 -->
+        <module name="NoWhitespaceBefore"/>
+        <!-- 操作符换行策略 -->
+        <module name="OperatorWrap"/>
+        <!-- 圆括号空白 -->
+        <module name="ParenPad"/>
+        <!-- 分隔符之后应有空白 -->
+        <module name="WhitespaceAfter"/>
+        <!-- 分隔符周围应有空白 -->
+        <module name="WhitespaceAround"/>
+
+        <!-- ===== 修饰符检查 ===== -->
+        <!-- 修饰符顺序遵循 Java 语言规范 -->
+        <module name="ModifierOrder"/>
+        <!-- 接口成员/方法的多余修饰符 -->
+        <module name="RedundantModifier"/>
+
+        <!-- ===== 代码块检查 ===== -->
+        <!-- 禁止嵌套代码块 -->
+        <module name="AvoidNestedBlocks"/>
+        <!-- 禁止空代码块 -->
+        <module name="EmptyBlock"/>
+        <!-- 左大括号位置 -->
+        <module name="LeftCurly"/>
+        <!-- if/for/while 等必须有 {} -->
+        <module name="NeedBraces"/>
+        <!-- 右大括号位置 -->
+        <module name="RightCurly"/>
+
+        <!-- ===== 代码检查 ===== -->
+        <!-- 禁止空语句（多余分号） -->
+        <module name="EmptyStatement"/>
+        <!-- 重写 equals 必须重写 hashCode -->
+        <module name="EqualsHashCode"/>
+        <!-- 局部变量/参数隐藏类字段 -->
+        <module name="HiddenField">
+            <property name="tokens" value="VARIABLE_DEF"/>
+        </module>
+        <!-- 禁止非法实例化（如 new Boolean） -->
+        <module name="IllegalInstantiation"/>
+        <!-- 子表达式中禁止内联赋值 -->
+        <module name="InnerAssignment"/>
+        <!-- 魔法值检查：降为 warning（语义债，需要给每处数字起业务含义的名字，
+             一次性批量提常量只会产出 TWO/THREE 这类无意义常量；随改动逐步偿还） -->
+        <module name="MagicNumber">
+            <property name="severity" value="warning"/>
+            <property name="ignoreNumbers" value="0, 1"/>
+            <property name="ignoreAnnotation" value="true"/>
+        </module>
+        <!-- switch 必须有 default -->
+        <module name="MissingSwitchDefault"/>
+        <!-- 简化布尔表达式 -->
+        <module name="SimplifyBooleanExpression"/>
+        <!-- 简化布尔返回 -->
+        <module name="SimplifyBooleanReturn"/>
+
+        <!-- ===== 类设计检查 ===== -->
+        <!-- 只有 private 构造函数的类应声明为 final -->
+        <module name="FinalClass"/>
+        <!-- 工具类不应有 public 构造器 -->
+        <module name="HideUtilityClassConstructor"/>
+        <!-- 接口仅用于定义类型（禁止常量接口） -->
+        <module name="InterfaceIsType"/>
+        <!-- 类成员可见度（应 private 的不能 public） -->
+        <module name="VisibilityModifier"/>
+
+    </module>
+</module>

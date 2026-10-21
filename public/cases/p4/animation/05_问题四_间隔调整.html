@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM D题 · 问题四 · 允许间隔调整的消解</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --purple:#9b5de5; --purple-d:#5f2f9e;
+  --r:12px; --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);overflow:hidden;
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.tbtn.p{background:#f4effc;border-color:#ddcdf5;color:var(--purple-d)}
+.tbtn.p:hover{border-color:var(--purple);color:var(--purple-d)}
+.splitnav{display:none}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.card ul{margin:6px 0 0;padding-left:18px}
+.card li{font-size:13.5px;color:var(--ink2);line-height:1.85;margin-bottom:4px}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-p{color:var(--purple-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi.w .v{color:var(--warn)}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.p .v{color:var(--purple-d)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb td.l{text-align:left}
+table.tb tr.on td{background:#eef8f6}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.p{background:#f6f1fd;border-color:#ddcdf5;color:var(--purple-d)}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.interact-hint{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--purple-d);
+  background:#f6f1fd;border:1px solid #ddcdf5;border-radius:9px;padding:8px 12px;line-height:1.6}
+.interact-hint b{color:var(--purple-d)}
+.interact-hint .dot-i{width:7px;height:7px;border-radius:50%;background:var(--purple);flex:0 0 auto;
+  animation:pulseDot 1.6s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+
+.approach-tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  color:var(--gold-d);background:linear-gradient(135deg,#fdf6e8,#f8ecd2);
+  border:1px solid #eddcb6;border-radius:999px;padding:3px 11px;margin:0 6px 6px 0;letter-spacing:.02em}
+.approach-tag.i{color:var(--blue);background:linear-gradient(135deg,#eef6f9,#ddeef4);border-color:#c4dfe9}
+
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;background:#fafdfd;
+  border:1px solid var(--line);border-radius:10px}
+.ctl .lbl{font-size:12.5px;color:var(--muted);letter-spacing:.03em}
+.formula{font-family:"SFMono-Regular",Consolas,monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto}
+.formula .c{color:#7fd8c9}
+.formula .k{color:#ffd88a}
+.formula .g{color:#9b5de5}
+.tf-grid{background:#0b2e36;border-radius:10px;padding:14px}
+.pop-in{animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes popIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">问题四 · 允许间隔调整的消解</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ========= 幕 1：新增自由度 ========= -->
+<section class="scene" id="s1" data-title="一 · 新增自由度：间隔 ±10Δt">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 题面与建模</div>
+      <h1>C 类装备现在可以调间隔了
+        <small>动作空间从 3 项扩到 4 项，理论上撤销数量会更少、调整幅度会更温和。</small>
+      </h1>
+      <p class="lead">题面原文：「<b>若允许部分 C 类用频装备对用频间隔时长进行调整，但要求与原间隔时长的差异不超过 10Δt，请对问题 1 中检测出的时频冲突进行消解。</b>」核心变化只有一个——C 类装备在消解时，除了频移、时移、撤销之外，多了 <span class="hl-p">间隔微调</span> 这个动作。</p>
+    </div>
+
+    <div>
+      <span class="approach-tag">🎯 获奖论文思路：把"自由度"看成资源</span>
+      <span class="approach-tag i">📐 参数化搜索空间</span>
+      <span class="approach-tag">🌿 邻域动作扩展</span>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>间隔调整到底动了什么 <em>与"时移"的本质区别</em></h3>
+        <p>每件 C 类装备在频段上占 <b>bw</b> 宽，在时间上按固定间隔 <b>p</b> 重复使用 <b>n</b> 次。间隔调整就是把 p 换成 p+δ。注意：它<b>不是整个人平移</b>（那是时移），而是把第 2 次之后的使用时间"重新摊开"，间距变大或变小。</p>
+        <div class="formula">
+<span class="c">// 第 k 次使用的时间区间</span>
+原： [ t<sub>s</sub> + k·p ,  t<sub>s</sub> + k·p + τ )     k = 0..n−1
+新： [ t<sub>s</sub> + k·p' ,  t<sub>s</sub> + k·p' + τ )    p' = p + δ
+
+<span class="k">约束</span> |δ| ≤ <span class="g">10</span>Δt      <span class="c">// 与原间隔差异不超过 10Δt</span>
+<span class="k">决定</span> k = 0 时刻 <b>不动</b>，只有 k ≥ 1 的块整体伸缩
+        </div>
+        <p class="small">首块 t<sub>s</sub> 保持不变是"间隔调整"与"时移"最好的区分点：时移把 n 块一起搬家，间隔调整只改"块与块之间的距离"。</p>
+      </div>
+      <div class="card">
+        <h3>为什么这可能减少撤销 <em>它是"多点同时避让"的杠杆</em></h3>
+        <p>问题二里，某些 C 类装备之所以只能撤销，是因为频移（≤10）和时移（≤5）的幅度有限，动了还是躲不开对手。而间隔调整一次性改变 <b>n−1 个后续矩形</b>的位置——原来 3 处同时冲突，改间隔后可能只剩 1 处甚至 0 处。</p>
+        <div class="note p">举例：C 类 n=3，p=40。对手在 t∈[45,52) 有个块。原布局块落在 40、80、120，第 2 块刚好撞上。改 δ=+10 → p'=50，块变成 50、100、150，第 2 块挪到 50 仍撞；改 δ=−10 → p'=30，块变成 30、60、90，全部避开。δ 的大小方向都要试。</div>
+        <p class="small">代价：间隔调整的搜索空间比单点微调大，n 越大、越接近"重新排布"，越需要有效的枚举顺序。</p>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="card" style="border-left:3px solid var(--teal)">
+        <h3>A / B 类 <em>动作不变</em></h3>
+        <p>频移 ±10Δf、时移 ±5Δt、撤销。间隔调整权限<span class="hl">不下放</span>给 A/B——题目只说了"部分 C 类"。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple)">
+        <h3>C 类 <em>动作 +1</em></h3>
+        <p><b>新增</b>间隔 ±10Δt。尝试顺序：频移 → 时移 → <span class="hl-p">间隔调</span> → 撤销。先试幅度小、影响面窄的动作，把大动作留到必要时。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold)">
+        <h3>结果对比 <em>幕 2 实证</em></h3>
+        <p>撤销数应更少；频移/时移的平均幅度应更小（因为一部分装备改用间隔解决了）。详细数字在幕 3 的对比表里。</p>
+      </div>
+    </div>
+
+    <div class="quote">论文加分点：把问题二、问题四抽象成<b>同一套"动作空间 + 优先级 + 约束"框架</b>下的两个实例。问题二是动作集 A₂={频移, 时移, 撤销}，问题四是 A₄=A₂∪{间隔调}。这样只需写一份消解引擎，改一个动作集合参数即可跑出两版解——这也是幕 2 动画能左右同时播放的原因。
+      <div class="small" style="margin-top:6px">进一步的启发式思路：① 间隔枚举优先试"能让矩形落在对手空隙里"的 δ；② 对同一装备，比较"间隔调 +10"与"间隔调 −10"哪个留下的空隙更大；③ 用局部搜索 / 模拟退火在 δ 邻域内找最优。</div>
+    </div>
+
+    <div class="canvasbox" style="margin-top:16px">
+      <div class="cvtop"><div class="ct">最小示例 · 为什么"只有改间隔能救"</div>
+        <div class="legend"><span><i style="background:#e07a5f"></i>A类 Y</span><span><i style="background:#1e9fc4"></i>B类 W/Z</span><span><i style="background:#12a594"></i>C类 X（可调间隔）</span><span><i style="background:#ff4d6d"></i>重叠区</span></div>
+      </div>
+      <p class="small" style="margin:4px 0 8px">4 件装备、1 处冲突。X 是 C 类、优先级最低必须让路。下面的按钮把 X 的动作<b>依次试一遍</b>——频移、时移都躲不掉，只有改间隔能解。鼠标悬停矩形可看编号。</p>
+      <div class="ctl">
+        <button class="tbtn" id="d4_freq">① 试频移 ±10Δf</button>
+        <button class="tbtn" id="d4_time">② 试时移 ±5Δt</button>
+        <button class="tbtn p" id="d4_iv">③ 改间隔 δ=−8</button>
+        <button class="tbtn" id="d4_reset">重置</button>
+      </div>
+      <div id="demo4" class="tf-grid"></div>
+      <div class="note" id="demo4Note">—</div>
+    </div>
+
+    <div class="interact-hint"><span class="dot-i"></span><span>下一幕是<b>左右分屏对比动画</b>：左边跑问题二消解、右边跑问题四消解，同一数据集、同一冲突对，看两版结果差异。点「同时消解两版」开始，或用底部圆点跳幕。</span></div>
+  </div>
+</section>
+
+<!-- ========= 幕 2：对比动画 ========= -->
+<section class="scene" id="s2" data-title="二 · 两版消解的对比动画">
+  <div class="wrap">
+    <div>
+      <div class="kicker">方法对比 · 可视化</div>
+      <h1>同一个数据集，两个消解版本
+        <small>左 = 问题二消解（无间隔调）；右 = 问题四消解（C 类可调间隔）。</small>
+      </h1>
+      <p class="lead">两版都基于问题一检测出的同一批冲突对，消解引擎也完全相同，唯一差别是右图允许 C 类做间隔调整。紫色矩形 = 用「间隔调节」消解的装备；金灰半透明 = 被撤销的装备。对比两图的金色面积，就能直观看出自由度的价值。</p>
+    </div>
+
+    <div class="interact-hint"><span class="dot-i"></span><span>点击下方 <b>「同时消解两版」</b> 让两图一起重绘；点击 <b>「重置」</b> 清空回到初始状态。鼠标悬停任意矩形可看该装备的编号与动作。</span></div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">问题二消解（动作集 A₂）</div></div>
+        <div id="tfSolve2" class="tf-grid"></div>
+        <div class="legend"><span><i style="background:#e0a04a"></i>撤销</span><span><i style="background:rgba(224,122,95,.8)"></i>A类</span><span><i style="background:rgba(30,159,196,.8)"></i>B类</span><span><i style="background:rgba(18,165,148,.8)"></i>C类</span></div>
+        <div class="note" id="stat2">—</div>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">问题四消解（动作集 A₄）</div></div>
+        <div id="tfSolve4" class="tf-grid"></div>
+        <div class="legend"><span><i style="background:#e0a04a"></i>撤销</span><span><i style="background:#9b5de5"></i>间隔调</span><span><i style="background:rgba(224,122,95,.8)"></i>A类</span><span><i style="background:rgba(30,159,196,.8)"></i>B类</span><span><i style="background:rgba(18,165,148,.8)"></i>C类</span></div>
+        <div class="note p" id="stat4">—</div>
+      </div>
+    </div>
+
+    <div class="ctl">
+      <span class="lbl">对比控制：</span>
+      <button class="tbtn p" id="btnAuto">同时消解两版</button>
+      <button class="tbtn" id="btnStep">单步高亮某件</button>
+      <button class="tbtn" id="btnReset">重置视图</button>
+      <span class="small" id="cmpNote" style="margin-left:auto">待运行。运行后此处会给出两版的差量结论。</span>
+    </div>
+
+    <div class="card">
+      <h3>怎么读这两张图 <em>观察要点</em></h3>
+      <ul>
+        <li><b>金色块（撤销）的数量</b>：右图应不多于左图。若相等甚至更多，说明间隔枚举策略还不够聪明，需要改进 δ 的搜索顺序。</li>
+        <li><b>紫色块（间隔调）的位置</b>：它们原本大概率是"问题二里只能撤销"的那些 C 类装备，现在被救回来了。</li>
+        <li><b>青色块（C 类）的整体形态</b>：间隔调后，同一装备的 n 个块间距会变化——肉眼能看到块"被重新摊开"或"被挤紧"。</li>
+        <li><b>两图的空余面积</b>：撤销少了，使用的时频格就多了，右图的"空区"应比左图小。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 3：统计对比 ========= -->
+<section class="scene" id="s3" data-title="三 · 统计对比与灵敏度">
+  <div class="wrap">
+    <div>
+      <div class="kicker">两版解法的数字</div>
+      <h1>按类别分的保留 / 调整 / 撤销
+        <small>直接对应题面表 1 的格式，也是 result2.xlsx 与 result4.xlsx 的汇总来源。</small>
+      </h1>
+      <p class="lead">论文里不能只说"问题四更好"，要用数字说清楚：撤销少了多少件、其中 C 类少了多少、平均调整幅度降了多少、有多少件改用了间隔调整。下面三张表就是可写进论文的成品。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>问题二消解统计 <em>动作集 A₂</em></h3>
+        <div id="tbl2"></div>
+      </div>
+      <div class="card" style="border-color:#ddcdf5">
+        <h3 style="color:var(--purple-d)">问题四消解统计 <em>动作集 A₄</em></h3>
+        <div id="tbl4"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>关键指标差量（论文核心结论表） <em>问题四 − 问题二</em></h3>
+      <div id="tblExtra"></div>
+      <p class="small" style="margin-top:8px">绿色数字 = 问题四更优的项。结论句式：「引入间隔调整后，总撤销数由 X 降至 Y，其中 C 类撤销由 a 降至 b，平均调整幅度由 p 降至 q，另有 m 件 C 类装备通过间隔微调避免了撤销。」</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>灵敏度分析 <em>δ 上限取不同值时</em></h3>
+        <p>把题面的 10Δt 换成 5、15、20 再跑一遍，看撤销数怎么变——这是论文里很常见的"参数灵敏度"章节。</p>
+        <table class="tb" id="tblSens"></table>
+        <p class="small">典型结论：δ 上限越大，可救回的 C 类越多，但边际收益递减。当 δ ≥ 某个阈值后，撤销数不再下降——说明瓶颈已不在间隔自由度上。</p>
+      </div>
+      <div class="card">
+        <h3>为什么右版可能"不够好" <em>暴露算法的局限</em></h3>
+        <p>如果运行后发现右版撤销数并未明显下降，往往是下面三个原因之一——把它们写进论文的"讨论"部分，反而显得严谨。</p>
+        <ul>
+          <li><b>δ 搜索太粗</b>：只从小到大地试 ±1..±10，没优先试"能让矩形正好落进对手空隙"的那些 δ。</li>
+          <li><b>贪心的顺序依赖</b>：先消解的装备可能"占了位置"，让后面的装备更难调整。可配合随机重启 / 多起点比较。</li>
+          <li><b>n 过大导致整体位移越界</b>：间隔变大时，末尾矩形可能超出时间范围，被直接判不可行。</li>
+        </ul>
+        <div class="note">对策：① 间隔枚举改为"枚举所有使某块恰好避开对手的 δ"；② 对同一冲突对尝试"让高优先级方动"的备选；③ 引入局部搜索在邻域内下降。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 4：交付物与收尾 ========= -->
+<section class="scene" id="s4" data-title="四 · result4.xlsx 与全题收尾">
+  <div class="wrap">
+    <div>
+      <div class="kicker">交付物</div>
+      <h1>result4.xlsx 的格式
+        <small>比 result2.xlsx 多一列：D 列 = 调整后的间隔时长。</small>
+      </h1>
+      <p class="lead">result4.xlsx 有五列：A 编号、B 调整后频段、C 调整后时间、D <b>调整后间隔</b>、E 是否撤销。题目规定每件装备最多调一个参数，所以 B/C/D 三列中最多只有一列被填写，其余留空或写"不动"。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>result4.xlsx 模板 <em>示例行</em></h3>
+        <table class="tb">
+          <tr><th>编号</th><th>调整后频段</th><th>调整后时间</th><th>调整后间隔</th><th>撤销</th></tr>
+          <tr><td>A003</td><td>[15, 30)</td><td>—</td><td>—</td><td>否</td></tr>
+          <tr><td>B041</td><td>—</td><td>12</td><td>—</td><td>否</td></tr>
+          <tr><td>C012</td><td>—</td><td>—</td><td><b class="hl-p">48</b></td><td>否</td></tr>
+          <tr><td>C020</td><td>—</td><td>—</td><td>—</td><td><b class="hl">是</b></td></tr>
+          <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+        </table>
+        <p class="small">C012 的间隔从 58 改到 48（δ=−10，恰好在允许边界内），让它的三次使用错开了对手的块，从而避免了撤销。</p>
+      </div>
+      <div class="card">
+        <h3>四问联动的收尾 <em>论文结构建议</em></h3>
+        <ul>
+          <li><b>问题一</b>：给出检测到的冲突对总数与冲突装备清单——这是后面三问的共同输入。</li>
+          <li><b>问题二</b>：基线消解方案的统计（保留 / 调整 / 撤销）。</li>
+          <li><b>问题三</b>：在问题二无冲突基线上，最多还能塞进多少件 C 类——容量上限估计。</li>
+          <li><b>问题四（本页）</b>：放宽间隔约束后的消解方案，与问题二做定量对比，体现"额外自由度"的收益。</li>
+        </ul>
+        <div class="note">所有 result*.xlsx 的内容，本质就是本原型各幕动画的截图 + 数字汇总，二者应完全一致、互相印证。</div>
+      </div>
+    </div>
+
+    <div class="quote">题面原文：「若允许部分 C 类用频装备对用频间隔时长进行调整，但要求与原间隔时长的差异不超过 10Δt，请对问题 1 中检测出的时频冲突进行消解。」
+      <div class="small" style="margin-top:6px">→ 问题二和问题四都是"消解问题一的冲突"，只是约束不同。论文必须写清两版的约束差异，并分别给出对应的统计结果，不要混为一谈。</div>
+    </div>
+
+    <div class="card" style="background:linear-gradient(135deg,#0b2e36,#14454f);border:none;box-shadow:0 4px 16px rgba(11,46,54,.15)">
+      <h3 style="color:#7fd8c9;margin-bottom:14px">🎬 整个 D 题动画原型到此完成</h3>
+      <p style="color:#cdeee9;font-size:13.5px;line-height:1.9">
+        五页结构：<b>index.html</b>（入口）→ <b>01 全局分析</b>（题面 + 数据 + 四问）→
+        <b>02 冲突检测</b>（扫描动画 + 冲突统计）→ <b>03 消解 P2</b>（贪心 + 日志 + 统计表）→
+        <b>04 容量最大化 P3</b>（装箱动画）→ <b>05 灵活消解 P4</b>（两版对比）。
+      </p>
+      <p style="color:#9ab7bd;font-size:12px;margin:8px 0 0">
+        所有合成数据用固定种子 42 生成，各页完全一致、可复现。算法为简化的贪心版本，论文中可升级为 ILP / 图着色 / 邻域搜索 / 模拟退火。
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+
+function mulberry32(seed){return function(){
+  let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);
+  return((t^t>>>14)>>>0)/4294967296;
+};}
+function genData(seed){
+  const rnd=mulberry32(seed||42);
+  const CLASS=[{k:"A",n:20,priority:3,color:"#e07a5f"},{k:"B",n:50,priority:2,color:"#1e9fc4"},{k:"C",n:80,priority:1,color:"#12a594"}];
+  const all=[];let idx=1;
+  for(const c of CLASS){
+    for(let i=0;i<c.n;i++){
+      const bw=4+Math.floor(rnd()*2);const fs=Math.floor(rnd()*(100-bw));
+      const tau=5+Math.floor(rnd()*2);const ts=Math.floor(rnd()*220);
+      const iv=50+Math.floor(rnd()*60);const n=2+Math.floor(rnd()*3);
+      const id=c.k+String(idx).padStart(3,"0");
+      all.push({id,cls:c.k,priority:c.priority,color:c.color,
+        fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,rects:[],status:"active",orig_iv:iv});idx++;
+    }
+  }
+  for(const e of all)for(let k=0;k<e.n;k++){
+    const t0=e.ts+k*e.iv;e.rects.push({fs:e.fs,fe:e.fe,ts:t0,te:t0+e.tau,k});
+  }
+  let maxT=0;for(const e of all)for(const r of e.rects)if(r.te>maxT)maxT=r.te;
+  return {equip:all,maxT};
+}
+function detectConflicts(equip){
+  const confs=[];const act=equip.filter(e=>e.status==="active");
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){
+    const e1=act[i],e2=act[j];let ov=0;
+    for(const r1 of e1.rects)for(const r2 of e2.rects)
+      if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe)&&Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te))
+        ov++;
+    if(ov)confs.push({a:e1,b:e2,ov});
+  }return confs;
+}
+function isConflictFree(rects, equipList, exceptEquip){
+  for(const e of equipList){
+    if(e===exceptEquip||e.status!=="active")continue;
+    for(const r1 of rects)for(const r2 of e.rects)
+      if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe)&&Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te))return false;
+  }return true;
+}
+
+/* 通用消解引擎：allowInterval 控制是否开启 C 类间隔调整 */
+function solve(data, allowInterval, deltaMax){
+  const Pv=(deltaMax===undefined)?10:deltaMax;
+  const equip=data.equip.map(e=>({...e,rects:e.rects.map(r=>({...r})),status:"active",action:null,delta:null,actType:null}));
+  const F=10,T=5;
+  let guard=0;
+  while(guard++<2000){
+    const confs=detectConflicts(equip);if(!confs.length)break;
+    const c=confs[0];let low;
+    if(c.a.priority!==c.b.priority)low=c.a.priority<c.b.priority?c.a:c.b;else low=c.b;
+    let found=null;
+    for(let d=1;d<=F&&!found;d++)for(const s of [1,-1]){
+      const nr=low.rects.map(r=>({fs:r.fs+s*d,fe:r.fe+s*d,ts:r.ts,te:r.te,k:r.k}));
+      if(nr.some(r=>r.fs<0||r.fe>100))continue;
+      if(isConflictFree(nr,equip,low))found={type:"freq",delta:s*d,nr};
+    }
+    if(!found)for(let d=1;d<=T&&!found;d++)for(const s of [1,-1]){
+      const nr=low.rects.map(r=>({fs:r.fs,fe:r.fe,ts:r.ts+s*d,te:r.te+s*d,k:r.k}));
+      if(isConflictFree(nr,equip,low))found={type:"time",delta:s*d,nr};
+    }
+    if(!found&&allowInterval&&low.cls==="C"){
+      for(let d=1;d<=Pv&&!found;d++)for(const s of [1,-1]){
+        const newIv=low.orig_iv+s*d;
+        if(newIv<=0)continue;
+        const nr=[];let ok=true;
+        for(let k=0;k<low.n;k++){
+          const t0=low.ts+k*newIv;
+          if(t0+low.tau>data.maxT){ok=false;break;}
+          nr.push({fs:low.fs,fe:low.fe,ts:t0,te:t0+low.tau,k});
+        }
+        if(!ok)continue;
+        if(isConflictFree(nr,equip,low))found={type:"interval",delta:s*d,nr,newIv};
+      }
+    }
+    if(found){
+      low.rects=found.nr;low.action=found.type;low.delta=found.delta;low.actType=found.type;
+      if(found.type==="freq"){low.fs+=found.delta;low.fe+=found.delta;}
+      else if(found.type==="time"){low.ts+=found.delta;low.te+=found.delta;}
+      else{low.iv=found.newIv;}
+    }else{low.status="cancelled";low.action="cancel";}
+  }
+  return equip;
+}
+function solveP2(data){return solve(data,false,10);}
+function solveP4(data,deltaMax){return solve(data,true,deltaMax);}
+
+/* 时频网格 */
+function tfGrid(containerId,opts){
+  opts=opts||{};
+  const W=opts.W||460,H=opts.H||260,pad=opts.pad||40;
+  const maxF=opts.maxF||100,maxT=opts.maxT||DATA.maxT,xStep=opts.xStep||100,yStep=opts.yStep||10;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"xMidYMid meet"});
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(el("line",{x1:pad,y1:y,x2:W-pad,y2:y,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(el("line",{x1:x,y1:pad,x2:x,y2:H-pad,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  if(opts.showAxes!==false){
+    for(let f=0;f<=maxF;f+=yStep){
+      const y=pad+(H-pad*2)*f/maxF;
+      svg.appendChild(txt(pad-6,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    for(let t=0;t<=maxT;t+=xStep){
+      const x=pad+(W-pad*2)*t/maxT;
+      svg.appendChild(txt(x,H-pad+12,String(t),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    svg.appendChild(txt(pad-6,pad-8,"频段 Δf",{"font-size":9,fill:"#9ab7bd"}));
+    svg.appendChild(txt(W-pad,H-pad+24,"时间 Δt",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+  }
+  svg._tf={W,H,pad,maxF,maxT};
+  document.getElementById(containerId).appendChild(svg);return svg;
+}
+function tfDrawRect(svg,rect,color,opts){
+  opts=opts||{};const g=svg._tf;if(!g)return;
+  const x=g.pad+(g.W-g.pad*2)*rect.ts/g.maxT;
+  const y=g.pad+(g.H-g.pad*2)*rect.fs/g.maxF;
+  const w=(g.W-g.pad*2)*(rect.te-rect.ts)/g.maxT;
+  const h=(g.H-g.pad*2)*(rect.fe-rect.fs)/g.maxF;
+  const r=el("rect",{x,y,width:Math.max(w,.5),height:Math.max(h,.5),rx:1.2,
+    fill:color,opacity:(opts.opacity===undefined?.78:opts.opacity),
+    stroke:opts.stroke||color,"stroke-width":opts.sw||.6});
+  if(opts.pop)r.setAttribute("class","pop-in");
+  if(opts.title){const t=el("title");t.textContent=opts.title;r.appendChild(t);}
+  svg.appendChild(r);return r;
+}
+
+/* ========= 页面状态 ========= */
+const DATA=genData(42);
+const P2=solveP2(genData(42));
+const P4=solveP4(genData(42),10);
+
+/* ========= 场景控制 ========= */
+(function(){
+  const scenes=document.querySelectorAll(".scene");
+  const dots=document.getElementById("dots");
+  let cur=0;
+  scenes.forEach((s,i)=>{const d=document.createElement("button");d.className="dot"+(i===0?" on":"");
+    d.title=s.getAttribute("data-title");d.onclick=()=>goto(i);dots.appendChild(d);});
+  function goto(i){
+    cur=Math.max(0,Math.min(scenes.length-1,i));
+    for(let k=0;k<scenes.length;k++){scenes[k].classList.toggle("active",k===cur);dots.children[k].classList.toggle("on",k===cur);}
+    document.getElementById("scTitle").textContent=scenes[cur].getAttribute("data-title");
+    document.getElementById("pgNow").textContent=cur+1;document.getElementById("pgAll").textContent=scenes.length;
+    document.getElementById("prog").style.width=((cur+1)/scenes.length*100)+"%";
+    if(scenes[cur]._onEnter)scenes[cur]._onEnter();
+  }
+  document.getElementById("btnPrev").onclick=()=>goto(cur-1);
+  document.getElementById("btnNext").onclick=()=>goto(cur+1);
+  document.getElementById("btnReplay").onclick=()=>goto(cur);
+  document.getElementById("btnFx").onclick=function(){
+    document.body.classList.toggle("reduce");this.classList.toggle("on",!document.body.classList.contains("reduce"));
+    this.textContent=document.body.classList.contains("reduce")?"动效 关":"动效 开";};
+  document.addEventListener("keydown",ev=>{
+    if(ev.key==="ArrowRight")goto(cur+1);else if(ev.key==="ArrowLeft")goto(cur-1);
+  });
+
+  const cn=(e,extra)=>{ // color/opacity/stroke by action
+    let color=e.color,opacity=.5,stroke=null,sw=.5;
+    if(e.status==="cancelled"){color="#e0a04a";opacity=.16;sw=.3;}
+    else if(e.actType==="interval"){color="#9b5de5";opacity=.9;sw=1.8;stroke="#c9a8f5";}
+    else if(e.actType==="freq"||e.actType==="time"){opacity=.7;sw=1.0;}
+    return {color,opacity,stroke,sw};
+  };
+
+  /* 幕 2：对比两版 */
+  scenes[1]._onEnter=function(){
+    clear("tfSolve2");clear("tfSolve4");
+    const svg2=tfGrid("tfSolve2",{W:460,H:260});
+    const svg4=tfGrid("tfSolve4",{W:460,H:260});
+    P2.forEach(e=>{const s=cn(e);e.rects.forEach(r=>tfDrawRect(svg2,r,s.color,{opacity:s.opacity,sw:s.sw,stroke:s.stroke,pop:true,title:e.id+(e.actType?" · "+e.actType:"")}));});
+    P4.forEach(e=>{const s=cn(e);e.rects.forEach(r=>tfDrawRect(svg4,r,s.color,{opacity:s.opacity,sw:s.sw,stroke:s.stroke,pop:true,title:e.id+(e.actType==="interval"?" · 间隔调 "+e.iv:"")}));});
+    const can2=P2.filter(e=>e.status==="cancelled"),can4=P4.filter(e=>e.status==="cancelled");
+    const iv4=P4.filter(e=>e.actType==="interval");
+    const c2=detectConflicts(P2),c4=detectConflicts(P4);
+    document.getElementById("stat2").textContent=
+      "剩余冲突 "+c2.length+" 对 ｜ 撤销 "+can2.length+" 件（A="+can2.filter(e=>e.cls==="A").length+" B="+can2.filter(e=>e.cls==="B").length+" C="+can2.filter(e=>e.cls==="C").length+"）｜ 调整 "+P2.filter(e=>e.actType==="freq"||e.actType==="time").length+" 件";
+    document.getElementById("stat4").textContent=
+      "剩余冲突 "+c4.length+" 对 ｜ 撤销 "+can4.length+" 件（A="+can4.filter(e=>e.cls==="A").length+" B="+can4.filter(e=>e.cls==="B").length+" C="+can4.filter(e=>e.cls==="C").length+"）｜ 间隔调 "+iv4.length+" 件，累计救回 "+iv4.length+" 件";
+    const d=can4.length-can2.length;
+    document.getElementById("cmpNote").textContent=(d<0?"✔ ":"⚠ ")+"问题四比问题二"+(d<0?"少撤销 "+(-d):"多撤销 "+d)+" 件，其中 C 类撤销变化 "+(can4.filter(e=>e.cls==="C").length-can2.filter(e=>e.cls==="C").length)+" 件，启用间隔调 "+iv4.length+" 件。";
+  };
+
+  let stepIdx=0;
+  document.getElementById("btnAuto").onclick=function(){goto(1);scenes[1]._onEnter();};
+  document.getElementById("btnReset").onclick=()=>{scenes[1]._onEnter();};
+  document.getElementById("btnStep").onclick=function(){
+    const list=P4.filter(e=>e.actType==="interval");
+    if(!list.length){document.getElementById("cmpNote").textContent="当前解中没有装备使用间隔调整。";return;}
+    const e=list[stepIdx%list.length];stepIdx++;
+    document.getElementById("cmpNote").textContent="间隔调整示例："+e.id+"（"+e.cls+"类）原间隔 "+e.orig_iv+" → 新间隔 "+e.iv+"（δ="+(e.iv-e.orig_iv>0?"+":"")+(e.iv-e.orig_iv)+"Δt），n="+e.n+" 次使用，碰撞检测已通过。";
+  };
+
+  /* 幕 3：统计表 */
+  function mkTable(equip){
+    const rows=['A','B','C'].map(c=>{
+      const arr=equip.filter(e=>e.cls===c);
+      return {c,
+        keep:arr.filter(e=>e.status==="active"&&!e.action).length,
+        adj:arr.filter(e=>e.actType==="freq"||e.actType==="time"||e.actType==="interval").length,
+        iv:arr.filter(e=>e.actType==="interval").length,
+        can:arr.filter(e=>e.status==="cancelled").length};
+    });
+    rows.push({c:"合计",
+      keep:rows.reduce((s,r)=>s+r.keep,0),adj:rows.reduce((s,r)=>s+r.adj,0),
+      iv:rows.reduce((s,r)=>s+r.iv,0),can:rows.reduce((s,r)=>s+r.can,0)});
+    return rows;
+  }
+  function render(rows){
+    return "<table class='tb'><tr><th>类别</th><th>保留</th><th>调整</th><th>其中间隔调</th><th>撤销</th></tr>"
+      +rows.map((r,i)=>"<tr"+(i===rows.length-1?" class='on'":"")+"><td>"+r.c+"</td><td class='num'>"+r.keep
+        +"</td><td class='num'>"+r.adj+"</td><td class='num'>"+r.iv+"</td><td class='num'>"+r.can+"</td></tr>").join("")
+      +"</table>";
+  }
+  scenes[2]._onEnter=function(){
+    const t2=mkTable(P2),t4=mkTable(P4);
+    document.getElementById("tbl2").innerHTML=render(t2);
+    document.getElementById("tbl4").innerHTML=render(t4);
+    const p2Adj=P2.filter(e=>e.actType==="freq"||e.actType==="time");
+    const p4Adj=P4.filter(e=>e.actType==="freq"||e.actType==="time");
+    const avg2=p2Adj.reduce((s,e)=>s+Math.abs(e.delta),0)/Math.max(p2Adj.length,1);
+    const avg4=p4Adj.reduce((s,e)=>s+Math.abs(e.delta),0)/Math.max(p4Adj.length,1);
+    const cC2=t2[2].can,cC4=t4[2].can,ivN=t4[3].iv;
+    const cell=(a,b,lowerBetter)=>{
+      const d=b-a;const good=lowerBetter?d<0:d>0;
+      const cls=d===0?"":(good?"hl-t":"hl");
+      return "<td class='num "+cls+"'>"+(d>0?"+":"")+d+"</td>";
+    };
+    document.getElementById("tblExtra").innerHTML=
+      "<table class='tb'><tr><th>指标</th><th>问题二</th><th>问题四</th><th>差值（四−二）</th></tr>"
+      +"<tr><td class='l'>总撤销数（越少越好）</td><td class='num'>"+t2[3].can+"</td><td class='num'>"+t4[3].can+"</td>"+cell(t2[3].can,t4[3].can,true)+"</tr>"
+      +"<tr><td class='l'>C 类撤销数（越少越好）</td><td class='num'>"+cC2+"</td><td class='num'>"+cC4+"</td>"+cell(cC2,cC4,true)+"</tr>"
+      +"<tr><td class='l'>A 类撤销数</td><td class='num'>"+t2[0].can+"</td><td class='num'>"+t4[0].can+"</td><td class='num'>"+(t4[0].can-t2[0].can)+"</td></tr>"
+      +"<tr><td class='l'>平均调整幅度 Δf/Δt（越小改动越温和）</td><td class='num'>"+avg2.toFixed(1)+"</td><td class='num'>"+avg4.toFixed(1)+"</td>"+cell(avg2,avg4,true)+"</tr>"
+      +"<tr><td class='l'>间隔调整件数（新增动作）</td><td class='num'>0</td><td class='num'>"+ivN+"</td><td class='num hl-t'>+"+ivN+"</td></tr>"
+      +"<tr><td class='l'>剩余冲突对（应恒为 0）</td><td class='num'>"+detectConflicts(P2).length+"</td><td class='num'>"+detectConflicts(P4).length+"</td><td class='num'>0</td></tr>"
+      +"</table>";
+
+    // 灵敏度表
+    const grid=[5,10,15,20,30];
+    let html="<tr><th>δ 上限</th><th>总撤销</th><th>C 类撤销</th><th>间隔调件数</th></tr>";
+    for(const dm of grid){
+      const r=solveP4(genData(42),dm);
+      const can=r.filter(e=>e.status==="cancelled");
+      html+="<tr"+(dm===10?" class='on'":"")+"><td>±"+dm+"Δt"+(dm===10?"（题面值）":"")+"</td><td class='num'>"+can.length
+        +"</td><td class='num'>"+can.filter(e=>e.cls==="C").length
+        +"</td><td class='num'>"+r.filter(e=>e.actType==="interval").length+"</td></tr>";
+    }
+    document.getElementById("tblSens").innerHTML="<table class='tb'>"+html+"</table>";
+  };
+
+  /* ===== 幕 1 最小示例：只有改间隔能救 ===== */
+  const D4C={A:"#e07a5f",B:"#1e9fc4",C:"#12a594",R:"#ff4d6d"};
+  function d4Set(){
+    const mk=function(id,cls,prio,color,fs,fe,ts,te,iv,tau,n){
+      return {id:id,cls:cls,priority:prio,color:color,fs:fs,fe:fe,ts:ts,te:te,iv:iv,bw:fe-fs,tau:tau,n:n,orig_iv:iv,rects:[],status:"active"};
+    };
+    const W=mk("W","B",2,D4C.B,30,40,35,50,0,15,1);
+    const Z=mk("Z","B",2,D4C.B,50,60,35,50,0,15,1);
+    const Y=mk("Y","A",3,D4C.A,44,50,38,48,0,10,1);
+    const X=mk("X","C",1,D4C.C,40,50,0,40,40,6,3);
+    [W,Z,Y].forEach(function(e){e.rects.push({fs:e.fs,fe:e.fe,ts:e.ts,te:e.te,k:0});});
+    for(let k=0;k<X.n;k++)X.rects.push({fs:X.fs,fe:X.fe,ts:k*X.iv,te:k*X.iv+X.tau,k:k});
+    return {equip:[W,Z,Y,X],maxT:120};
+  }
+  const D4EV=(function(){
+    const c2=solve(d4Set(),false,10),c4=solve(d4Set(),true,10);
+    return {r2:detectConflicts(c2).length,x2:c2.filter(e=>e.status==="cancelled").map(e=>e.id).join("、")||"无",
+      r4:detectConflicts(c4).length,x4:c4.filter(e=>e.status==="cancelled").map(e=>e.id).join("、")||"无",
+      iv4:c4.filter(e=>e.actType==="interval").map(e=>e.id+" p=40→"+e.iv).join("、")||"无"};
+  })();
+  function d4Draw(mode){
+    clear("demo4");
+    const svg=tfGrid("demo4",{W:900,H:300,pad:50,maxT:120,xStep:20,yStep:10});
+    const D=d4Set(),W=D.equip[0],Z=D.equip[1],Y=D.equip[2],X=D.equip[3],T=svg._tf;
+    const lab=function(r,s,c){const x=T.pad+(T.W-T.pad*2)*r.ts/T.maxT,y=T.pad+(T.H-T.pad*2)*r.fs/T.maxF;
+      svg.appendChild(txt(x+3,y-3,s,{fill:c,"font-size":10,"font-weight":700}));};
+    const put=function(e,color,op,sw,st,dash){
+      e.rects.forEach(function(r){const rc=tfDrawRect(svg,r,color,{opacity:op,sw:sw||.7,stroke:st||null,title:e.id+" · "+e.cls+"类"});
+        if(dash)rc.setAttribute("stroke-dasharray","3 3");});};
+    const red=function(a,b){a.forEach(function(r1){b.forEach(function(r2){
+      const fs=Math.max(r1.fs,r2.fs),fe=Math.min(r1.fe,r2.fe),ts=Math.max(r1.ts,r2.ts),te=Math.min(r1.te,r2.te);
+      if(fs<fe&&ts<te)tfDrawRect(svg,{fs:fs,fe:fe,ts:ts,te:te},D4C.R,{opacity:.95,sw:2.2,pop:true});});});};
+    const shiftF=function(e,d){return e.rects.map(function(r){return {fs:r.fs+d,fe:r.fe+d,ts:r.ts,te:r.te,k:r.k};});};
+    const shiftT=function(e,d){return e.rects.map(function(r){return {fs:r.fs,fe:r.fe,ts:r.ts+d,te:r.te+d,k:r.k};});};
+    const withIv=function(e,iv){return e.rects.map(function(r){return {fs:r.fs,fe:r.fe,ts:r.k*iv,te:r.k*iv+e.tau,k:r.k};});};
+
+    put(W,D4C.B,.72,.8,null);put(Z,D4C.B,.72,.8,null);put(Y,D4C.A,.8,.8,null);
+    lab(W.rects[0],"W","#9fdcee");lab(Z.rects[0],"Z","#9fdcee");lab(Y.rects[0],"Y","#f2b8a6");
+    let note="";
+    if(mode==="init"){
+      put(X,D4C.C,.88,1,null);lab(X.rects[0],"X","#7fe0d0");
+      red(X.rects,Y.rects);
+      note="<b>初始态 1 处冲突：</b>X 的第 2 块 <b>[40,46)</b>Δt × [40,50)Δf，落在 A 类 Y 的 <b>[38,48)</b>Δt × [44,50)Δf 里（红框）。X 是 C 类、优先级最低，必须让路。问题二没有间隔自由度时，它只能被<b>撤销</b>。";
+    }else if(mode==="freq"){
+      put(X,D4C.C,.22,.6,D4C.C,true);
+      const xr={rects:shiftF(X,10)},xl={rects:shiftF(X,-10)};
+      put(xr,D4C.C,.38,1,D4C.C,true);put(xl,D4C.C,.38,1,D4C.C,true);
+      lab(xr.rects[0],"X+10","#7fe0d0");lab(xl.rects[0],"X−10","#7fe0d0");
+      red(xr.rects,Z.rects);red(xl.rects,W.rects);
+      note="<b>① 频移无解：</b>幅度 d 从 1 试到 10——右移到 +10 时 X 频段变成 [50,60)，整块<b>撞进 Z</b> 的 [50,60)（红框）；左移到 −10 时变成 [30,40)，<b>撞进 W</b> 的 [30,40)（红框）；中间的幅度 X 仍压在 Y 上。右边没有空频段可躲。";
+    }else if(mode==="time"){
+      put(X,D4C.C,.22,.6,D4C.C,true);
+      const xp={rects:shiftT(X,5)},xm={rects:shiftT(X,-5)};
+      put(xp,D4C.C,.38,1,D4C.C,true);put(xm,D4C.C,.38,1,D4C.C,true);
+      lab(xp.rects[1],"t+5","#7fe0d0");lab(xm.rects[1],"t−5","#7fe0d0");
+      red(xp.rects,Y.rects);red(xm.rects,Y.rects);
+      note="<b>② 时移无解：</b>时移把 X 的 3 块<b>一起搬家</b>。+5 时第 2 块 [40,46)→[45,51)，−5 时→[35,41)，两种都仍与 Y 的 [38,48) 相交（红框）。第 1、3 块本就不冲突，白白跟着移动。";
+    }else{
+      put(X,D4C.C,.22,.6,D4C.C,true);
+      const xn={rects:withIv(X,32)};
+      put(xn,D4C.C,.9,1,D4C.C,false);
+      lab(xn.rects[1],"p'=32","#7fe0d0");
+      note="<b>③ 改间隔成功：</b>δ=−8 → p'=32，第 0 块<b>不动</b>，第 2 块由 t=40 挪到 <b>[32,38)</b>，与 Y 的 [38,48) 刚好擦肩（38&lt;38 为假，不算重叠）。第 3 块 [64,70) 也维持无冲突。<b>只动「块与块的间距」，就消掉了冲突</b>——这是频移、时移做不到的。";
+    }
+    note+="<div class='small' style='margin-top:6px'>引擎实跑本数据集：问题二 → 剩余冲突 <b>"+D4EV.r2+"</b> 对，撤销 ["+D4EV.x2+"]；问题四 → 剩余冲突 <b>"+D4EV.r4+"</b> 对，撤销 ["+D4EV.x4+"]，间隔调 "+D4EV.iv4+"。</div>";
+    document.getElementById("demo4Note").innerHTML=note;
+  }
+  const D4BTN=["d4_freq","d4_time","d4_iv"];
+  function d4SetOn(i){D4BTN.forEach(function(id,k){const b=document.getElementById(id);if(b)b.classList.toggle("on",k===i);});}
+  (function(){
+    document.getElementById("d4_freq").onclick=function(){d4Draw("freq");d4SetOn(0);};
+    document.getElementById("d4_time").onclick=function(){d4Draw("time");d4SetOn(1);};
+    document.getElementById("d4_iv").onclick=function(){d4Draw("iv");d4SetOn(2);};
+    document.getElementById("d4_reset").onclick=function(){d4Draw("init");d4SetOn(-1);};
+  })();
+  scenes[0]._onEnter=function(){d4Draw("init");d4SetOn(-1);};
+
+  goto(0);
+})();
+</script>
+</body>
+</html>

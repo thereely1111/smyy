@@ -1,0 +1,7 @@
+# mm-2-Web动画实现规范 · 确定性渲染链路的直接依赖
+# 不包含任何 LLM SDK：平台内模型由 harness 提供，脚本不直接调用 API。
+python-docx>=1.1
+pypdf>=4.0
+openpyxl>=3.1
+pymupdf>=1.24
+latex2mathml>=3.77,<4.0

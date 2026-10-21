@@ -1,0 +1,12 @@
+apiVersion: v2
+name: agent-platform
+description: AgentScope 智能体平台（Spring Boot 后端 + Vite 前端 + 可选内置 PostgreSQL/Redis）
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - agentscope
+  - agent-platform
+  - agui
+maintainers:
+  - name: agent-platform team

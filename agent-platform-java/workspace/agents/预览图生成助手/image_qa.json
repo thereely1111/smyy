@@ -1,0 +1,25 @@
+{
+  "status": "FAIL",
+  "file": "public/hero-assets/herb-drying-cover-v1.png",
+  "mime": "image/png",
+  "width": 1832,
+  "height": 1832,
+  "aspect_ratio": 1.0,
+  "checks": {
+    "file_exists": true,
+    "readable": true,
+    "landscape": false,
+    "central_safe_zone": "NOT_TESTED",
+    "small_card_recognition": "FAIL",
+    "no_text_or_watermark": "FAIL",
+    "topic_matches_case": "FAIL"
+  },
+  "human_review_required": true,
+  "notes": [
+    "Image-generation endpoint returned a placeholder stating 'The image is generating... Please refresh page to preview.'; it is not a case illustration.",
+    "Image is square rather than the requested landscape composition.",
+    "The placeholder contains visible English text, so it cannot be used as a cover image.",
+    "Central safe zone was not evaluated because the actual generated case subject is absent.",
+    "No image QA pass is claimed."
+  ]
+}

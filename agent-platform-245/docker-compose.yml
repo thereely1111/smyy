@@ -1,0 +1,34 @@
+services:
+  postgres:
+    # 镜像 agent-platform-postgres:16-alpine-pgvector 已固化 pgvector 0.8.1（源码构建，适配 PG16）。
+    # 重建该镜像（需网络）：docker build -f docker/postgres/Dockerfile -t agent-platform-postgres:16-alpine-pgvector .
+    # 注：Alpine apk 仅提供 PG18 的 pgvector，与 PG16 冲突，故走源码构建（见 docker/postgres/Dockerfile）。
+    image: agent-platform-postgres:16-alpine-pgvector
+    container_name: agent-platform-postgres
+    environment:
+      POSTGRES_DB: agent_platform
+      POSTGRES_USER: agent_platform
+      POSTGRES_PASSWORD: agent_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  
+  redis:
+    image: redis:7-alpine
+    container_name: agent-platform-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:
+  redis_data:

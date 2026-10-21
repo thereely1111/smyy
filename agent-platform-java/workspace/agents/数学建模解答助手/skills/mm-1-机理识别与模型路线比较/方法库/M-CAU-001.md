@@ -1,0 +1,13 @@
+### M-CAU-001 因果图与结构因果模型（SCM）
+- **task_types**：政策效果、干预分析、混杂控制、反事实预测。
+- **problem_signature**：问题要求“影响、导致、如果采取措施会怎样”，而非纯相关预测。
+- **core_idea**：用有向无环图和结构方程区分因果路径、混杂、碰撞点和中介。
+- **inputs**：变量、时间顺序、因果假设、干预、观测/实验数据。
+- **outputs**：可识别性判断、调整集、因果效应、反事实量。
+- **assumptions**：无未测混杂或已明确其影响；一致性、可交换性、正值性。
+- **hard_constraints**：只有横截面相关数据且没有因果假设时不得声称因果结论。
+- **validation**：安慰剂检验、敏感性分析、替代调整集、负向对照、机制一致性。
+- **selection_tags**：`causal, intervention, counterfactual, confounding`
+- **composable_with**：`M-PRE-001, M-TIME-004, M-STA-002`
+- **fallbacks**：倾向得分、双重差分、工具变量、断点回归（需满足各自识别条件）。
+- **agent_actions**：画 DAG -> 识别混杂/碰撞 -> 判断可识别 -> 选估计方法 -> 做敏感性。

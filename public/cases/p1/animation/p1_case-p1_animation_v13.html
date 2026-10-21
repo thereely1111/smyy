@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 国赛A题 · 全局分析 · 中药材热风烘干热湿耦合建模</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em;margin-left:auto}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.hl-b{color:var(--blue);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:20px;font-weight:650;color:var(--teal-d);line-height:1.3;font-variant-numeric:tabular-nums}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi::after{content:"";position:absolute;right:-12px;top:-12px;width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(18,165,148,.12),transparent 70%)}
+.kpi.g::after{background:radial-gradient(circle at 30% 30%,rgba(224,160,74,.16),transparent 70%)}
+.kpi.b::after{background:radial-gradient(circle at 30% 30%,rgba(20,108,135,.14),transparent 70%)}
+.kpi.w::after{background:radial-gradient(circle at 30% 30%,rgba(184,84,58,.14),transparent 70%)}
+
+/* ---------- 大号 KPI（结论幕） ---------- */
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh);}
+.bigkpi::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;
+  border-radius:50%;background:radial-gradient(circle,rgba(18,165,148,.10),transparent 70%);}
+.bigkpi.g::after{background:radial-gradient(circle,rgba(224,160,74,.14),transparent 70%);}
+.bigkpi.b::after{background:radial-gradient(circle,rgba(20,108,135,.14),transparent 70%);}
+.bigkpi.w::after{background:radial-gradient(circle,rgba(184,84,58,.14),transparent 70%);}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi.b .bk-v{color:var(--blue)}
+.bigkpi.w .bk-v{color:var(--warn)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+
+/* ---------- 流程节点 ---------- */
+.flowrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flownode{font-size:12px;padding:6px 11px;border-radius:8px;background:#fff;border:1px solid var(--line);
+  color:var(--ink2);font-weight:600;position:relative;}
+.flownode.on{background:var(--teal-d);color:#fff;border-color:var(--teal-d)}
+.flownode.g{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.flowarrow{color:var(--cyan);font-size:14px;font-weight:700}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh);position:relative}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dot{border-radius:50%}
+
+/* ---------- 公式块 ---------- */
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.85;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.formula .n{color:#e0a04a}
+.formula .w{color:#ffb4a0}
+
+/* ---------- 提示条 ---------- */
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.t{background:#eef8f6;border-color:#cfe7e5;color:#0b6e68}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{color:var(--teal-d);border-color:var(--teal);background:#eef8f6;font-weight:600}
+
+/* ---------- Cover ---------- */
+.cover{text-align:center;max-width:920px;margin:6px auto 0}
+.cover .big{font-size:38px;font-weight:650;letter-spacing:-.01em;line-height:1.25;margin:8px 0}
+.cover .big .ac{color:var(--teal-d)}
+.cover .big .ag{color:var(--gold-d)}
+.cover .big .aw{color:var(--warn)}
+.cover .meta{color:var(--muted);font-size:14.5px;margin:10px 0;line-height:1.8}
+@media(max-width:960px){.cover .big{font-size:28px}}
+
+body.reduce .pulse,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>A 题 · 中药材热风烘干</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p1-0.html" class="on">全局分析</a>
+    <a href="./mod-p1-1.html">问题一</a>
+    <a href="./mod-p1-2.html">问题二</a>
+    <a href="./mod-p1-3.html">问题三</a>
+    <a href="./mod-p1-4.html">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ============ 第一幕 · 概述 ============ -->
+<section class="scene" id="s1" data-title="一 · 概述 · 中药材热风烘干热湿耦合">
+  <div class="wrap">
+    <div class="cover">
+      <div class="kicker">2026 全国大学生数学建模竞赛 A 题 · 全局分析</div>
+      <h1 class="big">中药材热风烘干：圆柱体内的<span class="ac">热湿耦合</span>传热传质
+        <small style="display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:8px;letter-spacing:0">长 25 cm、半径 2 cm 的圆柱药材，初始 28 °C、干基含水率 2.55 kg/kg。热风把表面加热到 50.165 °C，水分沿浓度梯度由内向外迁移，目标是把干基含水率降到 0.15 kg/kg 以下。</small>
+      </h1>
+      <p class="lead" style="margin:10px auto 0">本题把一根圆柱药材的烘干过程交给一套「温度场 + 含水率场」的双场耦合模型：内部靠导热 λ 与 Fick 扩散 D，表面叠加对流换热 h 与水分蒸发/吸收 km。四个问题沿「预热平衡 → 全过程 → 达标时长 → 动边界收缩」逐层加约束。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="kpi"><div class="k">圆柱长度 L</div><div class="v">25 <u>cm</u></div><div class="s">轴向均匀，按一维径向处理</div></div>
+      <div class="kpi g"><div class="k">圆柱半径 R</div><div class="v">2 <u>cm</u></div><div class="s">径向计算域 0 → 2 cm</div></div>
+      <div class="kpi b"><div class="k">初始温度</div><div class="v">28 <u>°C</u></div><div class="s">药材与热风初始同温</div></div>
+      <div class="kpi w"><div class="k">初始干基含水率 C₀</div><div class="v">2.55 <u>kg/kg</u></div><div class="s">干燥起点</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">圆柱药材径向截面示意 · 半径 2 cm</div>
+          <div class="legend">
+            <span><i class="dot" style="background:#e0a04a"></i>热风环绕加热</span>
+            <span><i class="dot" style="background:#12a594"></i>径向位置 0 → 2 cm</span>
+          </div>
+        </div>
+        <canvas id="cvSect" height="340"></canvas>
+        <p class="note" style="margin-top:8px">外圈金色箭头表示热风环绕药材表面流动；内部虚线同心环为径向剖面示意。沿半径从中心（0 cm）到表面（2 cm）取 0 / 0.5 / 1.0 / 1.5 / 2.0 cm 五个特征位置，是后续剖面与达标判据的采样点。</p>
+      </div>
+
+      <div class="card">
+        <h3>题目给定的核心参数 <em>题面与附件</em></h3>
+        <table class="tb">
+          <tr><th>参数</th><th style="text-align:right">取值</th><th>含义</th></tr>
+          <tr><td>圆柱长度 L</td><td class="num">25 cm</td><td>轴向均匀</td></tr>
+          <tr><td>圆柱半径 R</td><td class="num">2 cm</td><td>径向计算域 0 → 2 cm</td></tr>
+          <tr><td>初始温度</td><td class="num">28 °C</td><td>药材与热风初始同温</td></tr>
+          <tr><td>初始干基含水率 C₀</td><td class="num">2.55 kg/kg</td><td>干燥起点</td></tr>
+          <tr class="on"><td>干燥目标</td><td class="num">&lt; 0.15 kg/kg</td><td>干基含水率达标阈值</td></tr>
+          <tr class="on"><td>热风终温</td><td class="num">50.165 °C</td><td>0–300 s 升温后稳定</td></tr>
+          <tr class="on"><td>热风含水率（对应值）</td><td class="num">0.04986 kg/kg</td><td>环境水分载荷</td></tr>
+        </table>
+        <div class="quote">建立圆柱药材热风烘干的热湿耦合模型，分析温度与含水率随时间、径向位置的变化，并回答预热平衡、全过程、达标时长与半径收缩四个问题。</div>
+      </div>
+    </div>
+
+    <p class="note"><span class="badge">读题</span>结局指标只有一个：把干基含水率降到 <b class="hl">0.15 kg/kg</b> 以下。四个问题分别是这个目标在「短时预热」「全程变物性」「全域同时达标」「半径随含水率收缩」四种约束下的展开。</p>
+  </div>
+</section>
+
+<!-- ============ 第二幕 · 物理机理 ============ -->
+<section class="scene" id="s2" data-title="二 · 物理机理 · 热湿耦合">
+  <div class="wrap">
+    <div>
+      <div class="kicker">物理机理 · 热湿耦合</div>
+      <h1>表面先热、内部后热；水分受浓度梯度由内向外迁移
+        <small>温度场与含水率场互相耦合：温度升高加快水分扩散与蒸发，水分蒸发又带走潜热、反作用于温度。</small>
+      </h1>
+    </div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">径向剖面示意 · 温度 T(r) 与含水率 C(r)</div>
+          <div class="legend">
+            <span><i class="ln" style="background:#12a594"></i>温度剖面</span>
+            <span><i class="ln" style="background:#e0a04a"></i>含水率剖面</span>
+          </div>
+        </div>
+        <canvas id="cvProfile" height="340"></canvas>
+        <p class="note" style="margin-top:8px">上panel：温度由中心向表面升高（外高内低），1800 s 时中心 33.42 °C、表面 36.59 °C；下panel：含水率由中心向表面降低（内高外低），中心仍保持 2.55，表面降到 1.312 kg/kg。</p>
+      </div>
+
+      <div class="card">
+        <h3>控制方程 <em>传热 / 传质</em></h3>
+        <div class="formula"><span class="c">// 传热：内部导热 λ + 表面对流 h</span>
+∂T/∂t = (λ/(ρ·cp))·(1/r)·∂/∂r( r·∂T/∂r )
+表面： q = h·(T_air − T_s)   <span class="n">h = 25 W/(m²·K)</span>
+T_air: 0–300 s 由 28 °C 升到 <span class="n">50.165 °C</span> 后稳定
+
+<span class="c">// 传质：内部 Fick 扩散 D + 表面蒸发/吸收 km</span>
+∂C/∂t = (1/r)·∂/∂r( D·r·∂C/∂r )
+表面： j = km·(C_s − C_a)   <span class="n">km = 8×10⁻⁷ m/s</span>
+C_a（热风含水率）：最终 <span class="n">0.04986 kg/kg</span></div>
+        <p class="small" style="margin-top:10px"><span class="badge q">耦合</span>温度决定扩散系数 D 与表面蒸发速率；蒸发带走潜热又降低表面温度，两场需联立求解。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>热湿耦合链条 <em>表面 → 内部</em></h3>
+      <div class="flowrow">
+        <span class="flownode on">热风加热表面</span>
+        <span class="flowarrow">→</span>
+        <span class="flownode g">表面水分蒸发（km）</span>
+        <span class="flowarrow">→</span>
+        <span class="flownode">内部形成浓度梯度</span>
+        <span class="flowarrow">→</span>
+        <span class="flownode">水分由内向外迁移</span>
+      </div>
+      <p class="small" style="margin-top:10px">表面先失水、内部仍高湿，形成从中心指向表面的浓度梯度，驱动水分持续外迁；这正是「中心含水率几乎不变、表面快速下降」的物理原因。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3><span class="badge p">附件1</span>烘房热风环境</h3>
+        <p class="small">热风温度 0–300 s 由约 28 °C 升到 <b class="hl-t num">50.165 °C</b> 后稳定。</p>
+        <p class="small">热风含水率对应值最终 <b class="num">0.04986 kg/kg</b>，作为表面传质的远场浓度 Cₐ。</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge q">边界条件</span>表面换热 / 传质</h3>
+        <p class="small">表面对流换热系数 <b class="hl-t num">h = 25 W/(m²·K)</b>。</p>
+        <p class="small">表面传质系数 <b class="hl-g num">km = 8×10⁻⁷ m/s</b>，控制蒸发/吸收强度。</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge n">物性来源</span>附录 2 / 3</h3>
+        <p class="small">问题一采用附录 2 的<b>常物性</b>（导热 λ、扩散 D 视为常数）。</p>
+        <p class="small">问题二全过程采用附录 3 的<b>变物性</b>，λ 与 D 随温度/含水率变化。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第三幕 · 数值方法 ============ -->
+<section class="scene" id="s3" data-title="三 · 数值方法 · 有限体积法 21 节点">
+  <div class="wrap">
+    <div>
+      <div class="kicker">数值方法 · 有限体积法</div>
+      <h1>径向 21 节点 + 显式欧拉推进：中心胞元用 dr²/8，表面叠加两类通量
+        <small>把连续的圆柱径向方程离散成 21 个控制体，逐时步显式更新温度与含水率。</small>
+      </h1>
+    </div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">径向网格示意 · 21 节点（i = 1 … 21）</div>
+          <div class="legend">
+            <span><i class="dot" style="background:#12a594"></i>节点</span>
+            <span><i class="ln" style="background:#cfe4e4"></i>控制体界面</span>
+          </div>
+        </div>
+        <canvas id="cvMesh" height="300"></canvas>
+        <p class="note" style="margin-top:8px">上半圆示意圆柱截面，红线标示一条半径；下排 21 个节点沿半径均匀布置，节点间距 dr = R/20 = 0.1 cm。中心节点 i=1 采用 dr²/8 校正曲面积分，表面节点 i=21 叠加扩散与蒸发两类通量。</p>
+      </div>
+
+      <div class="card">
+        <h3>离散要素 <em>空间 / 时间 / 边界</em></h3>
+        <table class="tb">
+          <tr><th>要素</th><th>处理方式</th></tr>
+          <tr><td>空间离散</td><td>有限体积法，径向 21 节点</td></tr>
+          <tr><td>中心胞元</td><td>面积 π·(dr/2)² → 系数 dr²/8</td></tr>
+          <tr><td>内部节点</td><td>二阶中心差分（i = 2 … 20）</td></tr>
+          <tr><td>表面节点</td><td>通量 = 内部扩散补给 − 表面蒸发</td></tr>
+          <tr class="on"><td>时间推进</td><td>显式欧拉，dt = 0.5 s</td></tr>
+        </table>
+        <div class="note t" style="margin-top:10px"><span class="badge q">要点</span>圆柱坐标系中 r→0 处存在 1/r 奇性，中心胞元用 dr²/8 把曲面积分展开后消去奇点，保证中心节点稳定。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>离散与边界公式 <em>FVM / 显式欧拉</em></h3>
+      <div class="formula"><span class="c">// 径向网格：R = 2 cm 均分 20 段，节点 i = 1 … 21</span>
+dr = R/20 = 0.1 cm
+
+<span class="c">// 中心胞元（i = 1）：面积以 dr²/8 校正，消去 1/r 奇性</span>
+V_1 = π·(dr/2)²   →   系数 <span class="n">dr²/8</span>
+
+<span class="c">// 表面节点（i = 21）净通量</span>
+flux[21] = ( −flux[20] ) − km·r_s·(C_s − C_a)
+            内部扩散补给        表面蒸发/吸收
+
+<span class="c">// 含水率显式欧拉推进</span>
+C^(n+1) = C^n + dt · (∂C/∂t)^n     <span class="n">dt = 0.5 s</span>
+<span class="c">// 温度场同样以显式欧拉推进 dt = 0.5 s</span></div>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3>空间网格</h3>
+        <p class="small">径向 21 节点、dr = 0.1 cm；轴向按 L = 25 cm 均匀，简化为一维径向问题。</p>
+        <p class="small hl-t">节点越密，表面浓度梯度捕捉越准。</p>
+      </div>
+      <div class="card">
+        <h3>时间推进</h3>
+        <p class="small">显式欧拉 dt = 0.5 s，逐时步同步更新温度与含水率。</p>
+        <p class="small hl-g">dt 受 D 与 dr 约束，取 0.5 s 兼顾稳定与效率。</p>
+      </div>
+      <div class="card">
+        <h3>边界处理</h3>
+        <p class="small">中心用曲面积分校正；表面把内部扩散补给与表面对流蒸发叠加为净通量。</p>
+        <p class="small hl-b">两个边界共同决定整体干燥速率。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第四幕 · 四问升级路径 ============ -->
+<section class="scene" id="s4" data-title="四 · 四问升级路径">
+  <div class="wrap">
+    <div>
+      <div class="kicker">四问升级路径 · 逐层加约束</div>
+      <h1>同一套方程，四层约束逐级加码
+        <small>预热平衡 → 全过程 → 达标时长 → 动边界收缩，每一问都在前一问的输出上再叠一层物理约束。</small>
+      </h1>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">四问递进关系 · 流动光点动画</div>
+        <div class="legend">
+          <span><i class="dot" style="background:#12a594"></i>Q1 · 预热平衡</span>
+          <span><i class="dot" style="background:#e0a04a"></i>Q2 · 全过程</span>
+          <span><i class="dot" style="background:#146c87"></i>Q3 · 达标时长</span>
+          <span><i class="dot" style="background:#b8543a"></i>Q4 · 动边界</span>
+        </div>
+      </div>
+      <canvas id="cvPath" height="280"></canvas>
+      <p class="note" style="margin-top:8px">问题一在常物性下看短时预热平衡；问题二在全过程引入变物性；问题三问全域各处含水率降到 0.15 以下所需时长；问题四让半径随含水率收缩，改写成动边界问题。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="card">
+        <h3><span class="badge q">Q1</span>预热平衡</h3>
+        <p class="small">0–1800 s · <b>常物性</b>（附录 2）</p>
+        <p class="small">1800 s 时中心 T = 33.42 °C、表面 T = 36.59 °C；中心含水率保持 2.55、表面降到 1.312。</p>
+        <p class="small"><span class="badge n">约束</span>常物性、无动边界</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge p">Q2</span>全过程</h3>
+        <p class="small">直至达标 · <b>变物性</b>（附录 3）</p>
+        <p class="small">中心温度约 8 h 达到 50 °C 并趋稳；表面含水率降至约 1.01 kg/kg。</p>
+        <p class="small"><span class="badge n">约束</span>全程变物性耦合</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge">Q3</span>达标时长</h3>
+        <p class="small">各处含水率 &lt; 0.15 kg/kg</p>
+        <p class="small">全域所有径向位置同时达标所需时长为 <b class="hl-b num">16.87 h</b>。</p>
+        <p class="small"><span class="badge n">约束</span>全域含水率阈值</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge w">Q4</span>动边界收缩</h3>
+        <p class="small">半径随含水率收缩（附录 4）</p>
+        <p class="small">半径由 2 cm 收缩到约 <b class="hl num">1.207 cm</b>，时长 <b class="hl num">21.49 h</b>。</p>
+        <p class="small"><span class="badge n">约束</span>移动边界 / 半径动态</p>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>约束递进对照</h3>
+        <table class="tb">
+          <tr><th>问题</th><th>尺度</th><th>新增约束</th></tr>
+          <tr><td>Q1 预热平衡</td><td>0–1800 s</td><td>常物性，无动边界</td></tr>
+          <tr><td>Q2 全过程</td><td>至达标</td><td>变物性，全程耦合</td></tr>
+          <tr><td>Q3 达标时长</td><td>各处 C &lt; 0.15</td><td>全域含水率阈值</td></tr>
+          <tr class="on"><td>Q4 动边界</td><td>R → 1.207 cm</td><td>半径随含水率收缩</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>为什么这样递进</h3>
+        <p>四问共用同一套传热传质方程与数值方法，差别只在约束：Q1 冻结物性看短时响应；Q2 放开物性看全程；Q3 把「某个点达标」升级为「所有点达标」；Q4 再把固定的外边界改成随含水率收缩的移动边界。</p>
+        <div class="quote">从「一个时刻」到「整个时间」、从「一点」到「全域」、从「定边界」到「动边界」，约束一圈圈收紧。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第五幕 · 结论 ============ -->
+<section class="scene" id="s5" data-title="五 · 结论 · 关键结果">
+  <div class="wrap">
+    <div>
+      <div class="kicker">结论 · 关键结果</div>
+      <h1>从预热到达标：四个数字串起整条烘干路径
+        <small>表面温度、表面含水率、全域达标时长、动边界收缩时长，是本模型四条最关键的结论。</small>
+      </h1>
+    </div>
+
+    <div class="grid4">
+      <div class="bigkpi"><div class="bk-k">问题一 · 表面末温（1800 s）</div><div class="bk-v" data-cnt="36.59" data-dec="2">0.00<span class="bk-u">°C</span></div><div class="bk-sub">中心 33.42 °C，表面 36.59 °C</div></div>
+      <div class="bigkpi g"><div class="bk-k">问题二 · 表面末含水率</div><div class="bk-v" data-cnt="1.01" data-dec="2">0.00<span class="bk-u">kg/kg</span></div><div class="bk-sub">中心约 8 h 达 50 °C 并趋稳</div></div>
+      <div class="bigkpi b"><div class="bk-k">问题三 · 全域达标时长</div><div class="bk-v" data-cnt="16.87" data-dec="2">0.00<span class="bk-u">h</span></div><div class="bk-sub">各处含水率 &lt; 0.15 kg/kg</div></div>
+      <div class="bigkpi w"><div class="bk-k">问题四 · 动边界时长</div><div class="bk-v" data-cnt="21.49" data-dec="2">0.00<span class="bk-u">h</span></div><div class="bk-sub">R：2 cm → 1.207 cm</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">表面干基含水率随烘干时间下降 · 含达标线</div>
+          <div class="legend">
+            <span><i class="ln" style="background:#12a594"></i>问题三 · 定边界</span>
+            <span><i class="ln" style="background:#e0a04a"></i>问题四 · 动边界</span>
+            <span><i class="ln" style="background:#b8543a"></i>C = 0.15 达标线</span>
+          </div>
+        </div>
+        <canvas id="cvSurface" height="300"></canvas>
+        <p class="note" style="margin-top:8px">两条曲线都由 6 / 12 / 17(18) / 21 h 的径向含水率取表面值得到。定边界模型（问题三）在 16.87 h 使全域达标；动边界模型（问题四）因半径收缩、扩散路径变短，表面下降更快，但需 21.49 h 才整体达标。</p>
+      </div>
+
+      <div class="card">
+        <h3>数值结果一览 <em>来自径向剖面数据</em></h3>
+        <table class="tb">
+          <tr><th>阶段</th><th style="text-align:right">中心</th><th style="text-align:right">表面</th></tr>
+          <tr><td>1800 s · 温度 (°C)</td><td class="num">33.42</td><td class="num">36.59</td></tr>
+          <tr><td>1800 s · 含水率 (kg/kg)</td><td class="num">2.55</td><td class="num">1.312</td></tr>
+          <tr class="on"><td>17 h · 含水率 (kg/kg)</td><td class="num">0.15</td><td class="num">0.1139</td></tr>
+          <tr class="on"><td>21 h · 含水率 (kg/kg)</td><td class="num">0.15</td><td class="num">0.081</td></tr>
+        </table>
+        <p class="small" style="margin-top:8px"><span class="badge n">读表</span>预热阶段中心几乎不脱水；进入降速干燥期后，含水率剖面整体下移，最终中心降到 0.15、表面更低。</p>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3><span class="badge q">结论①</span>干燥由表面向内推进</h3>
+        <p class="small">1800 s 内中心含水率始终保持 2.55，只有表面降到 1.312 kg/kg。</p>
+        <p class="small hl-t">说明短时预热阶段失水几乎全部发生在表层。</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge p">结论②</span>全过程趋于稳定</h3>
+        <p class="small">变物性全过程中，中心温度约 8 h 升到 50 °C 并趋稳，表面含水率降到约 1.01 kg/kg。</p>
+        <p class="small hl-g">温度先达标，含水率随后缓慢收敛。</p>
+      </div>
+      <div class="card">
+        <h3><span class="badge w">结论③</span>达标时长受边界模型影响</h3>
+        <p class="small">定边界需 16.87 h 使各处 &lt; 0.15；动边界半径收缩到约 1.207 cm，整体时长 21.49 h。</p>
+        <p class="small hl">两者相差约 4.6 h，边界是否收缩不可忽略。</p>
+      </div>
+    </div>
+
+    <p class="note t"><span class="badge">总览</span>四条结论共用同一套热湿耦合模型：温度场快速趋于热风温度，含水率场则决定烘干时间；问题三给出定边界下的达标下界，问题四说明半径收缩会显著改变进程。四个子问题详见 <a href="./mod-p1-1.html">问题一</a>、<a href="./mod-p1-2.html">问题二</a>、<a href="./mod-p1-3.html">问题三</a>、<a href="./mod-p1-4.html">问题四</a>。</p>
+  </div>
+</section>
+
+</main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+/* ===== DATA 区：来自数值模拟 p1_sim/p1_data_clean.js（原样复制） ===== */
+var TAB1={"100":[28.0,28.0003,28.0032,28.0271,28.1548],"300":[28.036,28.0565,28.1367,28.3371,28.7846],"600":[28.4216,28.5002,28.7555,29.2457,30.0635],"900":[29.2572,29.3865,29.7902,30.5096,31.5969],"1200":[30.4412,30.6041,31.1045,31.9747,33.2629],"1500":[31.863,32.0504,32.6193,33.5843,34.9437],"1800":[33.4188,33.613,34.198,35.1836,36.5905]};
+var TAB2={"100":[2.55,2.55,2.55,2.55,2.3623],"300":[2.55,2.55,2.55,2.55,2.0661],"600":[2.55,2.55,2.55,2.55,1.773],"900":[2.55,2.55,2.55,2.5498,1.5927],"1200":[2.55,2.55,2.55,2.5493,1.4718],"1500":[2.55,2.55,2.55,2.548,1.3826],"1800":[2.55,2.55,2.55,2.5453,1.312]};
+var TAB5={"6":[1.1591,1.1146,0.9938,0.8252,0.6384],"12":[0.3423,0.3343,0.3112,0.2756,0.2309],"17":[0.15,0.1475,0.1402,0.1287,0.1139]};
+var TAB6={"6":[2.3091,2.0676,1.3316,0.6204],"12":[0.8918,0.7591,0.4471,0.2757],"18":[0.2732,0.2406,0.1589,0.1176],"21":[0.15,0.1356,0.0991,0.081]};
+</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+
+/* ===================== 通用工具 ===================== */
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function setupCanvas(cv,h){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(280,cv.clientWidth||520);
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function roundRect(g,x,y,w,h,r){
+  if(h<r) r=h;
+  g.beginPath();
+  g.moveTo(x+r,y);
+  g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h); g.lineTo(x,y+h); g.lineTo(x,y+r);
+  g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+/* 按进度绘制折线（0..1） */
+function polyline(g,pts,prog,color,lw){
+  var segs=pts.length-1, total=prog*segs;
+  g.strokeStyle=color; g.lineWidth=lw; g.lineJoin='round'; g.lineCap='round';
+  g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
+  for(var i=0;i<segs;i++){
+    var f=clamp(total-i,0,1);
+    if(f<=0) break;
+    g.lineTo(pts[i][0]+(pts[i+1][0]-pts[i][0])*f, pts[i][1]+(pts[i+1][1]-pts[i][1])*f);
+    if(f<1) break;
+  }
+  g.stroke();
+}
+
+/* ===================== 动画引擎 ===================== */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; a._alive=false; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(ts){
+    if(!handle._alive) return;
+    fn(ts);
+    handle._raf=requestAnimationFrame(loop);
+  }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+/* 连续动画（带入场进度 p，之后持续循环） */
+function playLoop(cvId,drawFn,dur){
+  var cv=document.getElementById(cvId); if(!cv) return;
+  if(document.body.classList.contains('reduce')){ drawFn(cv,1,0); return; }
+  var t0=null;
+  runAnim(function(ts){ if(t0===null) t0=ts; var el=(ts-t0)/1000; drawFn(cv,clamp(el/dur,0,1),el); });
+}
+/* 一次性入场动画（p 到 1 后停止） */
+function playOnce(cvId,drawFn,dur){
+  var cv=document.getElementById(cvId); if(!cv) return;
+  if(document.body.classList.contains('reduce')){ drawFn(cv,1,0); return; }
+  var h={_raf:null,_alive:true}; activeAnims.push(h);
+  var t0=null;
+  function step(ts){
+    if(!h._alive) return;
+    if(t0===null) t0=ts;
+    var el=(ts-t0)/1000, p=clamp(el/dur,0,1);
+    drawFn(cv,p,el);
+    if(p<1) h._raf=requestAnimationFrame(step); else h._raf=null;
+  }
+  h._raf=requestAnimationFrame(step);
+}
+
+/* ===================== 第一幕：圆柱截面示意 ===================== */
+function drawSect(cv,p,clk){
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  g.clearRect(0,0,w,h);
+  var cx=Math.round(w*0.46), cy=Math.round(h*0.44);
+  var Rpx=Math.min(Math.round(h*0.32), Math.round(w*0.30));
+  var ringR=Rpx+28;
+  // 热风环绕箭头
+  var base=clk*0.5;
+  for(var a=0;a<6;a++){
+    var a0=base+a*Math.PI/3, a1=a0+Math.PI/3*0.62;
+    g.strokeStyle='rgba(224,160,74,'+(0.55+0.35*Math.sin(clk*2+a)).toFixed(3)+')';
+    g.lineWidth=2.6; g.lineCap='round';
+    g.beginPath(); g.arc(cx,cy,ringR,a0,a1); g.stroke();
+    var hx=cx+Math.cos(a1)*ringR, hy=cy+Math.sin(a1)*ringR;
+    var tx=-Math.sin(a1), ty=Math.cos(a1);
+    var nx=Math.cos(a1), ny=Math.sin(a1);
+    g.fillStyle='#e0a04a';
+    g.beginPath();
+    g.moveTo(hx+tx*8, hy+ty*8);
+    g.lineTo(hx-tx*2+nx*4.5, hy-ty*2+ny*4.5);
+    g.lineTo(hx-tx*2-nx*4.5, hy-ty*2-ny*4.5);
+    g.closePath(); g.fill();
+  }
+  // 圆柱截面
+  var grd=g.createRadialGradient(cx-Rpx*0.35,cy-Rpx*0.35,Rpx*0.06,cx,cy,Rpx);
+  grd.addColorStop(0,'#f4fdfb'); grd.addColorStop(0.65,'#dcf2ee'); grd.addColorStop(1,'#bfe2dc');
+  g.fillStyle=grd; g.beginPath(); g.arc(cx,cy,Rpx,0,6.2832); g.fill();
+  // 内部同心环（剖面示意）
+  g.setLineDash([4,4]);
+  for(var k=1;k<=4;k++){
+    g.strokeStyle='rgba(18,165,148,.20)'; g.lineWidth=1;
+    g.beginPath(); g.arc(cx,cy,Rpx*k/5,0,6.2832); g.stroke();
+  }
+  g.setLineDash([]);
+  g.strokeStyle='rgba(11,110,104,.9)'; g.lineWidth=1.8;
+  g.beginPath(); g.arc(cx,cy,Rpx,0,6.2832); g.stroke();
+  // 半径线（向下）
+  g.strokeStyle='rgba(11,46,54,.4)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx,cy+Rpx); g.stroke();
+  // 刻度
+  var labs=['0','0.5','1.0','1.5','2.0'];
+  for(var i=0;i<=4;i++){
+    var yy=cy+Rpx*i/4;
+    var vis=clamp(p*5-i,0,1);
+    if(vis<=0) continue;
+    g.globalAlpha=vis;
+    g.fillStyle='#12a594'; g.beginPath(); g.arc(cx,yy,3.4,0,6.2832); g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1; g.stroke();
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(labs[i]+' cm',cx+9,yy);
+    g.globalAlpha=1;
+  }
+}
+
+/* ===================== 第二幕：温度/含水率剖面 ===================== */
+function drawProfile(cv,p){
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  g.clearRect(0,0,w,h);
+  var L=58,R=24,PW=w-L-R;
+  var rs=[0,0.5,1,1.5,2];
+  var TT=TAB1[1800], CC=TAB2[1800];
+  function X(r){ return L+PW*(r/2); }
+  var aT=30, aH=104, Tmin=28, Tmax=37;
+  function YA(v){ return aT+aH*(1-(v-Tmin)/(Tmax-Tmin)); }
+  var bT=188, bH=104, Cmin=1.2, Cmax=2.6;
+  function YB(v){ return bT+bH*(1-(v-Cmin)/(Cmax-Cmin)); }
+  // 网格
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  [28,31,34,37].forEach(function(v){
+    var y=YA(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,y+.5); g.lineTo(L+PW,y+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(v+'',L-7,y);
+  });
+  [1.4,1.8,2.2,2.6].forEach(function(v){
+    var y=YB(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,y+.5); g.lineTo(L+PW,y+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(v.toFixed(1),L-7,y);
+  });
+  // 轴
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,aT-6); g.lineTo(L,aT+aH); g.stroke();
+  g.beginPath(); g.moveTo(L,bT-6); g.lineTo(L,bT+bH); g.stroke();
+  // 标题
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillStyle='#0b6e68'; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+  g.fillText('温度剖面 T(r)',L,aT-12);
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='right'; g.fillText('中心 33.42 → 表面 36.59 °C',L+PW,aT-12);
+  g.textAlign='left';
+  g.fillStyle='#8a6313'; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+  g.fillText('含水率剖面 C(r)',L,bT-12);
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='right'; g.fillText('中心 2.55 → 表面 1.312 kg/kg',L+PW,bT-12);
+  // 曲线
+  var tp=[], cp=[];
+  for(var i=0;i<rs.length;i++){ tp.push([X(rs[i]),YA(TT[i])]); cp.push([X(rs[i]),YB(CC[i])]); }
+  polyline(g,tp,p,'#12a594',2.6);
+  polyline(g,cp,p,'#e0a04a',2.6);
+  var totA=p*(tp.length-1), totB=p*(cp.length-1);
+  tp.forEach(function(pt,i){ if(i<=totA+1e-9){ g.fillStyle='#12a594'; g.beginPath(); g.arc(pt[0],pt[1],3.2,0,6.2832); g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.2; g.stroke(); } });
+  cp.forEach(function(pt,i){ if(i<=totB+1e-9){ g.fillStyle='#e0a04a'; g.beginPath(); g.arc(pt[0],pt[1],3.2,0,6.2832); g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.2; g.stroke(); } });
+  // x 刻度
+  g.textAlign='center'; g.textBaseline='top'; g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  rs.forEach(function(r){ g.fillText(r+'',X(r), bT+bH+6); });
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.fillText('径向位置 r (cm)　中心 → 表面',L+PW/2, bT+bH+24);
+}
+
+/* ===================== 第三幕：21 节点网格 ===================== */
+function drawMesh(cv,p){
+  var o=setupCanvas(cv,300), g=o.g, w=o.w, h=o.h;
+  g.clearRect(0,0,w,h);
+  var cx=w/2, cy=98, Rp=58;
+  // 圆截面
+  var grd=g.createRadialGradient(cx-Rp*0.35,cy-Rp*0.35,Rp*0.1,cx,cy,Rp);
+  grd.addColorStop(0,'#f4fdfb'); grd.addColorStop(1,'#cdeae5');
+  g.fillStyle=grd; g.beginPath(); g.arc(cx,cy,Rp,0,6.2832); g.fill();
+  g.strokeStyle='#0b6e68'; g.lineWidth=1.6; g.beginPath(); g.arc(cx,cy,Rp,0,6.2832); g.stroke();
+  // 半径线
+  g.strokeStyle='rgba(11,46,54,.45)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+Rp,cy); g.stroke();
+  g.fillStyle='#12a594'; g.beginPath(); g.arc(cx,cy,3.6,0,6.2832); g.fill();
+  g.fillStyle='#0b6e68'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='bottom'; g.fillText('R = 2 cm', cx+Rp/2, cy-8);
+  // 角注
+  g.textAlign='left'; g.textBaseline='top';
+  g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.fillText('中心胞元 i=1',14,14);
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.fillText('dr²/8 曲面积分校正',14,32);
+  g.textAlign='right';
+  g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.fillText('表面节点 i=21',w-14,14);
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.fillText('扩散补给 − 表面蒸发',w-14,32);
+  // 节点轴
+  var x0=64, x1=w-44, y=206;
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(x0,y); g.lineTo(x1,y); g.stroke();
+  var appear=Math.round(p*20)+1;
+  for(var j=0;j<=20;j++){
+    var x=x0+(x1-x0)*j/20;
+    g.strokeStyle='#e3f0ef'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x,y-7); g.lineTo(x,y+7); g.stroke();
+    if(j<appear){ g.fillStyle='#12a594'; g.beginPath(); g.arc(x,y,2.8,0,6.2832); g.fill(); }
+  }
+  g.textAlign='center'; g.textBaseline='top'; g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  [[0,'1'],[5,'6'],[10,'11'],[15,'16'],[20,'21']].forEach(function(it){
+    var x=x0+(x1-x0)*it[0]/20; g.fillText(it[1],x,y+10);
+  });
+  g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.fillText('中心',x0+2,y-24);
+  g.textAlign='right'; g.fillText('表面',x1-2,y-24);
+  g.textAlign='center'; g.textBaseline='top'; g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.fillText('径向 21 节点 · dr = R/20 = 0.1 cm　（有限体积法，节点 i = 1 … 21）',w/2,y+34);
+}
+
+/* ===================== 第四幕：四问递进流图 ===================== */
+var QINFO=[
+  {q:'Q1',t:'预热平衡',m:'0–1800 s · 常物性',d:'短时径向剖面',c:'#12a594'},
+  {q:'Q2',t:'全过程',m:'变物性 · 至达标',d:'中心 8h 达 50°C',c:'#e0a04a'},
+  {q:'Q3',t:'达标时长',m:'各处 C<0.15',d:'全域达标 16.87 h',c:'#146c87'},
+  {q:'Q4',t:'动边界收缩',m:'R: 2 → 1.207 cm',d:'整体 21.49 h',c:'#b8543a'}
+];
+function drawPath(cv,p,clk){
+  var o=setupCanvas(cv,280), g=o.g, w=o.w, h=o.h;
+  g.clearRect(0,0,w,h);
+  var n=QINFO.length;
+  var bw=Math.min(170,(w-60)/n-16), bh=96;
+  var gap=(w-60-bw*n)/(n-1);
+  var x0=30, cy=(h-bh)/2-8;
+  for(var i=0;i<n;i++){
+    var x=x0+i*(bw+gap);
+    var appear=clamp(p*(n-0.2)-i*0.55,0,1);
+    if(i<n-1){
+      var ax1=x+bw, ax2=x+bw+gap, ay=cy+bh/2;
+      if(appear>0.5){
+        g.strokeStyle='#8fb6bd'; g.lineWidth=2; g.setLineDash([5,3]);
+        g.beginPath(); g.moveTo(ax1+2,ay); g.lineTo(ax2-4,ay); g.stroke(); g.setLineDash([]);
+        g.fillStyle='#8fb6bd'; g.beginPath();
+        g.moveTo(ax2-2,ay); g.lineTo(ax2-9,ay-5); g.lineTo(ax2-9,ay+5); g.closePath(); g.fill();
+        var ph=(clk*0.5+i*0.25)%1, fx=ax1+2+(ax2-6-ax1-2)*ph;
+        g.fillStyle='rgba(18,165,148,.35)'; g.beginPath(); g.arc(fx,ay,6,0,6.2832); g.fill();
+        g.fillStyle='#12a594'; g.beginPath(); g.arc(fx,ay,3.5,0,6.2832); g.fill();
+      }
+    }
+    if(appear<=0) continue;
+    g.globalAlpha=appear;
+    g.fillStyle='rgba(11,46,54,.08)'; roundRect(g,x+1,cy+3,bw,bh,12); g.fill();
+    roundRect(g,x,cy,bw,bh,12); g.fillStyle=QINFO[i].c; g.fill();
+    g.fillStyle='rgba(255,255,255,.14)'; g.fillRect(x,cy,bw,9);
+    g.fillStyle='rgba(255,255,255,.95)'; g.beginPath(); g.arc(x+20,cy+22,13,0,6.2832); g.fill();
+    g.fillStyle=QINFO[i].c; g.font='700 13px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle'; g.fillText(QINFO[i].q,x+20,cy+22);
+    g.fillStyle='#fff'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+    g.fillText(QINFO[i].t,x+bw/2,cy+48);
+    g.font='11px "PingFang SC",system-ui,sans-serif'; g.fillStyle='rgba(255,255,255,.88)';
+    g.fillText(QINFO[i].m,x+bw/2,cy+66);
+    g.fillText(QINFO[i].d,x+bw/2,cy+82);
+    g.globalAlpha=1;
+  }
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('Q1 预热平衡 → Q2 全过程 → Q3 达标时长 → Q4 动边界：每问在前一问输出上叠加一层约束',w/2,h-10);
+}
+
+/* ===================== 第五幕：表面含水率曲线 ===================== */
+function drawSurface(cv,p){
+  var o=setupCanvas(cv,300), g=o.g, w=o.w, h=o.h;
+  g.clearRect(0,0,w,h);
+  var L=54,R=26,T=26,B=46,PW=w-L-R,PH=h-T-B;
+  function X(t){ return L+PW*t/22; }
+  var Ymax=0.7;
+  function Y(v){ return T+PH*(1-v/Ymax); }
+  // 网格
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  [0,0.2,0.4,0.6].forEach(function(v){
+    var y=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,y+.5); g.lineTo(L+PW,y+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(v.toFixed(1),L-7,y);
+  });
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  // 轴标题
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('表面含水率 Cs (kg/kg)',0,0); g.restore();
+  // 达标线
+  var yt=Y(0.15);
+  g.strokeStyle='#b8543a'; g.lineWidth=1.6; g.setLineDash([6,4]);
+  g.beginPath(); g.moveTo(L,yt); g.lineTo(L+PW,yt); g.stroke(); g.setLineDash([]);
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='bottom'; g.fillText('达标线 C = 0.15',L+6,yt-4);
+  // 数据序列
+  var s3=[[6,TAB5[6][4]],[12,TAB5[12][4]],[17,TAB5[17][4]]];
+  var s4=[[6,TAB6[6][3]],[12,TAB6[12][3]],[18,TAB6[18][3]],[21,TAB6[21][3]]];
+  function toPts(s){ return s.map(function(q){ return [X(q[0]),Y(q[1])]; }); }
+  var P3=toPts(s3), P4=toPts(s4);
+  polyline(g,P3,p,'#12a594',2.6);
+  polyline(g,P4,p,'#e0a04a',2.6);
+  var tot3=p*(P3.length-1), tot4=p*(P4.length-1);
+  P3.forEach(function(pt,i){ if(i<=tot3+1e-9){ g.fillStyle='#12a594'; g.beginPath(); g.arc(pt[0],pt[1],3.4,0,6.2832); g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.3; g.stroke(); } });
+  P4.forEach(function(pt,i){ if(i<=tot4+1e-9){ g.fillStyle='#e0a04a'; g.beginPath(); g.arc(pt[0],pt[1],3.4,0,6.2832); g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.3; g.stroke(); } });
+  // 端点标注
+  if(p>0.92){
+    g.font='600 11.5px "PingFang SC",system-ui,sans-serif'; g.textAlign='center';
+    g.fillStyle='#0b6e68'; g.textBaseline='top';
+    g.fillText('16.87 h',X(17),Y(s3[2][1])+8);
+    g.fillStyle='#8a6313'; g.textBaseline='bottom';
+    g.fillText('21.49 h',X(21),Y(s4[3][1])-8);
+  }
+  // x 刻度
+  g.textAlign='center'; g.textBaseline='top'; g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  [0,6,12,18].forEach(function(t){ g.fillText(t+'',X(t),T+PH+6); });
+  g.fillStyle='#57727c'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.fillText('烘干时间 (h)',L+PW/2,h-16);
+}
+
+/* ===================== KPI count-up ===================== */
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  var els=$$('.bigkpi .bk-v[data-cnt]');
+  if(document.body.classList.contains('reduce')){
+    els.forEach(function(el){
+      var u=el.querySelector('.bk-u'); el.innerHTML=fmt(parseFloat(el.dataset.cnt),parseInt(el.dataset.dec||'0',10))+(u?u.outerHTML:'');
+    });
+    return;
+  }
+  els.forEach(function(el){
+    var target=parseFloat(el.dataset.cnt), dec=parseInt(el.dataset.dec||'0',10);
+    var u=el.querySelector('.bk-u'), unitHtml=u?u.outerHTML:'';
+    var t0=performance.now(), dur=1200;
+    (function step(t){
+      var pr=clamp((t-t0)/dur,0,1);
+      el.innerHTML=fmt(target*easeOutCubic(pr),dec)+unitHtml;
+      if(pr<1) requestAnimationFrame(step);
+    })(performance.now());
+  });
+}
+function resetKPIs(){
+  kpiStarted=false;
+  $$('.bigkpi .bk-v[data-cnt]').forEach(function(el){
+    var u=el.querySelector('.bk-u'); el.innerHTML=fmt(0,parseInt(el.dataset.dec||'0',10))+(u?u.outerHTML:'');
+  });
+}
+
+/* ===================== 幕调度 ===================== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var st={last:0,armed:false,fired:0};
+var sceneStarters=[
+  function(){ playLoop('cvSect',drawSect,0.9); },
+  function(){ playOnce('cvProfile',drawProfile,1.3); },
+  function(){ playOnce('cvMesh',drawMesh,1.1); },
+  function(){ playLoop('cvPath',drawPath,1.1); },
+  function(){ playOnce('cvSurface',drawSurface,1.3); startKPIs(); }
+];
+function resetScene(sc){
+  stopAllAnims();
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+  resetKPIs();
+}
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0){ SCENES[cur].classList.remove('active'); }
+  cur=i;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(sceneStarters[i]) sceneStarters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+  stopAllAnims();
+  if(cur>=0){ resetKPIs(); sceneStarters[cur](); }
+}
+function init(){
+  var dots='', i;
+  for(i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ resetScene(SCENES[cur]); if(sceneStarters[cur]) sceneStarters[cur](); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false; goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false);
+  goTo(0);
+}
+window.addEventListener('resize',function(){
+  if(cur>=0 && sceneStarters[cur]){ stopAllAnims(); sceneStarters[cur](); }
+});
+init();
+window.__deck={goTo:goTo,get cur(){return cur;}};
+})();
+</script>
+</body>
+</html>

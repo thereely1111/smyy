@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "agent-platform.fullname" . }}-backend
+  labels:
+    {{- include "agent-platform.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "agent-platform.componentLabels" (dict "root" . "component" "backend" "context" .) | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "agent-platform.componentLabels" (dict "root" . "component" "backend" "context" .) | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # workspace PVC RWO：单副本场景下滚动更新时新旧 Pod 不能同时挂载
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.global.timezone | quote }}
+            - name: JAVA_OPTS
+              value: {{ .Values.backend.javaOpts | quote }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            # ---- 数据库 ----
+            - name: DB_HOST
+              value: {{ include "agent-platform.dbHost" . | quote }}
+            - name: DB_PORT
+              value: {{ include "agent-platform.dbPort" . | quote }}
+            - name: DB_NAME
+              value: {{ include "agent-platform.dbName" . | quote }}
+            - name: DB_USER
+              value: {{ include "agent-platform.dbUser" . | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "agent-platform.secretName" . }}
+                  key: db-password
+            # ---- Redis ----
+            - name: REDIS_HOST
+              value: {{ include "agent-platform.redisHost" . | quote }}
+            - name: REDIS_PORT
+              value: {{ include "agent-platform.redisPort" . | quote }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "agent-platform.secretName" . }}
+                  key: redis-password
+            # ---- 安全（启动 fail-fast） ----
+            - name: AGENT_PLATFORM_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "agent-platform.secretName" . }}
+                  key: jwt-secret
+            - name: AGENT_PLATFORM_EXTERNAL_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "agent-platform.secretName" . }}
+                  key: external-key
+            # ---- 业务开关 ----
+            {{- if .Values.config.dashscopeApiKey }}
+            - name: DASHSCOPE_API_KEY
+              value: {{ .Values.config.dashscopeApiKey | quote }}
+            {{- end }}
+            {{- if .Values.config.bochaApiKey }}
+            - name: BOCHA_API_KEY
+              value: {{ .Values.config.bochaApiKey | quote }}
+            {{- end }}
+            - name: AGENTSCOPE_STUDIO_ENABLED
+              value: {{ .Values.config.studioEnabled | quote }}
+            {{- if .Values.config.studioUrl }}
+            - name: AGENTSCOPE_STUDIO_URL
+              value: {{ .Values.config.studioUrl | quote }}
+            {{- end }}
+            - name: AGENT_PLATFORM_ALLOW_PRIVATE_OUTBOUND
+              value: {{ .Values.config.allowPrivateOutbound | quote }}
+            - name: AGENT_PLATFORM_ARTIFACTS_DIR
+              value: {{ .Values.config.artifactsDir | quote }}
+            - name: AGENT_PLATFORM_WORKSPACE_ROOT
+              value: {{ .Values.backend.workspaceRoot | quote }}
+            {{- with .Values.backend.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.readinessProbe.failureThreshold }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          volumeMounts:
+            - name: workspace
+              mountPath: {{ .Values.backend.workspaceRoot }}
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-workspace" (include "agent-platform.fullname" .)) .Values.backend.persistence.existingClaim }}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

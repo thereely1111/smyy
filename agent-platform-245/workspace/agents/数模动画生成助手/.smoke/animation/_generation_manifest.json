@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-09-28T09:45:24+08:00",
+  "generator": "mm-2-render-animation",
+  "generation_mode": "deterministic-facts",
+  "title": "A题",
+  "question_count": 4,
+  "source_pdf": "E:\\xsyy\\test\\数模动画生成助手\\.smoke\\input\\A题\\A题.pdf",
+  "source_pdf_sha256": "052d8014bff5727c019b72e44fdffaf5c145ce04050dd938baaf3527db331736",
+  "scene_map": null,
+  "scene_map_sha256": null,
+  "attachments": [
+    {
+      "name": "附件\\附件1.xlsx",
+      "size": 16586,
+      "suffix": ".xlsx"
+    },
+    {
+      "name": "附件\\附件2.xlsx",
+      "size": 11485,
+      "suffix": ".xlsx"
+    }
+  ],
+  "facts": {
+    "series": 25,
+    "stats": 5,
+    "tables": 2,
+    "notes": []
+  },
+  "output": {
+    "html_files": [
+      "01_全局问题分析.html",
+      "02_问题一分析.html",
+      "03_问题二分析.html",
+      "04_问题三分析.html",
+      "05_问题四分析.html"
+    ],
+    "quality": {
+      "parts": 5,
+      "scenes": 7,
+      "blocks": 31,
+      "block_types": {
+        "chart": 5,
+        "html": 9,
+        "matrix": 1,
+        "pills": 10,
+        "slider": 5,
+        "svgclick": 1
+      },
+      "chart_points": 1109,
+      "scene_interactions": [
+        1,
+        2,
+        3,
+        4,
+        4,
+        4,
+        4
+      ],
+      "attachment_files": 2,
+      "fact_series": 25,
+      "fact_stats": 5,
+      "fact_notes": [],
+      "warnings": [
+        "问题一分析 提到 附录2 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$",
+        "问题二分析 提到 附录3 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$",
+        "问题四分析 提到 附录4 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$"
+      ],
+      "html_files": [
+        "01_全局问题分析.html",
+        "02_问题一分析.html",
+        "03_问题二分析.html",
+        "04_问题三分析.html",
+        "05_问题四分析.html"
+      ],
+      "generation_mode": "deterministic-facts"
+    }
+  }
+}

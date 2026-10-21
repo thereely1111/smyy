@@ -1,0 +1,12 @@
+### M-SIM-003 系统动力学
+- **task_types**：宏观政策、资源环境、人口、库存、传播、长期反馈系统。
+- **problem_signature**：存在库存-流量结构、反馈回路、时滞和长期动态。
+- **core_idea**：用常微分/差分方程描述状态库存与流量反馈。
+- **inputs**：状态、流量、反馈、时滞、初始值、参数、情景政策。
+- **outputs**：状态轨迹、反馈贡献、稳态、峰值、情景差异。
+- **assumptions**：聚合层级合理；反馈关系和参数可解释；时间尺度一致。
+- **validation**：历史拟合、量纲检查、极端情景、结构验证、参数敏感性。
+- **selection_tags**：`system-dynamics, feedback, stock-flow, policy`
+- **composable_with**：`M-OPT-001, M-SIM-002, M-TIME-003`
+- **fallbacks**：差分方程、主体仿真、状态空间模型。
+- **agent_actions**：画因果回路 -> 定义库存流量 -> 写方程 -> 校准 -> 做结构和情景验证。

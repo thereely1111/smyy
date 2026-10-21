@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEM 广告投放策略优化研究 · 论文初稿</title>
+<style>
+  :root{--ink:#0B2E36;--sub:#4A6572;--line:#E2EAEE;--bg:#F4F8FA;--brand:#1E6FA8;--brand2:#12A594;--note:#FFF8E6;--note-b:#F0C36D}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.8;font-size:15px}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 22px 72px}
+  header.top{background:linear-gradient(120deg,#0B2E36,#1E6FA8);color:#fff;border-radius:16px;padding:30px;box-shadow:0 10px 30px rgba(11,46,54,.18)}
+  header.top h1{margin:0 0 8px;font-size:26px}
+  header.top .dc{opacity:.9;font-size:13.5px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;margin-top:20px;box-shadow:0 2px 10px rgba(11,46,54,.04)}
+  h2{font-size:22px;margin:0 0 6px;text-align:center}
+  .dc2{text-align:center;color:var(--sub);font-size:13px;margin-bottom:22px}
+  h3{font-size:18px;margin:24px 0 10px;color:var(--ink);border-left:4px solid var(--brand2);padding-left:12px}
+  p{margin:10px 0;color:#22323A;text-align:justify}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  .formula{background:#F0F7FA;border:1px dashed #9CC7D8;border-radius:10px;padding:12px 16px;margin:14px 0;font-family:"SFMono-Regular",Consolas,monospace;font-size:14px;color:#0B4A5C;text-align:center;overflow-x:auto}
+  .note{background:var(--note);border-left:4px solid var(--note-b);border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13.5px;color:#6B5320}
+  footer{margin-top:28px;text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>论文初稿 · v1</h1>
+    <div class="dc">22 页 · 图 15 张 · 表 8 张 · 参考文献 12 篇</div>
+  </header>
+
+  <div class="card">
+    <h2>SEM 广告投放策略优化研究</h2>
+    <div class="dc2">22 页 · 图 15 张 · 表 8 张 · 参考文献 12 篇</div>
+
+    <h3>摘要</h3>
+    <p>针对搜索引擎营销（SEM）广告投放的选词与预算决策问题，本文以某公司 2025 年全年投放日志为基础，构建"效益指标 — 饱和响应 — 单元级再分配"的统一建模框架。问题一通过效益率排序诊断原策略，发现头部 20 词消费占比 41.3%、尾部 20 词占比 6.8%，头部集中度偏低、尾部仍在浪费。问题二以消费为横轴、转化为纵轴，用双阈值把关键词分为黄金 / 重点 / 潜力 / 问题四类，并在 ±10% 扰动下成员变动不超过 8%。问题三在各单元饱和响应函数 f(B)=A·B/(B+τ) 的基础上，由 KKT 条件导出"边际效益相等"的最优性条件，做预算再分配，总期望转化相对原策略提升。问题四把 A_u、τ_u 视为随机变量，用 CVaR 约束给出总展现 / 总点击 / 总消费 / 总转化 / 效益率 / 紧急购流量级六项指标在 90% 与 95% 置信水平下的期望区间，并发现尾部风险主要来自效益端。</p>
+
+    <h3>目录</h3>
+    <ul>
+      <li>一、问题重述与信息结构分析</li>
+      <li>二、数据预处理与探索性分析</li>
+      <li>三、问题一：投放策略合理性诊断</li>
+      <li>四、问题二：关键词四象限分类</li>
+      <li>五、问题三：单元级投放与预算再分配</li>
+      <li>六、问题四：不确定性下的 CVaR 决策</li>
+      <li>七、灵敏度分析与稳健性检验</li>
+      <li>八、结论与改进方向</li>
+      <li>附录：代码与结果文件说明</li>
+    </ul>
+
+    <h3>第三章（节选）</h3>
+    <div class="formula">f(B) = A · B / (B + τ)　　f′(B) = A · τ / (B + τ)²　　KKT: A_u · τ_u / (B_u + τ_u)² = λ</div>
+    <p>考虑到线性响应会高估高出价段流量，本文采用饱和型函数刻画"边际递减"，并配合半饱和出价 τ_u 拟合各单元曲线；在预算上限约束下，由 KKT 条件可解析地给出各单元边际效益相等的再分配方案，避免启发式……</p>
+
+    <div class="note">论文可继续在平台上与 AI 交互修改：改摘要、补灵敏度、调排版、加图表说明都可以。</div>
+  </div>
+
+  <footer>2026 CUMCM E 题 · SEM 广告投放策略优化 · 论文初稿</footer>
+</div>
+</body>
+</html>

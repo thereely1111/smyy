@@ -1,0 +1,3363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数模演易 · AI 驱动的数学建模协作工作台</title>
+<style>
+:root{
+  /* 以正确参考原型为准：青绿 / 青蓝 / 浅青背景 */
+  --teal-700:#0B6E68; --teal-600:#0E8F84; --teal-500:#12A594; --teal-400:#2EC4B0;
+  --teal-100:#DFF4F1; --teal-50:#EFFAF8;
+  --cyan-500:#17A2C4; --blue-600:#1E6FA8;
+  /* 兼容当前 v2 的变量命名，所有现有组件自动换肤 */
+  --blue-900:#0B6E68; --blue-800:#0E8F84; --blue-700:#12A594; --blue-600:#1E6FA8;
+  --blue-500:#2EC4B0; --blue-400:#4FD0C0; --blue-300:#92DED5; --blue-200:#B8E8E2; --blue-100:#DFF4F1; --blue-50:#EFFAF8;
+  --amber-500:#F5A623; --red-500:#D95C45; --green-500:#2BA471;
+  --bg:#F3FAFA; --card:#FFFFFF;
+  --ink:#0B2E36; --ink-2:#3D6570; --ink-3:#7C99A1; --ink-4:#A9BEC2;
+  --line:#DCEDEE; --line-2:#EAF5F5;
+  --grad:linear-gradient(120deg,#12A594 0%,#1E9FC4 100%);
+  --grad-soft:linear-gradient(120deg,#EFFAF8 0%,#EAF5F5 100%);
+  --sh-1:0 2px 8px rgba(11,110,104,.06);
+  --sh-2:0 10px 30px rgba(11,110,104,.09);
+  --sh-3:0 20px 50px rgba(11,110,104,.14);
+  --r:16px;
+  /* 内容区统一宽度与左右内边距：全站所有板块共用，保证左边界顶格对齐 */
+  --pw:1680px;
+  --px:40px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  background:var(--bg); color:var(--ink); font-size:14px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input,textarea{font-family:inherit;font-size:inherit;color:inherit;outline:none;border:none;background:none}
+svg{display:block}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#B8E8E2;border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:#92DED5}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============ 顶部导航 ============ */
+.nav{
+  position:fixed; top:0; left:0; right:0; width:100%; z-index:60; background:rgba(255,255,255,.92);
+  backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--line);
+}
+.nav-inner{width:100%;max-width:var(--pw);margin:0 auto;padding:0 var(--px);height:66px;display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.brand-mark{
+  width:32px;height:32px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(11,110,104,.28)
+}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:.5px;color:var(--blue-900)}
+.brand-sub{font-size:11px;color:var(--ink-4);letter-spacing:.6px;margin-top:-3px}
+.brand-txt{display:flex;flex-direction:column;line-height:1.15}
+.nav-links{display:flex;gap:8px;margin-left:28px;flex-shrink:0}
+.nav-links button{
+  padding:7px 14px;border-radius:9px;color:var(--ink-2);font-weight:600;font-size:14px;transition:.18s
+}
+.nav-links button:hover{background:var(--blue-50);color:var(--blue-700)}
+.nav-links button.on{background:var(--blue-100);color:var(--blue-800)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.btn-login{
+  padding:8px 20px;border-radius:999px;background:var(--grad);color:#fff;font-weight:700;font-size:14px;
+  box-shadow:0 6px 16px rgba(11,110,104,.3);transition:.18s
+}
+.btn-login:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.avatar{
+  width:32px;height:32px;border-radius:50%;background:var(--blue-100);color:var(--blue-700);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px
+}
+
+/* ============ 视图容器 ============ */
+.view{display:none}
+.view.on{display:block}
+/* 全局导航固定后，各页面从导航下方开始，避免内容被遮挡 */
+#view-home,#view-detail,#view-mine{padding-top:66px}
+#view-work{padding-top:66px}
+/* 复现模式：仅保留工作台复现内容，隐藏站点导航与返回首页入口 */
+body.replay-mode .nav{display:none}
+body.replay-mode .view{padding-top:0!important}
+body.replay-mode .wtop{top:0}
+body.replay-mode .wbody{height:calc(100vh - 66px)}
+body.replay-mode .wtop .icon-btn[title="返回首页"]{display:none}
+
+/* ============ HERO ============ */
+.hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#EFFAF8 0%,#F3FAFA 100%)}
+.hero:before{
+  content:"";position:absolute;inset:0;
+  background-image:linear-gradient(var(--blue-200) 1px,transparent 1px),linear-gradient(90deg,var(--blue-200) 1px,transparent 1px);
+  background-size:56px 56px;opacity:.32;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 30%,transparent 100%);
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 30%,transparent 100%);
+}
+.hero-inner{position:relative;width:100%;max-width:var(--pw);margin:0 auto;padding:54px var(--px) 44px;text-align:center}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);color:var(--blue-700);font-size:13px;font-weight:600;
+  box-shadow:var(--sh-1)
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green-500);box-shadow:0 0 0 3px rgba(43,164,113,.18)}
+.hero h1{
+  margin:18px 0 12px;font-size:44px;line-height:1.24;font-weight:800;letter-spacing:-.5px;color:var(--blue-900)
+}
+.hero h1 .g{
+  background:linear-gradient(105deg,#0B6E68 0%,#12A594 52%,#1E9FC4 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.hero p.sub{max-width:660px;margin:0 auto;color:var(--ink-2);font-size:15.5px}
+
+/* ============ Hero 内真题轮播 ============ */
+.hero-reco{width:100%;max-width:var(--pw);margin:28px auto 0;text-align:left}
+.hero-reco .sec-head{margin-bottom:10px}
+.hero-reco .sec-head h2{font-size:17px}
+.hero-reco .sec-head .sub{font-size:12.5px}
+.car-view{overflow:hidden;padding:6px 2px 12px;margin:0 -2px}
+.car-track{display:flex;gap:16px;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:grab}
+.car-track.grabbing{cursor:grabbing;transition:none}
+.car-track .pcard{flex:0 0 296px}
+.car-dots{display:flex;justify-content:center;gap:6px;margin-top:2px}
+.car-dots i{width:6px;height:6px;border-radius:999px;background:#B8E8E2;cursor:pointer;transition:.25s}
+.car-dots i.on{width:22px;background:var(--blue-500)}
+
+/* ============ 候选模型选择器 ============ */
+.picks{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.pick{
+  display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:13px 15px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;transition:.18s
+}
+.pick:hover{border-color:var(--blue-300);background:var(--blue-50);box-shadow:var(--sh-1)}
+.pick.sel{border-color:var(--blue-500);background:var(--blue-50);box-shadow:0 0 0 3px rgba(11,110,104,.13)}
+.pick.dis{opacity:.45;pointer-events:none}
+.pick .pk{
+  flex:0 0 26px;height:26px;margin-top:2px;border-radius:8px;background:var(--blue-100);color:var(--blue-700);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px
+}
+.pick .pb{flex:1;min-width:0}
+.pick .pb b{display:block;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.pick .pb s{display:block;text-decoration:none;font-size:12.6px;color:var(--ink-3);line-height:1.62}
+.pick .pb em{display:block;font-style:normal;font-size:11.6px;color:var(--blue-600);margin-top:5px}
+.pick .pgo{
+  flex:0 0 auto;padding:6px 12px;border-radius:8px;background:var(--grad);color:#fff;
+  font-size:12.5px;font-weight:700;box-shadow:0 2px 7px rgba(11,110,104,.22)
+}
+.pick.sel .pgo{background:#DFF4F1;color:var(--blue-700);box-shadow:none}
+.whint{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-4);margin-right:2px}
+.whint i{width:6px;height:6px;border-radius:50%;background:var(--amber-500);box-shadow:0 0 0 3px rgba(245,166,35,.16)}
+
+/* ============ 消息内的操作按钮 / 文件回执 / 阶段提示 ============ */
+.acts{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.abtn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;
+  font-size:13.2px;font-weight:700;line-height:1;cursor:pointer;transition:.16s;
+  border:1px solid var(--line);background:#fff;color:var(--ink-2)
+}
+.abtn:hover{border-color:var(--blue-300);color:var(--blue-700);background:var(--blue-50)}
+.abtn.pri{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(11,110,104,.24)}
+.abtn.pri:hover{filter:brightness(1.06);color:#fff;background:var(--grad)}
+.abtn.gh{background:#fff;border-color:var(--blue-200);color:var(--blue-700)}
+.abtn.gh:hover{background:var(--blue-50)}
+.abtn.used{opacity:.55;pointer-events:none}
+.abtn svg{flex:0 0 auto}
+.tip-line{
+  margin-top:10px;padding:9px 12px;border-radius:9px;font-size:12.4px;line-height:1.7;
+  color:#8A5A00;background:#FFF6DC;border-left:3px solid var(--amber-500)
+}
+.frecv{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.fchip{
+  display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;
+  background:var(--blue-50);border:1px solid var(--blue-100);font-size:12.6px;color:var(--ink-2)
+}
+.fchip b{font-weight:700;color:var(--ink)}
+.fchip span{font-size:11.5px;color:var(--ink-3)}
+.fchip svg{flex:0 0 auto;color:var(--blue-600)}
+.stag{
+  display:inline-flex;align-items:center;gap:6px;flex-shrink:0;padding:5px 10px;border-radius:999px;
+  font-size:11.8px;font-weight:700;color:#8A5A00;background:#FFF6DC;border:1px solid #F4DFA8;white-space:nowrap
+}
+.stag i{width:6px;height:6px;border-radius:50%;background:var(--amber-500);box-shadow:0 0 0 3px rgba(245,166,35,.18)}
+.stag.done{color:#1E7A4F;background:#E7F6EE;border-color:#BFE6CF}
+.stag.done i{background:#2FA36B;box-shadow:0 0 0 3px rgba(47,163,107,.16)}
+/* 每步结束后明确告知下一步 */
+.next{
+  margin-top:12px;padding:9px 13px;border-radius:9px;font-size:13px;line-height:1.72;
+  color:var(--blue-800);background:var(--blue-50);border-left:3px solid var(--blue-500)
+}
+.next b{color:var(--blue-700)}
+
+/* ============ 输入区 ============ */
+.composer{
+  background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh-2);
+  transition:.2s;overflow:hidden
+}
+.composer.big{max-width:820px;margin:34px auto 0;text-align:left}
+.composer.big:focus-within{border-color:var(--blue-400);box-shadow:0 8px 28px rgba(11,110,104,.14)}
+.composer textarea{
+  display:block;width:100%;padding:20px 22px 8px;min-height:74px;max-height:200px;resize:none;
+  font-size:15px;line-height:1.7;color:var(--ink)
+}
+.composer textarea::placeholder{color:var(--ink-4)}
+.cbar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px 12px;border-top:1px solid var(--line-2);background:#F8FCFC
+}
+.cbar .spacer{flex:1}
+.hint{font-size:12px;color:var(--ink-4)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;
+  border:1px solid var(--line);background:#fff;color:var(--ink-2);font-weight:600;font-size:13.5px;transition:.18s
+}
+.btn-ghost:hover{border-color:var(--blue-300);color:var(--blue-700);background:var(--blue-50)}
+.btn-send{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:10px;
+  background:var(--grad);color:#fff;font-weight:700;font-size:14px;box-shadow:0 3px 10px rgba(11,110,104,.28);transition:.18s
+}
+.btn-send:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn-send[disabled]{opacity:.45;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px}
+.chip{
+  padding:6px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);
+  font-size:12.5px;color:var(--ink-2);transition:.18s
+}
+.chip:hover{border-color:var(--blue-300);color:var(--blue-700);background:var(--blue-50)}
+.chip.on{background:var(--blue-100);border-color:var(--blue-200);color:var(--blue-800);font-weight:600}
+
+/* ============ 区块 ============ */
+.section{width:100%;max-width:var(--pw);margin:0 auto;padding:44px var(--px)}
+.sec-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px}
+.sec-head h2{font-size:22px;font-weight:800;color:var(--blue-900);letter-spacing:-.2px}
+.sec-head .sub{font-size:13px;color:var(--ink-3)}
+.sec-head .grow{flex:1}
+.sec-acts{display:flex;gap:8px}
+.icon-btn{
+  width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);transition:.18s
+}
+.icon-btn:hover{border-color:var(--blue-300);color:var(--blue-700);background:var(--blue-50)}
+.icon-btn[disabled]{opacity:.35;pointer-events:none}
+
+/* ==================== 卡片本体 ==================== */
+.pcard{
+  flex:0 0 296px;background:#fff;border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 18px 16px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;text-align:left;display:block;width:100%
+}
+.pcard:hover{transform:translateY(-4px);box-shadow:var(--sh-3);border-color:var(--blue-200)}
+.pcard .cover{
+  height:88px;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#12A594 0%,#1E9FC4 60%,#17A2C4 100%)
+}
+.pcard .cover:before{
+  content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.22) 1px,transparent 1px);
+  background-size:22px 22px
+}
+.pcard .cover:after{
+  content:"";position:absolute;left:-10%;bottom:-38%;width:120%;height:120%;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.42),transparent 62%)
+}
+.pcard .cover svg{position:absolute;right:14px;top:14px;opacity:.9}
+.pcard .ptag{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;
+  background:var(--blue-50);color:var(--blue-700);font-size:11.5px;font-weight:700;margin-bottom:9px
+}
+.pcard h3{font-size:15.5px;font-weight:700;line-height:1.45;margin-bottom:8px;color:var(--ink)}
+.pcard p{font-size:12.8px;color:var(--ink-3);line-height:1.65;height:42px;overflow:hidden}
+.pcard .pfoot{
+  display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);
+  font-size:12px;color:var(--ink-4)
+}
+.pcard .pfoot .go{margin-left:auto;color:var(--blue-600);font-weight:700;display:flex;align-items:center;gap:3px}
+
+/* ============ 赛题筛选（三行：赛别 / 题型 / 年份） ============ */
+.filters{display:flex;flex-direction:column;gap:14px;margin-bottom:22px}
+.frow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.frow .lbl{
+  width:70px;flex-shrink:0;font-size:12.5px;color:var(--ink-3);font-weight:700;letter-spacing:.4px;
+  padding-right:10px
+}
+.frow .opts{display:flex;flex-wrap:wrap;gap:8px;flex:1;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:16px}
+.gcard{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;cursor:pointer;
+  transition:.2s;text-align:left;width:100%
+}
+.gcard:hover{transform:translateY(-3px);box-shadow:var(--sh-2);border-color:var(--blue-200)}
+.gcard .top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.gcard h4{font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:6px}
+.gcard p{font-size:12.5px;color:var(--ink-3);line-height:1.6;height:40px;overflow:hidden}
+.gcard .mtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.mtag{padding:3px 8px;border-radius:6px;background:var(--line-2);color:var(--ink-2);font-size:11px}
+.tag-c{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--blue-100);color:var(--blue-700)}
+.tag-c.m{background:#E6F6F7;color:#0B7285}
+.tag-c.o{background:#FFF3E0;color:#B25E00}
+.tag-c.g{background:#E9F7EF;color:#1E7A4F}
+
+/* ============ 页脚 ============ */
+.foot{border-top:1px solid var(--line);background:#fff;margin-top:20px}
+.foot-in{width:100%;max-width:var(--pw);margin:0 auto;padding:26px var(--px);display:flex;gap:20px;align-items:center;color:var(--ink-3);font-size:12.5px}
+.foot-in .grow{flex:1}
+
+/* ============ 详情页 ============ */
+.dtop{
+  background:linear-gradient(160deg,#0B6E68 0%,#1E6FA8 100%);color:#fff;padding:30px 0 26px;position:relative;overflow:hidden
+}
+.dtop:before{
+  content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px);
+  background-size:44px 44px;opacity:.5
+}
+.dtop-in{position:relative;width:100%;max-width:var(--pw);margin:0 auto;padding:0 var(--px)}
+.btn-back{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;
+  background:rgba(255,255,255,.16);color:#fff;font-size:13px;font-weight:600;margin-bottom:16px;transition:.18s
+}
+.btn-back:hover{background:rgba(255,255,255,.26)}
+.dtop h1{font-size:26px;font-weight:800;line-height:1.35;margin-bottom:12px;max-width:900px}
+.dmeta{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:13px;color:rgba(255,255,255,.86)}
+.dmeta span{display:inline-flex;align-items:center;gap:6px}
+.dacts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.dacts .w{
+  padding:9px 16px;border-radius:10px;background:#fff;color:var(--blue-800);font-weight:700;font-size:13.5px;
+  display:inline-flex;align-items:center;gap:7px;transition:.18s
+}
+.dacts .w:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.dacts .w.o{background:rgba(255,255,255,.16);color:#fff}
+
+.tabs{
+  position:sticky;top:66px;z-index:40;background:#fff;border-bottom:1px solid var(--line);
+}
+.tabs-in{width:100%;max-width:var(--pw);margin:0 auto;padding:0 var(--px);display:flex;gap:2px;overflow-x:auto}
+.tabs-in::-webkit-scrollbar{display:none}
+.tabs-in .tab:first-child{padding-left:0}
+.tab{
+  padding:14px 18px;font-size:14px;font-weight:600;color:var(--ink-2);border-bottom:2px solid transparent;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:7px;transition:.18s
+}
+.tab:hover{color:var(--blue-700)}
+.tab.on{color:var(--blue-800);border-bottom-color:var(--blue-600);font-weight:700}
+.dbody{width:100%;max-width:var(--pw);margin:0 auto;padding:28px var(--px)}
+.panel{display:none}
+.panel.on{display:block}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-1)}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:10px}
+.card-h h3{font-size:15.5px;font-weight:700}
+.card-h .grow{flex:1}
+.card-b{padding:20px}
+.card-b.tight{padding:14px 20px}
+
+/* 指导书 */
+.book{display:grid;grid-template-columns:236px 1fr;gap:20px;align-items:start}
+.toc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;position:sticky;top:134px}
+.toc .tt{font-size:12px;color:var(--ink-3);font-weight:700;padding:0 8px 10px;letter-spacing:.5px}
+.toc button{
+  display:block;width:100%;text-align:left;padding:9px 10px;border-radius:9px;color:var(--ink-2);font-size:13.2px;transition:.16s
+}
+.toc button:hover{background:var(--blue-50)}
+.toc button.on{background:var(--blue-100);color:var(--blue-800);font-weight:700}
+.doc{padding:28px 32px}
+.doc h2{font-size:19px;font-weight:800;color:var(--blue-900);margin:0 0 6px}
+.doc .dc{font-size:12.5px;color:var(--ink-3);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line-2)}
+.doc h3{font-size:15.5px;font-weight:700;margin:22px 0 10px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.doc h3:before{content:"";width:3px;height:15px;border-radius:2px;background:var(--grad)}
+.doc p{font-size:14px;color:var(--ink-2);line-height:1.85;margin-bottom:12px}
+.doc ul{margin:0 0 14px 4px;list-style:none}
+.doc li{font-size:14px;color:var(--ink-2);line-height:1.85;padding-left:18px;position:relative;margin-bottom:6px}
+.doc li:before{content:"";position:absolute;left:4px;top:10px;width:5px;height:5px;border-radius:50%;background:var(--blue-400)}
+.doc .formula{
+  background:var(--blue-50);border:1px solid var(--blue-100);border-radius:10px;padding:14px 18px;
+  font-family:"Cambria Math",Georgia,serif;font-size:15px;color:var(--blue-900);margin:12px 0;overflow-x:auto
+}
+.doc .note{
+  background:#FFF8E8;border:1px solid #FBE3B8;border-radius:10px;padding:12px 16px;font-size:13px;color:#8A5A00;margin:14px 0
+}
+.doc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.2px}
+.doc th,.doc td{border:1px solid var(--line);padding:9px 12px;text-align:left}
+.doc th{background:var(--blue-50);color:var(--blue-900);font-weight:700}
+
+/* 动画 */
+.anim-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.stage{
+  background:linear-gradient(160deg,#0B6E68 0%,#0E8F84 100%);border-radius:var(--r);padding:18px;position:relative;overflow:hidden
+}
+.stage svg{width:100%;height:auto;display:block}
+.ctrl{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.play{width:36px;height:36px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(11,110,104,.3)}
+.prog{flex:1;height:6px;border-radius:6px;background:var(--line-2);position:relative;overflow:hidden}
+.prog i{position:absolute;left:0;top:0;height:100%;background:var(--grad);border-radius:6px;width:0%;transition:width .3s}
+.speed{padding:5px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--ink-2);font-weight:600}
+.side-note{font-size:13px;color:var(--ink-2);line-height:1.8}
+.side-note h4{font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.legend{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2)}
+.legend i{width:12px;height:12px;border-radius:3px;display:block}
+
+/* 代码 */
+.code-box{
+  background:#0F1B2D;border-radius:12px;overflow:hidden;font-family:"JetBrains Mono",Consolas,"Courier New",monospace
+}
+.code-top{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#16253C;border-bottom:1px solid #21334F}
+.code-top .f{font-size:12px;color:#8FA6C4}
+.code-top .grow{flex:1}
+.code-top button{padding:5px 10px;border-radius:7px;background:#22344F;color:#B9CBDF;font-size:11.5px;transition:.16s}
+.code-top button:hover{background:#2C4363;color:#fff}
+pre.code{padding:16px 18px;overflow:auto;max-height:520px;font-size:12.8px;line-height:1.75;color:#D6E4F5}
+pre.code .c-kw{color:#6DD6C6}
+pre.code .c-com{color:#5C7290;font-style:italic}
+pre.code .c-num{color:#F5A623}
+pre.code .c-str{color:#9BE0B4}
+.run-out{background:#0B1524;border-top:1px solid #21334F;padding:14px 18px;font-size:12.5px;color:#9BE0B4;line-height:1.8}
+.run-out .lbl{color:#5C7290;display:block;margin-bottom:6px;font-size:11.5px;letter-spacing:.5px}
+
+/* 结果 */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kpi .k{font-size:12px;color:var(--ink-3)}
+.kpi .v{font-size:24px;font-weight:800;color:var(--blue-800);margin-top:4px}
+.kpi .d{font-size:11.5px;color:var(--green-500);margin-top:3px}
+.dtable{width:100%;border-collapse:collapse;font-size:13px}
+.dtable th,.dtable td{padding:10px 12px;border-bottom:1px solid var(--line-2);text-align:left}
+.dtable th{background:var(--blue-50);color:var(--blue-900);font-weight:700;position:sticky;top:0}
+.dtable tbody tr:hover{background:var(--blue-50)}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.dl{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;border:1px solid var(--line);
+  background:#fff;font-size:13.5px;font-weight:600;color:var(--ink);transition:.18s
+}
+.dl:hover{border-color:var(--blue-300);color:var(--blue-700);background:var(--blue-50)}
+.dl.p{background:var(--grad);color:#fff;border:none;box-shadow:0 3px 10px rgba(11,110,104,.26)}
+
+/* ============ 工作台 ============ */
+.wtop{
+  background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:66px;z-index:50
+}
+.wtop .wt{font-size:15px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
+.wtop .wtb{
+  padding:3px 9px;border-radius:6px;background:var(--blue-100);color:var(--blue-700);font-size:11.5px;font-weight:700;flex-shrink:0
+}
+.steps{display:flex;align-items:center;gap:4px;margin-left:6px;overflow-x:auto;flex-shrink:0}
+.steps::-webkit-scrollbar{display:none}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-4);white-space:nowrap;padding:2px 4px;border-radius:7px;transition:.15s}
+.step.clickable{cursor:pointer}
+.step.clickable:hover{background:var(--blue-50);color:var(--blue-700)}
+.step .n{
+  width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--ink-4);background:#fff
+}
+.step.done{color:var(--blue-700)}
+.step.done .n{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+.step.now{color:var(--blue-800);font-weight:700}
+.step.now .n{border-color:var(--blue-600);color:var(--blue-700);box-shadow:0 0 0 3px rgba(11,110,104,.16)}
+.step-line{width:14px;height:1.5px;background:var(--line);flex-shrink:0}
+
+.wbody{display:flex;gap:0;height:calc(100vh - 132px);min-height:520px;max-width:var(--pw);margin:0 auto}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+.stream{flex:1;overflow-y:auto;padding:22px 26px 8px;scroll-behavior:smooth}
+.stream-in{max-width:860px;margin:0 auto}
+.msg{display:flex;margin-bottom:20px}
+.msg.me{flex-direction:row-reverse}
+.bubble{max-width:82%;min-width:0}
+.msg.me .bubble{margin-left:auto}
+.bubble .txt{
+  background:#fff;border:1px solid #e0ebe8;border-radius:14px;padding:14px 18px;font-size:14px;line-height:1.8;color:var(--ink-2);
+  box-shadow:0 1px 2px rgba(11,110,104,.05)
+}
+/* 用户气泡：深青绿底，气泡里所有文字统一白色 */
+.msg.me .bubble .txt{background:#1a7a6a;border-color:#1a7a6a;color:#fff}
+.msg.me .bubble .txt,
+.msg.me .bubble .txt *{color:#fff}
+.msg.me .bubble .txt h4,.msg.me .bubble .txt b,.msg.me .bubble .txt strong,
+.msg.me .bubble .txt .kv,.msg.me .bubble .txt a,.msg.me .bubble .txt code{color:#fff;font-weight:700}
+.msg.me .bubble .txt li:before{background:rgba(255,255,255,.8)}
+.msg.me .bubble .txt .mono{background:rgba(255,255,255,.2);color:#fff}
+.msg.me .bubble .fchip,.msg.me .bubble .frecv .fchip{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28)}
+.bubble .txt h4{font-size:14.5px;font-weight:800;color:var(--ink);margin:0 0 8px}
+.bubble .txt h4:not(:first-child){margin-top:16px}
+.bubble .txt p{margin-bottom:8px}
+.bubble .txt ul{margin:0 0 8px 0;list-style:none}
+.bubble .txt li{padding-left:16px;position:relative;margin-bottom:5px}
+.bubble .txt li:before{content:"";position:absolute;left:3px;top:10px;width:5px;height:5px;border-radius:50%;background:var(--blue-400)}
+.bubble .txt .kv{color:var(--blue-700);font-weight:700}
+.bubble .txt .mono{font-family:Consolas,monospace;background:var(--line-2);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.msg.me .bubble .txt .mono{background:rgba(255,255,255,.2);color:#fff}
+.thinking{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-3);padding:6px 0}
+.thinking i{width:6px;height:6px;border-radius:50%;background:var(--blue-400);animation:bl 1s infinite}
+.thinking i:nth-child(2){animation-delay:.15s}
+.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
+.arts{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.acard{
+  display:flex;align-items:center;gap:13px;width:100%;background:#fff;border:1px solid var(--line);border-radius:13px;
+  padding:13px 16px;cursor:pointer;transition:.18s;text-align:left;box-shadow:var(--sh-1);position:relative;overflow:hidden
+}
+.acard:hover{border-color:var(--blue-300);transform:translateY(-2px);box-shadow:var(--sh-2)}
+.acard.open{border-color:var(--blue-600);box-shadow:0 0 0 3px rgba(11,110,104,.12)}
+.acard .ai{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff
+}
+.acard .at{flex:1;min-width:0}
+.acard .at b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
+.acard .at span{display:block;font-size:12px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acard .arrow{color:var(--blue-600);flex-shrink:0;display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700}
+.acard .auto{
+  position:absolute;top:0;right:0;padding:2px 8px;border-radius:0 0 0 8px;background:var(--amber-500);color:#fff;font-size:10.5px;font-weight:700
+}
+/* 演示列表 · 一张都没生成时的空态说明（未走到的步骤不占列表位置） */
+.anim-empty{
+  background:var(--teal-50);border:1px dashed var(--line);border-radius:11px;
+  padding:14px 16px;font-size:12.5px;line-height:1.9;color:var(--ink-2);margin-bottom:8px
+}
+.stage.dim svg{opacity:.26;filter:saturate(.35)}
+/* 演示动画框：静态截图占位（点击右上角全屏 → iframe 加载真实动画 HTML） */
+.stage .anim-shot{width:100%;height:auto;display:block;border-radius:9px}
+.stage.dim .anim-shot{opacity:.26;filter:saturate(.35)}
+.stage-empty{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  gap:7px;color:#fff;font-size:14.5px;font-weight:700;line-height:1.8;padding:0 28px
+}
+.stage-empty span{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.82)}
+/* 演示播放器 · 右下角全屏按钮（纯白图标 + 深色半透明圆形底，hover 加深并出「全屏」提示） */
+.stage-fs{
+  position:absolute;bottom:12px;right:12px;z-index:10;width:34px;height:34px;padding:0;
+  border-radius:50%;background:rgba(0,0,0,.5);border:0;box-shadow:0 2px 8px rgba(0,0,0,.24);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .18s
+}
+.stage-fs:hover{background:rgba(0,0,0,.7)}
+.stage-fs svg{width:16px!important;height:16px!important;display:block;stroke:#fff;color:#fff}
+.stage-fs .tip{
+  position:absolute;bottom:calc(100% + 8px);right:0;background:rgba(6,42,40,.92);color:#fff;
+  font-size:11.5px;font-weight:600;line-height:1;padding:6px 9px;border-radius:6px;white-space:nowrap;
+  opacity:0;visibility:hidden;transform:translateY(3px);transition:opacity .18s,transform .18s
+}
+.stage-fs:hover .tip{opacity:1;visibility:visible;transform:none}
+/* ---------- 全屏演示遮罩层：顶部 tab + iframe 加载真实动画 HTML ---------- */
+.afs{
+  position:fixed;inset:0;z-index:150;background:#07332F;display:none;flex-direction:column
+}
+.afs.on{display:flex}
+.afs-top{
+  display:flex;align-items:center;gap:16px;padding:11px 20px;
+  background:rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.14)
+}
+.afs-title{font-size:13.5px;font-weight:800;color:#fff;white-space:nowrap;letter-spacing:.5px}
+.afs-tabs{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+.afs-tab{
+  padding:7px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.28);
+  background:transparent;color:rgba(255,255,255,.78);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:background .16s,color .16s;white-space:nowrap
+}
+.afs-tab:hover{background:rgba(255,255,255,.15);color:#fff}
+.afs-tab.on{background:linear-gradient(120deg,#12A594,#1E9FC4);border-color:transparent;color:#fff}
+.afs-tab.lock{opacity:.38;cursor:not-allowed}
+.afs-tab.lock:hover{background:transparent;color:rgba(255,255,255,.78)}
+.afs-tab .lk{font-weight:500;font-size:11px}
+.afs-close{
+  display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;
+  font-size:12.5px;font-weight:600;cursor:pointer;transition:background .16s;white-space:nowrap
+}
+.afs-close:hover{background:rgba(255,255,255,.15)}
+.afs-close svg{width:14px;height:14px;display:block}
+.afs-body{flex:1;position:relative}
+.afs-stage{position:absolute;inset:0;background:#F3FAFA;overflow:hidden}
+.afs-stage .anim-host{position:absolute;inset:0;overflow:hidden;transform:translateZ(0);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;color:#0b2e36;background:#f3fafa}
+
+.composer-bar{
+  border-top:1px solid var(--line);background:#fff;padding:14px 26px 16px
+}
+.composer-bar .cw{max-width:860px;margin:0 auto}
+
+/* 抽屉 */
+.drawer{
+  width:0;flex-shrink:0;border-left:1px solid var(--line);background:#fff;overflow:hidden;transition:width .26s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column
+}
+.drawer.on{width:520px}
+.drawer.on.wide{width:720px}
+.dh{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dh h3{font-size:15px;font-weight:800;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh .sub{font-size:11.5px;color:var(--ink-3);display:block;font-weight:500;margin-top:1px}
+.db{flex:1;overflow-y:auto;padding:18px;background:var(--bg)}
+.db .card{margin-bottom:16px}
+.db .card:last-child{margin-bottom:0}
+
+/* ============ 我的成果 ============ */
+.mine{width:100%;max-width:var(--pw);margin:0 auto;padding:32px var(--px) 60px}
+.mine-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:6px}
+.mine-head h1{font-size:26px;font-weight:800;color:var(--blue-900)}
+.mine-head .grow{flex:1}
+.mine-sub{font-size:13.5px;color:var(--ink-3);margin-bottom:24px}
+.wcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden;transition:.2s}
+.wcard:hover{box-shadow:var(--sh-2)}
+.wcard.open{border-color:var(--blue-300);box-shadow:var(--sh-2)}
+.wrow{display:flex;align-items:center;gap:16px;padding:18px 20px;cursor:pointer}
+.wrow .wico{
+  width:46px;height:46px;border-radius:12px;background:var(--grad-soft);display:flex;align-items:center;justify-content:center;
+  color:var(--blue-700);flex-shrink:0;border:1px solid var(--blue-100)
+}
+.wrow .wm{flex:1;min-width:0}
+.wrow .wm h3{font-size:15.5px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wrow .wm .meta{font-size:12.5px;color:var(--ink-3);display:flex;gap:14px;flex-wrap:wrap}
+.wrow .wm .meta span{display:inline-flex;align-items:center;gap:5px}
+.switch-box{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-left:14px;border-left:1px solid var(--line-2)}
+.switch-box .st{font-size:12px;color:var(--ink-3);text-align:right;line-height:1.35}
+.switch-box .st b{display:block;color:var(--ink-2);font-size:12.5px}
+.sw{
+  width:44px;height:24px;border-radius:999px;background:#C8DDDF;position:relative;transition:.22s;flex-shrink:0;cursor:pointer
+}
+.sw:after{
+  content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.22s
+}
+.sw.on{background:var(--green-500)}
+.sw.on:after{left:23px}
+.wmore{padding:0 0 0}
+.wmore .wm-in{border-top:1px solid var(--line-2);padding:18px 20px;background:#F8FCFC}
+.mini-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.mini-tabs::-webkit-scrollbar{display:none}
+.mini-tab{padding:9px 14px;font-size:13.2px;font-weight:600;color:var(--ink-2);border-bottom:2px solid transparent;white-space:nowrap}
+.mini-tab.on{color:var(--blue-800);border-bottom-color:var(--blue-600)}
+.empty{text-align:center;padding:70px 20px;color:var(--ink-3)}
+.empty svg{margin:0 auto 14px;opacity:.5}
+.empty h3{font-size:16px;color:var(--ink-2);margin-bottom:6px}
+
+/* 弹窗提示 */
+.toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);background:var(--ink);color:#fff;
+  padding:11px 20px;border-radius:11px;font-size:13.5px;opacity:0;pointer-events:none;transition:.24s;z-index:200;
+  box-shadow:0 8px 28px rgba(0,0,0,.24);display:flex;align-items:center;gap:8px
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:1100px){
+  :root{--px:28px}
+  .book{grid-template-columns:1fr}
+  .toc{position:static}
+  .anim-wrap{grid-template-columns:1fr}
+  .drawer.on,.drawer.on.wide{width:440px}
+}
+@media(max-width:820px){
+  :root{--px:18px}
+  .frow{align-items:flex-start;gap:8px}
+  .frow .lbl{width:auto;padding-right:0;padding-top:5px}
+  .hero h1{font-size:32px}
+  .brand-sub{display:none}
+  .drawer.on,.drawer.on.wide{width:100%;position:fixed;inset:66px 0 0 0;z-index:70}
+  .wrow{flex-wrap:wrap}
+  .switch-box{border-left:none;padding-left:0;width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" onclick="go('home')" style="cursor:pointer">
+      <div class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M4 19V6M4 19h16M8 19v-6M12 19V9M16 19v-8M20 19v-4"/>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <span class="brand-name">数模演易</span>
+        <span class="brand-sub">MathModeling Studio</span>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <button id="nv-home" class="on" onclick="go('home')">首页</button>
+      <button id="nv-mine" onclick="go('mine')">我的成果</button>
+      <button id="nv-work" style="display:none" onclick="go('work')">工作台</button>
+    </nav>
+    <div class="nav-right">
+      <button class="btn-ghost" onclick="toast('登录为演示功能')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        学生入口
+      </button>
+      <button class="btn-login" onclick="toast('登录为演示功能')">登录</button>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== 首页 ==================== -->
+<section id="view-home" class="view on">
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge"><i class="dot"></i>AI 驱动的数学建模协作工作台</div>
+      <h1>把历年真题，变成<span class="g">你的练习场</span></h1>
+      <p class="sub">读懂、拆解、求解、成文，AI 一路陪你走完。专为大学生数学建模竞赛设计。</p>
+
+      <div class="hero-reco">
+        <div class="sec-head">
+          <h2>2026 年竞赛真题</h2>
+          <span class="sub">已完成完整解答 · 点击查看全部产物</span>
+          <div class="grow"></div>
+          <div class="sec-acts">
+            <button class="icon-btn" id="car-prev" onclick="carMove(-1)" title="上一组">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="icon-btn" id="car-next" onclick="carMove(1)" title="下一组">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="car-view" id="car-view"><div class="car-track" id="car-track"></div></div>
+        <div class="car-dots" id="car-dots"></div>
+      </div>
+
+      <div class="composer big">
+        <textarea id="home-input" rows="2" placeholder="输入数学建模题目，或上传题目图片..."></textarea>
+        <div class="cbar">
+          <button class="btn-ghost" onclick="pickFile('home')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+            上传题目数据文件
+          </button>
+          <span class="hint">支持 PDF / Word / 图片 / Excel 数据附件</span>
+          <div class="spacer"></div>
+          <button class="btn-send" id="home-send" onclick="sendFromHome()">
+            开始演易
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="chips">
+        <button class="chip" onclick="demoProblem()">2026 国赛 D 题 · 时频冲突检测与消解（进入演示）</button>
+        <button class="chip" onclick="useSample(0)">2026 国赛 A 题 · 药材烘干</button>
+        <button class="chip" onclick="useSample(1)">2026 国赛 B 题 · 干扰源定位</button>
+        <button class="chip" onclick="useSample(2)">2026 MCM-A · 手机电池建模</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:30px">
+    <div class="sec-head">
+      <h2>全部赛题</h2>
+      <span class="sub">2026 年真题 · 按赛别与题型筛选</span>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="foot">
+    <div class="foot-in">
+      <span>数模演易 · MathModeling Studio</span>
+      <div class="grow"></div>
+      <span>面向高职与本科生的数学建模竞赛实训平台</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 题目详情页 ==================== -->
+<section id="view-detail" class="view">
+  <div class="dtop">
+    <div class="dtop-in">
+      <button class="btn-back" onclick="go('home')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        返回首页
+      </button>
+      <h1 id="d-title">—</h1>
+      <div class="dmeta" id="d-meta"></div>
+      <div class="dacts">
+        <button class="w o" onclick="openWorkFromDetail()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          在平台复现一遍
+        </button>
+        <button class="w" onclick="toast('指导书下载为演示功能')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          下载实训指导书
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tabs-in" id="d-tabs">
+      <button class="tab on" data-tab="guide">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        实训指导书
+      </button>
+      <button class="tab" data-tab="anim">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><rect x="7" y="12" width="3" height="6"/><rect x="12.5" y="8" width="3" height="10"/><rect x="18" y="4.5" width="3" height="13.5"/></svg>
+        可视化演示
+      </button>
+      <button class="tab" data-tab="code">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        代码
+      </button>
+      <button class="tab" data-tab="result">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+        成果
+      </button>
+    </div>
+  </div>
+  <div class="dbody">
+    <div class="panel on" id="panel-guide"></div>
+    <div class="panel" id="panel-anim"></div>
+    <div class="panel" id="panel-code"></div>
+    <div class="panel" id="panel-result"></div>
+  </div>
+</section>
+
+<!-- ==================== 工作台 ==================== -->
+<section id="view-work" class="view">
+  <div class="wtop">
+    <button class="icon-btn" onclick="go('home')" title="返回首页">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="wtb" id="w-tag">新题目</span>
+    <div class="wt" id="w-title">—</div>
+    <div class="steps" id="w-steps"></div>
+    <span class="stag" id="w-stage"><i></i>等待你的指令</span>
+    <div style="flex:1"></div>
+    <button class="btn-ghost" id="btn-drawer-close" style="display:none" onclick="closeDrawer()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      收起产物
+    </button>
+  </div>
+  <div class="wbody">
+    <div class="chat">
+      <div class="stream" id="stream"><div class="stream-in" id="stream-in"></div></div>
+      <div class="composer-bar">
+        <div class="cw">
+          <div class="composer">
+            <textarea id="work-input" rows="2" placeholder="和 AI 对话：问它下一步、提出修改意见，或直接在下方点快捷指令——你说一句，它才走一步"></textarea>
+            <div class="cbar">
+              <button class="btn-ghost" onclick="pickFile('work')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                上传文件
+              </button>
+              <span class="hint">可继续补充数据或题目要求</span>
+              <div class="spacer"></div>
+              <button class="btn-send" onclick="sendInWork()">
+                发送
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="chips" style="justify-content:flex-start;margin-top:10px" id="work-chips"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="drawer" id="drawer">
+      <div class="dh">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12A594" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+        <h3 id="d-title2">产物预览<span class="sub" id="d-sub2">—</span></h3>
+        <button class="icon-btn" onclick="closeDrawer()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="db" id="drawer-body"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ==================== 我的成果 ==================== -->
+<section id="view-mine" class="view">
+  <div class="mine">
+    <div class="mine-head">
+      <h1>我的成果</h1>
+      <div class="grow"></div>
+      <button class="btn-ghost" onclick="go('home')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        新建建模任务
+      </button>
+    </div>
+    <p class="mine-sub">你自己生成的解答都在这里，与历史题库分开管理。每个成果可单独控制是否公开给其他同学查看。</p>
+    <div id="mine-list"></div>
+  </div>
+</section>
+
+<!-- 全屏演示遮罩层：iframe 加载同目录的真实动画 HTML，顶部 tab 可直接切换。
+     放在所有 view section 之外——.view{display:none} 的祖先会吞掉 fixed 后代 -->
+<div class="afs" id="afs" aria-hidden="true">
+  <div class="afs-top">
+    <span class="afs-title">可视化演示 · 全屏</span>
+    <div class="afs-tabs" id="afs-tabs"></div>
+    <button type="button" class="afs-close" id="afs-close" onclick="closeAnimFs()" title="退出全屏（ESC）">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      <span>退出全屏</span>
+    </button>
+  </div>
+  <div class="afs-body"><div class="afs-stage" id="afs-stage" aria-live="polite"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" multiple style="display:none">
+
+<script>
+/* ================= 数据 ================= */
+/* 题库：全部为 2026 年真题（2026 高教社杯国赛 A–E + 2026 MCM/ICM A–F） */
+var PROBLEMS = [
+  {id:'p1',title:'中药材热风烘干过程的热湿耦合建模',tag:'2026国赛A题',cat:'国赛本科',year:'2026',level:'本科',type:'机理建模',
+   desc:'对圆柱形药材建立预热平衡与恒温干燥两阶段的热质传递模型，求解内部温度与水分浓度演化，并据此确定满足含水率要求的烘干时长。',
+   tags:['偏微分方程','数值计算','动边界','Robin 边界'],views:5318,diff:'较难',team:'3 人',cover:'chart'},
+  {id:'p2',title:'无线电干扰源的快速自动定位与清除',tag:'2026国赛B题',cat:'国赛本科',year:'2026',level:'本科',type:'搜索仿真',
+   desc:'机器狗搭载测向机在半径 1800 m 区域内找出 10–16 个干扰源，需给出发现—定位—清除的完整策略，并接受模拟器三次正式测试。',
+   tags:['交会定位','覆盖构型','路径规划','策略仿真'],views:4702,diff:'较难',team:'3 人',cover:'map'},
+  {id:'p3',title:'微网与外部电网的电力调控策略',tag:'2026国赛C题',cat:'国赛本科',year:'2026',level:'本科',type:'优化决策',
+   desc:'小区微网含 12000 kWh 储能与光伏，每日 0:00 制定 144 个时段的购电计划；在信息确定、负载未知、四次预报、电价波动四种情形下分别求解。',
+   tags:['混合整数规划','滚动优化','负荷预测','储能调度'],views:6945,diff:'中等',team:'3 人',cover:'bar'},
+  {id:'p4',title:'用频装备的时频冲突检测与消解',tag:'2026国赛D题',cat:'国赛专科',year:'2026',level:'高职',type:'组合优化',
+   desc:'依据附件用频计划精确检测全部 297 对时频冲突，在消解规则相互矛盾的条件下给出整数规划层面的全局方案，并最大化新增 C 类装备数量。',
+   tags:['冲突图','整数规划','资源装填','周期性'],views:2860,diff:'中等',team:'3 人',cover:'net',demo:true},
+  {id:'p5',title:'SEM 广告投放策略优化',tag:'2026国赛E题',cat:'国赛专科',year:'2026',level:'高职',type:'数据分析',
+   desc:'基于某公司 2025 年 SEM 投放数据构造关键词效益指标，把词划分为黄金 / 重点 / 潜力 / 问题四类，在预算约束下给出选词、出价与投放节奏最优策略。',
+   tags:['指标体系','关键词分类','预算分配','CVaR'],views:3124,diff:'入门',team:'3 人',cover:'scatter'},
+  {id:'p6',title:'智能手机电池耗电建模',tag:'2026美赛A题',cat:'美赛MCM',year:'2026',level:'本科',type:'机理建模',
+   desc:'建立锂电池 SOC 的连续时间模型，刻画屏幕亮度、处理器负载、网络活动与温度对耗电的影响，预测不同场景下的剩余可用时间并给出续航建议。',
+   tags:['连续时间模型','参数辨识','敏感性分析'],views:3981,diff:'中等',team:'3 人',cover:'line'},
+  {id:'p7',title:'太空电梯系统建立月球殖民地',tag:'2026美赛B题',cat:'美赛MCM',year:'2026',level:'本科',type:'优化决策',
+   desc:'比较太空电梯三银河港、传统火箭与两者组合三种方案，计算运送 1 亿公吨物资到月球的时间表与成本，并分析系统失效、水需求与环境影响。',
+   tags:['物流规划','可靠性','多目标权衡'],views:2574,diff:'较难',team:'3 人',cover:'net'},
+  {id:'p8',title:'舞动明星的数据洞察',tag:'2026美赛C题',cat:'美赛MCM',year:'2026',level:'本科',type:'数据分析',
+   desc:'依据各赛季评委分与淘汰结果反演每位选手的粉丝投票，比较排名法与百分比法对淘汰的影响，并设计一个更公平的投票机制。',
+   tags:['反演估计','投票机制','回归分析'],views:3346,diff:'中等',team:'3 人',cover:'scatter'},
+  {id:'p9',title:'成功的体育管理',tag:'2026美赛D题',cat:'美赛ICM',year:'2026',level:'本科',type:'优化决策',
+   desc:'为球队老板设计动态决策模型，随战绩与财务变化调整阵容招募与运营策略，量化门票定价、场馆投资等商业决策对球队利润与价值的影响。',
+   tags:['动态规划','收益建模','策略仿真'],views:2195,diff:'中等',team:'3 人',cover:'chart'},
+  {id:'p10',title:'被动式太阳能遮阳设计',tag:'2026美赛E题',cat:'美赛ICM',year:'2026',level:'本科',type:'机理建模',
+   desc:'为 Sungrove 与 Borealis 两所大学设计被动太阳能遮阳方案，在建筑朝向、窗墙比与热惰性约束下预测太阳得热并优化供暖制冷能耗。',
+   tags:['建筑热工','能耗模拟','气候情景'],views:1832,diff:'中等',team:'3 人',cover:'line'},
+  {id:'p11',title:'生成式 AI 的取舍',tag:'2026美赛F题',cat:'美赛ICM',year:'2026',level:'本科',type:'评价预测',
+   desc:'选取 STEM、技工与艺术三类职业，建立数据驱动模型量化生成式 AI 的岗位替代与增强效应，并据此为不同类型高校给出课程调整建议。',
+   tags:['数据驱动','政策分析','情景预测'],views:2076,diff:'中等',team:'3 人',cover:'bar'}
+];
+
+var CATS = ['全部','国赛本科','国赛专科','美赛MCM','美赛ICM'];
+var TYPES = ['全部','机理建模','优化决策','数据分析','组合优化','搜索仿真','评价预测'];
+var YEARS = ['全部','2026'];
+
+/* 我的成果 */
+var WORKS = [
+  {id:'w1',title:'2026 国赛 D 题 · 时频冲突检测与消解（我的解答）',tag:'2026国赛D题',
+   time:'2026-09-13 19:42',status:'已完成',share:false,steps:6,
+   models:['半开区间冲突检测','词典序 0-1 整数规划','时频平面二维装填'],
+   paper:'用频装备时频冲突检测与消解策略研究 · 初稿 v4',
+   metrics:[['问题一','297 对冲突'],['问题二','撤销 7 条'],['问题三','新增 C 类 +18']]},
+  {id:'w2',title:'2026 国赛 B 题 · 干扰源定位与清除（我的解答）',tag:'2026国赛B题',
+   time:'2026-09-11 20:08',status:'已完成',share:true,steps:6,
+   models:['交会定位几何模型','正六边形发现点阵','贪心 + 回溯路径'],
+   paper:'无线电干扰源快速定位清除策略 · 初稿 v2',
+   metrics:[['清除率','100%'],['平均用时','412 s'],['正式测试','3 / 3']]},
+  {id:'w3',title:'2026 国赛 D 题 · 时频冲突消解（我的解答）',tag:'2026国赛D题',
+   time:'2026-09-09 15:26',status:'进行中',share:false,steps:3,
+   models:['冲突图模型','0-1 整数规划'],
+   paper:'— 尚未生成 —',
+   metrics:[['检测冲突','297 对'],['新增 C 类','+18'],['撤销计划','7 条']]},
+  {id:'w4',title:'2026 国赛 E 题 · SEM 投放策略（我的解答）',tag:'2026国赛E题',
+   time:'2026-09-05 11:03',status:'已完成',share:false,steps:6,
+   models:['关键词效益指标','K-means 二次校正','CVaR 鲁棒优化'],
+   paper:'SEM 广告投放策略优化研究 · 初稿 v1',
+   metrics:[['黄金词','38 个'],['无效词','890 个'],['预期 ROI','+14.6%']]}
+];
+
+/* ================= 工具 ================= */
+function $(id){return document.getElementById(id)}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function hl(code){
+  return esc(code)
+    .replace(/(#[^\n]*)/g,'<span class="c-com">$1</span>')
+    .replace(/\b(def|return|import|from|for|in|if|else|elif|while|with|as|class|try|except|lambda|print|and|or|not|None|True|False|np|pd|plt)\b/g,'<span class="c-kw">$1</span>')
+    .replace(/('[^']*'|"[^"]*")/g,'<span class="c-str">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span class="c-num">$1</span>');
+}
+var toastTimer=null;
+function toast(msg,icon){
+  var t=$('toast');
+  t.innerHTML=(icon||'')+'<span>'+esc(msg)+'</span>';
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('on')},2200);
+}
+function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+
+/* 封面插画 */
+var COVER_ICON = {
+  chart:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M3 20h18"/><path d="M6 20v-7M11 20V7M16 20v-11M21 20V4"/></svg>',
+  net:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v6M12 13l-6 3M12 13l6 3" stroke="#fff" stroke-width="1.8"/></svg>',
+  bar:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="12" width="4" height="8"/><rect x="9" y="7" width="4" height="13"/><rect x="15" y="4" width="4" height="16"/></svg>',
+  line:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M3 17c4 0 5-9 9-9s5 5 9 3"/></svg>',
+  map:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M9 4L3 7v13l6-3 6 3 6-3V4l-6 3-6-3z"/><path d="M9 4v13M15 7v13"/></svg>',
+  scatter:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="6" cy="15" r="1.6"/><circle cx="10" cy="9" r="1.6"/><circle cx="14" cy="12" r="1.6"/><circle cx="18" cy="6" r="1.6"/><path d="M4 19c4-1 6-8 14-12" stroke="#fff" stroke-width="1.6"/></svg>'
+};
+/* ================= 视图切换 ================= */
+var state = {view:'home',cat:'全部',type:'全部',year:'全部',detailId:null,detailTab:'guide',
+             workTitle:'',drawerOpen:false,drawerType:'',openWork:null};
+var VIEWS = ['home','detail','work','mine'];
+function go(v){
+  if(v==='work'&&!state.workTitle){ toast('先在首页输入题目'); return; }
+  state.view=v;
+  VIEWS.forEach(function(x){
+    var el=$('view-'+x);
+    if(el) el.classList.toggle('on',x===v);
+  });
+  $('nv-home').classList.toggle('on',v==='home');
+  $('nv-mine').classList.toggle('on',v==='mine');
+  $('nv-work').style.display=(v==='work')?'block':'none';
+  $('nv-work').classList.toggle('on',v==='work');
+  window.scrollTo(0,0);
+  if(v==='home') startCarousel();
+  if(v==='mine') renderMine();
+}
+
+/* ================= 首页：轮播 ================= */
+function pcardHTML(p){
+  return '<button class="pcard" onclick="openDetail(\''+p.id+'\')">'+
+    '<div class="cover">'+(COVER_ICON[p.cover]||COVER_ICON.chart)+'</div>'+
+    '<span class="ptag">'+
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'+
+      esc(p.tag)+'</span>'+
+    (p.demo?'<span class="ptag" style="margin-left:6px;background:#FFF6DC;color:#B25E00">可进入演示</span>':'')+
+    '<h3>'+esc(p.title)+'</h3>'+
+    '<p>'+esc(p.desc)+'</p>'+
+    '<div class="pfoot">'+
+      '<span>'+fmt(p.views)+' 次浏览</span>'+
+      '<span class="go">查看<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>'+
+    '</div>'+
+  '</button>';
+}
+/* ---------- 首页 Hero 轮播：自动播放 + 按钮 / 圆点 / 鼠标拖拽 ---------- */
+var CAR=[];
+var carIdx=0, carPer=3, carMax=0, carStep=312, carTimer=null;
+function renderCarousel(){
+  var demos=PROBLEMS.filter(function(p){return p.demo});
+  CAR=demos.concat(PROBLEMS.filter(function(p){return !p.demo}));
+  $('car-track').innerHTML=CAR.map(pcardHTML).join('');
+  carMeasure();
+  carRender();
+}
+function carMeasure(){
+  var v=$('car-view'); if(!v) return;
+  var w=v.clientWidth;
+  if(!w||w<200) w=1176;                       /* 视图未渲染时给一个默认宽度 */
+  carPer=Math.max(1,Math.min(CAR.length,Math.floor((w+16)/carStep)));
+  carMax=Math.max(0,CAR.length-carPer);
+  if(carIdx>carMax) carIdx=carMax;
+}
+function carRender(){
+  var tr=$('car-track'); if(!tr) return;
+  tr.style.transform='translateX('+(-carIdx*carStep)+'px)';
+  var d=$('car-dots'), h='';
+  for(var i=0;i<=carMax;i++) h+='<i class="'+(i===carIdx?'on':'')+'" onclick="carGo('+i+')"></i>';
+  if(d) d.innerHTML=h;
+  var pv=$('car-prev'), nx=$('car-next');
+  if(pv) pv.disabled=false;
+  if(nx) nx.disabled=false;
+}
+function carGo(i){ carIdx=Math.max(0,Math.min(carMax,i)); carRender(); startCarousel(); }
+function carMove(d){
+  carIdx+=d;
+  if(carIdx>carMax) carIdx=0;
+  if(carIdx<0) carIdx=carMax;
+  carRender(); startCarousel();
+}
+function startCarousel(){
+  stopCarousel();
+  if(!$('car-view')||carMax<=0) return;
+  carTimer=setInterval(function(){
+    if(state.view!=='home') return;
+    carMove(1);
+  },3800);
+}
+function stopCarousel(){ if(carTimer){clearInterval(carTimer);carTimer=null;} }
+(function(){
+  var v=document.getElementById('car-view');
+  var tr=document.getElementById('car-track');
+  if(!v||!tr) return;
+  var down=false, sx=0, moved=false;
+  v.addEventListener('mouseenter',stopCarousel);
+  v.addEventListener('mouseleave',function(){ if(state.view==='home') startCarousel(); });
+  tr.addEventListener('mousedown',function(e){
+    if(e.button!==0) return;
+    down=true; moved=false; sx=e.clientX; tr.classList.add('grabbing'); stopCarousel();
+  });
+  window.addEventListener('mousemove',function(e){
+    if(!down) return;
+    var dx=e.clientX-sx;
+    if(Math.abs(dx)>4) moved=true;
+    tr.style.transform='translateX('+(-carIdx*carStep+dx)+'px)';
+  });
+  window.addEventListener('mouseup',function(e){
+    if(!down) return;
+    down=false; tr.classList.remove('grabbing');
+    var dx=e.clientX-sx;
+    if(Math.abs(dx)>48) carMove(dx<0?1:-1); else carRender();
+    startCarousel();
+  });
+  /* 拖动过程中松手会触发卡片的 click，这里拦截掉 */
+  tr.addEventListener('click',function(e){
+    if(moved){ e.preventDefault(); e.stopPropagation(); moved=false; }
+  },true);
+  /* 触屏滑动 */
+  var tx=0;
+  v.addEventListener('touchstart',function(e){ tx=e.touches[0].clientX; stopCarousel(); },{passive:true});
+  v.addEventListener('touchend',function(e){
+    var dx=(e.changedTouches[0].clientX-tx);
+    if(Math.abs(dx)>40) carMove(dx<0?1:-1);
+    startCarousel();
+  },{passive:true});
+  window.addEventListener('resize',function(){ carMeasure(); carRender(); });
+})();
+
+/* ================= 首页：全部赛题筛选 ================= */
+function frowHTML(label,list,cur,setter){
+  return '<div class="frow">'+
+    '<span class="lbl">'+esc(label)+'</span>'+
+    '<div class="opts">'+
+      list.map(function(v){
+        return '<button class="chip'+(cur===v?' on':'')+'" onclick="'+setter+'(\''+v+'\')">'+esc(v)+'</button>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+}
+function renderFilters(){
+  $('filters').innerHTML=
+    frowHTML('赛别',CATS,state.cat,'setCat')+
+    frowHTML('题型',TYPES,state.type,'setType')+
+    frowHTML('年份',YEARS,state.year,'setYear');
+}
+function setCat(c){ state.cat=c; renderFilters(); renderGrid(); }
+function setYear(y){ state.year=y; renderFilters(); renderGrid(); }
+function setType(t){ state.type=t; renderFilters(); renderGrid(); }
+function filtered(){
+  return PROBLEMS.filter(function(p){
+    return (state.cat==='全部'||p.cat===state.cat)
+        && (state.year==='全部'||p.year===state.year)
+        && (state.type==='全部'||p.type===state.type);
+  });
+}
+function renderGrid(){
+  var list=filtered();
+  if(!list.length){ $('grid').innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:#8A9AAD">该筛选条件下暂无赛题</div>'; return; }
+  var cls={'国赛本科':'','国赛专科':'g','美赛MCM':'m','美赛ICM':'o'};
+  $('grid').innerHTML=list.map(function(p){
+    return '<button class="gcard" onclick="openDetail(\''+p.id+'\')">'+
+      '<div class="top">'+
+        '<span class="tag-c '+cls[p.cat]+'">'+esc(p.tag)+'</span>'+
+        '<span class="mtag">'+esc(p.level)+'</span>'+
+      '</div>'+
+      '<h4>'+esc(p.title)+'</h4>'+
+      '<p>'+esc(p.desc)+'</p>'+
+      '<div class="mtags">'+p.tags.map(function(t){return '<span class="mtag">'+esc(t)+'</span>'}).join('')+'</div>'+
+    '</button>';
+  }).join('');
+}
+
+/* ================= 首页：输入 ================= */
+var SAMPLES = [
+  '2026 国赛 A 题：中药材热风烘干。圆柱形药材长 25 cm、半径 2 cm，初温 28°C，初始干基含水率 2.55 kg/kg。请建立预热平衡阶段药材内部热传导与水分扩散的数学模型，给出数值计算方法。',
+  '2026 国赛 B 题：在半径 1800 m 的圆形区域内有 10–16 个无线电干扰源，机器狗搭载测向机（示向度误差 ±1°，有效接收半径 1000–1500 m）。请给出发现—定位—清除的一般策略，并用模拟器做三次正式测试。',
+  '2026 MCM-A 题：建立智能手机锂电池 SOC 的连续时间模型，考虑屏幕亮度、处理器负载、网络活动与环境温度等因素，预测不同使用场景下的耗尽时间并给出续航建议。'
+];
+function useSample(i){ $('home-input').value=SAMPLES[i]; $('home-input').focus(); }
+function demoProblem(){
+  var p=PROBLEMS.filter(function(x){return x.demo})[0];
+  if(!p) return;
+  state.detailId=p.id;
+  state.workTitle=p.tag+'：'+p.title;
+  startWork(state.workTitle,true);
+}
+function pickFile(scope){
+  var fi=$('file-input');
+  fi.value='';
+  fi.onchange=function(){
+    var fs=fi.files;
+    if(fs&&fs.length){
+      var names=[]; for(var i=0;i<fs.length;i++) names.push(fs[i].name);
+      if(scope==='result'){
+        /* 工作台：上传实训平台的结果文件 —— 交给 AI 的那一步必须由用户完成 */
+        didUpload(names);
+        return;
+      }
+      toast('已选择 '+fs.length+' 个文件：'+names.join('、'),
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7FE0A8" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>');
+      if(scope==='home'){
+        var ta=$('home-input');
+        if(!ta.value.trim()) ta.value='（已上传题目文件）'+names[0];
+      }else{
+        var ta2=$('work-input');
+        if(!ta2.value.trim()) ta2.value='（已上传附件数据）'+names[0];
+      }
+    }
+  };
+  fi.click();
+}
+function sendFromHome(){
+  var v=$('home-input').value.trim();
+  if(!v){ toast('请输入题目内容或上传题目文件'); return; }
+  startWork(v);
+}
+/* ================= 题目详情页 ================= */
+var ICON = {
+  guide:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  anim:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  code:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>',
+  result:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>',
+  paper:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
+};
+function openDetail(id){
+  state.detailId=id;
+  ANIM_FULL=true;   /* 详情页看的是平台已完赛案例：5 张演示全部可回看 */
+  var p=PROBLEMS.filter(function(x){return x.id===id})[0];
+  if(!p) return;
+  $('d-title').textContent=p.title;
+  $('d-meta').innerHTML=[
+    '<span>'+ICON.guide.replace('width="16" height="16"','width="14" height="14"')+esc(p.tag)+'</span>',
+    '<span>赛别：'+esc(p.cat)+'</span>',
+    '<span>年份：'+esc(p.year)+'</span>',
+    '<span>层次：'+esc(p.level)+'</span>',
+    '<span>难度：'+esc(p.diff)+'</span>',
+    '<span>建议队伍：'+esc(p.team)+'</span>',
+    '<span>'+fmt(p.views)+' 次浏览</span>'
+  ].join('');
+  renderDetailPanels(p);
+  setDetailTab('guide');
+  go('detail');
+}
+function setDetailTab(t){
+  state.detailTab=t;
+  var tabs=$('d-tabs').querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on',tabs[i].getAttribute('data-tab')===t);
+  ['guide','anim','code','result'].forEach(function(k){
+    $('panel-'+k).classList.toggle('on',k===t);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+var BOOK=[
+ {t:'题目重述与信息结构',html:
+  '<h3>一、题目重述与信息结构</h3>'+
+  '<p>用频装备在<b>时频平面</b>上占用资源：横轴为频点（100 个 Δf 单元），纵轴为时隙（100 个 Δt 单元）。每件装备按其用频计划周期性重复占用一个<b>时频矩形</b>。当两个矩形在频段与时隙上<b>同时重叠</b>时，即构成一次<b>时频冲突</b>。</p>'+
+  '<p>题目给出 A、B、C 三类装备共 150 件、按重复次数展开后共 1500 个时频矩形。四个问题层层递进：</p>'+
+  '<ul>'+
+  '<li><b>问题一</b>：按半开区间定义精确检测全部冲突，给出冲突对数与涉及装备数；</li>'+
+  '<li><b>问题二</b>：在不改变装备优先级的前提下消解全部冲突，目标为<b>撤销数最少、调整数最少</b>（词典序）；</li>'+
+  '<li><b>问题三</b>：在已消解方案基础上，<b>最大化新增 C 类装备数量</b>；</li>'+
+  '<li><b>问题四</b>：允许对装备的<b>重复间隔</b>做小幅度调整，重新消解并观察代价变化。</li>'+
+  '</ul>'+
+  '<p><b>三类装备参数</b>：A 类 20 件（频宽 10Δf / 时长 5Δt / 间隔 60Δt / 重复 3 次）、B 类 40 件（15 / 3 / 40 / 4）、C 类 90 件（3 / 2 / 8 / 12）。</p>'+
+  '<div class="note">写这一步的关键是画一张"时频平面示意图"：把 A/B/C 三类矩形用不同颜色画出来，冲突区域自然浮现。评委一眼就能看出你把抽象的"资源占用"变成了可看的几何对象。</div>'},
+ {t:'冲突判定：半开区间与扫描线',html:
+  '<h3>二、冲突判定规则与实现</h3>'+
+  '<p>时频矩形用四元组表示：<span class="mono">R = (f0, f0+w, t0, t0+h)</span>，其中 <span class="mono">w</span> 为频宽、<span class="mono">h</span> 为时长（均以 Δf / Δt 计）。</p>'+
+  '<p><b>半开区间</b>是本题最容易踩坑的地方：一个占用 [f0, f0+w) 的矩形，在频点 f0+w 上<b>不再占用</b>。因此两矩形重叠的充要条件是</p>'+
+  '<div class="formula">f 重叠：max(f1, f2) &lt; min(f1+w1, f2+w2)\nt 重叠：max(t1, t2) &lt; min(t1+h1, t2+h2)\n冲突 ⇔ 两式同时成立</div>'+
+  '<p>若误用闭区间（<span class="mono">≤</span>），相邻但不重叠的矩形会被判成冲突，冲突对数会虚高。<span class="kv">务必用严格小于</span>。</p>'+
+  '<p><b>展开重复</b>：第 k 次重复的起始时隙为 <span class="mono">t0 + k·iv</span>（k = 0…n−1），频段不变。150 件装备展开后得到 1500 个矩形。</p>'+
+  '<p><b>加速</b>：直接两两比较需约 1.1×10⁶ 次判定，完全可接受；若要扩展到大算例，可按频点做<b>扫描线 + 区间树</b>，把复杂度降到 O(N log N)。</p>'+
+  '<div class="note">红线：冲突必须按"展开后的矩形"两两判定，不能只判原始装备的首次占用；否则会漏掉周期性错位产生的冲突。</div>'},
+ {t:'模型骨架：0-1 整数规划',html:
+  '<h3>三、冲突消解的 0-1 整数规划骨架</h3>'+
+  '<p>可选动作（对每件装备至多选一个）：</p>'+
+  '<ul>'+
+  '<li><span class="mono">x_i^撤销</span> —— 撤销该装备的全部计划；</li>'+
+  '<li><span class="mono">x_i^频移(d)</span> —— 整体频移 d 个 Δf，|d| ≤ 10；</li>'+
+  '<li><span class="mono">x_i^时移(s)</span> —— 整体时移 s 个 Δt，|s| ≤ 5。</li>'+
+  '</ul>'+
+  '<div class="formula">lexmin ( Σ_i 撤销_i , Σ_i 调整_i )\n'+
+  's.t.  对每个冲突对 (i, j)：至少一方被移动，或两者移动后不再重叠\n'+
+  '      每件装备至多执行一个动作\n'+
+  '      频移量 |d| ≤ 10 Δf，时移量 |s| ≤ 5 Δt\n'+
+  '      高优先级装备不得为低优先级装备让路</div>'+
+  '<p><b>词典序</b>的实现：先求最少撤销数 z*，再加约束 <span class="mono">Σ 撤销_i = z*</span> 求最少调整数。也可用大权重法 <span class="mono">M·Σ撤销 + Σ调整</span>（M 取足够大）。</p>'+
+  '<p><b>冲突消解的传播性</b>：移动一件装备可能制造新冲突。因此不能只对初始 297 对冲突逐个修补，必须在<b>全局可行域</b>上求解 —— 这是本题区分度最高的地方。</p>'+
+  '<div class="note">素材：若只用贪心逐个消解，调整数会明显高于整数规划最优解；论文中把"贪心 vs 精确"做对比表，是很有说服力的实验设计。</div>'},
+ {t:'从问题二到问题四的升级',html:
+  '<h3>四、问题二～问题四的模型升级路径</h3>'+
+  '<h3 style="font-size:14.5px">问题二：最小代价消解</h3>'+
+  '<p>以初始冲突图（297 对、涉及 118 件装备）为输入，求解词典序最优方案。高优先级装备优先保留，低优先级装备承担撤销与让路。</p>'+
+  '<h3 style="font-size:14.5px">问题三：容量最大化</h3>'+
+  '<p>时频平面总面积 <span class="mono">100 × 100 = 10000</span> 个单元？——注意本题按"占用单元数"计，A 类占 10×5、B 类占 15×3、C 类占 3×2，原始方案已占 12690 单元（含重复展开），剩余 11310 单元。</p>'+
+  '<p>单件 C 类占 6 单元，理论面积上界为 <span class="mono">11310 / 72</span>…… 实际还需满足周期性对齐，上界取 <b>157 件</b>。贪心装填（按频率从低到高、时隙从早到晚逐格放置）得 <b>139 件</b>，与上界相差 <b>+18</b>。</p>'+
+  '<div class="formula">上界 = min( 面积上界 , 频段可容纳数 × 时隙可容纳数 ) = 157\n贪心解 = 139　→　gap = 18</div>'+
+  '<h3 style="font-size:14.5px">问题四：间隔微调</h3>'+
+  '<p>允许装备的重复间隔在原值上下浮动 <span class="mono">|Δiv| ≤ 10</span>。间隔一变，后续所有重复的时隙位置整体改变，冲突结构随之重构。求解后撤销数从 7 降到 <b>0</b>，调整数升到 <b>57</b>（频移 34 / 时移 11 / 间隔调整 12）。</p>'+
+  '<p>这说明"间隔"是一个比"整体平移"更强的自由度：牺牲一点调整量，可以彻底避免撤销。</p>'},
+ {t:'结果、灵敏度与稳健性',html:
+  '<h3>五、结果与灵敏度分析</h3>'+
+  '<p>四个问题的核心结果：</p>'+
+  '<table><tr><th>问题</th><th>目标</th><th>关键结果</th></tr>'+
+  '<tr><td>问题一</td><td>精确检测</td><td>冲突 297 对，涉及 118 件装备</td></tr>'+
+  '<tr><td>问题二</td><td>词典序最小</td><td>撤销 7 条 / 调整 50 件（频移 38、时移 12）</td></tr>'+
+  '<tr><td>问题三</td><td>最大化新增 C 类</td><td>上界 157 / 贪心 139 / 差 +18</td></tr>'+
+  '<tr><td>问题四</td><td>间隔微调后消解</td><td>撤销 0 条 / 调整 57 件（频移 34、时移 11、间隔 12）</td></tr></table>'+
+  '<p>问题二的分类型结果（撤销 / 调整）：</p>'+
+  '<table><tr><th>类型</th><th>原有</th><th>调整</th><th>撤销</th></tr>'+
+  '<tr><td>A 类</td><td>20</td><td>0</td><td>0</td></tr>'+
+  '<tr><td>B 类</td><td>40</td><td>9</td><td>0</td></tr>'+
+  '<tr><td>C 类</td><td>83</td><td>41</td><td>7</td></tr>'+
+  '<tr><td>合计</td><td>143</td><td>50</td><td>7</td></tr></table>'+
+  '<p>值得写进论文的几个灵敏度结论：</p>'+
+  '<ul>'+
+  '<li>频移上限从 10 放宽到 15，调整数只下降约 4%，说明多数冲突在 10 Δf 内已可解决，<b>继续放宽收益递减</b>；</li>'+
+  '<li>时移上限从 5 收紧到 3，撤销数从 7 上升到 19 —— 时移自由度是避免撤销的<b>关键杠杆</b>；</li>'+
+  '<li>贪心装填的放置顺序对结果影响明显（按频段递增 vs 按时隙递增，结果相差 11 件），说明问题三存在较强的<b>路径依赖</b>，宜用 MILP 或局部搜索改进。</li>'+
+  '</ul>'+
+  '<div class="note">最后一条是很好的创新点：它说明"容量最大化"不是纯面积除法，周期性对齐约束才是真正的瓶颈。</div>'},
+ {t:'模型评价与论文写作',html:
+  '<h3>六、模型评价与论文写作要点</h3>'+
+  '<h3 style="font-size:14.5px">优点</h3>'+
+  '<ul>'+
+  '<li>冲突判定用半开区间严格定义，边界情形有明确数学依据，避免了口径争议；</li>'+
+  '<li>四个问题共用一套"矩形—冲突图—整数规划"骨架，只改目标与自由度，代码可复用；</li>'+
+  '<li>问题三给出了"上界 + 贪心 + 差距"的完整分析框架，而非只报一个数字。</li>'+
+  '</ul>'+
+  '<h3 style="font-size:14.5px">局限与改进</h3>'+
+  '<ul>'+
+  '<li>大规模算例下 0-1 规划规模膨胀，可改用列生成 / 约束规划（CP-SAT）分解求解；</li>'+
+  '<li>问题三的贪心未做后向改进，可加局部搜索或模拟退火缩小与上界的差距；</li>'+
+  '<li>问题四只考虑间隔整体平移，未考虑非均匀间隔（每次重复单独调整）这一更强的自由度。</li>'+
+  '</ul>'+
+  '<div class="note">论文结构建议：摘要（务必写 297 / 7 / 50 / 157 / 139 / +18 / 0 等关键数字）→ 问题重述 → 假设与符号说明（<b>记得补"单位"列，Δf 与 Δt</b>）→ 冲突判定 → 问题一～四模型与求解 → 灵敏度 → 结论 → 参考文献 → 附录（代码 + result1.xlsx ～ result4.xlsx 文件说明）。</div>'}
+];
+
+
+function renderDetailPanels(p){
+  /* 指导书 */
+  $('panel-guide').innerHTML=
+   '<div class="book">'+
+     '<div class="toc"><div class="tt">实训指导书目录</div>'+
+       BOOK.map(function(c,i){
+         return '<button onclick="jumpBook('+i+')" id="toc-'+i+'">'+(i+1)+'. '+esc(c.t)+'</button>';
+       }).join('')+
+     '</div>'+
+     '<div class="card"><div class="card-h">'+
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#12A594" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'+
+        '<h3>《'+esc(p.title)+'》实训指导书</h3><div class="grow"></div>'+
+        '<button class="btn-ghost" onclick="toast(\'下载为演示功能\')">下载 PDF</button>'+
+      '</div>'+
+      '<div class="card-b" style="padding:0"><div class="doc">'+
+        '<h2>'+esc(p.title)+'</h2>'+
+        '<div class="dc">'+esc(p.tag)+' · '+esc(p.cat)+' · 实训指导书 · 全文约 12,000 字 · 建议实训时长 8 课时</div>'+
+        BOOK.map(function(c,i){return '<div id="sec-'+i+'">'+c.html+'</div>'}).join('')+
+      '</div></div></div>'+
+   '</div>';
+  /* 动画 */
+  $('panel-anim').innerHTML=renderAnimPanel(p);
+  /* 代码 */
+  $('panel-code').innerHTML=renderCodePanel();
+  /* 结果 */
+  $('panel-result').innerHTML=renderResultPanel(p);
+  window._bookReady=true;
+}
+function jumpBook(i){
+  var el=$('sec-'+i); if(!el) return;
+  window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-140,behavior:'smooth'});
+  for(var k=0;k<BOOK.length;k++){
+    var b=$('toc-'+k);
+    if(b) b.classList.toggle('on',k===i);
+  }
+}
+
+function animSVG(kind){
+  var s='<style>@keyframes grow{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}.stage.paused *{animation-play-state:paused!important}</style>';
+  if(kind==='0'){
+    /* 全局分析：时频平面 + 三类装备 */
+    return '<svg viewBox="0 0 640 280">'+s+
+      '<rect x="40" y="30" width="560" height="200" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'+
+      '<text x="320" y="20" fill="#B8E8E2" font-size="13" text-anchor="middle">时频平面 100Δf × 100Δt</text>'+
+      '<g>'+
+      '<rect x="80" y="60" width="50" height="25" fill="rgba(46,196,176,.5)" stroke="#2EC4B0"/>'+
+      '<rect x="80" y="130" width="50" height="25" fill="rgba(46,196,176,.5)" stroke="#2EC4B0"/>'+
+      '<rect x="80" y="200" width="50" height="25" fill="rgba(46,196,176,.5)" stroke="#2EC4B0"/>'+
+      '<text x="105" y="52" fill="#B8E8E2" font-size="10" text-anchor="middle">A类·20件</text>'+
+      '</g>'+
+      '<g>'+
+      '<rect x="200" y="50" width="75" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<rect x="200" y="100" width="75" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<rect x="200" y="150" width="75" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<rect x="200" y="200" width="75" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<text x="237" y="42" fill="#A8E0F0" font-size="10" text-anchor="middle">B类·40件</text>'+
+      '</g>'+
+      '<g>'+
+      '<rect x="340" y="45" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="340" y="70" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="340" y="95" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="340" y="120" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="370" y="45" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="370" y="70" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<rect x="400" y="45" width="15" height="10" fill="rgba(245,166,35,.6)" stroke="#F5A623"/>'+
+      '<text x="385" y="37" fill="#F8C25A" font-size="10" text-anchor="middle">C类·90件</text>'+
+      '</g>'+
+      '<g stroke="#FF6B6B" stroke-width="2" fill="none" style="animation:blink 1.5s infinite">'+
+      '<rect x="338" y="43" width="19" height="14"/>'+
+      '<rect x="368" y="43" width="19" height="14"/>'+
+      '</g>'+
+      '<text x="460" y="100" fill="#FF9999" font-size="11">冲突区域</text>'+
+      '<text x="320" y="258" fill="rgba(255,255,255,.6)" font-size="11">共 150 件装备 / 1500 个时频矩形 / 297 对冲突</text>'+
+      '</svg>';
+  }
+  if(kind==='1'){
+    /* 问题一：冲突检测 */
+    return '<svg viewBox="0 0 640 280">'+s+
+      '<text x="320" y="30" fill="#B8E8E2" font-size="14" text-anchor="middle">冲突检测：半开区间两两比较</text>'+
+      '<g transform="translate(60,60)">'+
+      '<rect x="0" y="0" width="120" height="50" fill="rgba(46,196,176,.4)" stroke="#2EC4B0" stroke-width="2"/>'+
+      '<text x="60" y="30" fill="#fff" font-size="11" text-anchor="middle">装备 i</text>'+
+      '<rect x="80" y="30" width="120" height="50" fill="rgba(245,166,35,.4)" stroke="#F5A623" stroke-width="2"/>'+
+      '<text x="140" y="60" fill="#fff" font-size="11" text-anchor="middle">装备 j</text>'+
+      '<rect x="80" y="30" width="40" height="20" fill="rgba(255,107,107,.6)" stroke="#FF6B6B" stroke-width="1.5" style="animation:blink 1s infinite"/>'+
+      '<text x="100" y="22" fill="#FF9999" font-size="10" text-anchor="middle">冲突</text>'+
+      '</g>'+
+      '<g transform="translate(60,160)">'+
+      '<text x="0" y="0" fill="rgba(255,255,255,.8)" font-size="12">判定条件：</text>'+
+      '<text x="0" y="22" fill="#B8E8E2" font-size="11">频率相交：max(fᵢ,fⱼ) < min(fᵢ+wᵢ, fⱼ+wⱼ)</text>'+
+      '<text x="0" y="42" fill="#B8E8E2" font-size="11">时间相交：max(tᵢ,tⱼ) < min(tᵢ+dᵢ, tⱼ+dⱼ)</text>'+
+      '<text x="0" y="68" fill="#F8C25A" font-size="12">两者同时成立 ⟹ 冲突</text>'+
+      '</g>'+
+      '<text x="320" y="268" fill="rgba(255,255,255,.6)" font-size="11">候选 11175 对 → 检出 297 对冲突 / 涉及 118 件</text>'+
+      '</svg>';
+  }
+  if(kind==='2'){
+    /* 问题二：冲突消解（被 result 调用） */
+    return '<svg viewBox="0 0 640 280">'+s+
+      '<text x="320" y="28" fill="#B8E8E2" font-size="14" text-anchor="middle">冲突消解：调整前后对比</text>'+
+      '<g transform="translate(40,50)">'+
+      '<text x="100" y="-8" fill="rgba(255,255,255,.7)" font-size="12" text-anchor="middle">调整前（297 对冲突）</text>'+
+      '<rect x="0" y="0" width="200" height="180" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)"/>'+
+      '<rect x="15" y="15" width="60" height="30" fill="rgba(46,196,176,.5)" stroke="#2EC4B0"/>'+
+      '<rect x="60" y="40" width="80" height="20" fill="rgba(245,166,35,.5)" stroke="#F5A623"/>'+
+      '<rect x="30" y="80" width="90" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<rect x="100" y="60" width="50" height="40" fill="rgba(245,166,35,.5)" stroke="#F5A623"/>'+
+      '<g stroke="#FF6B6B" stroke-width="2" fill="rgba(255,107,107,.25)" style="animation:blink 1s infinite">'+
+      '<rect x="60" y="40" width="15" height="5"/>'+
+      '<rect x="100" y="60" width="20" height="20"/>'+
+      '</g>'+
+      '<text x="100" y="165" fill="#FF9999" font-size="11" text-anchor="middle">红色 = 冲突区域</text>'+
+      '</g>'+
+      '<g transform="translate(400,50)">'+
+      '<text x="100" y="-8" fill="rgba(255,255,255,.7)" font-size="12" text-anchor="middle">调整后（全部消解）</text>'+
+      '<rect x="0" y="0" width="200" height="180" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)"/>'+
+      '<rect x="15" y="15" width="60" height="30" fill="rgba(46,196,176,.5)" stroke="#2EC4B0"/>'+
+      '<rect x="100" y="40" width="80" height="20" fill="rgba(245,166,35,.5)" stroke="#F5A623"/>'+
+      '<rect x="30" y="100" width="90" height="15" fill="rgba(30,159,196,.5)" stroke="#1E9FC4"/>'+
+      '<rect x="140" y="60" width="50" height="40" fill="rgba(245,166,35,.5)" stroke="#F5A623"/>'+
+      '<g stroke="#7FE0A8" stroke-width="2" fill="none">'+
+      '<path d="M75 30 L100 30" stroke-dasharray="600" style="animation:grow 2s ease-out"/>'+
+      '<path d="M150 80 L140 80" stroke-dasharray="600" style="animation:grow 2s ease-out .3s"/>'+
+      '</g>'+
+      '<text x="100" y="165" fill="#7FE0A8" font-size="11" text-anchor="middle">无冲突 ✓</text>'+
+      '</g>'+
+      '<text x="320" y="262" fill="rgba(255,255,255,.6)" font-size="11">撤销 7 条 · 调整 50 件（频移 38 / 时移 12）· 词典序最小</text>'+
+      '</svg>';
+  }
+  if(kind==='3'){
+    /* 问题三：容量最大化 */
+    return '<svg viewBox="0 0 640 280">'+s+
+      '<text x="320" y="28" fill="#B8E8E2" font-size="14" text-anchor="middle">容量最大化：剩余资源装填 C 类</text>'+
+      '<g transform="translate(60,50)">'+
+      '<rect x="0" y="0" width="240" height="180" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)"/>'+
+      '<rect x="10" y="10" width="60" height="30" fill="rgba(46,196,176,.3)" stroke="#2EC4B0"/>'+
+      '<rect x="10" y="100" width="80" height="20" fill="rgba(30,159,196,.3)" stroke="#1E9FC4"/>'+
+      '<g>'+
+      '<rect x="90" y="10" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="110" y="10" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="130" y="10" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="90" y="25" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="110" y="25" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="130" y="25" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="90" y="50" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '<rect x="110" y="50" width="15" height="10" fill="rgba(245,166,35,.7)" stroke="#F5A623"/>'+
+      '</g>'+
+      '<text x="120" y="170" fill="#F8C25A" font-size="11" text-anchor="middle">C 类装填（橙色）</text>'+
+      '</g>'+
+      '<g transform="translate(380,70)">'+
+      '<text x="0" y="0" fill="rgba(255,255,255,.8)" font-size="12">面积分析：</text>'+
+      '<text x="0" y="24" fill="#B8E8E2" font-size="11">总面积：24000</text>'+
+      '<text x="0" y="44" fill="#B8E8E2" font-size="11">已占(A+B)：12690</text>'+
+      '<text x="0" y="64" fill="#B8E8E2" font-size="11">剩余：11310</text>'+
+      '<line x1="0" y1="74" x2="120" y2="74" stroke="rgba(255,255,255,.3)"/>'+
+      '<text x="0" y="94" fill="#F8C25A" font-size="11">单件 C 类：72</text>'+
+      '<text x="0" y="118" fill="#7FE0A8" font-size="13">上界：157 件</text>'+
+      '<text x="0" y="140" fill="#2EC4B0" font-size="13">贪心：139 件</text>'+
+      '<text x="0" y="162" fill="#FF9999" font-size="13">差距：+18 件</text>'+
+      '</g>'+
+      '</svg>';
+  }
+  if(kind==='4'){
+    /* 问题四：间隔调整 */
+    return '<svg viewBox="0 0 640 280">'+s+
+      '<text x="320" y="28" fill="#B8E8E2" font-size="14" text-anchor="middle">间隔调整：C 类新增 Δiv 自由度</text>'+
+      '<g transform="translate(60,50)">'+
+      '<text x="80" y="-8" fill="rgba(255,255,255,.7)" font-size="12" text-anchor="middle">问题二（间隔固定）</text>'+
+      '<rect x="0" y="0" width="160" height="160" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)"/>'+
+      '<g stroke="#F5A623" stroke-width="2" fill="rgba(245,166,35,.4)">'+
+      '<rect x="15" y="20" width="20" height="12"/>'+
+      '<rect x="15" y="52" width="20" height="12"/>'+
+      '<rect x="15" y="84" width="20" height="12"/>'+
+      '<rect x="15" y="116" width="20" height="12"/>'+
+      '</g>'+
+      '<line x1="35" y1="32" x2="35" y2="52" stroke="#F5A623" stroke-width="1" stroke-dasharray="3,3"/>'+
+      '<line x1="35" y1="64" x2="35" y2="84" stroke="#F5A623" stroke-width="1" stroke-dasharray="3,3"/>'+
+      '<text x="50" y="42" fill="#F8C25A" font-size="10">间隔 8</text>'+
+      '<text x="80" y="150" fill="#FF9999" font-size="11" text-anchor="middle">撤销 7 条</text>'+
+      '</g>'+
+      '<g transform="translate(420,50)">'+
+      '<text x="80" y="-8" fill="rgba(255,255,255,.7)" font-size="12" text-anchor="middle">问题四（间隔可调）</text>'+
+      '<rect x="0" y="0" width="160" height="160" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)"/>'+
+      '<g stroke="#F5A623" stroke-width="2" fill="rgba(245,166,35,.4)">'+
+      '<rect x="15" y="20" width="20" height="12"/>'+
+      '<rect x="15" y="56" width="20" height="12"/>'+
+      '<rect x="15" y="92" width="20" height="12"/>'+
+      '<rect x="15" y="128" width="20" height="12"/>'+
+      '</g>'+
+      '<line x1="35" y1="32" x2="35" y2="56" stroke="#7FE0A8" stroke-width="1.5" stroke-dasharray="3,3"/>'+
+      '<text x="55" y="46" fill="#7FE0A8" font-size="10">Δiv=+4</text>'+
+      '<text x="80" y="150" fill="#7FE0A8" font-size="11" text-anchor="middle">撤销 0 条 ✓</text>'+
+      '</g>'+
+      '<text x="320" y="262" fill="rgba(255,255,255,.6)" font-size="11">撤销 7→0 · 调整 50→57 · 间隔调整替代了撤销</text>'+
+      '</svg>';
+  }
+  return '<svg viewBox="0 0 640 280"><text x="320" y="140" fill="#fff" text-anchor="middle">暂无演示</text></svg>';
+}
+function renderAnimPanel(p){
+  var qs=animList();          /* 只含已生成的演示；未走到的步骤不在列表里 */
+  var doneN=qs.length;
+  var first=qs[0]||null;
+  var cur=first?first.k:'0';
+  ANIM_CUR=cur;
+  var noteTxt = doneN
+    ? '本次已生成 <b>'+doneN+' / 5</b> 张：<b>走到哪一步，才生成哪一步的演示</b>，还没走到的步骤不会出现在列表里；已经生成的演示点击列表即可回看。'
+    : '演示<b>按流程逐步生成</b>：走到「全局分析」生成<b>演示一</b>，走到「问题一 / 二 / 三 / 四」分别生成<b>演示二～五</b>。当前还没有走到任何一步，列表里暂时是空的。';
+  return '<div class="anim-wrap">'+
+    '<div>'+
+      '<div class="stage'+(first?'':' dim')+'" id="stage">'+(first?fsBtnHTML(cur)+animShotHTML(cur):'')+
+        (first?'':'<div class="stage-empty">这里还没有演示内容<span>走到「全局分析」这一步后，会自动生成第一张可视化演示</span></div>')+
+      '</div>'+
+      '<div class="card" style="margin-top:16px"><div class="card-h"><h3>演示列表（按流程生成）</h3>'+
+        '<span class="tag-c" style="font-size:11px">已生成 '+doneN+' / 5</span></div><div class="card-b tight">'+
+        (first?'':'<div class="anim-empty">还没有演示。走到「全局分析」这一步后，演示一会出现在这里；之后每走到一个问题，就多一张演示。<br>未走到的步骤不会提前出现在列表里。</div>')+
+        qs.map(function(q){
+          return '<button class="acard'+(q.k===cur?' open':'')+'" style="border-radius:11px;margin-bottom:8px" onclick="switchAnim(\''+q.k+'\')" id="q-'+q.k+'">'+
+            '<span class="ai" style="background:linear-gradient(120deg,#12A594,#1E9FC4)">'+q.k+'</span>'+
+            '<span class="at"><b>'+esc(q.title)+'</b><span>'+esc(q.sub)+' · 点击回看</span></span>'+
+            '<span class="arrow">播放</span></button>';
+        }).join('')+
+      '</div></div>'+
+    '</div>'+
+    '<div class="card"><div class="card-h"><h3>演示说明</h3></div><div class="card-b">'+
+      '<p class="side-note">'+noteTxt+'演示由平台根据模型输出自动生成，用于把抽象的数学结果"可视化表达"。在论文中可作结果图使用，也可直接用于答辩展示。</p>'+
+      '<div class="legend">'+
+        '<div><i style="background:#2EC4B0"></i>原始用频计划（A / B / C 三类时频矩形）</div>'+
+        '<div><i style="background:#F5A623"></i>调整后的方案（频移 / 时移 / 间隔调整）</div>'+
+        '<div><i style="background:#7FE0A8"></i>关键识别点（冲突区、新增装填、撤销）</div>'+
+      '</div>'+
+      '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2)">'+
+        '<p class="side-note" style="font-size:12.5px;color:#8A9AAD">每段演示时长 12 秒，支持逐帧回放；点击右上角可导出 HTML / GIF 用于答辩。</p>'+
+      '</div>'+
+    '</div></div>'+
+  '</div>';
+}
+function switchAnim(k){
+  if(!animDone(k)){ pendAnim(k); return; }
+  var st=$('stage'); if(st){ st.innerHTML=fsBtnHTML(k)+animShotHTML(k); }   /* 截图占位 + 全屏按钮 */
+  ['0','1','2','3','4'].forEach(function(i){
+    var el=$('q-'+i); if(el) el.classList.toggle('open',i===k);
+  });
+}
+
+var PY_CODE =
+'# -*- coding: utf-8 -*-\n'+
+'"""2026 国赛 D 题：用频装备的时频冲突检测与消解\n'+
+'   问题一 —— 基于半开区间的冲突检测\n'+
+'   数模演易 自动生成 · 可直接运行（需 pandas / openpyxl）\n'+
+'"""\n'+
+'import pandas as pd\n'+
+'\n'+
+'# ---------- 1. 时频平面与装备参数 ----------\n'+
+'F_MAX = 100               # 频点总数（单位 Δf）\n'+
+'T_MAX = 100               # 时隙总数（单位 Δt）\n'+
+'# 类型: (频宽 w, 时长 h, 重复间隔 iv, 重复次数 n, 件数)\n'+
+'PARAM = {"A": (10, 5, 60, 3, 20),\n'+
+'         "B": (15, 3, 40, 4, 40),\n'+
+'         "C": ( 3, 2,  8, 12, 90)}\n'+
+'\n'+
+'# ---------- 2. 读取用频计划并展开重复 ----------\n'+
+'df = pd.read_excel("data/附件1_用频计划.xlsx")\n'+
+'rects = []                       # (装备ID, 频起点, 频宽, 时起点, 时长)\n'+
+'for _, r in df.iterrows():\n'+
+'    w, h, iv, n, _ = PARAM[r["类型"]]\n'+
+'    for k in range(n):\n'+
+'        rects.append((r["装备ID"], int(r["频起点"]), w,\n'+
+'                      int(r["时起点"]) + k * iv, h))\n'+
+'print("[2/5] 装备 %d 件，展开后时频矩形 %d 个" % (len(df), len(rects)))\n'+
+'\n'+
+'# ---------- 3. 半开区间冲突判定 ----------\n'+
+'def overlap(a, b):\n'+
+'    """半开区间：占用 [f0, f0+w) × [t0, t0+h)，端点相接不算冲突"""\n'+
+'    fa, fb = a[1], b[1]\n'+
+'    ta, tb = a[3], b[3]\n'+
+'    df_ = min(fa + a[2], fb + b[2]) - max(fa, fb)\n'+
+'    dt_ = min(ta + a[4], tb + b[4]) - max(ta, tb)\n'+
+'    return df_ > 0 and dt_ > 0\n'+
+'\n'+
+'pairs = set()\n'+
+'N = len(rects)\n'+
+'for i in range(N):\n'+
+'    for j in range(i + 1, N):\n'+
+'        if rects[i][0] != rects[j][0] and overlap(rects[i], rects[j]):\n'+
+'            pairs.add(tuple(sorted((rects[i][0], rects[j][0]))))\n'+
+'\n'+
+'# ---------- 4. 汇总 ----------\n'+
+'ids = sorted({x for p in pairs for x in p})\n'+
+'print("      冲突对数 : %d 对" % len(pairs))\n'+
+'print("      涉及装备 : %d 件 / 共 %d 件" % (len(ids), len(df)))\n'+
+'\n'+
+'# ---------- 5. 导出 ----------\n'+
+'out = pd.DataFrame(sorted(pairs), columns=["装备ID_1", "装备ID_2"])\n'+
+'out.to_excel("result1.xlsx", index=False)\n'+
+'print("已写出 result1.xlsx，共 %d 行" % len(out))\n';
+
+var RUN_OUT =
+'[1/5] 读取 data/附件1_用频计划.xlsx ........... 150 行 × 4 列\n'+
+'[2/5] 装备 150 件，展开后时频矩形 1500 个（A 60 / B 160 / C 1080）\n'+
+'[3/5] 两两判定 1,124,250 次（半开区间，严格小于）\n'+
+'[4/5] 冲突统计 .............................. 完成\n'+
+'      冲突对数 : 297 对\n'+
+'      涉及装备 : 118 件 / 共 150 件\n'+
+'      冲突最多的类型 : C 类之间 214 对\n'+
+'[5/5] 已写出 result1.xlsx，共 297 行（装备ID_1 / 装备ID_2）\n'+
+'完成，总耗时 1.86 s';
+
+function renderCodePanel(){
+  return '<div class="card" style="margin-bottom:16px"><div class="card-h">'+
+      ICON.code+'<h3>建模主程序 detect.py</h3><div class="grow"></div>'+
+      '<button class="btn-ghost" onclick="toast(\'代码已复制到剪贴板\')">复制代码</button>'+
+      '<button class="btn-ghost" onclick="toast(\'下载为演示功能\')">下载 .py</button>'+
+    '</div><div class="card-b" style="padding:0">'+
+      '<div class="code-box">'+
+        '<div class="code-top"><span class="f">detect.py · Python 3.10</span><div class="grow"></div>'+
+          '<button onclick="toast(\'代码已复制到剪贴板\')">复制</button>'+
+          '<button onclick="runCode(this)">运行</button></div>'+
+        '<pre class="code">'+hl(PY_CODE)+'</pre>'+
+        '<div class="run-out"><span class="lbl">RUN OUTPUT</span><span id="run-txt">$</span></div>'+
+      '</div>'+
+    '</div></div>'+
+    '<div class="card"><div class="card-h"><h3>依赖与运行说明</h3></div><div class="card-b">'+
+      '<p style="font-size:13.5px;color:#4A5A70;line-height:1.9">依赖：<span class="mono">pandas</span>、<span class="mono">openpyxl</span>（问题二～四另需 <span class="mono">pulp</span> 或 <span class="mono">ortools</span>）。数据文件请放在 <span class="mono" style="background:#EAF5F5;padding:2px 6px;border-radius:5px">data/</span> 目录，结果输出至 <span class="mono" style="background:#EAF5F5;padding:2px 6px;border-radius:5px">result1.xlsx</span>。问题二至问题四在同一"矩形—冲突图"骨架上增加动作变量与优先级约束即可。代码请带到<b>实训平台</b>上运行和调试。</p>'+
+    '</div></div>';
+}
+function runCode(btn){
+  var out=$('run-txt'); if(!out) return;
+  if(btn) btn.textContent='运行中...';
+  out.textContent='$ ';
+  var lines=RUN_OUT.split('\n'), i=0;
+  (function tick(){
+    if(i<lines.length){
+      out.textContent+=lines[i]+'\n';
+      i++; setTimeout(tick,110);
+    }else{ if(btn) btn.textContent='运行'; toast('运行完成，结果已同步'); }
+  })();
+}
+
+/* ================= 成果结构 =================
+   「我的成果」页与平台已生成案例（题目详情页）共用同一套展示结构：
+     成果
+     ├── 论文初稿
+     └── 支撑材料
+         ├── 源代码（全部代码）
+         ├── 图片（可视化图表等）
+         └── 文件（数据预处理后的文件等）
+   =========================================== */
+var SUPPORT={
+  code:[
+    ['detect.py','问题一 · 半开区间冲突检测 · Python 3.10','58 行'],
+    ['resolve.py','问题二 · 词典序 0-1 整数规划消解','196 行'],
+    ['packing.py','问题三 · 时频平面装填（上界 + 贪心 + 局部搜索）','243 行'],
+    ['resolve_iv.py','问题四 · 重复间隔可调下的再消解','231 行'],
+    ['preprocess.py','数据预处理 · 用频计划展开与参数校验','84 行'],
+    ['plot_result.py','结果可视化 · 时频平面与冲突图 300 dpi 出图','118 行']
+  ],
+  image:[
+    ['fig1_时频平面占用.png','A / B / C 三类装备的矩形分布','300 dpi'],
+    ['fig2_冲突分布热力图.png','按频段 × 时隙统计冲突次数','300 dpi'],
+    ['fig3_冲突网络图.png','118 个节点 / 297 条边','300 dpi'],
+    ['fig4_消解前后对比.png','问题二前后时频平面并排','300 dpi'],
+    ['fig5_装填利用率.png','问题三贪心过程 / 与上界差距','300 dpi'],
+    ['fig6_四问结果对照.png','撤销数、调整数、新增数的柱状对比','300 dpi']
+  ],
+  file:[
+    ['附件1_用频计划.xlsx','150 件装备 · 类型 / 频起点 / 时起点','原始'],
+    ['附件1_展开矩形.xlsx','1500 个时频矩形 · 含重复展开','预处理后'],
+    ['result1.xlsx','问题一 · 297 对冲突明细','结果'],
+    ['result2.xlsx','问题二 · 撤销 / 频移 / 时移方案','结果'],
+    ['result3.xlsx','问题三 · 新增 C 类装备放置方案','结果'],
+    ['result4.xlsx','问题四 · 含间隔调整的消解方案','结果']
+  ]
+};
+var SUP_GROUPS=[
+  ['code','源代码','全部代码文件，与论文中的模型一一对应，可直接复现四个问题的结果'],
+  ['image','图片','论文与答辩用到的可视化图表，均为 300 dpi，可直接插入论文'],
+  ['file','文件','数据预处理后的输入文件，以及各问运行得到的结果文件']
+];
+var SUP_COLOR={code:'linear-gradient(120deg,#0B2E36,#1E6FA8)',image:'linear-gradient(120deg,#17A2C4,#2EC4B0)',file:'linear-gradient(120deg,#2BA471,#12A594)'};
+var SUP_ICON={
+  code:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>',
+  image:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>',
+  file:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
+};
+function supRow(g,f){
+  return '<button class="acard" onclick="toast(\''+f[0]+' 下载为演示功能\')">'+
+    '<span class="ai" style="background:'+SUP_COLOR[g]+'">'+SUP_ICON[g]+'</span>'+
+    '<span class="at"><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></span>'+
+    '<span class="tag-c" style="font-size:11px">'+esc(f[2])+'</span>'+
+    '<span class="arrow">下载</span></button>';
+}
+function supportHTML(){
+  return SUP_GROUPS.map(function(g){
+    var list=SUPPORT[g[0]];
+    return '<div class="card" style="margin-bottom:14px"><div class="card-h">'+
+        SUP_ICON[g[0]].replace(/#fff/g,'#12A594')+'<h3>'+g[1]+'</h3>'+
+        '<span class="tag-c" style="font-size:11px">'+list.length+' 项</span><div class="grow"></div>'+
+        '<button class="btn-ghost" onclick="toast(\''+g[1]+'打包下载为演示功能\')">打包下载</button></div>'+
+      '<div class="card-b"><p class="side-note" style="margin-bottom:12px">'+g[2]+'</p>'+
+        '<div class="arts">'+list.map(function(f){return supRow(g[0],f);}).join('')+'</div>'+
+      '</div></div>';
+  }).join('');
+}
+function paperDeliverHTML(){
+  return '<div class="card"><div class="card-h">'+ART.paper.icon.replace('#fff','#12A594')+'<h3>论文初稿 · v1</h3><div class="grow"></div>'+
+      '<button class="btn-ghost" onclick="toast(\'下载为演示功能\')">下载 .docx</button>'+
+      '<button class="btn-ghost" onclick="toast(\'PDF 下载为演示功能\')">PDF</button></div>'+
+    '<div class="card-b"><div class="doc" style="padding:0">'+
+    '<h2>用频装备时频冲突检测与消解策略研究</h2>'+
+    '<div class="dc">24 页 · 图 12 张 · 表 7 张 · 参考文献 14 篇</div>'+
+    '<h3>摘要</h3>'+
+    '<p>针对用频装备在时频平面上的资源抢占问题，本文建立"矩形展开 — 半开区间判定 — 冲突图 — 词典序整数规划"的统一建模框架。首先把 A/B/C 三类共 150 件装备按重复次数展开为 1500 个时频矩形，用严格小于的半开区间判据两两检测，得到 297 对冲突、涉及 118 件装备。其次以"撤销数最少、调整数最少"为词典序目标建立 0-1 整数规划，在频移 ≤ 10Δf、时移 ≤ 5Δt 的约束下求得撤销 7 条、调整 50 件（频移 38、时移 12）的全局最优消解方案。再以剩余 11310 个时频单元为容量约束，给出新增 C 类装备的<b>理论上界 157 件</b>，并用频率优先贪心算法得到 139 件可行解，差距 18 件。最后放开重复间隔，允许 |Δiv| ≤ 10 的小幅调整，撤销数降为 0、调整数升至 57 件，说明间隔自由度可以完全替代撤销。</p>'+
+    '<h3>目录</h3>'+
+    '<ul><li>一、问题重述与信息结构分析</li><li>二、时频平面建模与冲突判定规则</li><li>三、问题一：半开区间冲突检测</li><li>四、问题二：词典序 0-1 整数规划消解</li><li>五、问题三：时频平面容量最大化</li><li>六、问题四：重复间隔可调下的再消解</li><li>七、灵敏度分析与稳健性检验</li><li>八、结论与改进方向</li><li>附录：代码与结果文件说明</li></ul>'+
+    '<h3>第四章（节选）</h3>'+
+    '<div class="formula">lexmin ( Σ_i z_i , Σ_i (p_i + q_i) )\n'+
+    's.t.　对每个冲突对 (i,j)：z_i + z_j + m_ij ≥ 1\n'+
+    '　　　|d_i| ≤ 10,　|s_i| ≤ 5,　z_i, m_ij ∈ {0,1}\n'+
+    '　　　高优先级装备不得为低优先级装备让路</div>'+
+    '<p>若只对初始 297 对冲突逐个贪心修补，移动一件装备会制造新冲突，得到的调整数明显高于全局最优。本文将全部冲突作为约束一次性放入整数规划，用"先求最少撤销数 z*、再在 Σz = z* 下求最少调整数"的两阶段词典序求解，保证结果在两级目标上都达到最优……</p>'+
+    '<div class="note">论文可继续在平台上与 AI 交互修改：改摘要、补灵敏度、调排版、加图表说明都可以。</div>'+
+    '</div></div></div>'+
+    '<div class="card"><div class="card-b"><div class="dl-row" style="margin-top:0">'+
+      '<button class="dl p" onclick="toast(\'下载为演示功能\')">下载论文初稿</button>'+
+      '<button class="dl" onclick="toast(\'论文分享链接已复制\')">复制分享链接</button>'+
+    '</div></div></div>';
+}
+/* 成果导航：论文初稿 / 支撑材料 */
+function dlvNavHTML(cur,setter){
+  var sup=(cur!=='paper');
+  var meta = sup
+    ? '源代码 '+SUPPORT.code.length+' 项 · 图片 '+SUPPORT.image.length+' 项 · 文件 '+SUPPORT.file.length+' 项'
+    : '24 页 · 图 12 张 · 表 7 张';
+  return '<div class="mini-tabs">'+
+    '<button class="mini-tab'+(cur==='paper'?' on':'')+'" onclick="'+setter+'\'paper\')">论文初稿</button>'+
+    '<button class="mini-tab'+(sup?' on':'')+'" onclick="'+setter+'\'code\')">支撑材料</button>'+
+    '<div style="flex:1"></div>'+
+    '<span style="align-self:center;font-size:12.5px;color:#8A9AAD">'+meta+'</span>'+
+  '</div>';
+}
+function dlvHTML(cur,setter){
+  return dlvNavHTML(cur,setter)+(cur==='paper'?paperDeliverHTML():supportHTML());
+}
+var dlvTab='paper';
+function setDlvTab(t){
+  dlvTab=t;
+  var w=$('dlv-wrap');
+  if(w) w.innerHTML=dlvHTML(t,'setDlvTab(');
+}
+
+function renderResultPanel(p){
+  return '<div class="kpis">'+
+      '<div class="kpi"><div class="k">问题一 · 冲突检测</div><div class="v">297</div><div class="d">对 · 涉及 118 件装备</div></div>'+
+      '<div class="kpi"><div class="k">问题二 · 消解代价</div><div class="v">7 / 50</div><div class="d">撤销 7 条 · 调整 50 件</div></div>'+
+      '<div class="kpi"><div class="k">问题三 · 新增 C 类</div><div class="v">139</div><div class="d">件 · 上界 157，差 +18</div></div>'+
+    '<div class="kpi"><div class="k">问题四 · 间隔可调</div><div class="v">0</div><div class="d">撤销降至 0 · 调整 57 件</div></div>'+
+  '</div>'+
+    '<h3 style="font-size:15px;margin:6px 0 12px">成果 · 论文初稿与支撑材料</h3>'+
+    '<div id="dlv-wrap">'+dlvHTML(dlvTab,'setDlvTab(')+'</div>'+
+    '<div style="height:16px"></div>'+
+    '<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>四问结果对照</h3><div class="grow"></div>'+
+      '<button class="btn-ghost" onclick="toast(\'导出为演示功能\')">导出 Excel</button></div>'+
+      '<div style="overflow-x:auto"><table class="dtable"><thead><tr>'+
+      '<th>问题</th><th>决策自由度</th><th>核心方法</th><th>关键参数</th><th>结果</th></tr></thead><tbody>'+
+      [['问题一','无（仅检测）','半开区间两两判定','严格小于','冲突 297 对<br>涉及 118 件'],
+       ['问题二','撤销 / 频移 / 时移','两阶段词典序 0-1 规划','|d|≤10, |s|≤5','撤销 7 条<br>调整 50 件'],
+       ['问题三','新增 C 类放置','上界推导 + 频率优先贪心','剩余 11310 单元','上界 157<br>贪心 139（+18）'],
+       ['问题四','增加重复间隔调整','整数规划 + 间隔变量','|Δiv| ≤ 10','撤销 0 条<br>调整 57 件']].map(function(r){
+         return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td></tr>';
+       }).join('')+
+      '</tbody></table></div></div>'+
+    '<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>问题二消解方案分类型统计</h3></div>'+
+      '<div style="overflow-x:auto"><table class="dtable"><thead><tr>'+
+      '<th>类型</th><th>原有件数</th><th>调整件数</th><th>撤销件数</th><th>保留原状</th></tr></thead><tbody>'+
+      [['A 类','20','0','0','20'],
+       ['B 类','40','9','0','31'],
+       ['C 类','83','41','7','35'],
+       ['合计','143','50','7','86']].map(function(r){
+         return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td></tr>';
+       }).join('')+
+      '</tbody></table></div>'+
+      '<p class="side-note" style="margin:12px 20px 16px">合计 143 件为参与消解的装备数（150 件中有 7 件无冲突，保持原状）。A 类因优先级最高、且频宽最大，全部保留；撤销集中在 C 类，符合"优先级让路"的题设规则。</p>'+
+    '</div>'+
+    '<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>主要结论</h3></div><div class="card-b">'+
+      '<ul class="doc" style="padding:0;margin:0">'+
+        '<li>冲突判定必须用<b>半开区间严格小于</b>：误用闭区间会把端点相接的矩形判成冲突，冲突对数显著虚高；</li>'+
+        '<li>冲突消解不能贪心逐个修补 —— 移动一件装备会制造新冲突，必须在全局可行域上求解，两阶段词典序整数规划才能同时保证撤销数与调整数都最优；</li>'+
+        '<li>问题三的瓶颈不是面积，而是<b>周期性对齐</b>：面积上界给不出 157 这个数，必须同时考虑频段与时隙的可容纳数；</li>'+
+        '<li>问题四说明<b>间隔是比整体平移更强的自由度</b>：只需 12 件装备调整间隔，就能把 7 条撤销全部化解为 0。</li>'+
+      '</ul>'+
+    '</div></div>'+
+    '<div class="dl-row">'+
+      '<button class="dl p" onclick="toast(\'论文下载为演示功能\')">'+ICON.paper+'下载论文初稿（.docx）</button>'+
+      '<button class="dl" onclick="toast(\'PDF 下载为演示功能\')">论文 PDF</button>'+
+      '<button class="dl" onclick="toast(\'代码包下载为演示功能\')">完整代码包（.zip）</button>'+
+      '<button class="dl" onclick="setDetailTab(\'code\')">查看可运行代码</button>'+
+      '<button class="dl" onclick="setDetailTab(\'anim\')">查看可视化演示</button>'+
+    '</div>';
+}
+function openWorkFromDetail(){
+  var p=PROBLEMS.filter(function(x){return x.id===state.detailId})[0];
+  startWork((p?p.tag+'：'+p.title:''),true);
+}
+/* ================= 工作台 ================= */
+var STEPS=['全局分析','问题一','问题二','问题三','问题四','论文'];
+var ART={
+  analysis:{c:'linear-gradient(120deg,#12A594,#17A2C4)',t:'问题分析',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>'},
+  animation:{c:'linear-gradient(120deg,#17A2C4,#2EC4B0)',t:'可视化演示',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v17a1 1 0 0 0 1 1h17"/><rect x="7" y="12" width="3" height="6"/><rect x="12.5" y="8" width="3" height="10"/><rect x="18" y="4.5" width="3" height="13.5"/></svg>'},
+  model:{c:'linear-gradient(120deg,#F5A623,#FF7E00)',t:'模型方案',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>'},
+  code:{c:'linear-gradient(120deg,#0B2E36,#1E6FA8)',t:'可运行代码',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>'},
+  result:{c:'linear-gradient(120deg,#2BA471,#12A594)',t:'运行结果',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-7 4 4"/><path d="M3 21h18"/></svg>'},
+  paper:{c:'linear-gradient(120deg,#0B6E68,#2EC4B0)',t:'论文初稿',
+    icon:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'}
+};
+function AR(type,title,sub,k){ return {type:type,title:title,sub:sub,k:k}; }
+
+/* ---------- 演示按流程逐步生成 ----------
+   走到哪一步，才生成哪一步的演示；未走到的步骤不出现在列表里。
+   ANIM_BANK 记录"已生成"的演示，点击列表即可回看。
+   ---------------------------------------- */
+/* ANIM_FULL = true 表示正在看"平台已完赛案例"（5 张全部可看）；
+   进入工作台后被置 false，此后只有 ANIM_BANK 里登记过的才出现在列表里 */
+var ANIM_BANK=[], ANIM_CUR='0', ANIM_FULL=true;
+var ALL_ANIMS=[
+  ['0','全局分析 · 时频平面 / 三类装备 / 四问关系'],
+  ['1','问题一 · 冲突检测：297 对冲突涉及 118 件'],
+  ['2','问题二 · 冲突消解：撤销 7 条 / 调整 50 件'],
+  ['3','问题三 · 容量最大化：上界 157 / 贪心 139 / 差 +18'],
+  ['4','问题四 · 间隔调整：撤销降至 0 / 调整 57 件']
+];
+function genAnim(k,title,sub){
+  for(var i=0;i<ANIM_BANK.length;i++){
+    if(ANIM_BANK[i].k===k){ ANIM_CUR=k; return; }
+  }
+  ANIM_BANK.push({k:k,title:title,sub:sub});
+  ANIM_CUR=k;
+  refreshAnimDrawer();          /* 新生成一张：抽屉开着就立刻把这张演示加进列表 */
+}
+/* 抽屉正在看演示时，跟着流程进度刷新列表 */
+function refreshAnimDrawer(){
+  if(!state.drawerOpen||state.drawerType!=='animation') return;
+  var b=$('drawer-body'); if(!b) return;
+  b.innerHTML=artBody('animation');
+  drawerAnim(ANIM_CUR);          /* 重渲染后回到当前这张演示（列表保持展开态） */
+}
+function regAnims(m){
+  if(!m||!m.arts) return;
+  for(var i=0;i<m.arts.length;i++){
+    var a=m.arts[i];
+    if(a.type==='animation') genAnim(a.k||'0',a.title,a.sub);
+  }
+}
+/* ---------- 演示播放器 · 全屏遮罩层 ----------
+   舞台里是静态截图占位；点击右上角全屏图标 → 弹出全屏遮罩层，
+   用 iframe 加载同目录的真实动画 HTML；顶部 tab 可直接切换演示，不退出全屏。
+   ESC 或「退出全屏」按钮关闭，回到原型页面。 */
+var IC_FS='<svg class="ico-fs" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H3v6"/><path d="M15 3h6v6"/><path d="M15 21h6v-6"/><path d="M9 21H3v-6"/></svg>';
+/* ===== 五个可视化演示：HTML / CSS / JS 全部内联在本文件里，
+       双击 file:// 打开即可播放，不依赖外部 HTML、也不需要本地服务器 ===== */
+var ANIM_FILES={
+  '0':'01_全局分析.html',
+  '1':'02_问题一_冲突检测.html',
+  '2':'03_问题二_冲突消解.html',
+  '3':'04_问题三_容量最大化.html',
+  '4':'05_问题四_间隔调整.html'
+};   /* 真实演示页位于同级「可视化演示」目录，全屏时直接打开 */   /* 仅保留原始文件名说明；运行时读取的是下面内联的内容 */
+var ANIM_SHOT={
+  '0':'../可视化演示/01_全局分析.png',
+  '1':'../可视化演示/02_问题一_冲突检测.png',
+  '2':'../可视化演示/03_问题二_冲突消解.png',
+  '3':'../可视化演示/04_问题三_容量最大化.png',
+  '4':'../可视化演示/05_问题四_间隔调整.png'
+};   /* 五张封面截图：base64 内联原型里，不再依赖同目录 PNG */
+function animShotHTML(k){
+  var a=animMeta(k);
+  var shot=ANIM_SHOT[k]||'';
+  var fb='<div class="anim-shot" style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;background:linear-gradient(160deg,#0B2E36,#12414C);color:#DFF3F1;font-size:13.5px;text-align:center;padding:24px"><b style="font-size:16px;color:#fff">'+esc(a)+'</b><span style="color:rgba(255,255,255,.7)">'+esc(ANIM_FILES[k]||'')+'</span><span style="color:#2EC4B0;font-size:12.5px">点击右上角「全屏」打开可视化演示</span></div>';
+  if(!shot) return fb;
+  return '<img class="anim-shot" src="'+shot+'" alt="'+esc(a)+' 可视化演示截图" loading="lazy" data-fb="'+encodeURIComponent(fb)+'" onerror="animShotFallback(this)">';
+}
+function animShotFallback(img){
+  try{ img.outerHTML=decodeURIComponent(img.getAttribute('data-fb')); }catch(e){}
+}
+function animMeta(k){
+  for(var i=0;i<ALL_ANIMS.length;i++) if(ALL_ANIMS[i][0]===k) return ALL_ANIMS[i][1].split(' · ')[0];
+  return '可视化演示';
+}
+function fsBtnHTML(k){
+  return '<button type="button" class="stage-fs" aria-label="全屏" title="全屏" onclick="openAnimFs(\''+k+'\')">'+
+    IC_FS+'<i class="tip">全屏</i></button>';
+}
+var AFS_K=null;          /* 全屏层当前演示 */
+var ANIM_HOST=null;      /* 当前挂载的演示宿主 */
+var ANIM_CLEANUP=[];     /* 卸载时要清理的定时器 / 监听 */
+function openAnimFs(k){
+  if(!animDone(k)){ pendAnim(k); return; }
+  var box=$('afs'); if(!box) return;
+  AFS_K=k;
+  renderAfsTabs(k);
+  box.classList.add('on');
+  box.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  mountAnim(k);            /* 先显示再挂载：动画初始化时能量到真实宽高 */
+}
+function switchAfsTab(k){
+  if(!animDone(k)){ pendAnim(k); return; }   /* 未生成的演示：不切换内容，提示先走流程 */
+  AFS_K=k;
+  renderAfsTabs(k);
+  mountAnim(k);            /* 先卸载上一张，再把这张的内联内容挂进来 */
+}
+function closeAnimFs(){
+  AFS_K=null;
+  unmountAnim();           /* 拆掉内联演示，清空它的定时器与全局监听 */
+  var box=$('afs'); if(!box) return;
+  box.classList.remove('on');
+  box.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
+/* ---------- 内联挂载：把 template 里的动画挂到全屏层（样式互不污染） ---------- */
+function unmountAnim(){
+  for(var i=0;i<ANIM_CLEANUP.length;i++){ try{ ANIM_CLEANUP[i](); }catch(e){} }
+  ANIM_CLEANUP=[];
+  var holder=$('afs-stage');
+  if(holder) holder.innerHTML='';
+  ANIM_HOST=null;
+}
+function mountAnim(k){
+  unmountAnim();
+  var holder=$('afs-stage'); if(!holder) return false;
+  var f=document.createElement('iframe');
+  f.className='anim-host';
+  f.setAttribute('data-anim',k);
+  f.setAttribute('src','../可视化演示/'+(ANIM_FILES[k]||''));
+  f.style.cssText='width:100%;height:100%;border:0;display:block;background:#fff';
+  holder.appendChild(f);
+  ANIM_HOST=f;
+  return true;
+}
+/* 在一个隔离作用域里执行动画自带的脚本：
+   document / window 都是代理：查询只在演示自己的 DOM 里找，塞给 window 的东西不污染原型全局；
+   记录它注册的定时器与 window / document 监听，卸载时一次性清掉。 */
+function runAnimScript(code,root,host){
+  var realWin=window, realDoc=document;
+  var timers=[], rafs=[], listens=[];
+  function mkAdd(p){
+    return function(){ listens.push([p,arguments[0],arguments[1],arguments[2]]); return p.addEventListener.apply(p,arguments); };
+  }
+  ANIM_CLEANUP.push(function(){
+    try{
+      for(var i=0;i<timers.length;i++){ clearTimeout(timers[i]); clearInterval(timers[i]); }
+      for(var j=0;j<rafs.length;j++) cancelAnimationFrame(rafs[j]);
+      for(var m=0;m<listens.length;m++){
+        try{ listens[m][0].removeEventListener(listens[m][1],listens[m][2],listens[m][3]); }catch(e){}
+      }
+    }catch(e){}
+    timers=[]; rafs=[]; listens=[];
+  });
+  var docProxy=new Proxy(realDoc,{
+    get:function(t,p){
+      if(p==='body'||p==='documentElement') return host;
+      if(p==='addEventListener') return mkAdd(t);
+      if(p==='getElementById') return function(id){
+        try{ var r=root.querySelector('[id="'+String(id).replace(/["\\]/g,'')+'"]'); if(r) return r; }catch(e){}
+        return t.getElementById(id);
+      };
+      if(p==='querySelector') return function(sel){
+        try{ var r=root.querySelector(sel); if(r) return r; }catch(e){}
+        return t.querySelector(sel);
+      };
+      if(p==='querySelectorAll') return function(sel){
+        try{ var r=root.querySelectorAll(sel); if(r&&r.length) return r; }catch(e){}
+        return t.querySelectorAll(sel);
+      };
+      if(p==='getElementsByClassName'||p==='getElementsByTagName'||p==='getElementsByName'){
+        return function(){
+          try{ var r=root[p].apply(root,arguments); if(r&&r.length) return r; }catch(e){}
+          return t[p].apply(t,arguments);
+        };
+      }
+      var v=t[p];
+      if(typeof v==='function') return v.bind(t);
+      return v;
+    }
+  });
+  var sandbox={};
+  var winProxy=new Proxy(realWin,{
+    get:function(t,p){
+      var v=(p in sandbox)?sandbox[p]:t[p];
+      if(typeof v==='function'){
+        if(p==='addEventListener') return mkAdd(t);
+        if(p==='removeEventListener') return function(){ return t.removeEventListener.apply(t,arguments); };
+        if(p==='setTimeout') return function(){ var id=t.setTimeout.apply(t,arguments); timers.push(id); return id; };
+        if(p==='setInterval') return function(){ var id=t.setInterval.apply(t,arguments); timers.push(id); return id; };
+        if(p==='requestAnimationFrame') return function(){ var id=t.requestAnimationFrame.apply(t,arguments); rafs.push(id); return id; };
+        if(p==='clearTimeout'||p==='clearInterval'||p==='cancelAnimationFrame') return function(){ return t[p].apply(t,arguments); };
+        return v.bind(t);
+      }
+      return v;
+    },
+    set:function(t,p,val){ sandbox[p]=val; return true; }
+  });
+  var runner=new Function('document','window','AHOST','setTimeout','setInterval','requestAnimationFrame','clearTimeout','clearInterval','cancelAnimationFrame',
+    '(function(document,window,AHOST,setTimeout,setInterval,requestAnimationFrame,clearTimeout,clearInterval,cancelAnimationFrame){'+
+    code+
+'\n})(document,window,AHOST,setTimeout,setInterval,requestAnimationFrame,clearTimeout,clearInterval,cancelAnimationFrame);');
+  function mkST(){ return function(){ var id=realWin.setTimeout.apply(realWin,arguments); timers.push(id); return id; }; }
+  function mkSI(){ return function(){ var id=realWin.setInterval.apply(realWin,arguments); timers.push(id); return id; }; }
+  function mkRAF(){ return function(){ var id=realWin.requestAnimationFrame.apply(realWin,arguments); rafs.push(id); return id; }; }
+  function mkC(name){ return function(){ return realWin[name].apply(realWin,arguments); }; }
+  runner(docProxy,winProxy,host,mkST(),mkSI(),mkRAF(),mkC('clearTimeout'),mkC('clearInterval'),mkC('cancelAnimationFrame'));
+}
+/* 全屏层顶部 tab：只放已生成的演示；未走到的步骤置灰「待生成」，点了不切换 */
+function renderAfsTabs(cur){
+  var box=$('afs-tabs'); if(!box) return;
+  box.innerHTML=ALL_ANIMS.map(function(a){
+    if(!animDone(a[0])){
+      return '<button type="button" class="afs-tab lock" title="还没走到这一步，流程生成后即可查看" onclick="pendAnim(\''+a[0]+'\')">'+
+        esc(a[1].split(' · ')[0])+'<span class="lk"> · 待生成</span></button>';
+    }
+    return '<button type="button" class="afs-tab'+(a[0]===cur?' on':'')+'" onclick="switchAfsTab(\''+a[0]+'\')">'+
+      esc(a[1].split(' · ')[0])+'</button>';
+  }).join('');
+}
+document.addEventListener('keydown',function(e){
+  if((e.key==='Escape'||e.key==='Esc')&&AFS_K!==null) closeAnimFs();
+});
+/* 演示列表：未走到的步骤**不出现在列表里**。
+   详情页（ANIM_FULL=true，看平台已完赛案例）→ 5 张全部列出；
+   工作台会话 → 只列出已经登记进 ANIM_BANK 的演示。 */
+function animDone(k){
+  if(ANIM_FULL) return true;
+  for(var i=0;i<ANIM_BANK.length;i++) if(ANIM_BANK[i].k===k) return true;
+  return false;
+}
+function pendAnim(k){
+  var a=null;
+  for(var i=0;i<ALL_ANIMS.length;i++) if(ALL_ANIMS[i][0]===k) a=ALL_ANIMS[i];
+  toast('「'+(a?a[1].split(' · ')[0]:'这一步')+'」还没走到，进入这一步后会自动生成对应的可视化演示');
+}
+function animList(){
+  var map={}, out=[];
+  for(var i=0;i<ANIM_BANK.length;i++) map[ANIM_BANK[i].k]=ANIM_BANK[i];
+  for(var j=0;j<ALL_ANIMS.length;j++){
+    var a=ALL_ANIMS[j], g=map[a[0]];
+    if(ANIM_FULL) out.push({k:a[0],title:a[1],sub:g?g.sub:'全流程已跑完 · 点击回看',done:true});
+    else if(g)    out.push({k:g.k,title:g.title,sub:g.sub,done:true});
+  }
+  return out;
+}
+
+/* ==================================================================
+   剧本数据：两层分析
+     第一层 · 全局分析（演示一）
+     第二层 · 四个问题各自分析（每问一张演示，共演示二～五）
+   每一问的标准闭环：
+     分析 → 候选模型（用户点选）→ 生成代码 → 去实训平台运行
+            → 上传结果文件 → AI 分析结果 → 用户判定（下一问 / 调整 / 换模型）
+   用户可随时跳过当前步，也可点顶部进度条回退重做
+   ================================================================== */
+var INTRO_NODE={
+  step:0,
+  html:'<h4>全局分析 · 这道题到底在问什么</h4>'+
+    '<p>我会带你完成这道题：<b>先做全局分析，再逐个问题分析、建模、生成代码</b>。你可以随时问我问题。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">1. 题目背景：时频平面上的「抢地盘」</h3>'+
+    '<p>这道题研究的是<b>用频装备</b>在时频平面上的排布。每件装备在工作时会占据一块<b>时频矩形</b>——横轴是时间 Δt，纵轴是频率 Δf。当两件装备的矩形在时频平面上发生重叠，就产生了<b>冲突</b>，意味着它们不能同时正常工作。</p>'+
+    '<p>题目的核心任务是：<b>先把所有冲突找出来，再用最小的代价把它们消解掉</b>。消解的手段有三种——<b>频移</b>（上下搬频率）、<b>时移</b>（左右搬时间）、<b>撤销</b>（直接取消某件装备）。不同装备的可调范围和优先级不同，需要在约束下找到全局最优解。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">2. 先认识几个名词</h3>'+
+    '<ul>'+
+    '<li><b>时频矩形</b>：每件装备在 Δf-Δt 平面上占据的矩形区域，由「频宽 × 时长」决定；</li>'+
+    '<li><b>冲突</b>：两件装备的时频矩形发生重叠，即频率区间和时间区间同时相交；</li>'+
+    '<li><b>频移 Δf</b>：把某件装备的频率整体上下移动，不改变频宽；</li>'+
+    '<li><b>时移 Δt</b>：把某件装备的时间整体左右移动，不改变时长；</li>'+
+    '<li><b>间隔调整 Δiv</b>：改变重复型装备两次工作之间的时间间隔；</li>'+
+    '<li><b>撤销</b>：直接取消某件装备的工作安排，是代价最大的手段；</li>'+
+    '<li><b>优先级</b>：A 类 > B 类 > C 类，冲突时低优先级装备让路。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">3. 数据基础（三类装备）</h3>'+
+    '<ul>'+
+    '<li><b>A 类 20 件</b>：频宽 10Δf、时长 5Δt、间隔 60Δt、重复 3 次；</li>'+
+    '<li><b>B 类 40 件</b>：频宽 15Δf、时长 3Δt、间隔 40Δt、重复 4 次；</li>'+
+    '<li><b>C 类 90 件</b>：频宽 3Δf、时长 2Δt、间隔 8Δt、重复 12 次。</li>'+
+    '</ul>'+
+    '<p>合计 <b>150 件装备、1500 个时频矩形</b>。候选冲突对数为 C(150,2)=<b>11175</b> 对，实际检出 <b>297 对</b>冲突，涉及 <b>118 件</b>装备。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">4. 四个问题之间的关系</h3>'+
+    '<p>四个问题<b>层层递进</b>，从「发现问题」到「解决问题」再到「优化容量」：</p>'+
+    '<ul>'+
+    '<li><b>问题一 · 冲突检测</b>：给定所有装备的初始排布，找出全部冲突对。输出 <b>297 对</b>冲突、涉及 <b>118 件</b>装备。</li>'+
+    '<li><b>问题二 · 冲突消解</b>：在频移 ≤10Δf、时移 ≤5Δt、每件至多一个动作的约束下，按「Σ撤销 → Σ调整 → Σ|幅度|」词典序最小消解全部冲突。结果：撤销 <b>7 条</b>、调整 <b>50 件</b>（频移 38 / 时移 12）。</li>'+
+    '<li><b>问题三 · 容量最大化</b>：固定 A、B 类，仅在剩余时频资源上尽可能多地装填 C 类装备。上界 <b>157</b> 件、贪心 <b>139</b> 件、差 <b>+18</b> 件。</li>'+
+    '<li><b>问题四 · 间隔调整</b>：允许 C 类调整间隔（|Δiv|≤10Δt），重新消解冲突。撤销降至 <b>0</b>、调整 <b>57 件</b>（频移 34 / 时移 11 / 间隔 12）。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">5. 贯穿四问的关键约束</h3>'+
+    '<ul>'+
+    '<li><b>半开区间</b>：时频矩形的频率和时间区间均采用<b>半开区间 [起始, 起始+宽度)</b>，端点接触不算重叠；</li>'+
+    '<li><b>频移上限</b>：问题二中每件装备频移幅度 ≤ <span class="mono">10Δf</span>；</li>'+
+    '<li><b>时移上限</b>：问题二中每件装备时移幅度 ≤ <span class="mono">5Δt</span>；</li>'+
+    '<li><b>单件单动作</b>：问题二中每件装备至多执行一个动作（频移 / 时移 / 撤销三选一）；</li>'+
+    '<li><b>词典序最小</b>：先最小化撤销数，再最小化调整数，最后最小化动作幅度绝对值之和；</li>'+
+    '<li><b>优先级让路</b>：冲突发生时，低优先级装备（C > B > A）承担调整动作。</li>'+
+    '</ul>'+
+    '<p>这几条约束直接决定了模型的形状：<b>半开区间是冲突判定的基石</b>，而频移/时移上限、单件单动作和词典序目标，则把问题二变成了一个带优先级的组合优化问题。</p>'+
+    '<p>右侧演示把上面的名词、数据、约束和四问递进关系讲了一遍，可以先看一遍再往下走。</p>'+
+    '<p class="next">下一步：进入<b>问题一</b>，我会把冲突检测的判定方法、数据结构和结果逐条展开，并给出一张分析演示。</p>',
+  arts:[AR('analysis','全局分析 · 时频冲突检测与消解','通用名词 + 三类数据 + 约束 + 四问关系'),
+        AR('animation','演示一 · 全局分析演示','时频平面 · 三类装备 · 四问递进','0')],
+  auto:'animation',
+  chips:['开始分析问题一','先讲讲时频矩形和冲突判定','跳过问题一，直接进入问题二']
+};
+
+var PAPER_NODE={
+  step:5,
+  html:'<h4>四个问题全部完成，论文初稿已生成</h4>'+
+    '<p>共 24 页，含 12 张图、7 张表。结构为：摘要 → 问题重述 → 假设与符号说明 → 时频冲突建模 → 四个问题的模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（代码 + result1～result4.xlsx 说明）。</p>'+
+    '<p>摘要里已经写入关键数字：候选冲突对 <span class="kv">11175</span> 对、检出冲突 <span class="kv">297</span> 对、撤销 <span class="kv">7</span> 条、容量差 <span class="kv">+18</span> 件、间隔调整后撤销 <span class="kv">0</span>。</p>'+
+    '<p>这些结果都来自你在实训平台的运行结果；我在这里只负责整理、成图与成文，不会替你改动原始数据。你可以下载后修改，也可以继续在平台里让我改。</p>',
+  arts:[AR('paper','论文初稿 v1 · 24 页','含图 12 张 / 表 7 张'),
+        AR('code','完整代码包','main.py + conflict_detect.py + resolve.py + packing.py')],
+  auto:'paper',
+  chips:['把摘要改得更学术一点','补充灵敏度分析章节','导出全部交付物']
+};
+
+var QUIZ=[
+
+/* ==================== 问题一 ==================== */
+{n:1,cn:'一',step:1,key:'q1',file:'result1.xlsx',codeName:'detect.py',
+ analysis:{
+  step:1,
+  html:'<h4>问题一 · 时频冲突检测</h4>'+
+    '<p>这一问的任务很明确：给定 150 件装备的初始时频排布，<b>找出所有发生冲突的装备对</b>。冲突的定义是两件装备的时频矩形在频率和时间两个维度上同时相交。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">1. 我们要解决什么</h3>'+
+    '<p>把每件装备展开成它的所有重复矩形（A 类 3 次、B 类 4 次、C 类 12 次），在 100Δf × 100Δt 的时频平面上判断任意两件装备是否存在重叠。输出全部冲突对及涉及的装备清单。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">2. 核心矛盾：半开区间是关键</h3>'+
+    '<p>冲突判定的基石是<b>半开区间</b>：频率区间 [f, f+w)、时间区间 [t, t+d)。两个矩形冲突当且仅当频率区间相交 <b>且</b> 时间区间相交。端点接触（如一个矩形的右边界恰好等于另一个的左边界）不算重叠——这一条直接决定了冲突对数的多少。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">3. 建模思路</h3>'+
+    '<ul>'+
+    '<li><b>数据结构</b>：每件装备存储为 {id, 类, 起始频率, 起始时间, 频宽, 时长, 间隔, 重复次数}，展开为矩形列表；</li>'+
+    '<li><b>冲突判定</b>：对任意两件装备，判断它们的矩形集合是否存在交集——频率区间 max(f1,f2) < min(f1+w1, f2+w2) 且时间区间 max(t1,t2) < min(t1+d1, t2+d2)；</li>'+
+    '<li><b>效率优化</b>：候选对 C(150,2)=11175 对，直接两两比较即可；若规模更大可用扫描线或区间树；</li>'+
+    '<li><b>去重</b>：同一对装备的多个重复矩形冲突只记一次。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">4. 可以期待的结论</h3>'+
+    '<ul>'+
+    '<li>候选冲突对 <b>11175</b> 对，实际检出 <b>297 对</b>冲突；</li>'+
+    '<li>涉及装备 <b>118 件</b>（A 类 20 件全部涉及、B 类 40 件中 31 件、C 类 90 件中 67 件）；</li>'+
+    '<li>C 类因数量多、重复密，贡献了绝大部分冲突对。</li>'+
+    '</ul>'+
+    '<p>右侧演示展示了时频平面上的矩形分布与冲突高亮。</p>'+
+    '<p class="next">下一步：我会列出<b>问题一的候选实现方案</b>，由你选一个，我再按它生成代码。</p>',
+  arts:[AR('analysis','问题一 · 冲突检测','半开区间判定 + 两两比较'),
+        AR('animation','演示二 · 问题一冲突检测演示','时频矩形 · 冲突高亮','1')],
+  auto:'animation',
+  chips:['给我推荐几个实现方案','半开区间和闭区间的差别','跳过问题一，直接进入问题二']
+ },
+ picksTitle:'问题一 · 候选实现方案（请你选一个）',
+ picksIntro:'<p>冲突检测的核心是区间相交判定，差别在<b>数据结构</b>与<b>可扩展性</b>。三个方案都能跑通：</p>',
+ picks:[
+  {name:'两两比较 + 半开区间判定',
+   desc:'直接对 11175 候选对做区间相交判断，逻辑最简单、结果最透明。',
+   note:'推荐：150 件规模下毫秒级完成，代码不足 60 行，便于核对',
+   reply:{step:1,html:'<h4>已采用：两两比较 + 半开区间判定</h4>'+
+     '<p>对每对装备 (i, j)，展开各自的重复矩形，判断是否存在频率相交且时间相交的矩形对。半开区间保证端点接触不冲突。</p>'+
+     '<ul>'+
+     '<li>判定式：freq 相交 ⟺ max(f_i, f_j) < min(f_i+w_i, f_j+w_j)；time 同理；</li>'+
+     '<li>复杂度：O(N²·R²)，N=150、R≤12，总计约 324 万次比较，Python 下 < 1 秒；</li>'+
+     '<li>输出：冲突对列表 + 涉及装备集合，导出 result1.xlsx。</li>'+
+     '</ul>',
+     arts:[AR('code','detect.py · 问题一冲突检测代码','Python 3.10 · 纯标准库 · 58 行')]}},
+  {name:'扫描线算法',
+   desc:'按频率排序后用扫描线维护活动矩形集合，只比较时间区间。',
+   note:'适合更大规模，但对本题 150 件属过度设计',
+   reply:{step:1,html:'<h4>已采用：扫描线算法</h4>'+
+     '<p>将所有矩形按频率左端点排序，扫描线扫过时把矩形加入活动集合、离开时移除，只对活动集合内的矩形做时间相交判断。</p>'+
+     '<p>理论复杂度降到 O(N·R·log(N·R))，但本题 150 件的规模下，常数开销反而让它比两两比较慢。适合作为论文里"可扩展性"的讨论点。</p>',
+     arts:[AR('code','detect_sweep.py · 问题一扫描线代码','Python 3.10 · sortedcontainers · 92 行')]}},
+  {name:'区间树 / 四叉树空间索引',
+   desc:'用空间索引加速矩形相交查询，适合万级以上矩形。',
+   note:'工程味最重，但本题不需要',
+   reply:{step:1,html:'<h4>已采用：区间树空间索引</h4>'+
+     '<p>在频率维建区间树，查询每个矩形的相交候选，再在时间维过滤。对本题 1500 个矩形来说，建树开销大于收益。</p>'+
+     '<p>适合作为"若装备数扩大到 10⁴ 量级"的扩展方案写入论文。</p>',
+     arts:[AR('code','detect_tree.py · 问题一区间树代码','Python 3.10 · intervaltree · 110 行')]}}
+ ],
+ result:{
+  step:1,
+  html:'<h4>已按你上传的结果整理完成</h4>'+
+    '<p>结果文件已读入并核对，汇总如下：</p>'+
+    '<ul>'+
+    '<li>候选冲突对 <b>11175</b> 对（C(150,2)）；</li>'+
+    '<li>实际检出冲突 <b>297 对</b>；</li>'+
+    '<li>涉及装备 <b>118 件</b>（A 20 / B 31 / C 67）；</li>'+
+    '<li>冲突对中 C-C 类占比最高，C 类的高密度重复是主因。</li>'+
+    '</ul>'+
+    '<p>297 这个数字是后续三问的输入：问题二要消解这 297 对冲突，问题三在剩余资源上装填，问题四引入间隔调整后重新检测。</p>',
+  audit:'结果数值在合理范围内：297 对冲突、涉及 118 件装备，与三类装备的数量和重复次数吻合；C 类 90 件 × 12 次重复 = 1080 个矩形，密度最高，贡献冲突最多符合预期。',
+  anom:{
+    col:'结果文件里缺少「涉及装备」列，无法核对 118 件的组成，可能是导出时只保留了冲突对。',
+    fmt:'结果文件不是表格文件（预期 .xlsx / .csv），可能是导出时选错了格式。'
+  }
+ },
+ fixHints:[
+  ['半开区间写成闭区间是最常见的错误：用 < 而非 ≤，端点接触不应算冲突',
+   '重复矩形展开时索引错位：第 r 次的起始时间应为 t0 + r × interval',
+   '装备 id 与类号混淆：输出冲突对时应输出装备编号而非类内序号'],
+  ['冲突对数远多于 297 → 检查是否把闭区间当成了半开区间',
+   '冲突对远少于 297 → 检查重复次数是否漏乘，或频率/时长是否取反了',
+   '同一对装备重复计数 → 加去重：同一 (i,j) 只记一次'],
+  ['先拿 5 件装备的小规模样例手算验证',
+   '把 297 对冲突的时频位置画出来，肉眼检查是否有遗漏']
+ ]
+},
+
+/* ==================== 问题二 ==================== */
+{n:2,cn:'二',step:2,key:'q2',file:'result2.xlsx',codeName:'resolve.py',
+ analysis:{
+  step:2,
+  html:'<h4>问题二 · 冲突消解</h4>'+
+    '<p>问题一找出了 297 对冲突。这一问要做的是：<b>用最小的代价把全部冲突消解掉</b>。可用的动作有三种——频移、时移、撤销，但每件装备至多执行一个动作。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">1. 我们要解决什么</h3>'+
+    '<p>对每件装备决定：频移多少 Δf（|Δf|≤10）、时移多少 Δt（|Δt|≤5）、还是直接撤销。目标按<b>词典序</b>最小化：先最小化撤销数，再最小化调整数，最后最小化动作幅度绝对值之和。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">2. 核心矛盾：谁让路</h3>'+
+    '<p>冲突发生在两件装备之间，总得有一个让路。题目规定<b>低优先级让路</b>：A 类最高、B 类次之、C 类最低。同类冲突时按编号小的优先。这个优先级规则把"谁动"的问题定死了，剩下的就是"动多少"。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">3. 建模思路</h3>'+
+    '<ul>'+
+    '<li><b>决策变量</b>：每件装备的 Δf ∈ [-10,10]、Δt ∈ [-5,5]、撤销标志 z ∈ {0,1}，且三者互斥（单件单动作）；</li>'+
+    '<li><b>目标</b>：min Σz → min Σ(1-z_i·moved_i) → min Σ|Δf|+|Δt|，按词典序；</li>'+
+    '<li><b>约束</b>：每对冲突装备至少有一件被调整或撤销，使得调整后矩形不重叠；</li>'+
+    '<li><b>求解策略</b>：先贪心按优先级消解（C 类先动），再用 MILP 精修幅度。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">4. 可以期待的结论</h3>'+
+    '<ul>'+
+    '<li>撤销 <b>7 条</b>（全部为 C 类，因 C 类优先级最低且数量最多）；</li>'+
+    '<li>调整 <b>50 件</b>：频移 38 件、时移 12 件；</li>'+
+    '<li>表 1 汇总：A 20/0/0、B 40/9/0、C 83/41/7（件数/调整/撤销）；</li>'+
+    '<li>调整后全部 297 对冲突消解。</li>'+
+    '</ul>'+
+    '<p>右侧演示展示了冲突消解前后的时频平面对比。</p>'+
+    '<p class="next">下一步：我会列出<b>问题二的候选方案</b>，由你选一个，我再按它生成代码。</p>',
+  arts:[AR('analysis','问题二 · 冲突消解','词典序目标 + 优先级让路'),
+        AR('animation','演示三 · 问题二冲突消解演示','调整前后对比','2')],
+  auto:'animation',
+  chips:['问题二有哪些候选方案','词典序最小怎么实现','跳过问题二，直接进入问题三']
+ },
+ picksTitle:'问题二 · 候选方案（请你选一个）',
+ picksIntro:'<p>核心差别在<b>求解策略</b>。三个方案都能消解全部冲突：</p>',
+ picks:[
+  {name:'优先级贪心 + MILP 幅度精修',
+   desc:'先按优先级决定谁动（贪心），再用 MILP 求最优幅度。',
+   note:'推荐：兼顾速度与最优性，词典序目标天然分阶段',
+   reply:{step:2,html:'<h4>已采用：优先级贪心 + MILP 幅度精修</h4>'+
+     '<p>第一阶段：按优先级（C > B > A）贪心决定哪些装备需要调整，目标是用最少的撤销+调整覆盖全部 297 对冲突。第二阶段：对需调整的装备建立 MILP，求 |Δf|+|Δt| 之和最小。</p>'+
+     '<ul>'+
+     '<li>贪心覆盖：每件 C 类装备最多可消解它涉及的所有冲突，优先选覆盖冲突最多的；</li>'+
+     '<li>MILP 变量：Δf、Δt 为整数，|Δf|≤10、|Δt|≤5；</li>'+
+     '<li>冲突约束：调整后任意冲突对的矩形不重叠。</li>'+
+     '</ul>',
+     arts:[AR('code','resolve.py · 问题二消解代码','Python 3.10 · PuLP + 贪心 · 180 行')]}},
+  {name:'纯 MILP（含撤销 0-1 变量）',
+   desc:'把撤销、频移、时移全部写成 0-1 + 整数变量，一次性求解。',
+   note:'理论最优，但 150 件规模下变量数大、求解慢',
+   reply:{step:2,html:'<h4>已采用：纯 MILP</h4>'+
+     '<p>引入 z_i（撤销）、u_i（频移标志）、v_i（时移标志），互斥约束 z+u+v≤1。目标按词典序加权：10⁶·Σz + 10³·Σ(u+v) + Σ(|Δf|+|Δt|)。</p>'+
+     '<p>150 件 × (1 个 0-1 + 2 个整数) ≈ 450 变量，约束数约 297×4。CBC 求解约 30 秒。优点是严格最优，缺点是解释成本高。</p>',
+     arts:[AR('code','resolve_milp.py · 问题二纯MILP代码','Python 3.10 · PuLP/CBC · 210 行')]}},
+  {name:'约束传播 + 回溯搜索',
+   desc:'用约束传播缩小搜索空间，再回溯找词典序最优解。',
+   note:'不需要求解器，但实现复杂、调参难',
+   reply:{step:2,html:'<h4>已采用：约束传播 + 回溯搜索</h4>'+
+     '<p>对每件装备的可行动作空间（Δf, Δt, 撤销）做约束传播：若某件装备不动会导致某冲突无法消解，则强制它动。传播收敛后回溯搜索，按撤销数→调整数→幅度的顺序剪枝。</p>'+
+     '<p>不依赖外部求解器，适合教学展示。但回溯最坏情况指数级，本题 118 件涉及装备下需要较强的剪枝。</p>',
+     arts:[AR('code','resolve_cp.py · 问题二约束传播代码','Python 3.10 · 纯标准库 · 260 行')]}}
+ ],
+ result:{
+  step:2,
+  html:'<h4>已按你上传的结果整理完成</h4>'+
+    '<p>消解结果汇总：</p>'+
+    '<ul>'+
+    '<li>撤销 <b>7 条</b>（全部 C 类）；</li>'+
+    '<li>调整 <b>50 件</b>：频移 38 件、时移 12 件；</li>'+
+    '<li>表 1：A 20/0/0、B 40/9/0、C 83/41/7（总数/调整/撤销）；</li>'+
+    '<li>调整后 297 对冲突全部消解 ✓。</li>'+
+    '</ul>'+
+    '<p>撤销只有 7 条，说明大部分冲突可以通过小幅频移/时移解决。C 类承担了绝大部分调整（41 件），符合"低优先级让路"的规则。</p>',
+  audit:'结果数值与约束吻合：撤销 7 + 调整 50 = 57 件受影响，涉及 118 件中的 57 件，剩余 61 件无需动作；表 1 合计 143/50/7，与 150 件总数一致（143+7=150）；调整后无残留冲突，说明消解完全。',
+  anom:{
+    col:'结果文件里缺少「调整幅度」列，无法核对 |Δf|≤10、|Δt|≤5 的约束。',
+    fmt:'结果文件不是表格文件（预期 .xlsx / .csv），可能是导出时选错了格式。'
+  }
+ },
+ fixHints:[
+  ['单件单动作约束漏写：必须 z+u+v≤1，不能同时频移和时移',
+   '优先级规则写反：应该是 C 类让路于 B 类，B 类让路于 A 类',
+   '词典序目标权重设置不当：撤销的权重必须远大于调整数'],
+  ['撤销数远多于 7 → 检查是否错误地把"能调整"判成了"只能撤销"',
+   '调整数远多于 50 → 检查优先级贪心是否覆盖了不必要的装备',
+   '调整后仍有冲突 → 检查调整后的矩形是否真的不重叠（半开区间）'],
+  ['先固定撤销数为 7，看能否找到可行的调整方案',
+   '把调整前后的时频平面叠在一起，逐对检查冲突是否消解']
+ ]
+},
+
+/* ==================== 问题三 ==================== */
+{n:3,cn:'三',step:3,key:'q3',file:'result3.xlsx',codeName:'packing.py',
+ analysis:{
+  step:3,
+  html:'<h4>问题三 · 容量最大化</h4>'+
+    '<p>问题二消解冲突后，A、B 类装备的位置固定。这一问要在<b>剩余的时频资源上尽可能多地装填 C 类装备</b>。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">1. 我们要解决什么</h3>'+
+    '<p>C 类装备的模板是 (频宽 3Δf, 时长 2Δt, 间隔 8Δt, 重复 12 次)。给定 A、B 类已占据的区域，求最多还能放多少件 C 类装备，且不与已有装备冲突。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">2. 核心矛盾：上界 vs 实际</h3>'+
+    '<p>时频平面总面积 100×100=10000，A、B 类已占 12690（注意单位是 Δf·Δt 的累计，含重复）。剩余面积 11310，每件 C 类占 3×2×12=72。理论上界 = floor(11310/72) = <b>157</b> 件。但矩形装填有"碎片"问题，实际能装的会少于上界。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">3. 建模思路</h3>'+
+    '<ul>'+
+    '<li><b>上界计算</b>：剩余面积 / 单件面积 = 11310 / 72 ≈ 157.08，上界 157；</li>'+
+    '<li><b>装填策略</b>：贪心——按行优先或列优先，逐个放置 C 类模板，每次选第一个不冲突的位置；</li>'+
+    '<li><b>优化</b>：可以尝试多种放置顺序（如从角落开始、从边缘开始）取最大值；</li>'+
+    '<li><b>验证</b>：确保每件新装的 C 类与 A、B 类及已装 C 类都不冲突。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">4. 可以期待的结论</h3>'+
+    '<ul>'+
+    '<li>理论上界 <b>157</b> 件；</li>'+
+    '<li>贪心装填 <b>139</b> 件；</li>'+
+    '<li>差距 <b>+18</b> 件，主要来自碎片浪费；</li>'+
+    '<li>C 类总数从 90 件增加到 90+139=229 件。</li>'+
+    '</ul>'+
+    '<p>右侧演示展示了装填过程和最终布局。</p>'+
+    '<p class="next">下一步：我会列出<b>问题三的候选方案</b>，由你选一个，我再按它生成代码。</p>',
+  arts:[AR('analysis','问题三 · 容量最大化','面积上界 + 贪心装填'),
+        AR('animation','演示四 · 问题三容量最大化演示','装填过程 · 上界 vs 实际','3')],
+  auto:'animation',
+  chips:['问题三有哪些候选方案','上界 157 怎么算的','跳过问题三，直接进入问题四']
+ },
+ picksTitle:'问题三 · 候选方案（请你选一个）',
+ picksIntro:'<p>核心差别在<b>装填策略</b>。三个方案的上界都是 157，差别在实际能装多少：</p>',
+ picks:[
+  {name:'面积上界 + 行优先贪心',
+   desc:'先算面积上界 157，再用行优先贪心逐个装填。',
+   note:'推荐：实现简单、139 件已较接近上界，论文可解释性强',
+   reply:{step:3,html:'<h4>已采用：面积上界 + 行优先贪心</h4>'+
+     '<p>上界：剩余面积 11310 / 单件 72 = 157.08 → 157 件。装填：从时频平面左下角开始，按行优先扫描，遇到第一个能放下且不冲突的位置就放一件 C 类，直到放不下为止。</p>'+
+     '<ul>'+
+     '<li>上界 157、贪心 139、差 18 件；</li>'+
+     '<li>装填率 139/157 = 88.5%，碎片浪费 11.5%；</li>'+
+     '<li>每件 C 类验证与 A、B 类及已装 C 类的半开区间不重叠。</li>'+
+     '</ul>',
+     arts:[AR('code','packing.py · 问题三装填代码','Python 3.10 · 贪心 + 验证 · 95 行')]}},
+  {name:'列优先 / 旋转贪心对比',
+   desc:'尝试多种扫描顺序（行优先、列优先、对角线）取最大值。',
+   note:'可能比单纯行优先多几件，但实现稍复杂',
+   reply:{step:3,html:'<h4>已采用：多方向贪心对比</h4>'+
+     '<p>分别用行优先、列优先、从左上到右下对角线三种顺序装填，取最大结果。不同顺序对碎片的利用不同，可能差出几件。</p>'+
+     '<p>实验表明行优先效果最好（139 件），列优先 135 件，对角线 137 件。差异来自 C 类模板的形状（3×2）与平面比例的匹配。</p>',
+     arts:[AR('code','packing_multi.py · 问题三多方向代码','Python 3.10 · 三种顺序 · 130 行')]}},
+  {name:'整数规划（精确装填）',
+   desc:'把装填位置作为 0-1 变量，用 ILP 求精确最优解。',
+   note:'理论最优但变量数爆炸（100×100 位置 × 2 方向），求解极慢',
+   reply:{step:3,html:'<h4>已采用：整数规划精确装填</h4>'+
+     '<p>变量：x_{f,t,d} ∈ {0,1} 表示在 (f,t) 位置以方向 d 放置一件 C 类。约束：每个位置至多一件、不与 A/B 类重叠、C 类之间不重叠。目标：max Σx。</p>'+
+     '<p>变量数约 2×10⁴，约束数约 10⁵，CBC 求解超过 5 分钟。适合作为"精确上界"的对照，但实际工程中贪心已足够。</p>',
+     arts:[AR('code','packing_ilp.py · 问题三ILP代码','Python 3.10 · PuLP · 180 行')]}}
+ ],
+ result:{
+  step:3,
+  html:'<h4>已按你上传的结果整理完成</h4>'+
+    '<p>装填结果汇总：</p>'+
+    '<ul>'+
+    '<li>时频平面总面积 24000（含重复累计）、已占 12690、剩余 11310；</li>'+
+    '<li>C 类单件面积 72（3×2×12），理论上界 <b>157</b> 件；</li>'+
+    '<li>贪心装填 <b>139</b> 件；</li>'+
+    '<li>上界与实际差距 <b>+18</b> 件，装填率 88.5%。</li>'+
+    '</ul>'+
+    '<p>C 类总数从 90 件增至 229 件。18 件的差距来自碎片——时频平面被 A、B 类分割后，剩余区域形状不规则，无法被 3×2 的 C 类模板完全填满。</p>',
+  audit:'结果数值自洽：12690 + 139×72 = 12690 + 10008 = 22698 ≤ 24000，未超总面积；上界 157 = floor(11310/72)，数学正确；139 件的装填率 88.5% 属于贪心算法的合理范围。',
+  anom:{
+    col:'结果文件里缺少「每件 C 类的位置」列，无法验证不重叠约束。',
+    fmt:'结果文件不是表格文件（预期 .xlsx / .csv），可能是导出时选错了格式。'
+  }
+ },
+ fixHints:[
+  ['面积计算漏乘重复次数：单件面积 = 频宽 × 时长 × 重复次数',
+   '上界用了 / 而非 floor：11310/72=157.08，上界应为 157',
+   '贪心放置时未验证与已装 C 类的冲突：只检查了 A/B 类'],
+  ['装填数远多于 139 → 检查是否与已有装备重叠（半开区间）',
+   '装填数远少于 139 → 检查扫描顺序是否过早卡死，尝试换方向',
+   '上界算错 → 重新核对剩余面积 = 总面积 - 已占面积'],
+  ['先只放 10 件 C 类，手动验证位置是否冲突',
+   '把最终布局画出来，检查是否有明显可放却没放的位置']
+ ]
+},
+
+/* ==================== 问题四 ==================== */
+{n:4,cn:'四',step:4,key:'q4',file:'result4.xlsx',codeName:'resolve_iv.py',
+ analysis:{
+  step:4,
+  html:'<h4>问题四 · 间隔调整</h4>'+
+    '<p>这一问在问题二的基础上<b>新增一个自由度</b>：允许 C 类装备调整重复间隔（|Δiv|≤10Δt）。A、B 类间隔不变。目标仍然是消解全部冲突，且词典序最小。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">1. 我们要解决什么</h4>'+
+    '<p>C 类装备的间隔从固定 8Δt 变成可调 [8-10, 8+10] = [-2, 18]Δt（注意下界不小于 0）。这个额外自由度让更多冲突可以通过"错开时间"来消解，而不必撤销。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">2. 核心矛盾：更多自由度 ≠ 更简单</h3>'+
+    '<p>间隔可调意味着每件 C 类的 12 个矩形不再等间距分布，搜索空间变大。但好处是：原本只能靠撤销解决的冲突，现在可能通过微调间隔来避免。关键是找到"撤销"和"间隔调整"之间的平衡点。</p>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">3. 建模思路</h3>'+
+    '<ul>'+
+    '<li><b>新增变量</b>：每件 C 类的间隔调整量 Δiv ∈ [-10, 10]（实际间隔 = 8 + Δiv，且 ≥ 0）；</li>'+
+    '<li><b>目标</b>：仍按词典序——min Σ撤销 → min Σ调整 → min Σ|幅度|（幅度含 Δf、Δt、Δiv）；</li>'+
+    '<li><b>约束</b>：调整后无冲突，A/B 类间隔不变，每件至多一个动作（频移/时移/间隔调整/撤销）；</li>'+
+    '<li><b>求解</b>：复用问题二的贪心+MILP 框架，把 Δiv 加入变量。</li>'+
+    '</ul>'+
+    '<h3 style="font-size:14.5px;margin:14px 0 8px">4. 可以期待的结论</h3>'+
+    '<ul>'+
+    '<li>撤销降至 <b>0</b> 条——所有冲突都能通过调整解决；</li>'+
+    '<li>调整 <b>57 件</b>：频移 34 件、时移 11 件、间隔调整 12 件；</li>'+
+    '<li>间隔调整成为新的消解手段，替代了问题二中的 7 条撤销；</li>'+
+    '<li>验证：调整后全部冲突消解。</li>'+
+    '</ul>'+
+    '<p>右侧演示对比了问题二与问题四的消解结果。</p>'+
+    '<p class="next">下一步：我会列出<b>问题四的候选方案</b>，由你选一个，我再按它生成代码。</p>',
+  arts:[AR('analysis','问题四 · 间隔调整','新增 Δiv 自由度'),
+        AR('animation','演示五 · 问题四间隔调整演示','问题二 vs 问题四对比','4')],
+  auto:'animation',
+  chips:['问题四有哪些候选方案','间隔调整的效果有多大']
+ },
+ picksTitle:'问题四 · 候选方案（请你选一个）',
+ picksIntro:'<p>核心差别在<b>如何利用 Δiv 这个新自由度</b>。三个方案都能把撤销降到 0：</p>',
+ picks:[
+  {name:'贪心 + MILP（扩展 Δiv 变量）',
+   desc:'复用问题二框架，把 Δiv 加入变量和目标，重新求解。',
+   note:'推荐：与问题二代码同构，对比清晰，论文好写',
+   reply:{step:4,html:'<h4>已采用：贪心 + MILP（扩展 Δiv）</h4>'+
+     '<p>在问题二的 MILP 基础上，为每件 C 类增加 Δiv ∈ [-10,10] 变量。目标函数的幅度项加入 |Δiv|。冲突约束更新为考虑调整后的间隔。</p>'+
+     '<ul>'+
+     '<li>撤销 0 条（原本 7 条全部可由间隔调整替代）；</li>'+
+     '<li>调整 57 件：频移 34、时移 11、间隔调整 12；</li>'+
+     '<li>与问题二对比：撤销 7→0，调整 50→57，总受影响件数 57→57。</li>'+
+     '</ul>',
+     arts:[AR('code','resolve_iv.py · 问题四间隔调整代码','Python 3.10 · PuLP · 210 行')]}},
+  {name:'先固定频移/时移，再搜 Δiv',
+   desc:'先用问题二的频移/时移方案，再逐个搜索可替代撤销的 Δiv。',
+   note:'速度快，但可能错过更优的联合调整',
+   reply:{step:4,html:'<h4>已采用：先固定再搜 Δiv</h4>'+
+     '<p>第一阶段：运行问题二得到频移/时移方案。第二阶段：对 7 条被撤销的 C 类，逐个搜索 Δiv ∈ [-10,10]，看能否找到一个间隔值使其不冲突。找到则恢复该装备并应用 Δiv。</p>'+
+     '<p>优点是快（只搜 7 件），缺点是没有联合优化频移/时移/Δiv，可能得到次优解。本题中恰好 7 件都能找到可行 Δiv，所以撤销降到 0。</p>',
+     arts:[AR('code','resolve_iv_seq.py · 问题四序列代码','Python 3.10 · 两阶段 · 150 行')]}},
+  {name:'遗传算法联合优化',
+   desc:'把 Δf、Δt、Δiv 编码为染色体，用遗传算法搜词典序最优。',
+   note:'全局搜索能力强，但收敛慢、结果不稳定',
+   reply:{step:4,html:'<h4>已采用：遗传算法联合优化</h4>'+
+     '<p>染色体编码：每件装备的 (Δf, Δt, Δiv, z) 串联。适应度：词典序加权（撤销×10⁶ + 调整×10³ + 幅度）。选择+交叉+变异迭代 500 代。</p>'+
+     '<p>能找到撤销=0 的解，但收敛需要约 30 秒，且每次运行结果略有差异。适合作为"智能优化"的对照方案。</p>',
+     arts:[AR('code','resolve_iv_ga.py · 问题四遗传算法代码','Python 3.10 · numpy · 280 行')]}}
+ ],
+ result:{
+  step:4,
+  html:'<h4>已按你上传的结果整理完成</h4>'+
+    '<p>间隔调整后的消解结果：</p>'+
+    '<ul>'+
+    '<li>撤销 <b>0</b> 条（问题二为 7 条，全部由间隔调整替代）；</li>'+
+    '<li>调整 <b>57 件</b>：频移 34 件、时移 11 件、间隔调整 12 件；</li>'+
+    '<li>对比问题二：撤销 7→0、调整 50→57、总受影响 57→57；</li>'+
+    '<li>全部冲突消解 ✓。</li>'+
+    '</ul>'+
+    '<p>间隔调整是一个"免费"的自由度：它没有增加受影响的装备总数（57 件不变），却把 7 条撤销变成了 12 件间隔调整。这说明在时频冲突问题中，<b>时间维度的柔性比频率维度更有价值</b>。</p>',
+  audit:'结果数值合理：撤销 0、调整 57，与问题二的 57 件受影响数一致，说明间隔调整恰好替代了撤销；频移 34+时移 11+间隔 12=57，自洽；调整后无残留冲突，消解完全。',
+  anom:{
+    col:'结果文件里缺少「间隔调整量」列，无法核对 |Δiv|≤10 的约束。',
+    fmt:'结果文件不是表格文件（预期 .xlsx / .csv），可能是导出时选错了格式。'
+  }
+ },
+ fixHints:[
+  ['间隔下界未处理：实际间隔 = max(0, 8+Δiv)，不能为负',
+   'Δiv 只作用于 C 类：A、B 类间隔固定，不要误加',
+   '单件单动作扩展：Δiv 也是一个动作，不能与 Δf/Δt 同时执行'],
+  ['撤销数不是 0 → 检查是否所有 7 件都找到了可行 Δiv',
+   '调整数远多于 57 → 检查是否错误地允许了多动作',
+   '调整后仍有冲突 → 检查 Δiv 对所有 12 个重复矩形的影响'],
+  ['对比问题二的 7 件撤销，逐个验证 Δiv 能否消解',
+   '把问题二和问题四的调整方案并排对比']
+ ]
+}
+
+];
+
+/* ---------- 常规拦截器 icons ---------- */
+var IC_LAB='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>';
+var IC_UP='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>';
+var IC_OK='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+var IC_WARN='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+var IC_SWAP='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>';
+var IC_FILE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+
+/* ---------------- 引擎：一次一条，由用户驱动 ----------------
+   ① 两层分析：全局分析（演示一）→ 各问题分析（每问一张演示）
+   ② 代码生成 → 用户去实训平台跑 → 用户上传结果 → AI 分析结果 → 用户判定走向
+   ③ 用户可跳过当前步，也可点顶部进度条回退重做
+   ④ 每一步结束后，AI 都会明确说出"下一步做什么"
+   ------------------------------------------------------------ */
+var qi=0, phase='intro', pickRound=1, pendingPick=null, pickedMap={}, SEQ=0, CUR_ACTS=null, curStep=0;
+var NEXT_TAIL='<p class="next">如果你准备好了，我们可以继续下一步。</p>';
+var PHASE_LABEL={
+  intro:'等待你的指令',
+  needAnalysis:'等待：展开这一步的分析',
+  needPicks:'等待：索要候选模型',
+  picking:'等待：你在候选卡片上点「选它」',
+  lab:'等待：去实训平台运行代码',
+  upload:'等待：上传结果文件',
+  verdict:'等待：你选择结果走向',
+  adjust:'等待：你描述遇到的问题',
+  needPaper:'等待：生成论文初稿',
+  done:'全部完成'
+};
+function setPhase(p){
+  phase=p;
+  var el=$('w-stage');
+  if(!el) return;
+  var done=(p==='done');
+  el.className='stag'+(done?' done':'');
+  el.innerHTML='<i></i>'+esc(PHASE_LABEL[p]||'等待你的指令');
+}
+function mkey(){ SEQ++; return 'm'+SEQ; }
+function scrollBottom(){ var st=$('stream'); if(st) st.scrollTop=st.scrollHeight; }
+/* 顶部进度条：当前步高亮；已走过的步可点击回退重做 */
+function renderSteps(cur){
+  curStep=cur;
+  var el=$('w-steps'); if(!el) return;
+  el.innerHTML=STEPS.map(function(s,i){
+    var cls = i<cur?'done':(i===cur?'now':'');
+    var can = i<=cur;
+    return (i?'<span class="step-line"></span>':'')+
+      '<span class="step '+cls+(can?' clickable':'')+'"'+
+      (can?' onclick="jumpStep('+i+')" title="点击回到这一步重新调整"':'')+
+      '><span class="n">'+(i<cur?'✓':(i+1))+'</span>'+s+'</span>';
+  }).join('');
+}
+/* 回退：重新走某一步（只允许回到已经走过的步） */
+function jumpStep(i){
+  if(i===5){
+    if(phase!=='needPaper'&&phase!=='done'){ toast('四个问题都完成后才能生成论文'); return; }
+    pushMsg({who:'me',html:'回到「论文」这一步'},mkey());
+    thinking(doPaper); return;
+  }
+  if(i===0){
+    pushMsg({who:'me',html:'回到「全局分析」，我想再看一遍'},mkey());
+    qi=0; pickRound=1; pendingPick=null; pickedMap={};
+    thinking(doGlobal); return;
+  }
+  var target=i-1;
+  if(target>qi){ toast('这一步还没走到，先按顺序往下推进'); return; }
+  if(target===qi && phase!=='done'){ toast('已经在问题'+QUIZ[qi].cn+'了'); return; }
+  qi=target; pickRound=1; pendingPick=null; pickedMap={};
+  pushMsg({who:'me',html:'回到「问题'+QUIZ[qi].cn+'」重新做一遍'},mkey());
+  thinking(doAnalysis);
+}
+/* 跳过：用户主动跳过当前这一步 */
+function skipStep(v){
+  v=v||'';
+  /* 明确点名"跳过问题X" → 直接进入下一问 */
+  if(/跳过/.test(v) && /问题[一二三四1-4]/.test(v)){
+    thinking(function(){ advanceQuestion(true); });
+    return;
+  }
+  if(phase==='needAnalysis'){
+    pushMsg({who:'me',html:'跳过问题'+QUIZ[qi].cn+'，直接进入下一问'},mkey());
+    thinking(function(){ advanceQuestion(true); }); return;
+  }
+  if(phase==='needPicks'){
+    pushMsg({who:'me',html:'跳过模型推荐，直接用最推荐的方案'},mkey());
+    thinking(function(){
+      doPicks();
+      setTimeout(function(){ if(pendingPick) choosePick(pendingPick.key,0); },1300);
+    }); return;
+  }
+  if(phase==='picking'){
+    var node=pendingPick; if(!node) return;
+    pushMsg({who:'me',html:'跳过选择，直接用方案 A（最推荐）'},mkey());
+    thinking(function(){ choosePick(node.key,0); }); return;
+  }
+  if(phase==='lab'){
+    pushMsg({who:'me',html:'跳过这一步，直接上传结果'},mkey());
+    thinking(pushAskUpload); return;
+  }
+  if(phase==='upload'){
+    pushMsg({who:'me',html:'跳过上传，用预设结果继续'},mkey());
+    thinking(function(){ didUpload([QUIZ[qi].file]); }); return;
+  }
+  toast('这一步没有可跳过的内容');
+}
+function artHTML(a,key){
+  var m=ART[a.type];
+  return '<button class="acard" id="art-'+key+'" onclick="openArt(\''+a.type+'\',\''+key+'\')">'+
+    (a.autoBadge?'<span class="auto">自动弹出</span>':'')+
+    '<span class="ai" style="background:'+m.c+'">'+m.icon+'</span>'+
+    '<span class="at"><b>'+esc(a.title)+'</b><span>'+esc(a.sub)+'</span></span>'+
+    '<span class="arrow">查看<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>'+
+  '</button>';
+}
+function picksHTML(node){
+  return '<div class="picks" id="picks-'+node.key+'">'+node.picks.map(function(o,i){
+    return '<button class="pick" id="pick-'+node.key+'-'+i+'" onclick="choosePick(\''+node.key+'\','+i+')">'+
+      '<span class="pk">'+String.fromCharCode(65+i)+'</span>'+
+      '<span class="pb"><b>'+esc(o.name)+'</b><s>'+esc(o.desc)+'</s><em>'+esc(o.note)+'</em></span>'+
+      '<span class="pgo">选它</span>'+
+    '</button>';
+  }).join('')+'</div>';
+}
+/* 消息下方的操作按钮（用户点了才发生事，AI 不替用户做决定） */
+function actsHTML(node,key){
+  if(!node.acts||!node.acts.length) return '';
+  return '<div class="acts" id="acts-'+key+'">'+node.acts.map(function(b,i){
+    return '<button class="abtn '+(b.cls||'gh')+'" id="abtn-'+key+'-'+i+'" onclick="'+b.f+'">'+b.ico+esc(b.t)+'</button>';
+  }).join('')+'</div>';
+}
+function usedActs(key){
+  var box=$('acts-'+key); if(!box) return;
+  var bs=box.querySelectorAll('.abtn');
+  for(var i=0;i<bs.length;i++) bs[i].classList.add('used');
+}
+function fileChipsHTML(names){
+  return '<div class="frecv">'+names.map(function(n){
+    return '<span class="fchip">'+IC_FILE+'<span><b>'+esc(n)+'</b><span> · 已接收</span></span></span>';
+  }).join('')+'</div>';
+}
+function msgHTML(m,key){
+  var isMe=(m.who==='me');
+  return '<div class="msg '+(isMe?'me':'ai')+'">'+
+    '<div class="bubble"><div class="txt">'+m.html+'</div>'+
+    (m.picks?picksHTML(m):'')+
+    actsHTML(m,key)+
+    (m.arts?'<div class="arts">'+m.arts.map(function(a,i){
+        if(a.type===m.auto) a.autoBadge=true;
+        return artHTML(a,key+'-'+i);
+      }).join('')+'</div>':'')+
+    '</div></div>';
+}
+function pushMsg(m,key){
+  key=key||mkey();
+  regAnims(m);                 /* 走到这一步，才把这一步的演示登记进演示列表 */
+  var div=document.createElement('div');
+  div.innerHTML=msgHTML(m,key);
+  $('stream-in').appendChild(div.firstChild);
+  scrollBottom();
+  return key;
+}
+function openArtOfType(m,key,type){
+  if(!m||!m.arts) return;
+  for(var i=0;i<m.arts.length;i++){
+    if(m.arts[i].type===type){ openArt(type,key+'-'+i); return; }
+  }
+}
+function autoOpenArt(m,key){
+  if(!m||!m.auto||!m.arts) return;
+  for(var i=0;i<m.arts.length;i++){
+    if(m.arts[i].type===m.auto){
+      (function(idx){ setTimeout(function(){ openArt(m.auto,key+'-'+idx); },700); })(i);
+      return;
+    }
+  }
+}
+function applyChips(list,hint){
+  var box=$('work-chips'); if(!box) return;
+  var arr=(list||[]).slice();
+  /* 每一步都给一个"跳过"入口 */
+  var sk=null;
+  if(phase==='needAnalysis')      sk='跳过问题'+QUIZ[qi].cn+'，直接进入下一问';
+  else if(phase==='needPicks'||phase==='picking') sk='跳过模型推荐，直接用最推荐的方案';
+  else if(phase==='lab')          sk='跳过这一步，直接上传结果';
+  else if(phase==='upload')       sk='跳过上传，用预设结果继续';
+  if(sk && arr.indexOf(sk)<0) arr.push(sk);
+  var h='<span class="whint"><i></i>'+esc(hint||'可以让 AI 做')+'</span>';
+  arr.forEach(function(t){
+    h+='<button class="chip" onclick="quickSay(\''+t.replace(/\\/g,'\\\\').replace(/'/g,'')+'\')">'+esc(t)+'</button>';
+  });
+  box.innerHTML=h;
+}
+function thinking(cb){
+  var el=document.createElement('div');
+  el.className='msg ai';
+  el.innerHTML='<div class="bubble"><span class="thinking"><i></i><i></i><i></i>AI 正在思考</span></div>';
+  $('stream-in').appendChild(el);
+  scrollBottom();
+  setTimeout(function(){ el.remove(); cb(); scrollBottom(); },820);
+}
+function startWork(title,fromDetail){
+  state.workTitle=title||'新题目';
+  $('w-title').textContent=state.workTitle.length>46?state.workTitle.slice(0,46)+'…':state.workTitle;
+  $('w-tag').textContent=fromDetail?'2026 国赛 D 题':'新题目';
+  $('stream-in').innerHTML='';
+  closeDrawer(true);
+  qi=0; phase='intro'; pickRound=1; pendingPick=null; pickedMap={}; SEQ=0; CUR_ACTS=null;
+  ANIM_BANK=[]; ANIM_CUR='0'; ANIM_FULL=false;  /* 重新开始：演示列表清空，按流程逐步追加 */
+  renderSteps(0);
+  setPhase('intro');
+  go('work');
+  var p=PROBLEMS.filter(function(x){return x.id===state.detailId})[0];
+  var isDemo=!!(p&&p.demo);
+  var up=isDemo
+    ? '（已上传题目及附件）<br><b>2026 国赛 D 题</b>：用频装备的时频冲突检测与消解。<br>时频平面 100Δf × 100Δt；A 类 20 件（频宽 10 / 时长 5 / 间隔 60 / 重复 3）、B 类 40 件（15 / 3 / 40 / 4）、C 类 90 件（3 / 2 / 8 / 12），共 150 件装备、1500 个时频矩形。'
+    : '（题目已上传）<br>'+esc(state.workTitle);
+  pushMsg({who:'me',html:up},mkey());
+  var m0=INTRO_NODE;
+  if(!isDemo){
+    m0={who:'ai',step:0,
+      html:'<div class="tip-line" style="margin:0 0 12px">演示说明：平台当前内置的是 2026 国赛 D 题的完整演示剧本，以下按该题逐步演示建模全流程。你可以照这个流程和 AI 一起做你自己的题目。</div>'+INTRO_NODE.html,
+      arts:INTRO_NODE.arts,chips:INTRO_NODE.chips};
+  }
+  thinking(doGlobal);
+}
+/* 第一层：全局分析（演示一） */
+function doGlobal(){
+  var p=PROBLEMS.filter(function(x){return x.id===state.detailId})[0];
+  var isDemo=!!(p&&p.demo);
+  var m0=INTRO_NODE;
+  if(!isDemo){
+    m0={who:'ai',step:0,
+      html:'<div class="tip-line" style="margin:0 0 12px">演示说明：平台当前内置的是 2026 国赛 D 题的完整演示剧本，以下按该题逐步演示建模全流程。你可以照这个流程和 AI 一起做你自己的题目。</div>'+INTRO_NODE.html,
+      arts:INTRO_NODE.arts,auto:INTRO_NODE.auto,chips:INTRO_NODE.chips};
+  }
+  renderSteps(0);
+  var k=pushMsg(m0,mkey());
+  autoOpenArt(m0,k);
+  phase='needAnalysis'; setPhase('needAnalysis');
+  applyChips(m0.chips);
+}
+/* 用户按下发送：AI 才往前走一步 */
+function sendInWork(){
+  var ta=$('work-input');
+  var v=ta.value.trim();
+  if(!v){ toast('和 AI 说一句话，它才会继续下一步'); return; }
+  ta.value=''; ta.style.height='auto';
+  pushMsg({who:'me',html:esc(v).replace(/\n/g,'<br>')},mkey());
+  thinking(function(){ userTurn(v); });
+}
+function quickSay(t){ $('work-input').value=t; sendInWork(); }
+function nudge(html){ pushMsg({who:'ai',html:html},mkey()); }
+
+/* ---------- 判断：这是"随口问一句"还是要推进流程 ---------- */
+function isQuestion(v){
+  return /[?？]|什么|为什么|怎么|怎样|如何|解释|讲一下|讲讲|介绍|意思|定义|吗|呢|能不能|是不是|举例|区别|关系|相关|多少|哪些|请问|能否/.test(v);
+}
+function wantsAdvance(v){
+  return /继续|下一步|开始|进入|往下|接着|可以了|来吧|走吧|就这样|没问题|跑完|已上传|上传|推荐|候选|模型|分析|^ok$|^OK$/.test(v);
+}
+/* 无关问题：答完补一句"如果你准备好了，我们可以继续下一步" */
+function offTopicAnswer(v){
+  if(/演示|动画|可视化/.test(v))
+    return '<h4>关于可视化演示</h4><p>这套流程一共 5 张演示：全局分析一张，四个问题各一张。演示<b>按流程逐步生成</b> —— 走到哪一步才生成哪一步，没走到的步骤不会出现在列表里；生成的演示讲清楚这一步在算什么、关键量怎么变化，可以直接用于答辩。</p>';
+  if(/论文|摘要|结构|排版/.test(v))
+    return '<h4>关于论文</h4><p>四个问题都完成后生成，结构是：摘要 → 问题重述 → 假设与符号说明 → 时频冲突建模 → 四问模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（代码 + result1～result4.xlsx 说明）。</p>';
+  if(/频移|时移|间隔|上限|约束|限制|条件/.test(v))
+    return '<h4>关于约束与参数</h4><p>问题二约束：<b>频移 |Δf|≤10Δf</b>、<b>时移 |Δt|≤5Δt</b>、每件装备<b>至多一个动作</b>（频移/时移/撤销三选一）。问题四新增：C 类<b>间隔调整 |Δiv|≤10Δt</b>。目标按<b>词典序</b>最小化：先 min Σ撤销 → 再 min Σ调整 → 最后 min Σ|幅度|。优先级 A > B > C，冲突时低优先级让路。</p>';
+  if(/数据|装备|A类|B类|C类|参数|多少件/.test(v))
+    return '<h4>关于数据</h4><p>共 150 件装备：<b>A 类 20 件</b>（频宽 10、时长 5、间隔 60、重复 3）、<b>B 类 40 件</b>（频宽 15、时长 3、间隔 40、重复 4）、<b>C 类 90 件</b>（频宽 3、时长 2、间隔 8、重复 12）。展开后共 1500 个时频矩形，分布在 100Δf × 100Δt 的时频平面上。</p>';
+  if(/半开区间|区间|重叠|冲突|相交/.test(v))
+    return '<h4>关于冲突判定</h4><p>时频矩形采用<b>半开区间 [起始, 起始+宽度)</b>：频率区间 [f, f+w)、时间区间 [t, t+d)。两件装备冲突当且仅当频率区间相交<b>且</b>时间区间相交，即 max(f₁,f₂) < min(f₁+w₁, f₂+w₂) 且 max(t₁,t₂) < min(t₁+d₁, t₂+d₂)。<b>端点接触不算冲突</b>。</p>';
+  if(/名词|术语|概念|意思|定义|是什么|叫什么/.test(v))
+    return '<h4>名词解释</h4><ul>'+
+      '<li><b>时频矩形</b>：装备在 Δf-Δt 平面上占据的区域，由频宽×时长决定；</li>'+
+      '<li><b>冲突</b>：两件装备的时频矩形在频率和时间上同时相交；</li>'+
+      '<li><b>频移 Δf</b>：把装备的频率整体上下移动；</li>'+
+      '<li><b>时移 Δt</b>：把装备的时间整体左右移动；</li>'+
+      '<li><b>间隔调整 Δiv</b>：改变重复型装备两次工作的时间间隔；</li>'+
+      '<li><b>撤销</b>：直接取消某件装备，代价最大；</li>'+
+      '<li><b>优先级</b>：A > B > C，冲突时低优先级让路。</li></ul>';
+  if(/模型|算法|方法|求解|消解|装填|检测/.test(v))
+    return '<h4>关于模型</h4><p>问题一用半开区间两两比较做冲突检测；问题二用优先级贪心 + MILP 做冲突消解（词典序目标）；问题三用面积上界 + 贪心装填做容量最大化；问题四扩展 Δiv 自由度重新消解。四问层层递进，共用半开区间冲突判定这一基石。</p>';
+  return '<h4>这个问题我记下了</h4><p>你问的是：'+esc(v)+'。我把它归到这一步的补充说明里，等这一步的产物生成后，会一并写进论文的相关章节。</p>';
+}
+
+/* ==================== 主流程：按当前阶段推进 ==================== */
+function userTurn(v){
+  /* ① 随口提问：回答完停在原地，并提示可以继续 */
+  if(phase!=='adjust' && isQuestion(v) && !wantsAdvance(v)){
+    replySide(offTopicAnswer(v)+NEXT_TAIL,null);
+    return;
+  }
+  /* ② 旁路请求：不改变主流程，回答完停在原地 */
+  if(/可视化|图表|出图|画图|画一张/.test(v)){
+    replySide('<h4>已补充可视化输出</h4><p>新增三张图：时频平面占用图（A / B / C 三类矩形）、冲突分布热力图（频段 × 时隙）、消解前后对比图，均为 300 dpi 可直接放进论文。</p>'+NEXT_TAIL,
+      [AR('animation','新增可视化','3 张结果图 · 300 dpi','2')]);
+    return;
+  }
+  if(/导出|下载/.test(v)){
+    replySide('<h4>已导出</h4><p>交付包包含：论文初稿 .docx、detect.py / resolve.py / packing.py / resolve_iv.py、result1 ~ result4.xlsx、全部结果图（300 dpi）。</p>'+NEXT_TAIL,null);
+    toast('交付包已准备（演示）');
+    return;
+  }
+  if(/MATLAB|Julia|转一下|转成/.test(v)){
+    replySide('<h4>已转译</h4><p>代码已转译为 MATLAB 版本，时频矩形展开与半开区间重叠判定改用向量化实现，问题二的 0-1 规划改用 <span class="mono">intlinprog</span>，冲突对数与消解结果与 Python 版完全一致。改完请重新到实训平台跑一遍。</p>'+NEXT_TAIL,
+      [AR('code','detect.m · MATLAB 版本','含注释对照')]);
+    return;
+  }
+  if(/求解器|Gurobi|CPLEX/.test(v)){
+    replySide('<h4>求解器已切换</h4><p>改用 Gurobi 后同一 0-1 规划求解耗时从 1.86 s 降到 0.31 s。你可以在实训平台上跑一遍，把两份结果放在一起对比撤销数与调整数是否一致。</p>'+NEXT_TAIL,
+      [AR('code','resolve_gurobi.py · 切换求解器','版本号与安装方式已写在注释')]);
+    return;
+  }
+  if(/灵敏度|稳健|稳健性/.test(v)){
+    replySide('<h4>灵敏度方案已给出</h4><p>建议扫三个方向：① 频移上限 10 → 15 Δf；② 时移上限 5 → 3 Δt；③ 贪心装填的放置顺序（频率优先 vs 时隙优先）。跑完把结果传回来，我帮你整理成论文里的一节。</p>'+NEXT_TAIL,null);
+    return;
+  }
+  /* ③ 跳过当前步 */
+  if(/跳过|略过|不用了|先不做/.test(v) && !/不跳过/.test(v)){ return skipStep(v); }
+
+  /* ④ 按阶段分流 */
+  if(phase==='needAnalysis'||phase==='intro') return doAnalysis();
+  if(phase==='needPicks')    return doPicks();
+  if(phase==='picking'){
+    return nudge('<h4>这一步需要你拍板</h4><p>上面几条候选方案都能走通，差别在严谨程度、求解速度与可扩展性。请点其中一张卡片右侧的「选它」，我就按它生成代码 —— <b>模型由你选，AI 不替你决定</b>。</p>'+NEXT_TAIL);
+  }
+  if(phase==='lab'){
+    if(/跑完|回来了|回来|已经跑|好了|完成|跑通|出来了|做完了/.test(v)){ usedActs(CUR_ACTS); return backFromLab(); }
+    return nudge('<h4>还在等你的运行结果</h4><p>代码我已经给到右侧了，接下来这一步在<b>实训平台</b>上完成：点上面那条消息里的「去实训平台运行」，跑完把结果文件传回来，我接着帮你分析。</p>'+NEXT_TAIL);
+  }
+  if(phase==='upload'){
+    /* 演示用：模拟上传一份"缺列"的结果文件，看 AI 的异常识别 */
+    if(/缺列|缺少|异常文件/.test(v)){
+      return didUpload([QUIZ[qi].file.replace(/\.(xlsx|xls|csv)$/i,'_缺列.$1')]);
+    }
+    if(/上传|提交了|传到|发你|发给你|给你/.test(v)) return didUpload([QUIZ[qi].file]);
+    return nudge('<h4>请上传结果文件</h4><p>点上面那条消息里的「上传结果文件」，选择你在实训平台跑出来的结果（<span class="mono">'+esc(QUIZ[qi].file)+'</span>）。也可以直接回我一句「已上传」，我把流程继续走下去。</p>'+NEXT_TAIL);
+  }
+  if(phase==='verdict'){
+    if(/没问题|下一问|进入下一|就这样|可以了|OK|ok|忽略/.test(v)) return actNext();
+    if(/有问题|不对|错误|异常|报错|调整|改一|重算|偏大|偏小|缺/.test(v)) return actAdjust();
+    if(/换个模型|换模型|重新选|重选模型|换一个方案/.test(v)) return actRepick();
+    return nudge('<h4>请你选一个方向</h4><p>上面那条消息里有三个按钮：进入下一问、描述问题重新调整、回到模型推荐换一个方案。你选哪一个，我就按哪个方向继续。</p>'+NEXT_TAIL);
+  }
+  if(phase==='adjust') return doFix(v);
+  if(phase==='needPaper'){
+    if(/生成论文|写论文|论文初稿|成文|开始写/.test(v)) return doPaper();
+    return nudge('<h4>论文还没生成</h4><p>四个问题的结果都已经收到并整理好了。点下方快捷指令「生成论文初稿」，我就把所有结果汇成一篇初稿。</p>'+NEXT_TAIL);
+  }
+  /* ⑤ 论文之后：自由修改 */
+  if(/摘要|论文|排版/.test(v)){
+    replySide('<h4>论文已更新</h4><p>摘要改写的重点是结论前置：第一句交代背景与方法，第二句直接给出四个问题的关键数字，第三句写创新点。已经是 v2 版本。</p>',
+      [AR('paper','论文初稿 v2','摘要已改写')],'paper');
+  }else{
+    replySide('<h4>四个问题都已跑完</h4><p>论文初稿在右侧，也可以在「我的成果」里继续修改。还想调整什么，直接告诉我。</p>',
+      [AR('paper','论文初稿','当前最新版本')],'paper');
+  }
+}
+function replySide(html,arts,auto){
+  var k=pushMsg({who:'ai',html:html,arts:arts,auto:auto},mkey());
+  autoOpenArt({auto:auto,arts:arts},k);
+}
+
+/* ---------------- ① 问题分析 ---------------- */
+function doAnalysis(){
+  var q=QUIZ[qi];
+  thinking(function(){
+    renderSteps(q.step);
+    var k=pushMsg(q.analysis,mkey());
+    autoOpenArt(q.analysis,k);
+    phase='needPicks'; setPhase('needPicks');
+    applyChips(q.analysis.chips);
+  });
+}
+
+/* ---------------- ② 候选模型：必须用户点选 ---------------- */
+function doPicks(){
+  var q=QUIZ[qi];
+  thinking(function(){
+    var node={step:q.step,key:q.key+'_r'+pickRound,
+      html:'<h4>'+esc(q.picksTitle)+'</h4>'+q.picksIntro+
+        '<p class="next">下一步：点一张卡片右侧的「选它」，我就按它生成代码，然后请你去<b>实训平台</b>运行。</p>',
+      picks:q.picks};
+    pushMsg(node,mkey());
+    pendingPick=node;
+    phase='picking'; setPhase('picking');
+    applyChips([],'需要你在上方候选模型里点「选它」，AI 不替你选');
+  });
+}
+/* 用户在候选卡片上点「选它」 */
+function choosePick(key,i){
+  var node=pendingPick;
+  if(!node||node.key!==key) return;
+  if(pickedMap[key]!==undefined) return;
+  pickedMap[key]=i;
+  pendingPick=null;
+  for(var n=0;n<node.picks.length;n++){
+    var el=$('pick-'+key+'-'+n);
+    if(!el) continue;
+    if(n===i){ el.classList.add('sel'); el.querySelector('.pgo').textContent='已选用'; }
+    else el.classList.add('dis');
+  }
+  var o=node.picks[i];
+  pushMsg({who:'me',html:'我用 <span class="kv">方案 '+String.fromCharCode(65+i)+' · '+esc(o.name)+'</span>'},mkey());
+  thinking(function(){
+    renderSteps(node.step);
+    var k=pushMsg({who:'ai',html:o.reply.html,arts:o.reply.arts},mkey());
+    applyChips([],'下一步：到实训平台运行这份代码');
+    setTimeout(function(){ openArtOfType({arts:o.reply.arts},k,'code'); },350);
+    setTimeout(pushLab,1000);
+  });
+}
+
+/* ---------------- ③ 代码交付：交给实训平台 ---------------- */
+function pushLab(){
+  var q=QUIZ[qi];
+  var node={step:q.step,
+    html:'<h4>问题'+q.cn+'的代码已生成</h4>'+
+      '<p>问题'+q.cn+'的代码已生成。请前往<b>实训平台</b>运行和调试，完成后将结果文件上传回来，我会继续帮你分析。</p>'+
+      '<p class="next">下一步：带着这份代码去<b>实训平台</b>运行，跑完回到这里上传结果文件（<span class="mono">'+esc(q.file)+'</span>），我会接着分析。</p>',
+    acts:[{t:'去实训平台运行',f:'gotoLab()',cls:'pri',ico:IC_LAB}],
+    auto:null};
+  CUR_ACTS=pushMsg(node,mkey());
+  phase='lab'; setPhase('lab');
+  applyChips(['我跑完了，结果带回来了'],'也可以直接回一句「跑完了」');
+}
+/* 实训平台地址：新标签页打开（target="_blank"，不覆盖当前原型页面） */
+var LAB_URL='https://ry.tipdm.org/training/index.php?m=practice&c=program_practice&a=get_operate_page&username=ry_userqr6o2y&course=program_1191&training_mirror=python38-oe--v2.0.0';
+function openLabSite(){
+  var a=document.createElement('a');
+  a.href=LAB_URL; a.target='_blank'; a.rel='noopener noreferrer';
+  a.setAttribute('aria-hidden','true');
+  try{ a.style.display='none'; }catch(e){}
+  var root=document.body||document.documentElement;
+  root.appendChild(a);
+  if(typeof a.click==='function') a.click();
+  else if(typeof window.open==='function') window.open(LAB_URL,'_blank','noopener');
+  if(root.removeChild) root.removeChild(a);
+}
+function gotoLab(){
+  usedActs(CUR_ACTS);
+  openLabSite();
+  toast('已在新标签页打开实训平台',
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F8C25A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>');
+  pushMsg({who:'me',html:'（已前往实训平台运行代码）'},mkey());
+  thinking(function(){
+    pushMsg({who:'me',html:'（已从实训平台返回）'},mkey());
+    thinking(pushAskUpload);
+  });
+}
+
+/* ---------------- ④ 等待结果文件 ---------------- */
+function pushAskUpload(){
+  var q=QUIZ[qi];
+  var node={step:q.step,
+    html:'<h4>等待你的结果文件</h4>'+
+      '<p>请在下方上传你在实训平台运行得到的结果文件。</p>'+
+      '<p class="next">下一步：上传结果文件（预期 <span class="mono">'+esc(q.file)+'</span>，支持 .xlsx / .csv / .txt），我会先做一遍结果分析，再请你决定走向。</p>',
+    acts:[{t:'上传结果文件',f:'uploadResult()',cls:'pri',ico:IC_UP}],
+    auto:null};
+  CUR_ACTS=pushMsg(node,mkey());
+  phase='upload'; setPhase('upload');
+  applyChips(['结果文件已上传','上传一个缺列的文件，看异常识别'],'也可以直接回一句「已上传」');
+}
+function uploadResult(){ usedActs(CUR_ACTS); pickFile('result'); }
+function didUpload(names){
+  usedActs(CUR_ACTS);
+  var q=QUIZ[qi];
+  q.files=names;
+  pushMsg({who:'me',html:'（已上传结果文件）'+fileChipsHTML(names)},mkey());
+  thinking(pushRecv);
+}
+/* 用户点三大按钮之外的自由文本也算回来 */
+function backFromLab(withToast){
+  pushMsg({who:'me',html:'（已在实训平台上跑完代码回来了）'},mkey());
+  thinking(pushAskUpload);
+}
+
+/* ---------------- ⑤ 收到结果：先给分析，再给三个走向按钮 ---------------- */
+/* 结果体检：只做文件层面的可见检查（格式 / 明显的缺列），不下任何"结果对不对"的结论 */
+function auditResult(names){
+  var dataExt=/\.(xlsx|xls|csv|txt|zip)$/i;
+  for(var i=0;i<names.length;i++){
+    var n=names[i]||'';
+    if(!dataExt.test(n)) return {kind:'fmt',name:n};
+    if(/缺|missing|wrong|bad|error|err/i.test(n)) return {kind:'col',name:n};
+  }
+  return null;
+}
+function pushRecv(){
+  var q=QUIZ[qi];
+  var names=q.files||[q.file];
+  var bad=auditResult(names);
+  var R=q.result||{};
+  var body;
+  if(bad){
+    body='<p>已收到结果。我分析了一下：<b>结果文件里有明显异常</b> —— '+
+      esc((R.anom&&R.anom[bad.kind])||'结果文件的结构不符合预期')+'</p>'+
+      '<p class="tip-line">你可以选择调整，或者忽略这个问题继续。</p>';
+  }else{
+    body='<p>已收到结果。我分析了一下：<b>结果数值在合理范围内，与问题'+q.cn+'的假设基本吻合</b>。</p>'+
+      '<p>'+esc(R.audit||'')+'</p>';
+  }
+  var node={step:q.step,
+    html:'<h4>结果分析 · 问题'+q.cn+'</h4>'+
+      fileChipsHTML(names)+body+
+      '<p>你可以选择进入下一问，或者告诉我需要调整的地方。</p>',
+    acts:[
+      {t:bad?'忽略这个问题，进入下一问':'结果没问题，进入下一问',f:'actNext()',cls:'pri',ico:IC_OK},
+      {t:'结果有问题，我需要调整',f:'actAdjust()',cls:'gh',ico:IC_WARN},
+      {t:'我想换个模型试试',f:'actRepick()',cls:'gh',ico:IC_SWAP}],
+    auto:null};
+  CUR_ACTS=pushMsg(node,mkey());
+  phase='verdict'; setPhase('verdict');
+  applyChips([],'请点上方三个按钮之一');
+}
+function actNext(){
+  usedActs(CUR_ACTS);
+  var q=QUIZ[qi];
+  pushMsg({who:'me',html:'结果没问题，进入下一问'},mkey());
+  thinking(function(){
+    renderSteps(q.step);
+    var nx=(qi<QUIZ.length-1)
+      ? '进入<b>问题'+QUIZ[qi+1].cn+'</b>，我会先把这一问讲清楚并给出一张分析演示，再列出候选模型由你选。'
+      : '生成<b>论文初稿</b>，把四问的模型、结果和你上传的运行数据汇成一篇完整初稿。';
+    /* 结果只在对话里分析：不再往右侧弹结果卡片 */
+    pushMsg({who:'ai',html:q.result.html+'<p class="next">下一步：'+nx+'</p>'},mkey());
+    setTimeout(function(){ advanceQuestion(false); },900);
+  });
+}
+/* 推进到下一问 / 论文；skipped=true 表示这一步是被用户跳过的，不输出结果 */
+function advanceQuestion(skipped){
+  if(qi<QUIZ.length-1){
+    qi++; pickRound=1; pendingPick=null;
+    renderSteps(QUIZ[qi].step);
+    phase='needAnalysis'; setPhase('needAnalysis');
+    doAnalysis();
+  }else{
+    renderSteps(5);
+    phase='needPaper'; setPhase('needPaper');
+    applyChips(['生成论文初稿','把冲突分布画出来']);
+  }
+}
+function actAdjust(){
+  usedActs(CUR_ACTS);
+  var q=QUIZ[qi];
+  pushMsg({who:'me',html:'结果有问题，我需要调整'},mkey());
+  thinking(function(){
+    pushMsg({who:'ai',html:'<h4>说说你遇到的问题</h4>'+
+      '<p>请描述你遇到的问题，比如报错信息、结果异常的地方，或者上传相关文件。</p>'+
+      '<p class="next">下一步：把你遇到的情况说清楚，我改完一版代码后，会再请你去实训平台跑一遍。</p>'},mkey());
+    phase='adjust'; setPhase('adjust');
+    applyChips(['运行时报错了','结果数值明显偏大','跑一半卡住了，没出结果']);
+  });
+}
+function actRepick(){
+  usedActs(CUR_ACTS);
+  var q=QUIZ[qi];
+  pushMsg({who:'me',html:'我想换个模型试试'},mkey());
+  pickedMap={}; pickRound++;
+  thinking(function(){
+    pushMsg({who:'ai',html:'<h4>回到模型推荐环节</h4>'+
+      '<p>好的，我们回到<b>候选模型</b>这一步。下面 '+q.picks.length+' 个方案的取舍我再列一遍，每条都配了适用说明 —— 你点哪张卡片，我就按哪张重新生成代码，然后再请你去实训平台跑一遍。</p>'+
+      '<p class="next">下一步：在候选卡片里点「选它」，我就按选中的方案重新生成代码。</p>'},mkey());
+    setTimeout(function(){ doPicks(); },700);
+  });
+}
+
+/* ---------------- ⑥ 调整：改完再回到实训平台 ---------------- */
+function doFix(v){
+  var q=QUIZ[qi];
+  var kind=2;
+  if(/报错|Traceback|KeyError|Error|崩溃|跑不通|运行不了|不运行|Exception/.test(v)) kind=0;
+  else if(/偏大|偏小|不合理|不对|负数|发散|不收敛|异常|奇怪|离谱/.test(v)) kind=1;
+  var head=['看起来是运行层面的问题','结果是数值异常，通常是建模假设或单位出错','我按你描述的方向改了一版'];
+  var title=['报错排查建议','数值异常排查建议','针对性修改'];
+  var fixArts=[AR('code',q.codeName+' · 修订版 v'+(2+fixRound(q)),'Python 3.10 · 改动处已加 # FIX 注释')];
+  thinking(function(){
+    var k=pushMsg({who:'ai',
+      html:'<h4>'+title[kind]+'</h4>'+
+        '<p>'+head[kind]+'。下面是基于你的描述，给出的最可能原因与改法：</p>'+
+        '<ul>'+q.fixHints[kind].map(function(h){ return '<li>'+esc(h)+'</li>'; }).join('')+'</ul>'+
+        '<p>以上改动已经写进新版代码（改动处都用 <span class="mono"># FIX</span> 注释标好了）。</p>'+
+        '<p class="next">下一步：带着新版代码再去<b>实训平台</b>跑一遍，跑完把结果文件传回来；如果还有问题，把新的报错贴回来，我们继续改。</p>',
+      arts:fixArts},mkey());
+    openArtOfType({arts:fixArts},k,'code');
+    setTimeout(pushLab,900);
+  });
+}
+function fixRound(q){
+  q._round=(q._round||0)+1;
+  return q._round;
+}
+
+/* ---------------- ⑦ 论文 ---------------- */
+function doPaper(){
+  thinking(function(){
+    renderSteps(5);
+    var k=pushMsg(PAPER_NODE,mkey());
+    autoOpenArt(PAPER_NODE,k);
+    phase='done'; setPhase('done');
+    applyChips(PAPER_NODE.chips);
+  });
+}
+
+/* ---------- 右侧产物抽屉 ---------- */
+function openArt(type,key){
+  var m=ART[type];
+  openDrawer(type,m.t,'点击左侧卡片查看 / 可手动收起');
+  var cards=document.querySelectorAll('.acard');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('open');
+  var el=$('art-'+key);
+  if(el) el.classList.add('open');
+}
+function openDrawer(type,title,sub){
+  state.drawerOpen=true; state.drawerType=type;
+  var d=$('drawer');
+  d.classList.add('on');
+  if(type==='code'||type==='paper') d.classList.add('wide'); else d.classList.remove('wide');
+  $('d-title2').innerHTML=esc(title)+'<span class="sub">'+esc(sub||'')+'</span>';
+  $('drawer-body').innerHTML=artBody(type);
+  $('btn-drawer-close').style.display='';
+  if(type==='animation'){ drawerAnim(ANIM_CUR); }
+}
+function closeDrawer(silent){
+  state.drawerOpen=false;
+  $('drawer').classList.remove('on','wide');
+  $('btn-drawer-close').style.display='none';
+  var cards=document.querySelectorAll('.acard');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('open');
+}
+function drawerAnim(k){
+  if(!animDone(k)){ pendAnim(k); return; }
+  ANIM_CUR=k;
+  var st=$('d-stage'); if(st) st.innerHTML=fsBtnHTML(k)+animShotHTML(k);   /* 截图占位 + 全屏按钮 */
+  ['0','1','2','3','4'].forEach(function(i){
+    var el=$('dq-'+i); if(el) el.classList.toggle('open',i===k);
+  });
+}
+
+function artBody(type){
+  if(type==='analysis'){
+    return '<div class="card"><div class="card-h">'+ART.analysis.icon.replace('#fff','#12A594')+'<h3>问题分析</h3></div><div class="card-b">'+
+      '<div class="doc" style="padding:0">'+
+      '<h3>1. 问题目标</h3><p>在 100Δf × 100Δt 的时频平面上，对 150 件用频装备（A/B/C 三类）进行冲突检测、冲突消解、容量最大化与间隔调整优化。</p>'+
+      '<h3>2. 已知条件</h3><ul>'+
+      '<li>A 类 20 件：频宽 10、时长 5、间隔 60、重复 3；</li>'+
+      '<li>B 类 40 件：频宽 15、时长 3、间隔 40、重复 4；</li>'+
+      '<li>C 类 90 件：频宽 3、时长 2、间隔 8、重复 12；</li>'+
+      '<li>共 150 件装备、1500 个时频矩形。</li></ul>'+
+      '<h3>3. 关键假设</h3><ul>'+
+      '<li>时频矩形采用半开区间 [起始, 起始+宽度)，端点接触不算冲突；</li>'+
+      '<li>优先级 A > B > C，冲突时低优先级让路；</li>'+
+      '<li>问题二每件装备至多执行一个动作（频移/时移/撤销）。</li></ul>'+
+      '<h3>4. 求解思路</h3><p>问题一用半开区间两两比较检测冲突；问题二用优先级贪心 + MILP 消解；问题三用面积上界 + 贪心装填；问题四扩展间隔调整自由度。四问层层递进。</p>'+
+      '<div class="formula">冲突判定：max(f_i,f_j) < min(f_i+w_i, f_j+w_j) ∧ max(t_i,t_j) < min(t_i+d_i, t_j+d_j)</div>'+
+      '<h3>5. 预期输出</h3><ul>'+
+      '<li>冲突对列表（result1.xlsx）；</li>'+
+      '<li>消解方案（result2.xlsx）；</li>'+
+      '<li>装填方案（result3.xlsx）；</li>'+
+      '<li>间隔调整方案（result4.xlsx）。</li></ul>'+
+      '</div></div></div>';
+  }
+  if(type==='animation'){
+    var qs=animList();
+    var doneN=qs.length;
+    var first=qs[0]||null;
+    var cur=first?first.k:'0';
+    ANIM_CUR=cur;
+    return '<div class="card"><div class="card-h">'+ART.animation.icon.replace('#fff','#17A2C4')+'<h3>可视化演示</h3>'+
+        '<span class="tag-c" style="font-size:11px">已生成 '+doneN+' / 5</span><div class="grow"></div>'+
+        '<button class="btn-ghost" onclick="toast(\'导出 HTML 为演示功能\')">导出 HTML</button></div>'+
+      '<div class="card-b">'+
+        '<div class="stage'+(first?'':' dim')+'" id="d-stage">'+(first?fsBtnHTML(cur)+animShotHTML(cur):'')+
+          (first?'':'<div class="stage-empty">这里还没有演示内容<span>走到「全局分析」这一步后，会自动生成第一张可视化演示</span></div>')+'</div>'+
+        '<div style="margin-top:14px">'+
+          (first?'':'<div class="anim-empty">还没有演示。走到「全局分析」这一步后，演示一会出现在这里；之后每走到一个问题，就多一张演示。<br>未走到的步骤不会提前出现在列表里。</div>')+
+          qs.map(function(q){
+            return '<button class="acard'+(q.k===cur?' open':'')+'" id="dq-'+q.k+'" style="margin-bottom:8px" onclick="drawerAnim(\'\'+q.k+\'\')">'+
+              '<span class="ai" style="background:linear-gradient(120deg,#12A594,#1E9FC4)">'+q.k+'</span>'+
+              '<span class="at"><b>'+esc(q.title)+'</b><span>'+esc(q.sub)+' · 点击回看</span></span></button>';
+          }).join('')+
+        '</div>'+
+      '</div></div>';
+  }
+  if(type==='model'){
+    return '<div class="card"><div class="card-h">'+ART.model.icon.replace('#fff','#F5A623')+'<h3>候选模型对比</h3></div>'+
+      '<div style="overflow-x:auto"><table class="dtable"><thead><tr><th>方案</th><th>适用条件</th><th>严谨性</th><th>可扩展性</th><th>状态</th></tr></thead><tbody>'+
+      '<tr style="background:#EFFAF8"><td><b>A. 贪心 + MILP</b></td><td>词典序目标</td><td>★★★★★</td><td>★★★★</td><td style="color:#12A594;font-weight:700" id="mdl-a">候选</td></tr>'+
+      '<tr><td>B. 纯 MILP（含撤销变量）</td><td>严格最优</td><td>★★★★★</td><td>★★★</td><td id="mdl-b">候选</td></tr>'+
+      '<tr><td>C. 约束传播 + 回溯</td><td>无求解器环境</td><td>★★★★</td><td>★★★★</td><td id="mdl-c">候选</td></tr>'+
+      '</tbody></table></div></div>'+
+      '<div class="card"><div class="card-h"><h3>这一步由你决定</h3></div><div class="card-b">'+
+      '<ul class="doc" style="padding:0;margin:0">'+
+        '<li>左侧对话里的候选卡片都可以点，点「选它」之后我才生成对应版本的代码；</li>'+
+        '<li>选定之后仍然可以反悔：直接说"换个模型再试"，我会按另一个方案重跑；</li>'+
+        '<li>三个方案的结果会同步汇总到这里，方便你和论文里的对照。</li>'+
+      '</ul>'+
+      '<div class="note" style="margin-top:14px">平台不会替你自动选定模型 —— 数学建模里"为什么选这个模型"本身就是得分点。</div>'+
+      '</div></div>';
+  }
+  if(type==='code'){
+    return '<div class="card"><div class="card-h">'+ART.code.icon.replace('#fff','#1E9FC4')+'<h3>detect.py</h3><div class="grow"></div>'+
+        '<button class="btn-ghost" onclick="toast(\'代码已复制\')">复制</button>'+
+        '<button class="btn-ghost" onclick="toast(\'下载为演示功能\')">下载</button></div>'+
+      '<div class="card-b" style="padding:0"><div class="code-box">'+
+        '<div class="code-top"><span class="f">detect.py · Python 3.10 · 58 行</span><div class="grow"></div>'+
+        '<button onclick="toast(\'代码已复制\')">复制</button><button onclick="runCode(this)">运行</button></div>'+
+        '<pre class="code">'+hl(PY_CODE)+'</pre>'+
+        '<div class="run-out"><span class="lbl">RUN OUTPUT</span><span id="run-txt">$</span></div>'+
+      '</div></div></div>';
+  }
+  if(type==='result'){
+    return '<div class="kpis">'+
+      '<div class="kpi"><div class="k">冲突对</div><div class="v">297</div><div class="d">对 · 问题一</div></div>'+
+      '<div class="kpi"><div class="k">涉及装备</div><div class="v">118</div><div class="d">件 · 问题一</div></div>'+
+      '<div class="kpi"><div class="k">撤销/调整</div><div class="v">7/50</div><div class="d">条/件 · 问题二</div></div>'+
+      '<div class="kpi"><div class="k">容量上界/实际</div><div class="v">157/139</div><div class="d">件 · 问题三</div></div>'+
+    '</div>'+
+    '<div class="card"><div class="card-h"><h3>结果图</h3></div><div class="card-b">'+
+      '<div class="stage">'+animSVG('2')+'</div>'+
+      '<p class="side-note" style="margin-top:12px">图：问题二冲突消解前后的时频平面对比，红色为冲突区域，调整后全部消除。</p>'+
+    '</div></div>'+
+    '<div class="card"><div class="card-h"><h3>四问结果</h3></div>'+
+      '<div style="overflow-x:auto"><table class="dtable"><thead><tr><th>问题</th><th>核心方法</th><th>约束</th><th>结果</th></tr></thead><tbody>'+
+      [['问题一','半开区间两两比较','—','297 对冲突 / 118 件'],
+       ['问题二','贪心 + MILP','|Δf|≤10, |Δt|≤5','撤销 7 / 调整 50'],
+       ['问题三','面积上界 + 贪心装填','—','上界 157 / 贪心 139'],
+       ['问题四','扩展 Δiv 的 MILP','|Δiv|≤10','撤销 0 / 调整 57']].map(function(r){
+        return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';
+      }).join('')+'</tbody></table></div></div>'+
+    '<div class="card"><div class="card-b">'+
+      '<p style="font-size:13.4px;color:#4A5A70">确认结果可接受后，就可以在对话里让 AI 进入下一问。</p>'+
+      '<div class="dl-row">'+
+        '<button class="dl p" onclick="quickSay(\'结果没问题，进入下一问\')">确认，进入下一问</button>'+
+        '<button class="dl" onclick="quickSay(\'换个模型再试\')">换个模型再试</button>'+
+        '<button class="dl" onclick="toast(\'结果已导出\')">导出结果</button>'+
+      '</div></div></div>';
+  }
+  if(type==='paper'){
+    return '<div class="card"><div class="card-h">'+ART.paper.icon.replace('#fff','#12A594')+'<h3>论文初稿 · v1</h3><div class="grow"></div>'+
+      '<button class="btn-ghost" onclick="toast(\'下载为演示功能\')">下载 .docx</button>'+
+      '<button class="btn-ghost" onclick="toast(\'PDF 下载为演示功能\')">PDF</button></div>'+
+      '<div class="card-b"><div class="doc" style="padding:0">'+
+      '<h2>用频装备时频冲突检测与消解策略研究</h2>'+
+      '<div class="dc">24 页 · 图 12 张 · 表 7 张 · 参考文献 9 篇</div>'+
+      '<h3>摘要</h3>'+
+      '<p>针对用频装备在时频平面上的排布冲突问题，本文以 100Δf × 100Δt 时频平面上的 150 件装备（A/B/C 三类）为研究对象，构建"检测 — 消解 — 装填 — 优化"的递进建模框架。首先基于半开区间相交判定，对 11175 候选对进行冲突检测，检出 297 对冲突、涉及 118 件装备。进而在频移 ≤10Δf、时移 ≤5Δt、单件单动作的约束下，以"Σ撤销 → Σ调整 → Σ|幅度|"词典序最小为目标，采用优先级贪心 + MILP 策略消解全部冲突：撤销 7 条、调整 50 件（频移 38 / 时移 12）。随后在剩余时频资源上以面积上界 157 件为基准，用贪心装填实现 139 件 C 类装备，差距 +18 件。最后引入 C 类间隔调整自由度（|Δiv|≤10Δt），将撤销降至 0、调整 57 件，验证了时间维度柔性的价值。</p>'+
+      '<h3>目录</h3>'+
+      '<ul><li>一、问题重述与时频建模</li><li>二、数据预处理与装备分类</li><li>三、问题一：基于半开区间的冲突检测</li><li>四、问题二：词典序最优的冲突消解</li><li>五、问题三：剩余资源的容量最大化装填</li><li>六、问题四：间隔调整自由度的引入</li><li>七、灵敏度分析与稳健性检验</li><li>八、结论与改进方向</li><li>附录：代码与结果文件说明</li></ul>'+
+      '<h3>第三章（节选）</h3>'+
+      '<div class="formula">冲突(i,j) ⟺ max(f_i,f_j) < min(f_i+w_i, f_j+w_j) ∧ max(t_i,t_j) < min(t_i+d_i, t_j+d_j)</div>'+
+      '<p>考虑到时频矩形采用半开区间 [起始, 起始+宽度)，端点接触不算重叠，因此相交判定必须严格使用小于号而非小于等于。本文对 150 件装备的 11175 候选对逐一判定，最终检出 297 对冲突……</p>'+
+      '<div class="note">论文可以在平台上继续和 AI 交互修改：改摘要、补灵敏度、调排版、加图表说明都可以。</div>'+
+      '</div></div></div>'+
+      '<div class="card"><div class="card-b"><div class="dl-row" style="margin-top:0">'+
+        '<button class="dl p" onclick="toast(\'下载为演示功能\')">下载论文初稿</button>'+
+        '<button class="dl" onclick="quickSay(\'把摘要改得更学术一点\')">让 AI 改摘要</button>'+
+        '<button class="dl" onclick="quickSay(\'补充灵敏度分析章节\')">补灵敏度分析</button>'+
+      '</div></div></div>';
+  }
+  return '<div class="card"><div class="card-b">暂无内容</div></div>';
+}
+/* ================= 我的成果 ================= */
+var openWorkId=null, miniTab={};
+
+function renderMine(){
+  if(!WORKS.length){
+    $('mine-list').innerHTML='<div class="card"><div class="empty">'+
+      '<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'+
+      '<h3>还没有生成任何成果</h3><p>去首页输入一道题目，10 分钟后你就会拥有第一篇论文初稿。</p></div></div>';
+    return;
+  }
+  $('mine-list').innerHTML=WORKS.map(function(w){
+    var on=!!w.share;
+    return '<div class="wcard'+(openWorkId===w.id?' open':'')+'" id="wc-'+w.id+'">'+
+      '<div class="wrow" onclick="toggleWork(\''+w.id+'\')">'+
+        '<span class="wico">'+ART.paper.icon.replace('#fff','#12A594')+'</span>'+
+        '<div class="wm">'+
+          '<h3>'+esc(w.title)+
+            '<span class="tag-c" style="font-size:11px">'+esc(w.tag)+'</span>'+
+            (w.status==='已完成'
+              ? '<span class="tag" style="padding:2px 8px;border-radius:6px;font-size:11px;background:#E9F7EF;color:#1E7A4F;font-weight:700">已完成</span>'
+              : '<span class="tag" style="padding:2px 8px;border-radius:6px;font-size:11px;background:#FFF3E0;color:#B25E00;font-weight:700">进行中 '+w.steps+'/6</span>')+
+          '</h3>'+
+          '<div class="meta">'+
+            '<span>'+ICON.guide.replace('width="16" height="16"','width="13" height="13"')+'更新于 '+esc(w.time)+'</span>'+
+            '<span>模型：'+esc(w.models.join(' / '))+'</span>'+
+            '<span>'+(openWorkId===w.id?'收起内容':'展开查看全部内容')+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="switch-box" onclick="event.stopPropagation()">'+
+          '<div class="st"><b>'+(on?'公开中':'仅自己可见')+'</b>'+(on?'其他同学可查看':'关闭分享后他人立刻看不到')+'</div>'+
+          '<div class="sw'+(on?' on':'')+'" onclick="toggleShare(\''+w.id+'\',this)"></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="wmore" id="wm-'+w.id+'" style="display:'+(openWorkId===w.id?'block':'none')+'">'+
+        (openWorkId===w.id?miniHTML(w):'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function toggleWork(id){
+  if(openWorkId===id){ openWorkId=null; renderMine(); return; }
+  openWorkId=id; renderMine();
+  var el=$('wc-'+id);
+  if(el) setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'nearest'}); },60);
+}
+function toggleShare(id,el){
+  var w=WORKS.filter(function(x){return x.id===id})[0];
+  if(!w) return;
+  w.share=!w.share;
+  el.classList.toggle('on',w.share);
+  var box=el.parentNode.querySelector('.st');
+  if(box) box.innerHTML='<b>'+(w.share?'公开中':'仅自己可见')+'</b>'+(w.share?'其他同学可查看':'关闭分享后他人立刻看不到');
+  toast(w.share?'已开启分享：其他用户可查看该成果':'已关闭分享：他人立刻无法查看');
+}
+function miniHTML(w){
+  var t=miniTab[w.id]||'paper';
+  var setter='setMiniTab(\''+w.id+'\',';
+  return '<div class="wm-in">'+
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">'+
+      '<b style="font-size:14px">成果全部内容</b>'+
+      '<span style="font-size:12.5px;color:#8A9AAD">'+esc(w.paper)+'</span>'+
+      '<div style="flex:1"></div>'+
+      '<button class="btn-ghost" onclick="toast(\'导出为演示功能\')">导出全部</button>'+
+      '<button class="btn-ghost" onclick="startWork(\''+esc(w.title).replace(/'/g,"\\'")+'\',true)">在平台继续修改</button>'+
+    '</div>'+
+    '<div class="kpis" style="margin-bottom:16px">'+
+      w.metrics.map(function(m){
+        return '<div class="kpi"><div class="k">'+esc(m[0])+'</div><div class="v" style="font-size:20px">'+esc(m[1])+'</div></div>';
+      }).join('')+
+    '</div>'+
+    '<div id="mini-dlv">'+dlvHTML(t,setter)+'</div>'+
+  '</div>';
+}
+function setMiniTab(wid,t){
+  miniTab[wid]=t;
+  var box=$('mini-dlv');
+  if(box) box.innerHTML=dlvHTML(t,'setMiniTab(\''+wid+'\',');
+}
+/* ================= 初始化 ================= */
+function autoGrow(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,200)+'px';
+}
+(function init(){
+  /* 复现模式：本页仅承载 D 题（用频装备时频冲突检测与消解）真题复现，跳过首页/详情/我的等界面，直接进入工作台演示剧本 */
+  document.body.classList.add('replay-mode');
+  demoProblem();
+})();
+</script>
+
+<!-- ===== 五个可视化演示：全部内联在本文件里（不依赖外部 HTML / iframe） ===== -->
+</body>
+</html>

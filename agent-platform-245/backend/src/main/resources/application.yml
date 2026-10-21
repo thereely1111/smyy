@@ -1,0 +1,310 @@
+spring:
+  application:
+    name: agent-platform
+
+  lifecycle:
+    # 优雅关停等待窗口：与模型执行超时（agent-platform.model-execution.
+    # timeout-minutes=4）对齐——重启时在途 LLM 单步最长还需 ~4 分钟才到自身
+    # 超时，30s 默认窗口会把本可自然收尾的步子截断（3.7c）。可用环境变量覆盖。
+    timeout-per-shutdown-phase: ${SPRING_LIFECYCLE_SHUTDOWN_TIMEOUT:250s}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:192.168.1.245}:${DB_PORT:5432}/${DB_NAME:agent_platform_server}
+    username: ${DB_USER:agent_platform}
+    password: ${DB_PASSWORD:agent_platform}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    out-of-order: true
+
+  servlet:
+    multipart:
+      # 上传文件大小限制
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+  # 定时任务线程池
+  task:
+    scheduling:
+      pool:
+        size: ${SCHEDULING_POOL_SIZE:4}
+      thread-name-prefix: platform-sched-
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.245}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8 # 连接池最大连接数（负值表示没有限制）
+          max-wait: -1ms  # 连接池最大阻塞等待时间（负值表示没有限制）
+          max-idle: 8  # 连接池中的最大空闲连接
+          min-idle: 0  # 连接池中的最小空闲连接
+
+
+
+  mvc:
+    async:
+      # 异步请求兜底超时：产物下载按端点在 WebAsyncTask 上单独设更紧的值，
+      # 这里只防「将来新加异步端点忘了包 WebAsyncTask」。刻意不配成 2h ——
+      # 那会让下载失去超时保护（SSE 的 2h 由 agentscope.agui.sse-timeout 独立控制）
+      request-timeout: 1800000
+
+  # 定时任务线程池
+
+server:
+  port: 8080
+
+# AG-UI 配置
+agentscope:
+  agui:
+    # SSE 连接超时（毫秒）
+    sse-timeout: 7200000
+    # 运行超时
+    run-timeout: 2h
+    # 输出 token_usage CUSTOM 事件（含单次模型调用的 usage 与 finishReason），
+    # 随 agui_events 落库——模型输出是否被 max_tokens 截断（finishReason=length）的定性数据源
+    emit-token-usage: true
+    # 启用 reasoning 事件（含单次模型调用的 reasoning 与 finishReason），
+    enable-reasoning: true
+    # 客户端断开 SSE 后是否中断 run（框架默认 true）。
+    # false = 断连后 run 继续跑完、事件照常落库：浏览器关页、无人值守脚本超时、
+    # 反向代理掐流都不会再杀死在跑 run；用户主动停止仍走 interrupt 端点
+    # （配合 stop_requested 抑制标记，中断后不会被看护复活）。
+    interrupt-on-disconnect: false
+
+  # AgentScope Studio（智能体调试面板），默认关闭；不可用时静默失败，不影响运行
+  studio:
+    enabled: ${AGENTSCOPE_STUDIO_ENABLED:false}
+    url: ${AGENTSCOPE_STUDIO_URL:http://localhost:3000}
+    tracing-url: ${AGENTSCOPE_STUDIO_TRACING_URL:}
+    project: ${AGENTSCOPE_STUDIO_PROJECT:agent-platform}
+    run-name: ${AGENTSCOPE_STUDIO_RUN_NAME:agent-platform}
+    run-id: ${AGENTSCOPE_STUDIO_RUN_ID:}
+    max-retries: ${AGENTSCOPE_STUDIO_MAX_RETRIES:3}
+    reconnect-attempts: ${AGENTSCOPE_STUDIO_RECONNECT_ATTEMPTS:3}
+    reconnect-delay: ${AGENTSCOPE_STUDIO_RECONNECT_DELAY:1s}
+    reconnect-max-delay: ${AGENTSCOPE_STUDIO_RECONNECT_MAX_DELAY:5s}
+
+agent-platform:
+  workspace-root: ${AGENT_PLATFORM_WORKSPACE_ROOT:${user.dir}/workspace}
+  # 产物目录名，所有生成内容统一写入该目录（相对路径 artifacts/<业务名>/<文件名>）
+  # 注意：智能体定义中硬编码的目录名需同步修改
+  artifacts-dir: ${AGENT_PLATFORM_ARTIFACTS_DIR:artifacts}
+  # 默认模型（provider:model）。走第三方中转站 / 自建网关（OpenAI 协议）时写成
+  # openai:<模型名>；框架内置前缀还有 deepseek: / kimi: / glm: / minimax:。
+  # ⚠️ 只改前缀不够：框架的 apiKey/baseUrl 只认 ModelCreationContext（凭证覆盖装配那条
+  #    路才会填它），yml 这条路必须靠下面的 model-api-key / model-base-url 显式下发，
+  #    否则装配期硬抛 "Environment variable <厂商>_API_KEY is required to auto-create
+  #    model"，表现就是一进智能体就报「运行出错 / 服务器内部错误」。
+  #    中转站还要注意：base-url 不填会打到供应商官方端点（openai 即 api.openai.com）。
+  model: openai:qwen3.8-flash
+  # model: openai:qwen3.8-flash   # 中转站（OpenAI 协议）：与下面两项一起改
+  # 默认模型的 apiKey（中转站 / 自建网关的 key）。留空则回落供应商自己的环境变量
+  # （OPENAI_API_KEY / DASHSCOPE_API_KEY …）；dashscope: 前缀留空时还会回落
+  # dashscope.api-key（与主模型同款百炼 key 的历史配置）。
+  model-api-key: ${AGENT_PLATFORM_MODEL_API_KEY:}
+  # 默认模型的 baseUrl（中转站 / 自建网关地址，形如 https://<域名>/v1）。
+  # 框架各供应商的 baseUrl 一律只认 ModelCreationContext，没有环境变量口子。
+  model-base-url: ${AGENT_PLATFORM_MODEL_BASE_URL:https://kuaipao.pro/v1}
+  # 思考通道三态开关：qwen3 流式默认关 thinking，模型把过程推演写进可见正文并在
+  # 后续每轮 prefill 反复付费；true 后推演走 reasoning_content（单次付费，不重发）
+  model-thinking: true
+  # DashScope 多模态读图
+  dashscope:
+    api-key: ${DASHSCOPE_API_KEY:}
+    multimodal-model: ${DASHSCOPE_VL_MODEL:qwen3-vl-plus}
+  # 博查 web search，web_search 工具的数据源
+  bocha:
+    api-key: ${BOCHA_API_KEY:}
+  # 模型执行超时与重试
+  model-execution:
+    timeout-minutes: ${AGENT_PLATFORM_MODEL_TIMEOUT_MINUTES:4}
+    max-attempts: ${AGENT_PLATFORM_MODEL_MAX_ATTEMPTS:3}
+  # 会话附件内联策略：超过 max-inline-bytes 的附件改为路径引用 + 按需读取；
+  # max-inline-chars 为其它 @path 引用展开块的默认截断长度
+  attachments:
+    max-inline-bytes: ${ATTACHMENTS_MAX_INLINE_BYTES:32768}
+    max-inline-chars: ${ATTACHMENTS_MAX_INLINE_CHARS:12000}
+  # Plan 模式：启用后智能体可在计划模式与执行模式间切换
+  plan-enabled: true
+  # 单轮 ReAct 迭代上限（编排型主智能体一轮要同时完成取证/派发/台账更新，
+  # 过小会把一轮拆成两轮；子智能体另有 steps 声明）
+  max-iters: ${AGENT_PLATFORM_MAX_ITERS:30}
+  # 完成契约（3.13）：多阶段任务全部完成时，智能体在会话工作区落件
+  # session-complete.json（deliverables 逐项 path/sha256/minBytes），停滞看护
+  # 以「标记 + 交付物指纹核验」为「真完成」的判定基准，不再猜测文本措辞。
+  completion-contract:
+    file-name: ${AGENT_PLATFORM_COMPLETION_MARKER:session-complete.json}
+  # 纯文本收尾登记（DeclarativeEndingWatchdog）：run 以纯文本正常收场时登记
+  # 时间戳，停滞看护据此在宽限期后提前补醒（不等满停滞阈值）。登记不决策，
+  # 补醒与否由看护结合完成契约/等人工/停止抑制判定。
+  declarative-ending:
+    enabled: ${AGENT_PLATFORM_DECLARATIVE_ENDING_ENABLED:true}
+  # 迭代上限截断续跑（TruncationResumeNudger）：run 撞 max-iters 被框架强制
+  # 收尾时，向会话 inbox 投一条「接着做完」hint 并请求一次唤醒，把继续推进
+  # 的间隔从停滞看护的冷却周期压到秒级。滑动窗口内超过 max-per-window 次
+  # 后停止自动续跑，转由停滞看护的告警通道处理。
+  truncation-resume:
+    enabled: ${AGENT_PLATFORM_TRUNCATION_RESUME_ENABLED:true}
+    wakeup-delay-seconds: ${AGENT_PLATFORM_TRUNCATION_RESUME_DELAY_SECONDS:5}
+    max-per-window: ${AGENT_PLATFORM_TRUNCATION_RESUME_MAX_PER_WINDOW:3}
+    window-minutes: ${AGENT_PLATFORM_TRUNCATION_RESUME_WINDOW_MINUTES:30}
+  # 子智能体会话保留天数，超期未活动的会话自动回收
+  subagent-retention-days: ${AGENT_PLATFORM_SUBAGENT_RETENTION_DAYS:7}
+  # 过期会话清理 cron 表达式（启动时也会执行一次）
+  subagent-maintenance-cron: ${AGENT_PLATFORM_SUBAGENT_MAINTENANCE_CRON:0 30 4 * * *}
+  # 是否启用技能自动积累
+  skill-sedimentation: false
+  # 外部技能仓库（管理端「技能仓库导入」数据源）
+  skill-repository:
+    # 是否启用
+    enabled: ${AGENT_PLATFORM_SKILL_REPO_ENABLED:true}
+    # 仓库类型：git | http | clawhub | skillhub
+    type: ${AGENT_PLATFORM_SKILL_REPO_TYPE:clawhub}
+    # git：仓库地址（https/ssh 均可，私有仓库凭证嵌入 url）
+    # http：JSON 索引文件地址，格式 {"skills":[{"name":"…","url":"https://…/SKILL.md",…}]}
+    # clawhub：ClawHub 公共注册表（clawhub.ai），token 填 clh_... 可提高限流额度
+    # skillhub：SkillHub 中国区（skillhub.cn），token 可选（Bearer）
+    url: ${AGENT_PLATFORM_SKILL_REPO_URL:}
+    # git 分支（可选，默认远端默认分支）
+    branch: ${AGENT_PLATFORM_SKILL_REPO_BRANCH:}
+    # 访问令牌（可选，仅 http 类型使用）
+    token: ${AGENT_PLATFORM_SKILL_REPO_TOKEN:}
+    # git 本地缓存目录（默认 {项目根}/.skill-repository-cache）
+    # cache-dir: /var/cache/agent-platform/skill-repository
+    # 目录缓存持久化为 .catalog.json，重启后恢复；超龄时先返回旧数据、后台刷新
+    # 缓存有效期（分钟），0 表示每次都重新同步
+    cache-ttl-minutes: 60
+    # git / http 网络操作超时（秒）
+    timeout-seconds: 300
+  # 排除的文件夹
+  exclude-folders: _default, agents
+  # 运行时目录清理（默认关闭，开启后按 mtime 清理超期会话目录）
+  runtime-gc-enabled: ${AGENT_PLATFORM_RUNTIME_GC_ENABLED:false}
+  runtime-gc-max-age-days: ${AGENT_PLATFORM_RUNTIME_GC_MAX_AGE_DAYS:30}
+  runtime-gc-cron: ${AGENT_PLATFORM_RUNTIME_GC_CRON:0 0 3 * * *}
+  # 停滞检测：父智能体无响应时发送唤醒信号
+  progress-watchdog:
+    stall-min-minutes: ${AGENT_PLATFORM_STALL_MIN_MINUTES:8}
+    wake-cooldown-minutes: ${AGENT_PLATFORM_WAKE_COOLDOWN_MINUTES:15}
+    active-window-hours: ${AGENT_PLATFORM_ACTIVE_WINDOW_HOURS:24}
+    # 停滞通知阈值（分钟）：超过该时间即推送告警
+    stall-alert-min-minutes: ${AGENT_PLATFORM_STALL_ALERT_MIN_MINUTES:30}
+    # 自动唤醒上限（次数），达到后转人工
+    max-wake-attempts: ${AGENT_PLATFORM_MAX_WAKE_ATTEMPTS:3}
+    # HITL 等待通知阈值（分钟）：有未处理的表单/确认且空闲超过该时间即推送提醒
+    hitl-alert-min-minutes: ${AGENT_PLATFORM_HITL_ALERT_MIN_MINUTES:3}
+    # 纯文本收尾补醒宽限期（分钟）：登记后超过该宽限期且其后无新消息、
+    # 完成契约未核验通过 ⇒ 提前补醒，不等满停滞阈值
+    text-ending-grace-minutes: ${AGENT_PLATFORM_TEXT_ENDING_GRACE:3}
+    # 租约心跳新鲜度门槛（分钟）：停滞闸门只把「心跳在该窗口内」的租约视为
+    # 「有 run 在跑」。心跳由巡检每分钟续写，5 分钟 ≫ 正常心跳间隔。
+    # 不设此键时只能改代码默认值，而改动对读代码的人不可见 ⇒ 显式列出。
+    lease-stale-minutes: ${AGENT_PLATFORM_LEASE_STALE_MINUTES:5}
+  # HITL 审批超时：闸门/表单超过阈值未处理则自动取消并通知用户
+  hitl-timeout:
+    enabled: ${AGENT_PLATFORM_HITL_TIMEOUT_ENABLED:true}
+    approval-timeout-minutes: ${AGENT_PLATFORM_HITL_TIMEOUT_MINUTES:30}
+  # 主动告警：会话无响应/运行超时等事件推送给用户
+  alert:
+    enabled: ${AGENT_PLATFORM_ALERT_ENABLED:true}
+    # 同一告警键的冷却窗口（分钟），防止短时间内重复发送
+    dedup-cooldown-minutes: ${AGENT_PLATFORM_ALERT_DEDUP_MINUTES:60}
+    retention-days: ${AGENT_PLATFORM_ALERT_RETENTION_DAYS:30}
+    wecom:
+      # 企业微信群机器人（默认关闭，配置 webhook 后发送告警）
+      enabled: ${AGENT_PLATFORM_ALERT_WECOM_ENABLED:false}
+      webhook-url: ${AGENT_PLATFORM_ALERT_WECOM_URL:}
+      # 触发告警发送的最低级别
+      min-level: ${AGENT_PLATFORM_ALERT_WECOM_MIN_LEVEL:error}
+      timeout-seconds: ${AGENT_PLATFORM_ALERT_WECOM_TIMEOUT:5}
+  # AG-UI 事件持久化，异步批量写入 agui_events 表供回放/审计，不阻塞对话
+  agui-event-log:
+    enabled: ${AGENT_PLATFORM_AGUI_EVENT_LOG:true}
+    batch-size: ${AGENT_PLATFORM_AGUI_EVENT_LOG_BATCH:100}
+    flush-interval-ms: ${AGENT_PLATFORM_AGUI_EVENT_LOG_FLUSH_MS:500}
+    queue-limit: ${AGENT_PLATFORM_AGUI_EVENT_LOG_QUEUE_LIMIT:20000}
+  security:
+    # 外部请求是否允许访问私有网段，默认禁止
+    # loopback 与 link-local（含云元数据 169.254.169.254）始终拒绝
+    allow-private-outbound: ${AGENT_PLATFORM_ALLOW_PRIVATE_OUTBOUND:false}
+  external:
+    # 外部凭据加密密钥（AES-256-GCM，base64 编码 32 字节）
+    # 用于加密知识库 API Key 与告警渠道凭据。生成：openssl rand -base64 32
+    # ⚠️ 轮换该密钥会使存量密文全部失效，须先配过渡值再逐条重存
+    key: ${AGENT_PLATFORM_EXTERNAL_KEY:7jb4QGHPWuBtnff42adGXfyd88tQlTiOsbB5kxsPEtA=}
+  auth:
+    # JWT 密钥（HS256，≥ 32 字节）
+    # 本地开发：export AGENT_PLATFORM_JWT_SECRET="$(openssl rand -base64 48)"
+    jwt-secret-key: ${AGENT_PLATFORM_JWT_SECRET:F1CxtLa8x6Fp0D56p4AECT/i1vkZX91tpxTyu/A+eAb5vL/OGw1QA01aZeDeUjNy}
+    access-expire-minutes: ${AGENT_PLATFORM_ACCESS_EXPIRE_MINUTES:30}
+    refresh-expire-days: ${AGENT_PLATFORM_REFRESH_EXPIRE_DAYS:7}
+    oauth:
+      # 外部鉴权服务
+      auth-server-url: ${AGENT_PLATFORM_OAUTH_SERVER_URL:http://192.168.1.96:9623/}
+      client-id: ${AGENT_PLATFORM_OAUTH_CLIENT_ID:f073ede2-2e03-4a24-87c7-094f6caf37fa}
+      client-secret: ${AGENT_PLATFORM_OAUTH_CLIENT_SECRET:bNA0qAjkSsi1F_cZQCo_xg}
+      redirect-uri: ${AGENT_PLATFORM_OAUTH_REDIRECT_URI:http://localhost:5174/auth/callback}
+      userinfo-url: ${AGENT_PLATFORM_OAUTH_USERINFO_URL:http://192.168.1.96:9623/api/user/info}
+      # tipdm 修改密码接口 RSA 公钥
+      tipdm-public-key: ${AGENT_PLATFORM_OAUTH_TIPDM_PUBLIC_KEY:MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDb21hj4a0wDKmlPK0K/zcE5xq+OKETURb10NXetETh+puvboA+jWUUoBWRdLiKZBm4QMtU1JIFSvRQbbsIjGHJNGFCggeH60kLrJ7xjQnNgfufkp0oPL/eUzs8thO8gWNT3HROViIyLeP27gonlhkqZV76yJKM3J95ggZewZbu2wIDAQAB}
+      # 权限查询接口路径
+      permissions-path: ${AGENT_PLATFORM_OAUTH_PERMISSIONS_PATH:/api/user/permissions}
+      # 权限查询 scope 参数
+      permissions-scope: ${AGENT_PLATFORM_OAUTH_PERMISSION_SCOPE:智能体基座}
+
+  document-preview:
+    enabled: ${DOCUMENT_PREVIEW_ENABLED:false}
+    base-url: ${DOCUMENT_PREVIEW_BASE_URL:}
+    public-base-url: ${DOCUMENT_PREVIEW_PUBLIC_BASE_URL:}
+    ticket-ttl-seconds: ${DOCUMENT_PREVIEW_TICKET_TTL:300}
+  # 模型执行超时与重试
+
+  upload-policy:
+    allowed-extensions: txt, md, markdown, json, csv, tsv, py, java, js, ts, tsx, jsx, html, css, sql, xml, yaml, yml, sh, pdf, doc, docx, xls, xlsx, ppt, pptx, png, jpg, jpeg, jmx
+    # 上限写字节数（不带单位）：25MB 这类带单位值绑不上 long，
+    # 且会让「单位配错」变成启动期才发现的问题。
+    drive-max-bytes: 26214400
+    attachment-max-bytes: 20971520
+    knowledge-document-max-bytes: 20971520
+  # Plan 模式：启用后智能体可在计划模式与执行模式间切换
+
+  artifacts-download:
+    # 打包递归深度上限，与产物树一致：面板看不到的层级不应能被下载
+    max-depth: 6
+    # 单次打包总体积上限（字节，默认 500MB）。超限返回 413 而不是打个半截包
+    max-total-bytes: ${AGENT_PLATFORM_ARTIFACT_DOWNLOAD_MAX_BYTES:524288000}
+    # 单次打包条目数上限（安全阀，代码内再夹到 60000，JDK zip 硬上限是 65535）
+    max-entries: ${AGENT_PLATFORM_ARTIFACT_DOWNLOAD_MAX_ENTRIES:50000}
+    # 下载端点异步超时（毫秒，默认 10 分钟）。按端点设置而非全局 async 超时：
+    # SSE 需要 2 小时，全局一刀切会让两者互相破坏
+    timeout-millis: ${AGENT_PLATFORM_ARTIFACT_DOWNLOAD_TIMEOUT:600000}
+    # 下载票据有效期（秒）。窗口只需覆盖「换票 → 发起下载」，越长重放收益越大
+    ticket-ttl-seconds: ${AGENT_PLATFORM_ARTIFACT_TICKET_TTL:60}
+  # 停滞检测：父智能体无响应时发送唤醒信号
+
+  shell:
+    path: ${AGENT_PLATFORM_SHELL_PATH:}
+    command-prefix: ${AGENT_PLATFORM_SHELL_COMMAND_PREFIX:}
+  # 主动告警：会话无响应/运行超时等事件推送给用户
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# Windows IDEA 控制台中文乱码修复
+logging:
+  charset:
+    console: UTF-8

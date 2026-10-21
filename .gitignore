@@ -1,0 +1,67 @@
+# ---- 密钥与本地配置：绝不提交 -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+
+# ---- 依赖与构建产物：本地可重新生成，别进仓库 ----------------------------------
+node_modules/
+dist/
+dist-ssr/
+
+# 验证构建产物：dist-animation-verify / dist-case-*-verify 等，结构同 dist/，
+# 纯本地验证用（动画截图、生成 HTML），一律不进库。已统一归档到 .artifacts/verify/。
+dist-*/
+.vite/
+# Vite 读 .ts 配置时的临时转译产物，进程被中断会残留
+*.timestamp-*.mjs
+*.tsbuildinfo
+# 本地归档区：验证产物、临时备份等不该污染项目根的东西
+.artifacts/
+agent-platform/backend/target/
+agent-platform/frontend/dist/
+agent-platform/frontend/node_modules/
+agent-platform/frontend/.vite/
+*.class
+
+# ---- 运行期产物：会话数据、上传文件、生成物 ------------------------------------
+logs/
+workspace/runtimes/
+workspace/knowledge_bases/
+# 首页题库封面：后端直连生图的本机产物（一题一张，按 slug 覆盖）。
+# 不进库 —— 随包发布的那一份在 agent-platform/backend/src/main/resources/seed/hero-covers/，
+# 由 WebConfig 的 /covers/** 静态映射「生成目录优先、jar 内种子兜底」。
+workspace/hero-covers/
+# agentscope 框架的总线队列（inbox/wakeups），纯运行时状态
+workspace/.agentscope/
+# 定义区里的冒烟测试残留：曾经被跟踪过，含真题 PDF、附件与生成的动画 HTML。
+# 它躺在 Agent 定义目录内（模型可读），会干扰模型判断「什么是我该产出的文件」。
+workspace/agents/*/.smoke/
+workspace/agents/*/skills/*/scripts/python_path.txt
+workspace/agents/*/skills/*/scripts/modules/__pycache__/
+**/__pycache__/
+*.pyc
+
+# ---- 编辑器 / 系统 ------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# ---- AI 协作说明：不进仓库（内含本机环境细节与内部路径）------------------------
+CLAUDE.md
+
+# ---- IDE 工具产物（VSCode Java 扩展自动生成，它自己也声明忽略）-----------------
+.github/modernize/
+
+# ---- agent-platform-java 工作副本：与 agent-platform/ 同口径 -------------------
+agent-platform-java/backend/target/
+agent-platform-java/workspace/agents/*/.smoke/
+agent-platform-java/backend/.skill-repository-cache.catalog.json
+agent-platform-java/codex.md
+
+# Python runtime binaries are prepared locally and copied into dist at build time
+public/python/*
+!public/python/runtime.json
+!public/python/LICENSE

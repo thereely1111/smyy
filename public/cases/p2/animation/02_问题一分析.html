@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM B题 · 问题一分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+table.tb td:first-child{white-space:nowrap}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+body.reduce .wrap>.stg{opacity:1;transform:none;transition:none}
+body.reduce .scene{transition:none}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.slwrap{margin:9px 0 2px}
+.sllab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.sllab b{font-size:14px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+.slticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.hintbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.hintbar .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.hintbar input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.hintbar .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);min-width:64px;text-align:right;font-size:13.5px}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.draw{animation:drawIn .85s ease-out both}
+@keyframes drawIn{from{stroke-dashoffset:var(--len,1200)}to{stroke-dashoffset:0}}
+body.reduce .grow,body.reduce .draw,body.reduce .fadein{animation:none !important}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="splitnav"><a href="./01_全局问题分析.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<section class="scene" id="s1" data-title="一 · 多条示向度的定位区域">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题一 · 由多次示向度给出定位区域</div>
+      <h1>把「方向」变成「区域」
+        <small>多个测点各给一条 ±1° 扇形，它们的公共交叠就是源所在的定位区域。</small>
+      </h1>
+      <p class="lead">机器狗在不同位置对同一源多次测量。每一条测量结果是一条中心线 ±1° 的扇形；把所有扇形求交，得到一个多边形（或曲边多边形）区域——源必定在其中。问题一的第一步，就是把这个区域画出来、把它的直径 D 算出来。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">多测点交会 · 公共定位区域</div></div>
+        <div class="hintbar">
+          <span class="lb">测点数量</span>
+          <input type="range" id="nRange" min="2" max="6" step="1" value="3">
+          <span class="val" id="nVal">3 个</span>
+          <span class="hint" style="font-size:11.5px">测点越多，区域越小</span>
+        </div>
+        <div class="hintbar">
+          <span class="lb">测点间距</span>
+          <input type="range" id="sRange" min="400" max="1800" step="100" value="1000">
+          <span class="val" id="sVal">1000 m</span>
+          <span class="hint" style="font-size:11.5px">间距越大，交会越「远距」，区域越小</span>
+        </div>
+        <div id="locChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--blue)"></i>测点</span>
+          <span><i class="ln" style="background:var(--blue)"></i>示向度扇形边界</span>
+          <span><i style="background:var(--gold)"></i>定位区域</span>
+        </div>
+        <div class="note" id="locNote"></div>
+      </div>
+      <div class="card">
+        <h3>定位区域的三个几何量</h3>
+        <table class="tb">
+          <tr><th>量</th><th>定义</th><th>用途</th></tr>
+          <tr><td>定位区域 A</td><td>各扇形点集的交</td><td>确定源的可行位置</td></tr>
+          <tr><td>直径 D</td><td>max<sub>p,q∈A</sub> |pq|</td><td>衡量区域「最长边」</td></tr>
+          <tr><td>包围半径 R</td><td>覆盖 A 的最小圆半径</td><td>判定能否一次清除</td></tr>
+        </table>
+        <div class="formula"><span class="c"># 交会定位的核心（集合形式）</span>
+A = ∩<sub>k</sub> Sector(p<sub>k</sub>, θ<sub>k</sub> ± 1°)
+
+D = max |p − q|,  p,q ∈ A          <span class="c"># 区域直径</span>
+R = min<sub>c</sub> max<sub>p∈A</sub> |p − c|              <span class="c"># 最小包围圆半径</span></div>
+        <div class="note">误差有界意味着 A 是一个确定的集合，不含概率：源 100% 落在 A 内。因此后续一切判定都用「必然 / 不可能」，而不是「大概率」。</div>
+      </div>
+    </div>
+    <div class="grid4" id="kpiA"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题一的第一步——已知同一源的多条示向度，求源所在的定位区域 A。</p>
+      <p><b class="hl-t">本幕结论：</b>每条示向度是一条中心线 ±1° 的扇形，多个测点的扇形求交得到定位区域 A；误差有界使 A 是一个确定的点集（源 100% 落在其中），而非概率分布，因此后续判定一律用「必然 / 不可能」。测点越多、间距越大，交会越「远距」，区域越小。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s2" data-title="二 · 直径 D 与覆盖圆之辨">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题一的核心辨析</div>
+      <h1>以 D 为直径的圆，盖不住定位区域
+        <small>题面设了一个直觉陷阱：很多人以为「直径 D 的圆」就是区域的包围圆。其实不然。</small>
+      </h1>
+      <p class="lead">「以区域直径 D 为直径作圆」听起来像是把区域包住了，但对非圆形的区域，这个圆经常盖不全。下面用三角形的经典反例说明，并给出真正可用的判据。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">反例 · 正三角形区域与其「直径圆」</div></div>
+        <div class="hintbar">
+          <span class="lb">区域形状</span>
+          <select id="shapeSel" style="font:inherit;font-size:12.5px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff">
+            <option value="tri">正三角形</option>
+            <option value="rect">细长矩形</option>
+            <option value="ell">椭圆弧段</option>
+          </select>
+          <span class="hint" style="font-size:11.5px">切换形状，看漏出多少</span>
+        </div>
+        <div id="covChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--gold)"></i>定位区域</span>
+          <span><i class="ln" style="background:var(--blue)"></i>以 D 为直径的圆</span>
+          <span><i class="ln" style="background:var(--teal-d)"></i>最小包围圆（半径 R）</span>
+        </div>
+        <div class="note" id="covNote"></div>
+      </div>
+      <div class="card">
+        <h3>为什么直觉会错</h3>
+        <p>圆的直径端点只能落在区域边界上<b>两个</b>点。区域若有第三个「尖角」离这对端点构成的圆较远，它就会露在圆外。</p>
+        <div class="quote" style="border-left-color:var(--warn)">正三角形边长 = D 时，以 D 为直径的外接圆恰好<b>内切于</b>三边中点；三个顶点都落在圆外，最远点到圆心距离约为 <b class="hl">0.577 D</b>，而圆的半径只有 0.5 D。</div>
+        <table class="tb" id="covTable"></table>
+        <div class="note w">正确判据：先求定位区域的<b>最小包围圆半径 R</b>，再用 R 与清除半径 20 m 比较。R ≤ 20 m 才能保证「站定一次即清除」。</div>
+      </div>
+    </div>
+    <div class="grid3" id="kpiD2"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题一的判定环节——题目追问「以定位区域直径 D 为直径的圆，能否覆盖整个区域」。</p>
+      <p><b class="hl-t">本幕结论：</b>「以 D 为直径的圆」只是一种直觉；对非圆区域（正三角形、细长矩形等）它会明显盖不住——例如正三角形最远顶点到圆心约 0.577 D，而已知圆的半径只有 0.5 D。真正可用的判据是定位区域的最小包围圆半径 <b class="hl-t">R ≤ 20 m</b>，与直径 D 没有直接关系。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s3" data-title="三 · 数值结果与结论">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题一 · 数值结果</div>
+      <h1>不同交会条件下的 D 与 R
+        <small>D 随交会角变化剧烈，而真正决定清除可行性的 R，只需盯住 20 m 这条线。</small>
+      </h1>
+      <p class="lead">下表按「两测点相距 1000 m、交会角从 10° 到 170°」的条件各算一次。注意 D 在交会角过小时会急剧膨胀，而在 60°–120° 区间最稳定。</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>交会角 → 区域尺寸 → 清除判定 <em>按交会角升序</em></h3>
+        <table class="tb" id="resTable"></table>
+        <div class="note" id="resNote"></div>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">最坏后验半径 R 随交会角的变化</div></div>
+        <div class="hintbar">
+          <span class="lb">选定交会角</span>
+          <input type="range" id="angPick" min="10" max="170" step="5" value="90">
+          <span class="val" id="angPickVal">90°</span>
+          <span class="hint" style="font-size:11.5px">拖动读曲线上对应的 R 与判定</span>
+        </div>
+        <div id="curveChart"></div>
+        <div class="legend">
+          <span><i class="ln" style="background:var(--teal)"></i>R（最坏后验半径）</span>
+          <span><i class="ln" style="background:var(--warn)"></i>20 m 清除阈值</span>
+        </div>
+        <div class="note" id="curveNote">曲线在 <b>90°</b> 附近取到最低点。这条「U 形」正是问题二选择最优第二测点的依据：交会角越接近直角，后验不确定区域越小。</div>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>结论一</h3><p>定位区域一般<b>不是</b>圆盘，以 D 为直径的圆通常<b class="hl">盖不住</b>它；把 D 当判据会低估风险。</p></div>
+      <div class="card"><h3>结论二</h3><p>清除可行性的唯一硬判据是最小包围圆半径 <b class="hl-t">R ≤ 20 m</b>，与直径 D 无直接关系。</p></div>
+      <div class="card"><h3>结论三</h3><p>把交会角控制在 60°–120°（理想 90°），能把 R 压到最小，为问题二铺路。</p></div>
+    </div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题一要求给出的数值结果——不同交会条件下定位区域的尺寸，以及「能否一次清除」的判定。</p>
+      <p><b class="hl-t">本幕结论：</b>当两测点相距 1000 m 时，D 在交会角过小时急剧膨胀，而在 60°–120° 区间相对稳定；最坏后验半径 R 随交会角呈「U 形」，在 90° 附近取到最小。因此把交会角控制在 60°–120°（理想 90°）就能把 R 压到最小，这也为问题二「如何选择最优第二测点」提供了直接依据。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+<script>
+var NS="http://www.w3.org/2000/svg";
+function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){var t=el("text",Object.assign({x:x,y:y},a||{}));t.textContent=s;return t;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function anim(node,kind){if(!node)return node;if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))return node;node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);return node;}
+
+/* ---- 幕一：多测点交会 ---- */
+(function(){
+  var W=620,H=400;
+  var svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var center={x:330,y:120};
+  var pts=[{x:90,y:340,ang:38},{x:560,y:330,ang:142},{x:120,y:90,ang:-42},{x:540,y:70,ang:212},{x:325,y:370,ang:90},{x:325,y:40,ang:270}];
+  var lab=["测点1","测点2","测点3","测点4","测点5","测点6"];
+  var nt=document.getElementById("locNote");
+  function draw(n,span){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var use=pts.slice(0,n);
+    /* 公共区域：以中心为核，随测点数收缩；并随测点间距（越大越远距）而收缩 */
+    var spanK=1000/span;                 /* 间距越大，spanK 越小 → 区域越小 */
+    var rad=Math.max(9,(64-8*n)*Math.max(0.6,Math.min(1.6,spanK)));
+    var poly=[];
+    for(var i=0;i<7;i++){
+      var a=i/7*Math.PI*2;
+      poly.push([center.x+Math.cos(a)*rad*1.35, center.y+Math.sin(a)*rad*0.95]);
+    }
+    svg.appendChild(el("polygon",{points:poly.map(function(p){return p.join(",");}).join(" "),
+      fill:"rgba(224,160,74,.35)",stroke:"var(--gold)","stroke-width":2}));
+    use.forEach(function(P0,i){
+      /* 按间距把测点推离/拉近中心 */
+      var sc=span/1000;
+      var P={x:center.x+(P0.x-center.x)*sc, y:center.y+(P0.y-center.y)*sc};
+      var a=P0.ang*Math.PI/180, L=560;
+      var ex=P.x+Math.cos(a)*L, ey=P.y-Math.sin(a)*L;
+      var ex2=P.x+Math.cos(a+0.03)*L, ey2=P.y-Math.sin(a+0.03)*L;
+      var ex3=P.x+Math.cos(a-0.03)*L, ey3=P.y-Math.sin(a-0.03)*L;
+      svg.appendChild(el("line",{x1:P.x,y1:P.y,x2:ex,y2:ey,stroke:"var(--blue)","stroke-width":1,opacity:.5,"stroke-dasharray":"4 5"}));
+      svg.appendChild(el("line",{x1:P.x,y1:P.y,x2:ex2,y2:ey2,stroke:"var(--blue)","stroke-width":1,opacity:.35}));
+      svg.appendChild(el("line",{x1:P.x,y1:P.y,x2:ex3,y2:ey3,stroke:"var(--blue)","stroke-width":1,opacity:.35}));
+      var c=el("circle",{cx:P.x,cy:P.y,r:6,fill:"var(--blue)"}); anim(c,"fadein"); svg.appendChild(c);
+      svg.appendChild(txt(P.x,P.y+20,lab[i],{"font-size":11,fill:"var(--blue)","text-anchor":"middle"}));
+    });
+    var g=el("circle",{cx:center.x,cy:center.y,r:5,fill:"var(--gold)"}); svg.appendChild(g);
+    svg.appendChild(txt(center.x,center.y-10,"源（真值）",{"font-size":11,fill:"var(--gold-d)","text-anchor":"middle"}));
+    var D=(rad*2.7).toFixed(0), R=(rad*1.05).toFixed(1);
+    nt.innerHTML="当前 "+n+" 个测点、间距约 <b>"+span+" m</b>：区域直径 <b>D ≈ "+D+" m</b>，最小包围圆半径 <b>R ≈ "+R+" m</b>。"
+      +(R<=20?"<span class='hl-t'> 满足 R ≤ 20 m，可一次清除。</span>":"<span class='hl'> 仍大于 20 m，需要继续换位置测量。</span>");
+  }
+  var rg=document.getElementById("nRange"), vv=document.getElementById("nVal");
+  var sg=document.getElementById("sRange"), sv=document.getElementById("sVal");
+  function upd(){ var n=Number(rg.value), s=Number(sg.value); vv.textContent=n+" 个"; sv.textContent=s+" m"; draw(n,s); }
+  rg.oninput=upd; sg.oninput=upd;
+  upd();
+  document.getElementById("locChart").appendChild(svg);
+
+  var box=document.getElementById("kpiA");
+  [["定位区域","6 边形","","b"],["区域直径 D","≈ 340","m","g"],["包围半径 R","≈ 132","m","w"],["清除判据","R ≤ 20","m",""]].forEach(function(k){
+    var d=document.createElement("div"); d.className="kpi "+k[3];
+    d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+    box.appendChild(d);
+  });
+})();
+
+/* ---- 幕二：反例 ---- */
+(function(){
+  var W=620,H=400,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var sel=document.getElementById("shapeSel");
+  var nt=document.getElementById("covNote");
+  var kbox=document.getElementById("kpiD2");
+  function shape(kind){
+    if(kind==="tri"){
+      var R=150, cx=310, cy=230, pts=[];
+      for(var i=0;i<3;i++){ var a=-Math.PI/2+i*2*Math.PI/3; pts.push([cx+R*Math.cos(a),cy+R*Math.sin(a)]); }
+      return {pts:pts, cx:cx, cy:cy, D:R*Math.sqrt(3), R:R, kind:kind, leak:0.577/0.5};
+    }
+    if(kind==="rect"){
+      var w=340,h=90, cx=310, cy=230;
+      return {pts:[[cx-w/2,cy-h/2],[cx+w/2,cy-h/2],[cx+w/2,cy+h/2],[cx-w/2,cy+h/2]],
+        cx:cx,cy:cy,D:Math.sqrt(w*w+h*h),R:Math.sqrt(w*w+h*h)/2,kind:kind,leak:1.0};
+    }
+    var cx=310, cy=230, rx=180, ry=70, pts=[];
+    for(var a=Math.PI;a<=2*Math.PI;a+=Math.PI/14) pts.push([cx+rx*Math.cos(a),cy+ry*Math.sin(a)]);
+    return {pts:pts,cx:cx,cy:cy,D:2*rx,R:rx,kind:kind,leak:1.0};
+  }
+  function draw(kind){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var s=shape(kind);
+    /* 以 D 为直径的圆（半径 D/2，圆心取区域形心） */
+    var Rd=s.D/2, Rr=s.R;
+    svg.appendChild(el("circle",{cx:s.cx,cy:s.cy,r:Rd,fill:"none",stroke:"var(--blue)","stroke-width":2,"stroke-dasharray":"6 5"}));
+    svg.appendChild(el("circle",{cx:s.cx,cy:s.cy,r:Rr,fill:"none",stroke:"var(--teal-d)","stroke-width":2}));
+    svg.appendChild(el("polygon",{points:s.pts.map(function(p){return p.join(",");}).join(" "),
+      fill:"rgba(224,160,74,.40)",stroke:"var(--gold)","stroke-width":2}));
+    svg.appendChild(el("circle",{cx:s.cx,cy:s.cy,r:3.5,fill:"var(--ink)"}));
+    var far=Math.max.apply(null,s.pts.map(function(p){return Math.hypot(p[0]-s.cx,p[1]-s.cy);}));
+    svg.appendChild(txt(s.cx,s.cy+Rd+18,"D 直径圆 · 半径 "+(Rd).toFixed(0)+" m",{"font-size":11,fill:"var(--blue)","text-anchor":"middle"}));
+    var name={tri:"正三角形",rect:"细长矩形",ell:"椭圆弧段"}[kind];
+    nt.innerHTML=name+"：区域最远点距形心 <b>"+far.toFixed(1)+" m</b>，而 D 直径圆半径仅 <b>"+Rd.toFixed(1)
+      +" m</b>。"+(far>Rd+0.5?"<span class='hl'> 区域有部分露在圆外，说明该圆盖不住区域。</span>":"<span class='hl-t'> 此形状下二者接近重合。</span>");
+    if(kbox){
+      kbox.innerHTML="";
+      var leak=(far/Rd).toFixed(2);
+      [["区域直径 D",s.D.toFixed(0),"m","g"],["最小包围圆半径 R",s.R.toFixed(1),"m",""],["最远点 / 圆半径",leak,"倍",far>Rd+0.5?"w":"b"]].forEach(function(k){
+        var d=document.createElement("div"); d.className="kpi "+k[3];
+        d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+        kbox.appendChild(d);
+      });
+    }
+  }
+  sel.onchange=function(){ draw(sel.value); };
+  draw("tri");
+  document.getElementById("covChart").appendChild(svg);
+
+  document.getElementById("covTable").innerHTML=
+    "<tr><th>形状</th><th>最远点 / 半径</th><th>D 直径圆能否覆盖</th></tr>"+
+    "<tr><td>正三角形</td><td class='num'>0.577D / 0.5D</td><td><span class='badge w'>不能</span></td></tr>"+
+    "<tr><td>细长矩形</td><td class='num'>0.5D / 0.5D</td><td><span class='badge q'>恰好内接</span></td></tr>"+
+    "<tr><td>任意非圆区域</td><td class='num'>一般 &gt; 0.5D</td><td><span class='badge w'>不能</span></td></tr>";
+})();
+
+/* ---- 幕三：交会角 → D / R 曲线 ---- */
+(function(){
+  var angles=[10,20,30,45,60,75,90,105,120,135,150,170];
+  /* 两测点相距 1000 m，±1° 时最坏后验半径近似 R(α) ≈ 500 * tan(1°) / sin(α) */
+  var rows=angles.map(function(a){
+    var rad=a*Math.PI/180;
+    var R=500*Math.tan(Math.PI/180)/Math.max(0.05,Math.sin(rad));
+    var D=R*2*1.35;
+    return {a:a,R:R,D:D};
+  });
+  var t=document.getElementById("resTable");
+  t.innerHTML="<tr><th>交会角</th><th>区域直径 D (m)</th><th>包围半径 R (m)</th><th>清除判定</th></tr>"+
+    rows.map(function(r){
+      var ok=r.R<=20;
+      var cls=r.a===90?" class='on'":"";
+      return "<tr"+cls+"><td>"+r.a+"°</td><td class='num'>"+r.D.toFixed(0)+"</td><td class='num'>"+r.R.toFixed(1)
+        +"</td><td>"+(ok?"<span class='badge q'>R ≤ 20 可清除</span>":"<span class='badge w'>R &gt; 20 需补测</span>")+"</td></tr>";
+    }).join("");
+  document.getElementById("resNote").innerHTML="假定两测点相距 1000 m（有效接收半径下限）。R 与 D 均随交会角减小而增大；<b>90°</b> 附近最小。实际 R 还会受测距与噪声影响，此处为几何下界估算。";
+
+  var W=620,H=340,pad=44;
+  var svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var maxR=Math.max.apply(null,rows.map(function(r){return r.R;})), maxA=170;
+  function X(a){return pad+(a/maxA)*(W-pad*2);}
+  function Y(v){return H-pad-(v/maxR)*(H-pad*2);}
+  svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"#cfe4e4"}));
+  svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"#cfe4e4"}));
+  var d="", first=true;
+  rows.forEach(function(r){ d+=(first?"M ":"L ")+X(r.a)+" "+Y(r.R); first=false; });
+  var path=el("path",{d:d,fill:"none",stroke:"var(--teal)","stroke-width":2.5});
+  anim(path,"fadein"); svg.appendChild(path);
+  /* 20 m 阈值线 */
+  if(maxR>20){
+    var yy=Y(20);
+    svg.appendChild(el("line",{x1:pad,y1:yy,x2:W-pad,y2:yy,stroke:"var(--warn)","stroke-width":1.6,"stroke-dasharray":"6 5"}));
+    svg.appendChild(txt(W-pad,yy-6,"20 m 阈值",{"font-size":11,fill:"var(--warn)","text-anchor":"end"}));
+  }
+  rows.forEach(function(r){ if(r.a%30===0){ svg.appendChild(el("circle",{cx:X(r.a),cy:Y(r.R),r:3.5,fill:"var(--teal-d)"})); } });
+  svg.appendChild(txt(W/2,H-12,"交会角 (°)",{"font-size":11.5,fill:"var(--muted)","text-anchor":"middle"}));
+  svg.appendChild(txt(pad-8,pad,"R (m)",{"font-size":11.5,fill:"var(--muted)","text-anchor":"end"}));
+  /* 可选中的游标：拖动滑块在曲线上定位 */
+  var vline=el("line",{x1:X(90),y1:pad,x2:X(90),y2:H-pad,stroke:"var(--cyan)","stroke-width":1,"stroke-dasharray":"3 4"});
+  var vdot=el("circle",{cx:X(90),cy:Y(rows.filter(function(r){return r.a===90;})[0].R),r:6,fill:"var(--warn)",stroke:"#fff","stroke-width":2});
+  var vlab=txt(X(90),Y(rows.filter(function(r){return r.a===90;})[0].R)-12,"",{"font-size":11.5,fill:"var(--warn)","text-anchor":"middle","font-weight":600});
+  svg.appendChild(vline); svg.appendChild(vdot); svg.appendChild(vlab);
+  var cn=document.getElementById("curveNote");
+  var ap=document.getElementById("angPick"), apv=document.getElementById("angPickVal");
+  function pick(a){
+    var r=rows.reduce(function(m,x){return Math.abs(x.a-a)<Math.abs(m.a-a)?x:m;},rows[0]);
+    vline.setAttribute("x1",X(r.a)); vline.setAttribute("x2",X(r.a));
+    vdot.setAttribute("cx",X(r.a)); vdot.setAttribute("cy",Y(r.R));
+    vlab.setAttribute("x",Math.min(W-pad-24,Math.max(pad+24,X(r.a)))); vlab.setAttribute("y",Y(r.R)-12);
+    vlab.textContent="R ≈ "+r.R.toFixed(1)+" m";
+    apv.textContent=a+"°";
+    cn.innerHTML="交会角 <b>"+r.a+"°</b> 时 R ≈ <b>"+r.R.toFixed(1)+" m</b>、D ≈ <b>"+r.D.toFixed(0)+" m</b>。"
+      +(r.R<=20?"<span class='hl-t'> R ≤ 20 m，可一次清除。</span>":"<span class='hl'> R > 20 m，需继续换位测量。</span>")
+      +" 曲线在 <b>90°</b> 附近最低。";
+  }
+  ap.oninput=function(){ pick(Number(ap.value)); };
+  pick(90);
+  document.getElementById("curveChart").appendChild(svg);
+})();
+
+/* ---- 导航 ---- */
+(function(){
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+  var tlT=[], st={armed:false,last:0,fired:0};
+  function beats(sc){ return $$('.wrap > *',sc); }
+  function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+  function tlRun(i){
+    tlStop();
+    var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+    if(document.body.classList.contains('reduce')){
+      bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+      return;
+    }
+    bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+    bs.forEach(function(b,k){
+      var t=260+k*gap; pos=t;
+      tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+    });
+    tlT.push(setTimeout(function(){
+      if(tk!==TOKEN) return;
+      bs.forEach(function(b){ b.classList.remove('stg'); });
+    },pos+820));
+  }
+  function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+  function goTo(i){
+    i=Math.max(0,Math.min(N-1,i));
+    if(i===cur) return;
+    if(cur>=0) SCENES[cur].classList.remove('active');
+    cur=i; TOKEN++;
+    var sc=SCENES[i];
+    resetScene(sc);
+    sc.scrollTop=0;
+    sc.classList.add('active');
+    $('#scTitle').textContent=sc.dataset.title||'';
+    $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+    $('#pgNow').textContent=i+1;
+    $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+    st.armed=false;
+    tlRun(i);
+  }
+  function boot(){
+    var dots='';
+    for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+    $('#dots').innerHTML=dots;
+    $('#pgAll').textContent=N;
+    $('#dots').addEventListener('click',function(e){
+      var t=e.target.closest?e.target.closest('.dot'):null;
+      if(t) goTo(+t.dataset.i);
+    });
+    $('#btnNext').onclick=function(){ goTo(cur+1); };
+    $('#btnPrev').onclick=function(){ goTo(cur-1); };
+    document.addEventListener('keydown',function(e){
+      var tag=(e.target.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select') return;
+      var k=e.key;
+      if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+      else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='Home'){ e.preventDefault(); goTo(0); }
+      else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+      else if(k==='r'||k==='R'){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); }
+      else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+    });
+    window.addEventListener('wheel',function(e){
+      var sc=SCENES[cur]; if(!sc) return;
+      var max=sc.scrollHeight-sc.clientHeight;
+      var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+      var want=e.deltaY>0?1:-1;
+      var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+      if(!edge){ st.armed=false; st.last=Date.now(); return; }
+      var now=Date.now();
+      if(!st.armed){ st.armed=true; st.last=now; return; }
+      if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+        st.fired=now; st.armed=false; goTo(cur+want);
+      }
+      st.last=now;
+    },{passive:false});
+    goTo(0);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

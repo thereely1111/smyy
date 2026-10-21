@@ -1,0 +1,12 @@
+### M-PRE-001 多元线性回归 / 广义线性模型
+- **task_types**：连续值预测、因素解释、计数/二分类基线。
+- **problem_signature**：响应变量与特征关系近似线性；需要参数解释和显著性分析。
+- **core_idea**：估计条件均值或线性预测关系；GLM 用链接函数扩展响应分布。
+- **inputs**：特征、响应、分类编码、交互项、时间/空间分组。
+- **outputs**：系数、置信区间、预测值、残差、解释度、概率或期望。
+- **assumptions**：独立性、线性/链接函数合理、误差结构正确、无严重共线性。
+- **validation**：训练/验证划分、残差图、异方差检验、VIF、校准和外部验证。
+- **selection_tags**：`regression, interpretable, baseline, inference`
+- **composable_with**：`M-PRE-003, M-STA-001, M-CAU-001`
+- **fallbacks**：正则化回归、广义加性模型、树模型。
+- **agent_actions**：探索关系 -> 变换/编码 -> 拟合 -> 残差诊断 -> 交叉验证和解释。

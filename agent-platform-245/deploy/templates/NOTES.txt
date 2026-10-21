@@ -1,0 +1,44 @@
+AgentScope 智能体平台已部署到命名空间 {{ .Release.Namespace }}。
+
+{{- if .Values.ingress.enabled }}
+
+访问地址：
+  http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}
+
+{{- else }}
+
+前端本地访问：
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "agent-platform.fullname" . }}-frontend {{ .Values.service.frontend.port }}:{{ .Values.service.frontend.port }}
+  # 浏览器打开 http://localhost:{{ .Values.service.frontend.port }}
+
+后端本地访问（直连 API / AG-UI）：
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "agent-platform.fullname" . }}-backend {{ .Values.service.backend.port }}:{{ .Values.service.backend.port }}
+
+{{- end }}
+
+组件状态：
+  kubectl --namespace {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+
+部署前自检（两者必填，缺失则后端启动即失败）：
+  1. --set secrets.jwtSecret="$(openssl rand -base64 48)"
+  2. --set secrets.externalKey="$(openssl rand -base64 32)"
+
+镜像仓库说明：
+  backend.image / frontend.image 指向 registry.example.com 占位地址，部署前请改为
+  实际仓库地址。该 chart 不包含应用镜像构建；参考打包方式：
+    backend  —— Spring Boot fat jar 的 Dockerfile（java 21 基础镜像）
+    frontend —— Vite build 产物 dist/ + nginx（conf.d 配置已由 chart 注入，
+                镜像里只需拷贝静态文件，保持 /etc/nginx/conf.d/default.conf 可覆盖）
+    postgres —— docker/postgres/Dockerfile（PG16 + pgvector 0.8.1 源码构建）
+
+{{- if .Values.postgres.enabled }}
+数据库：内置 postgres StatefulSet（{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}），
+  Flyway 首次启动自动建表（V1 起全量迁移）。
+{{- else }}
+数据库：外部库 {{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }}/{{ .Values.externalDatabase.name }}
+{{- end }}
+
+{{- if .Values.backend.persistence.enabled }}
+工作空间：PVC {{ include "agent-platform.fullname" . }}-workspace（{{ .Values.backend.workspaceRoot }}），
+  会话工作区与 artifacts/ 产物均落此卷。升级采用 Recreate 策略（RWO 单副本）。
+{{- end }}

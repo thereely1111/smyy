@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 国赛A题 · 问题四分析 · 半径收缩的动边界烘干</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4,.grid6{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.t{background:#eef8f6;border-color:#cfe7e5;color:var(--teal-d)}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 公式块 ---------- */
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.85;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.formula .n{color:#e0a04a}
+.formula .w{color:#ffb4a0}
+
+/* ---------- 大号 KPI（结论幕） ---------- */
+.bigkpi{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh);
+}
+.bigkpi::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;
+  border-radius:50%;background:radial-gradient(circle,rgba(18,165,148,.10),transparent 70%);}
+.bigkpi.g::after{background:radial-gradient(circle,rgba(224,160,74,.14),transparent 70%);}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi.b .bk-v{color:var(--blue)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+
+/* ---------- 流程节点 ---------- */
+.flowrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flownode{
+  font-size:12px;padding:6px 11px;border-radius:8px;background:#fff;border:1px solid var(--line);
+  color:var(--ink2);font-weight:600;position:relative;
+}
+.flownode.on{background:var(--teal-d);color:#fff;border-color:var(--teal-d)}
+.flowarrow{color:var(--cyan);font-size:14px;font-weight:700}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{color:var(--teal-d);border-color:var(--teal);background:#eef8f6;font-weight:600}
+
+/* 动效总开关 */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>2026 国赛 A 题</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./mod-p1-0.html">全局</a><a href="./mod-p1-1.html">问题一</a><a href="./mod-p1-2.html">问题二</a><a href="./mod-p1-3.html">问题三</a><a href="./mod-p1-4.html" class="on">问题四</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===================== 第一幕 问题四概述：半径收缩的动边界 ===================== -->
+<section class="scene" id="s1" data-title="一 · 问题四概述：半径收缩的动边界">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题四 · 半径收缩的动边界</div>
+      <h1>半径会缩小的热风烘干：把动边界折成固定域
+        <small>药材圆柱随水分流失逐渐变细，半径由 2cm 收缩到约 1.207cm，烘干所需时长 21.49h。</small>
+      </h1>
+      <p class="lead">前三问把药材当作半径不变的圆柱处理；问题四要求考虑干燥过程中<span class="hl-t">半径随时间真实收缩</span>（动边界）。圆柱体长 L=25cm、<b>初始</b>半径 R₀=2cm、初始温度 28°C、初始干基含水率 C₀=2.55 kg/kg，物性改用<b>附录4</b>的变物性参数。半径收缩使物理求解域随 R(t) 不断缩小，必须在动边界上重新建立热湿耦合模型。</p>
+    </div>
+
+    <div class="grid4 stg">
+      <div class="kpi b"><div class="k">初始半径 R₀</div><div class="v">2.00 <u>cm</u></div></div>
+      <div class="kpi g"><div class="k">物性来源 · 附录4</div><div class="v">变物性 <u>D(C,T)</u></div></div>
+      <div class="kpi"><div class="k">半径收缩终点</div><div class="v">≈1.207 <u>cm</u></div></div>
+      <div class="kpi w"><div class="k">所需烘干时长</div><div class="v">21.49 <u>h</u></div></div>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">圆柱截面半径收缩示意 · 干壳由外向内推进</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>湿芯（高含水率）</span>
+          <span><i style="background:#e0a04a"></i>干壳（低含水率）</span>
+          <span><i class="ln" style="background:#8aa3aa"></i>初始半径 2cm 轮廓</span>
+        </div>
+      </div>
+      <canvas id="cvShrinkHero" height="300"></canvas>
+      <p class="note" style="margin-top:8px">虚线为初始半径 2cm 的轮廓，实心圆为当前截面半径 R(t)：从 2cm 单调收缩到约 1.207cm（收缩约 39.65%）。金色外环是已干燥的外壳，青色内芯是仍含水的核心；随时间推移，干壳变厚、湿芯变小。截面中心数字为该时刻的中心含水率 Cc。</p>
+    </div>
+
+    <div class="grid3 stg">
+      <div class="card">
+        <h3>与前三个问题的差别 <em>固定 vs 收缩</em></h3>
+        <p><span class="badge n">问题一~三</span>半径固定 R≡2cm，求解域始终为 [0, 2cm]，边界静止。</p>
+        <p><span class="badge q">问题四</span>半径随含水率下降而收缩，求解域 [0, R(t)] 逐时缩小，边界在移动。</p>
+        <div class="note t" style="margin-top:6px">边界移动意味着网格与通量边界都要随之更新，不能沿用固定半径的离散方式。</div>
+      </div>
+      <div class="card">
+        <h3>半径为什么会收缩 <em>附件2 收缩数据</em></h3>
+        <p>水分从细胞中流失后，细胞壁塌陷、孔隙收缩，宏观上表现为药材整体体积变小。收缩数据取自<b>附件2</b>：半径 R(t) 由 2cm 单调收缩到约 1.207cm。</p>
+        <p>收缩前期较快（0~6h），后期趋缓并逐渐贴近终值。</p>
+        <div class="note" style="margin-top:6px">R(t) 是问题四的已知输入，用于动边界位置与归一化坐标。</div>
+      </div>
+      <div class="card">
+        <h3>为什么改用附录4 物性 <em>变物性参数</em></h3>
+        <p>附录4 中扩散系数 D、导热系数 λ、体积热容 ρcₚ 均随含水率 C 与温度 T 变化，更贴近真实干燥过程。</p>
+        <p>其中 D 在同等 C、T 下比附录3 低约一个量级，这是问题四时长变长的关键原因。</p>
+        <div class="note w" style="margin-top:6px">物性随 C 变化 → 方程非线性 → 需迭代求解。</div>
+      </div>
+    </div>
+
+    <div class="quote">问题四的难点不在公式本身，而在于「边界会动」——半径每时每刻都在缩小，网格必须跟着缩，表面蒸发与换热的通量条件也要按当前半径折算。把这些处理干净，才能如实刻画收缩药材的热湿耦合过程。</div>
+  </div>
+</section>
+
+<!-- ===================== 第二幕 动边界建模：Landau 坐标变换 ===================== -->
+<section class="scene" id="s2" data-title="二 · 动边界建模：Landau 坐标变换">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题四 · 动边界建模</div>
+      <h1>Landau 坐标：把收缩的动边界折成固定域
+        <small>令 ξ = r / R(t)，物理域 [0, R(t)] 随时间收缩，归一化后变为固定域 [0, 1]。</small>
+      </h1>
+      <p class="lead">直接在有界缩小的物理域上离散，需要每步重建网格、处理移动边界，代价高且易出错。Landau 坐标把物理半径 r 除以当前半径 R(t)，映射为无量纲坐标 ξ=r/R(t)∈[0,1]。这样一来，动边界问题被转换成固定域上的问题，代价是方程中多出一个由收缩引起的对流（收缩）项。</p>
+    </div>
+
+    <div class="card stg">
+      <h3>归一化方程与边界条件 <em>Landau 坐标下的热湿耦合</em></h3>
+      <div class="formula"><span class="c">// Landau 坐标变换：把动边界 r ≤ R(t) 映射到固定域</span>
+ξ = r / R(t) ,    ξ ∈ [0, 1] ,    r = ξ · R(t)
+
+<span class="c">// 归一化扩散方程（R 随 t 收缩，额外产生对流项）</span>
+∂C/∂t = (D / R²) · (1/ξ) · ∂/∂ξ ( ξ · ∂C/∂ξ )  −  <span class="w">(ξ · Ṙ / R) · ∂C/∂ξ</span>
+               扩散项（半径归一化）                    收缩对流项
+
+<span class="c">// 边界条件与初值</span>
+ξ = 0 :   ∂C/∂ξ = 0                              轴对称，中心无净通量
+ξ = 1 :   −(D / R) · ∂C/∂ξ = k_m · (C_s − C_eq)   表面蒸发按 k_m / R 折算
+t = 0 :   C = C₀ = 2.55 kg/kg                     初始干基含水率
+
+<span class="c">// 温度边界同理，热边界按 h / R 折算</span>
+−(λ / R) · ∂T/∂ξ = h · (T_∞ − T_s)
+
+<span class="c">// 附录4 变物性（随 C 与 T 变化）</span>
+D    = 4.2e-4 · exp(−0.30 · C) · exp(−3850 / T_K)      [m²/s]
+λ    = 0.12 + 0.20 · C / (C + 1)                        [W/(m·K)]
+ρcₚ  = (760 + 90 · C) · (1850 + 2150 · C / (C + 1))</div>
+      <p class="note t" style="margin-top:8px">关键点：扩散项中的 D 被除以 R²，表面蒸发项被除以 R，换热的 h 同样被 R 折算——半径收缩既缩短了扩散路径，又让边界通量随半径变化，两种效应叠加在归一化方程中。</p>
+    </div>
+
+    <div class="card stg">
+      <h3>求解流程 <em>从收缩域到固定域，再换算回去</em></h3>
+      <div class="flowrow">
+        <span class="flownode">物理域随 R(t) 收缩</span><span class="flowarrow">→</span>
+        <span class="flownode on">归一化 ξ = r / R(t)</span><span class="flowarrow">→</span>
+        <span class="flownode on">固定域 [0,1] 离散求解</span><span class="flowarrow">→</span>
+        <span class="flownode">r = ξ · R(t) 换算回物理坐标</span>
+      </div>
+      <p class="small" style="margin-top:8px">归一化后，网格节点固定在 ξ = k/20（k = 0…20，共 21 个节点），物理位置随 R(t) 一起收缩；时间步长取 dt = 0.5s。</p>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">物理域收缩 vs 归一化固定域 · 节点映射示意</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>物理域（随 R 收缩）</span>
+          <span><i style="background:#146c87"></i>归一化域（固定）</span>
+          <span><i class="ln" style="background:#1e9fc4"></i>坐标映射</span>
+        </div>
+      </div>
+      <canvas id="cvLandau" height="320"></canvas>
+      <p class="note" style="margin-top:8px">左栏是收缩的物理域 [0, R(t)]，节点物理位置随半径一起向左收缩；右栏是归一化域 [0, 1]，节点位置始终固定在 ξ = k/20。两栏的节点<b>编号相同、数量相同</b>，只是横坐标被 R(t) 缩放。这对箭头表示 ξ = r/R(t) 的正向映射与 r = ξ·R(t) 的换算。</p>
+    </div>
+
+    <div class="grid3 stg">
+      <div class="card">
+        <h3>Landau 变换原理 <em>把动压成静</em></h3>
+        <p>令 ξ=r/R(t)，则物理域 0≤r≤R(t) 对应 0≤ξ≤1，与时间无关。</p>
+        <p>求导时需计入 R(t) 的时间依赖，由此引入 ∂ξ/∂t = −ξ·Ṙ/R，从而在方程中留下一个对流项。</p>
+        <div class="note t" style="margin-top:6px">变换不改变物理本质，只是把「移动的网格」换成「固定的网格」。</div>
+      </div>
+      <div class="card">
+        <h3>收缩对流项的来历 <em>(ξ · Ṙ / R)</em></h3>
+        <p>半径收缩相当于边界向中心挤压，物质被「推」向内侧，宏观上表现为一个附加的对流输运。</p>
+        <p>收缩越快（Ṙ 越大）或当前半径越小（R 越小），对流项越显著。</p>
+        <div class="note w" style="margin-top:6px">Ṙ<0（半径减小）时该项使含水率向外侧重分布，加速外层干燥。</div>
+      </div>
+      <div class="card">
+        <h3>数值实现 <em>有限体积法</em></h3>
+        <p><span class="badge n">网格</span>ξ 方向 21 个节点，等距布置</p>
+        <p><span class="badge n">时间</span>dt = 0.5s，共用一套离散格式</p>
+        <p><span class="badge n">迭代</span>物性随 C 变化，每个时间步内做内迭代</p>
+        <div class="note" style="margin-top:6px">边界 ξ=1 的通量与 ξ=0 的对称条件一起，构成两组封闭的三对角方程组。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 第三幕 半径收缩与水分下降 ===================== -->
+<section class="scene" id="s3" data-title="三 · 半径收缩与含水率下降">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题四 · 半径收缩与水分</div>
+      <h1>半径与含水率同步下降：两条曲线相互印证
+        <small>半径由 2cm 收缩到约 1.207cm；中心、表面与最大含水率同步降到目标阈值。</small>
+      </h1>
+      <p class="lead">D4 曲线记录了问题四从 0 到 21.485h 的全程演化。左图是半径 R(t)：前期下降快、后期趋缓，最终收缩约 39.65%；右图是含水率：中心含水率 Cc 最慢、表面含水率 Cs 最快，整体最大含水率等于中心值（中心始终是含水率最高的位置）。当中心含水率降到 0.15 kg/kg 时，烘干达到目标。</p>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">半径收缩曲线 与 含水率下降曲线（问题四 D4 数据）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#12a594"></i>半径 R(t)（左图）</span>
+          <span><i class="ln" style="background:#12a594"></i>中心 Cc（右图）</span>
+          <span><i class="ln" style="background:#146c87"></i>表面 Cs</span>
+          <span><i class="ln" style="background:#e0a04a"></i>最大 Cmax</span>
+          <span><i class="ln" style="background:#b8543a"></i>目标 0.15</span>
+        </div>
+      </div>
+      <canvas id="cvDual" height="340"></canvas>
+      <p class="note" style="margin-top:8px">左图纵轴为半径 R(t)（cm）：从 2.00cm 单调收缩到 1.207cm，前期（0~6h）斜率最大。右图纵轴为含水率（kg/kg）：中心 Cc（实线）始终高于表面 Cs（实线），最大含水率 Cmax 与中心值重合（虚线压在实线上），红色虚线为 0.15 的目标阈值。曲线在约 21.49h 处与阈值相交。</p>
+    </div>
+
+    <div class="grid4 stg">
+      <div class="kpi"><div class="k">半径收缩幅度</div><div class="v">39.65 <u>%</u></div></div>
+      <div class="kpi b"><div class="k">表面含水率终值</div><div class="v">0.081 <u>kg/kg</u></div></div>
+      <div class="kpi g"><div class="k">中心含水率终值</div><div class="v">0.15 <u>kg/kg</u></div></div>
+      <div class="kpi w"><div class="k">终态半径</div><div class="v">1.207 <u>cm</u></div></div>
+    </div>
+
+    <div class="card stg">
+      <h3>问题四径向含水率关键节点 <em>TAB6 · 每 6h 抽样</em></h3>
+      <table class="tb" id="tbProfile"></table>
+      <p class="note" style="margin-top:8px">表中「中心 0cm / 0.5cm / 1cm」为三个固定物理位置的含水率；因半径随干燥收缩，1cm 处始终仍在药材内部（R(6h)≈1.376cm &gt; 1cm）。最后一列为<b>当前半径处</b>的表面含水率，其横坐标即为该时刻的 R(t)，故「表面」列的位置随时间向内移动。21h 时中心降到 0.15、表面 0.081，径向梯度依然明显。</p>
+    </div>
+
+    <div class="grid2 stg">
+      <div class="card">
+        <h3>半径收缩的两个阶段 <em>先快后慢</em></h3>
+        <p>0~6h 含水率高、收缩最快，半径由 2.00cm 迅速降到约 1.376cm；6h 之后含水率下降趋缓，收缩速率随之减慢。</p>
+        <p>18h 之后半径基本贴近终值 1.207cm，残余收缩量很小。</p>
+        <div class="note t" style="margin-top:6px">半径的「先快后慢」与失水的推进节奏互补：收缩主要发生在干燥前期，后期半径已接近终值，含水率的下降反而主导了剩余的烘干时间。</div>
+      </div>
+      <div class="card">
+        <h3>中心与表面的差距 <em>径向梯度</em></h3>
+        <p>6h 时中心 2.3091、表面 0.6204，内外差距大；12h 时中心 0.8918、表面 0.2757；18h 时中心 0.2732、表面 0.1176。</p>
+        <p>到 21h，中心 0.15、0.5cm 处 0.1356、1cm 处 0.0991、表面 0.081——由内到外单调下降。</p>
+        <div class="note w" style="margin-top:6px">中心含水率始终是整体最大值，故 Cmax 曲线与 Cc 曲线重合。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 第四幕 收缩剖面：干区由外向内推进 ===================== -->
+<section class="scene" id="s4" data-title="四 · 收缩剖面：干区由外向内推进">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题四 · 径向剖面</div>
+      <h1>干区由外向内推进，半径同步收缩
+        <small>把 6h / 12h / 18h / 21h 的径向含水率剖面叠在同一张图上，可看清干燥前沿的推进与半径的缩小。</small>
+      </h1>
+      <p class="lead">剖面曲线以物理半径 r 为横轴、含水率 C 为纵轴。表层先失水、含水率迅速下降，形成一层低含水率的「干壳」；干壳随时间向内加厚，干燥前沿（陡降段）由外向内推进。与此同时，每条剖面的右端点就是该时刻的表面位置 r=R(t)，随着半径收缩而逐步向左移动。</p>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">径向含水率剖面 · 6h / 12h / 18h / 21h</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#12a594"></i>6 h</span>
+          <span><i class="ln" style="background:#1e9fc4"></i>12 h</span>
+          <span><i class="ln" style="background:#146c87"></i>18 h</span>
+          <span><i class="ln" style="background:#b8543a"></i>21 h</span>
+          <span><i class="ln" style="background:#b8543a"></i>目标 0.15</span>
+        </div>
+      </div>
+      <canvas id="cvProfile" height="340"></canvas>
+      <p class="note" style="margin-top:8px">四条剖面自上而下依次对应 6h→21h：表层含水率随时间是快速下降的，4h 之后外侧已经远低于中心。虚线竖线标出 6h 与 21h 的表面位置 R，可见表面位置从约 1.376cm 移动到 1.207cm。红色虚线为 0.15 的目标阈值，21h 剖面除中心外都已降到阈值以下。</p>
+    </div>
+
+    <div class="grid2 stg">
+      <div class="card">
+        <h3>干壳的推进 <em>由外向内</em></h3>
+        <p>热风从表面带走水分，表层先干；随干燥推进，干壳逐渐加厚，含水率的陡降段（干燥前沿）持续向内移动。</p>
+        <p>6h 时剖面还比较平缓（中心到表面 2.31→0.62），21h 时外层已整体压低（1cm 处仅 0.0991、表面 0.081）。</p>
+        <div class="note t" style="margin-top:6px">这正是「降速干燥」的体现：干壳越厚，内部水分向外迁移的阻力越大。</div>
+      </div>
+      <div class="card">
+        <h3>收缩与剖面的耦合 <em>半径缩短路径</em></h3>
+        <p>半径收缩让传质路径变短，理论上会加快内部水分迁移；但归一化方程中的对流项会把含水率向外侧重分布，同时附录4 的低扩散系数放大了内部阻力。</p>
+        <p>两者叠加的结果是：剖面在后期仍保持明显的径向梯度，中心含水率最后才降到 0.15。</p>
+        <div class="note w" style="margin-top:6px">若忽略半径收缩，同样的物性下剖面收尾会更快——这正是问题四比问题三多出 4.62h 的来源之一。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 第五幕 结论：21.49 h ===================== -->
+<section class="scene" id="s5" data-title="五 · 结论：所需时长 21.49h">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题四 · 结论</div>
+      <h1>半径收缩下所需烘干时长 21.49 h
+        <small>半径由 2cm 收缩到约 1.207cm；收缩缩短了路径，但附录4 的低扩散系数主导，总时长反而更长。</small>
+      </h1>
+      <p class="lead">采用 Landau 坐标把动边界化为固定域求解，配合附录4 的变物性参数与表面按 R 折算的蒸发/换热边界，问题四得到所需烘干时长 <b>21.49 h</b>。此时半径收缩到约 1.207cm，整体最大含水率为 0.15 kg/kg，中心 0.15、0.5cm 处 0.1356、1cm 处 0.0991、表面 0.081。</p>
+    </div>
+
+    <div class="grid4 stg">
+      <div class="bigkpi">
+        <div class="bk-k">问题四 · 所需时长</div>
+        <div class="bk-v" data-cnt="21.49" data-dec="2">0.00<span class="bk-u">h</span></div>
+        <div class="bk-sub">半径收缩 · 附录4 变物性</div>
+      </div>
+      <div class="bigkpi g">
+        <div class="bk-k">问题三 · 对照（半径不变）</div>
+        <div class="bk-v" data-cnt="16.87" data-dec="2">0.00<span class="bk-u">h</span></div>
+        <div class="bk-sub">同题条件下半径固定</div>
+      </div>
+      <div class="bigkpi b">
+        <div class="bk-k">收缩后半径</div>
+        <div class="bk-v" data-cnt="1.207" data-dec="3">0.000<span class="bk-u">cm</span></div>
+        <div class="bk-sub">由初始 2cm 收缩约 39.65%</div>
+      </div>
+      <div class="bigkpi">
+        <div class="bk-k">终态最大含水率</div>
+        <div class="bk-v" data-cnt="0.15" data-dec="2">0.00<span class="bk-u">kg/kg</span></div>
+        <div class="bk-sub">中心 0.15 · 表面 0.081</div>
+      </div>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">时长对比 与 21h 最终径向含水率分布</div>
+        <div class="legend">
+          <span><i style="background:#8aa3aa"></i>问题三（半径不变）</span>
+          <span><i style="background:#12a594"></i>问题四（半径收缩）</span>
+          <span><i class="ln" style="background:#b8543a"></i>21h 剖面 / 目标 0.15</span>
+        </div>
+      </div>
+      <canvas id="cvAnswer" height="300"></canvas>
+      <p class="note" style="margin-top:8px">左图对比两问的烘干时长：问题三 16.87h，问题四 21.49h，因半径收缩与附录4 物性共同作用，问题四多出 4.62h。右图是 21h 的最终径向含水率：中心 0.150、1cm 处 0.099、表面 0.081，由内到外单调下降，中心恰好落在 0.15 的目标阈值上。</p>
+    </div>
+
+    <div class="grid3 stg">
+      <div class="card">
+        <h3>为什么收缩反而更慢 <em>路径 vs 扩散系数</em></h3>
+        <p><span class="badge q">缩短路径</span>半径由 2cm 收缩到约 1.207cm，内部水分到表面的路程变短，本应加快干燥。</p>
+        <p><span class="badge w">主导因素</span>附录4 的扩散系数 D 在相同 C、T 下比附录3 低约一个量级，传质阻力显著增大。</p>
+        <div class="note w" style="margin-top:6px">两种效应相抵后由低扩散系数主导，故 21.49h &gt; 16.87h。</div>
+      </div>
+      <div class="card">
+        <h3>模型要点回顾 <em>动边界处理</em></h3>
+        <p><span class="badge n">坐标</span>Landau 坐标 ξ = r/R(t)，把动边界化为固定域 [0,1]</p>
+        <p><span class="badge n">方程</span>扩散项除以 R²，并引入收缩对流项 (ξ·Ṙ/R)∂C/∂ξ</p>
+        <p><span class="badge n">边界</span>表面蒸发按 k_m/R 折算、热边界按 h/R 折算</p>
+        <div class="note t" style="margin-top:6px">有限体积法 21 节点、dt = 0.5s，物性随 C 变化做内迭代。</div>
+      </div>
+      <div class="card">
+        <h3>结果可信度 <em>数据一致性</em></h3>
+        <p>半径在 21.49h 收缩到约 1.207cm，与附件2 的收缩数据一致；中心含水率恰好降到 0.15 的目标值。</p>
+        <p>剖面在 6h / 12h / 18h / 21h 的抽样值与 D4 全程曲线相互吻合，内外梯度符合干燥规律。</p>
+        <div class="note" style="margin-top:6px">收缩使路径变短、低扩散系数使阻力变大，最终时长是两者共同作用的净结果。</div>
+      </div>
+    </div>
+
+    <div class="card stg">
+      <h3>问题三 与 问题四 对比 <em>假设与结果</em></h3>
+      <table class="tb">
+        <tr><th>对比项</th><th>问题三（半径不变）</th><th>问题四（半径收缩）</th></tr>
+        <tr><td>半径处理</td><td>固定 R ≡ 2cm</td><td>收缩 R(t)：2 → 约 1.207cm</td></tr>
+        <tr><td>物性</td><td>附录3</td><td>附录4（变物性）</td></tr>
+        <tr><td>求解坐标</td><td>物理坐标 r</td><td>Landau 坐标 ξ = r/R(t)</td></tr>
+        <tr class="on"><td><b>烘干时长</b></td><td class="num"><b>16.87 h</b></td><td class="num"><b>21.49 h</b></td></tr>
+      </table>
+      <p class="note t" style="margin-top:8px">问题四虽因半径收缩缩短了传质路径，但附录4 的扩散系数比附录3 低约一个量级，二者相抵后低扩散系数占主导，故问题四的时长（21.49h）反而比问题三（16.87h）更长。</p>
+    </div>
+
+    <div class="quote">问题四的核心产出是「21.49 h」这个时长，以及一套能处理动边界的建模方法：用 Landau 坐标把收缩域折成固定域，把半径收缩的影响收进一个对流项，再配合按 R 折算的表面边界条件，就能如实刻画收缩药材的热湿耦合过程。</div>
+  </div>
+</section>
+
+</main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= 数值模拟产出数据（原样复制） ================= */
+var D4={"t":[0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5,10.5,11.5,12.5,13.5,14.5,15.5,16.5,17.5,18.5,19.5,20.5,21.485],"Cc":[2.55,2.55,2.5499,2.5438,2.503,2.3934,2.2072,1.9645,1.6971,1.4337,1.1933,0.9841,0.8074,0.6608,0.5406,0.4429,0.3638,0.3001,0.2491,0.2082,0.1756,0.15],"Cs":[1.5543,1.2644,1.0243,0.8742,0.7546,0.6606,0.5799,0.5127,0.4478,0.3915,0.3412,0.2966,0.2559,0.2209,0.1908,0.1651,0.1433,0.1253,0.1105,0.0985,0.0888,0.081],"Cmax":[2.55,2.55,2.5499,2.5438,2.503,2.3934,2.2072,1.9645,1.6971,1.4337,1.1933,0.9841,0.8074,0.6608,0.5406,0.4429,0.3638,0.3001,0.2491,0.2082,0.1756,0.15],"R":[1.873,1.703,1.589,1.51,1.447,1.397,1.356,1.321,1.299,1.281,1.266,1.253,1.244,1.236,1.229,1.223,1.219,1.216,1.213,1.211,1.209,1.207]};
+var TAB6={"6":[2.3091,2.0676,1.3316,0.6204],"12":[0.8918,0.7591,0.4471,0.2757],"18":[0.2732,0.2406,0.1589,0.1176],"21":[0.15,0.1356,0.0991,0.081]};
+
+/* ================= 常量与配色 ================= */
+var C0=2.55,R0=2.00,REND=1.207,DUR=21.49,TLIM=0.15;
+var TEAL='#12a594',TEALD='#0b6e68',CYAN='#1e9fc4',BLUE='#146c87',GOLD='#e0a04a',GOLDD='#8a6313',
+    WARN='#b8543a',INK='#0b2e36',INK2='#3d6570',MUTED='#57727c',GRID='#eaf4f4',AXIS='#cfe4e4',GREY='#8aa3aa';
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+
+/* ================= 通用工具 ================= */
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function fmt(v,dec){if(dec===undefined)dec=0;return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+function font(g,size,weight){g.font=(weight||600)+' '+(size||12)+'px "PingFang SC",system-ui,sans-serif';}
+function haloText(g,txt,x,y,color,size,align){
+  font(g,size||11,600);
+  g.textAlign=align||'left'; g.textBaseline='middle';
+  g.lineWidth=3; g.strokeStyle='rgba(255,255,255,.92)'; g.strokeText(txt,x,y);
+  g.fillStyle=color; g.fillText(txt,x,y);
+}
+function setupCanvas(cv,h){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  return {g:g,w:w,h:h};
+}
+function pathFrac(g,pts,frac){
+  var n=pts.length,f=clamp(frac,0,1),m=(n-1)*f,k=Math.floor(m),r=m-k;
+  g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
+  for(var i=1;i<=k;i++) g.lineTo(pts[i][0],pts[i][1]);
+  if(k<n-1){ g.lineTo(lerp(pts[k][0],pts[k+1][0],r),lerp(pts[k][1],pts[k+1][1],r)); }
+}
+function interpR(tt){
+  if(tt<=0) return R0;
+  var t=D4.t,R=D4.R,i;
+  for(i=0;i<t.length;i++){ if(tt<=t[i]){ if(i===0) return R[0]; var f=(tt-t[i-1])/(t[i]-t[i-1]); return R[i-1]+(R[i]-R[i-1])*f; } }
+  return R[R.length-1];
+}
+function interpC(a,tt){
+  if(tt<=0) return C0;
+  var t=D4.t,i;
+  for(i=0;i<t.length;i++){ if(tt<=t[i]){ if(i===0) return a[0]; var f=(tt-t[i-1])/(t[i]-t[i-1]); return a[i-1]+(a[i]-a[i-1])*f; } }
+  return a[a.length-1];
+}
+function reduceOn(){ return document.body.classList.contains('reduce'); }
+
+/* ================= 动画引擎 ================= */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var h={_raf:null}; activeAnims.push(h);
+  function loop(t){ fn(t); h._raf=requestAnimationFrame(loop); }
+  h._raf=requestAnimationFrame(loop); return h;
+}
+function anim(fn){
+  if(reduceOn()){ fn(99999); return; }
+  var t0=performance.now();
+  runAnim(function(t){ fn(t-t0); });
+}
+
+/* ================= 第一幕：圆柱截面收缩 ================= */
+function drawHero(tm){
+  var cv=$('#cvShrinkHero'); if(!cv) return;
+  var o=setupCanvas(cv,300), g=o.g, w=o.w, h=o.h;
+  var L=26,R=26,T=40,B=54,PW=w-L-R,PH=h-T-B;
+  var pe=easeOutCubic(clamp(tm/2000,0,1));
+  var times=[0,6,12,18,21.485];
+  var colW=PW/times.length;
+  var rmaxPx=Math.min(PH*0.32,colW*0.36,66);
+  var sc=rmaxPx/R0, r0p=R0*sc;
+  var cy=T+PH*0.42;
+  font(g,13,600); g.fillStyle=INK; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('圆柱截面半径随烘干时间收缩（虚线＝初始半径 2cm 轮廓）',L,26);
+  g.strokeStyle=AXIS; g.lineWidth=1;
+  g.beginPath(); g.moveTo(L,cy); g.lineTo(L+PW,cy); g.stroke();
+  times.forEach(function(tt,i){
+    var pa=clamp(pe*1.4-i*0.12,0,1); if(pa<=0.001) return;
+    var cx=L+colW*(i+0.5);
+    var Rcm=interpR(tt), Cc=interpC(D4.Cc,tt);
+    var rp=Rcm*sc, core=Math.sqrt(clamp(Cc/C0,0,1));
+    g.globalAlpha=pa;
+    g.setLineDash([4,3]); g.strokeStyle='#b8cccc'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx-r0p,cy); g.lineTo(cx+r0p,cy); g.stroke();
+    g.beginPath(); g.moveTo(cx-r0p,cy-r0p*0.45); g.lineTo(cx-r0p,cy+r0p*0.45); g.stroke();
+    g.beginPath(); g.moveTo(cx+r0p,cy-r0p*0.45); g.lineTo(cx+r0p,cy+r0p*0.45); g.stroke();
+    g.setLineDash([]);
+    var gr=g.createRadialGradient(cx-rp*0.3,cy-rp*0.3,rp*0.15,cx,cy,rp);
+    gr.addColorStop(0,'#fdf4e8'); gr.addColorStop(1,GOLD);
+    g.fillStyle=gr; g.beginPath(); g.arc(cx,cy,rp,0,6.2832); g.fill();
+    g.strokeStyle=GOLDD; g.lineWidth=1.6; g.stroke();
+    g.fillStyle=TEAL; g.beginPath(); g.arc(cx,cy,rp*core,0,6.2832); g.fill();
+    g.strokeStyle='rgba(255,255,255,.55)'; g.lineWidth=1; g.stroke();
+    font(g,11,600); g.fillStyle=TEALD; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText('Cc='+Cc.toFixed(2),cx,cy+rp*core+13);
+    g.globalAlpha=1;
+    var lab=(tt===0?'0':(tt===21.485?'21':String(Math.round(tt))));
+    font(g,12.5,600); g.fillStyle=INK; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText('t = '+lab+' h',cx,cy+rmaxPx+32);
+    font(g,11,400); g.fillStyle=MUTED;
+    g.fillText('R = '+Rcm.toFixed(3)+' cm',cx,cy+rmaxPx+48);
+  });
+}
+
+/* ================= 第二幕：物理域 vs 归一化域 ================= */
+function drawLandau(tm){
+  var cv=$('#cvLandau'); if(!cv) return;
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var L=44,R=44,T=58,B=56,PW=w-L-R,PH=h-T-B;
+  var cy=T+PH*0.46;
+  var gap=Math.min(120,Math.max(70,PW*0.15));
+  var pw=(PW-gap)/2;
+  var lx=L, rx=L+pw+gap;
+  var cyc=(tm/1000)%4.8;
+  var Run=lerp(R0,REND,easeInOutCubic(clamp(cyc/3.4,0,1)));
+  var barH=Math.min(54,PH*0.30);
+  font(g,13,600); g.fillStyle=INK; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('动边界 → 固定域：Landau 坐标变换（ξ = r / R(t)）',L,26);
+  var top=cy-barH/2, bwL=pw*(Run/R0);
+  /* 左：物理域 */
+  g.strokeStyle=AXIS; g.lineWidth=1;
+  g.beginPath(); g.moveTo(lx,cy+barH/2+12); g.lineTo(lx+pw,cy+barH/2+12); g.stroke();
+  [0,0.5,1,1.5,2].forEach(function(v){
+    var x=lx+pw*(v/2);
+    g.beginPath(); g.moveTo(x,cy+barH/2+12); g.lineTo(x,cy+barH/2+17); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(String(v),x,cy+barH/2+31);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+  g.fillText('r (cm)',lx+pw,cy+barH/2+45);
+  var gr=g.createLinearGradient(lx,top,lx+bwL,top+barH);
+  gr.addColorStop(0,TEAL); gr.addColorStop(1,'#7fd8c9');
+  g.fillStyle=gr; g.fillRect(lx,top,bwL,barH);
+  g.strokeStyle=TEALD; g.lineWidth=1.5; g.strokeRect(lx,top,bwL,barH);
+  for(var k=0;k<=20;k++){
+    var x=lx+bwL*(k/20);
+    g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x,top+5); g.lineTo(x,top+barH-5); g.stroke();
+  }
+  font(g,12,600); g.fillStyle=INK; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('物理域 0 ≤ r ≤ R(t)',lx,top-10);
+  font(g,11,600); g.fillStyle=TEALD; g.textAlign='right';
+  g.fillText('R = '+Run.toFixed(3)+' cm',lx+pw,top-10);
+  /* 右：归一化域 */
+  g.fillStyle='#eef7f6'; g.fillRect(rx,top,pw,barH);
+  g.strokeStyle=BLUE; g.lineWidth=1.5; g.strokeRect(rx,top,pw,barH);
+  for(var k2=0;k2<=20;k2++){
+    var x2=rx+pw*(k2/20);
+    g.strokeStyle='rgba(20,108,135,.7)'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x2,top+5); g.lineTo(x2,top+barH-5); g.stroke();
+  }
+  g.strokeStyle=AXIS;
+  g.beginPath(); g.moveTo(rx,top+barH+12); g.lineTo(rx+pw,top+barH+12); g.stroke();
+  [0,0.25,0.5,0.75,1].forEach(function(v){
+    var x=rx+pw*v;
+    g.beginPath(); g.moveTo(x,top+barH+12); g.lineTo(x,top+barH+17); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(String(v),x,top+barH+31);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+  g.fillText('ξ',rx+pw,top+barH+45);
+  font(g,12,600); g.fillStyle=INK; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('归一化域 ξ ∈ [0, 1]（固定不变）',rx,top-10);
+  /* 映射箭头 */
+  var mx=(lx+pw+rx)/2;
+  g.strokeStyle=CYAN; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(lx+pw+4,cy-10); g.lineTo(rx-12,cy-10); g.stroke();
+  g.beginPath(); g.moveTo(rx-4,cy-10); g.lineTo(rx-12,cy-15); g.lineTo(rx-12,cy-5); g.closePath();
+  g.fillStyle=CYAN; g.fill();
+  font(g,11,600); g.fillStyle=TEALD; g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('ξ = r / R(t)',mx,cy-18);
+  g.strokeStyle=WARN; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(rx-4,cy+16); g.lineTo(lx+pw+12,cy+16); g.stroke();
+  g.beginPath(); g.moveTo(lx+pw+4,cy+16); g.lineTo(lx+pw+12,cy+11); g.lineTo(lx+pw+12,cy+21); g.closePath();
+  g.fillStyle=WARN; g.fill();
+  font(g,11,600); g.fillStyle=WARN; g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('r = ξ · R(t)',mx,cy+34);
+  /* 底部说明 */
+  font(g,11,400); g.fillStyle=MUTED; g.textBaseline='alphabetic';
+  g.textAlign='left'; g.fillText('同一批 21 个节点，物理位置随 R(t) 收缩',lx,T+PH-6);
+  g.textAlign='right'; g.fillText('节点固定在 ξ = k/20，不随时间移动',rx+pw,T+PH-6);
+}
+
+/* ================= 第三幕：半径收缩 + 含水率下降 ================= */
+function drawDual(tm){
+  var cv=$('#cvDual'); if(!cv) return;
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  var L=52,R=22,T=52,B=46,PW=w-L-R,PH=h-T-B;
+  var gap=42, pw=(PW-gap)/2;
+  var x0=L, x1=L+pw+gap, yT=T, yB=T+PH;
+  var pe=easeOutCubic(clamp(tm/1700,0,1));
+  font(g,12.5,600); g.fillStyle=TEALD; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('半径 R(t) 收缩曲线 (cm)',x0,34);
+  g.fillText('含水率 C(t)：中心 / 表面 / 最大 (kg/kg)',x1,34);
+  /* --- 左：R(t) --- */
+  var Rmin=1.05,Rmax=2.10;
+  function YL(v){ return yB-(v-Rmin)/(Rmax-Rmin)*PH; }
+  function XL(t){ return x0+pw*(t/22); }
+  [1.2,1.4,1.6,1.8,2.0].forEach(function(v){
+    var y=YL(v);
+    g.strokeStyle=GRID; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y+.5); g.lineTo(x0+pw,y+.5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(1),x0-6,y);
+  });
+  g.strokeStyle=AXIS; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(x0,yT); g.lineTo(x0,yB); g.lineTo(x0+pw,yB); g.stroke();
+  var pts=[[XL(0),YL(R0)]];
+  D4.t.forEach(function(t,i){ pts.push([XL(t),YL(D4.R[i])]); });
+  pathFrac(g,pts,pe); g.strokeStyle=TEAL; g.lineWidth=2.6; g.stroke();
+  if(pe>0.03){
+    pathFrac(g,pts,pe); g.lineTo(pts[0][0],yB); g.closePath();
+    g.fillStyle='rgba(18,165,148,.10)'; g.fill();
+  }
+  [0,6,12,18,21].forEach(function(t){
+    var x=XL(t);
+    g.strokeStyle='#f2f9f9'; g.lineWidth=1; g.beginPath(); g.moveTo(x,yT); g.lineTo(x,yB); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(String(t),x,yB+16);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='center'; g.fillText('时间 t (h)',x0+pw/2,h-6);
+  g.beginPath(); g.arc(XL(0),YL(R0),4,0,6.2832); g.fillStyle=TEAL; g.fill();
+  haloText(g,'2.000 cm',XL(0)+8,YL(R0)-11,TEALD,10.5,'left');
+  g.beginPath(); g.arc(XL(21.485),YL(REND),4,0,6.2832); g.fillStyle=WARN; g.fill();
+  haloText(g,'1.207 cm',XL(21.485)-8,YL(REND)-12,WARN,10.5,'right');
+  /* --- 右：含水率 --- */
+  var Cm=2.75;
+  function YR(v){ return yB-v/Cm*PH; }
+  function XR(t){ return x1+pw*(t/22); }
+  [0,0.5,1,1.5,2,2.5].forEach(function(v){
+    var y=YR(v);
+    g.strokeStyle=GRID; g.lineWidth=1; g.beginPath(); g.moveTo(x1,y+.5); g.lineTo(x1+pw,y+.5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(1),x1-6,y);
+  });
+  g.strokeStyle=AXIS; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(x1,yT); g.lineTo(x1,yB); g.lineTo(x1+pw,yB); g.stroke();
+  [0,6,12,18,21].forEach(function(t){
+    var x=XR(t);
+    g.strokeStyle='#f2f9f9'; g.lineWidth=1; g.beginPath(); g.moveTo(x,yT); g.lineTo(x,yB); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(String(t),x,yB+16);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='center'; g.fillText('时间 t (h)',x1+pw/2,h-6);
+  function buildC(a){ var p=[[XR(0),YR(C0)]]; D4.t.forEach(function(t,i){ p.push([XR(t),YR(a[i])]); }); return p; }
+  function strokeC(a,col,dash,wd){
+    var p=buildC(a);
+    if(dash) g.setLineDash(dash);
+    pathFrac(g,p,pe); g.strokeStyle=col; g.lineWidth=wd; g.stroke();
+    if(dash) g.setLineDash([]);
+  }
+  strokeC(D4.Cmax,GOLD,[5,4],1.6);
+  strokeC(D4.Cs,BLUE,null,2.4);
+  strokeC(D4.Cc,TEAL,null,2.4);
+  g.strokeStyle=WARN; g.lineWidth=1.4; g.setLineDash([5,4]);
+  g.beginPath(); g.moveTo(x1,YR(TLIM)); g.lineTo(x1+pw,YR(TLIM)); g.stroke(); g.setLineDash([]);
+  haloText(g,'目标 0.15',x1+7,YR(TLIM)-7,WARN,10.5,'left');
+  g.beginPath(); g.arc(XR(21.485),YR(0.15),3.6,0,6.2832); g.fillStyle=TEAL; g.fill();
+  haloText(g,'Cc=0.150',XR(21.485)-8,YR(0.15)-12,TEALD,10.5,'right');
+  g.beginPath(); g.arc(XR(21.485),YR(0.081),3.6,0,6.2832); g.fillStyle=BLUE; g.fill();
+  haloText(g,'Cs=0.081',XR(21.485)-8,YR(0.081)+13,BLUE,10.5,'right');
+}
+
+/* ================= 第四幕：径向剖面 ================= */
+function drawProfile(tm){
+  var cv=$('#cvProfile'); if(!cv) return;
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  var L=52,R=26,T=54,B=50,PW=w-L-R,PH=h-T-B;
+  var yT=T, yB=T+PH;
+  var pe=easeOutCubic(clamp(tm/1800,0,1));
+  function X(r){ return L+PW*(r/2); }
+  function Y(v){ return yB-v/2.75*PH; }
+  font(g,13,600); g.fillStyle=INK; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('径向含水率剖面 · 干区由外向内推进（半径同步收缩）',L,26);
+  [0,0.5,1,1.5,2,2.5].forEach(function(v){
+    var y=Y(v);
+    g.strokeStyle=GRID; g.lineWidth=1; g.beginPath(); g.moveTo(L,y+.5); g.lineTo(L+PW,y+.5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(1),L-6,y);
+  });
+  g.strokeStyle=AXIS; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,yT); g.lineTo(L,yB); g.lineTo(L+PW,yB); g.stroke();
+  [0,0.5,1,1.5,2].forEach(function(v){
+    var x=X(v);
+    g.beginPath(); g.moveTo(x,yB); g.lineTo(x,yB+5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(v.toFixed(1),x,yB+19);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='center'; g.fillText('物理半径 r (cm)',L+PW/2,h-6);
+  g.strokeStyle=WARN; g.lineWidth=1.4; g.setLineDash([5,4]);
+  g.beginPath(); g.moveTo(L,Y(TLIM)); g.lineTo(L+PW,Y(TLIM)); g.stroke(); g.setLineDash([]);
+  haloText(g,'目标 0.15 kg/kg',L+PW-8,Y(TLIM)+6,WARN,10.5,'right');
+  var groups=[{h:6,k:'6',c:TEAL},{h:12,k:'12',c:CYAN},{h:18,k:'18',c:BLUE},{h:21,k:'21',c:WARN}];
+  groups.forEach(function(gr,i){
+    var v=TAB6[gr.k], Rc=interpR(gr.h);
+    var p=[[X(0),Y(v[0])],[X(0.5),Y(v[1])],[X(1),Y(v[2])],[X(Rc),Y(v[3])]];
+    var f=clamp(pe*1.4-i*0.16,0,1);
+    if(f<=0.001) return;
+    pathFrac(g,p,f); g.strokeStyle=gr.c; g.lineWidth=2.4; g.stroke();
+    p.forEach(function(pt,j){
+      if(f>=(j/(p.length-1))*0.98+0.02){
+        g.fillStyle=gr.c; g.beginPath(); g.arc(pt[0],pt[1],3.4,0,6.2832); g.fill();
+        g.strokeStyle='#fff'; g.lineWidth=1.2; g.stroke();
+      }
+    });
+    if(f<0.99) return;
+    g.strokeStyle=gr.c; g.lineWidth=1; g.setLineDash([3,3]); g.globalAlpha=0.5;
+    g.beginPath(); g.moveTo(X(Rc),yT); g.lineTo(X(Rc),yB); g.stroke();
+    g.setLineDash([]); g.globalAlpha=1;
+    haloText(g,gr.h+'h',X(0)+8,Y(v[0])+(gr.h===21?12:0),gr.c,11,'left');
+  });
+  [[6,TEAL],[21,WARN]].forEach(function(q){
+    var Rc=interpR(q[0]);
+    haloText(g,'R('+q[0]+'h)='+Rc.toFixed(3),X(Rc),yT+14,q[1],10.5,'center');
+  });
+}
+
+/* ================= 第五幕：时长对比 + 末态剖面 ================= */
+function drawAnswer(tm){
+  var cv=$('#cvAnswer'); if(!cv) return;
+  var o=setupCanvas(cv,300), g=o.g, w=o.w, h=o.h;
+  var L=54,R=24,T=50,B=48,PW=w-L-R,PH=h-T-B;
+  var gap=46, pw=(PW-gap)/2;
+  var x0=L, x1=L+pw+gap, yT=T, yB=T+PH;
+  var pe=easeOutCubic(clamp(tm/1800,0,1));
+  font(g,12.5,600); g.fillStyle=TEALD; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('烘干时长对比 (h)',x0,32);
+  g.fillText('21h 最终径向含水率 (kg/kg)',x1,32);
+  /* 左：柱状 */
+  var ym=24;
+  function YB(v){ return yB-v/ym*PH; }
+  [0,6,12,18,24].forEach(function(v){
+    var y=YB(v);
+    g.strokeStyle=GRID; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y+.5); g.lineTo(x0+pw,y+.5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(String(v),x0-6,y);
+  });
+  g.strokeStyle=AXIS; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(x0,yT); g.lineTo(x0,yB); g.lineTo(x0+pw,yB); g.stroke();
+  var bars=[{n:'问题三',v:16.87,c:GREY,s:'半径不变'},{n:'问题四',v:DUR,c:TEAL,s:'半径收缩'}];
+  var step=pw/bars.length, bw=Math.min(96,step*0.46);
+  bars.forEach(function(b,i){
+    var x=x0+step*(i+0.5)-bw/2, bh=PH*(b.v/ym)*easeOutCubic(clamp(pe*1.4-i*0.15,0,1));
+    var gr=g.createLinearGradient(x,yB-bh,x,yB); gr.addColorStop(0,b.c); gr.addColorStop(1,'#ffffff');
+    g.fillStyle=gr; g.fillRect(x,yB-bh,bw,bh);
+    g.strokeStyle=b.c; g.lineWidth=1.8; g.strokeRect(x,yB-bh,bw,bh);
+    if(bh>8) haloText(g,b.v.toFixed(2)+' h',x+bw/2,yB-bh-12,INK,13,'center');
+    font(g,12.5,600); g.fillStyle=INK2; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(b.n,x+bw/2,yB+18);
+    font(g,11,400); g.fillStyle=MUTED; g.fillText(b.s,x+bw/2,yB+33);
+  });
+  /* 右：末态剖面 */
+  function RX(r){ return x1+pw*(r/2); }
+  function RY(v){ return yB-v/0.20*PH; }
+  [0,0.05,0.10,0.15,0.20].forEach(function(v){
+    var y=RY(v);
+    g.strokeStyle=GRID; g.lineWidth=1; g.beginPath(); g.moveTo(x1,y+.5); g.lineTo(x1+pw,y+.5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(2),x1-6,y);
+  });
+  g.strokeStyle=AXIS; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(x1,yT); g.lineTo(x1,yB); g.lineTo(x1+pw,yB); g.stroke();
+  [0,0.5,1,1.5,2].forEach(function(v){
+    var x=RX(v);
+    g.beginPath(); g.moveTo(x,yB); g.lineTo(x,yB+5); g.stroke();
+    font(g,10.5,400); g.fillStyle=MUTED; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(v.toFixed(1),x,yB+19);
+  });
+  font(g,11,400); g.fillStyle=MUTED; g.textAlign='center'; g.fillText('物理半径 r (cm)',x1+pw/2,h-6);
+  var pv=TAB6['21'], Rc=interpR(21);
+  var p21=[[RX(0),RY(pv[0])],[RX(0.5),RY(pv[1])],[RX(1),RY(pv[2])],[RX(Rc),RY(pv[3])]];
+  pathFrac(g,p21,clamp(pe*1.4,0,1)); g.strokeStyle=WARN; g.lineWidth=2.4; g.stroke();
+  p21.forEach(function(pt){
+    g.fillStyle=WARN; g.beginPath(); g.arc(pt[0],pt[1],3.6,0,6.2832); g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.2; g.stroke();
+  });
+  g.strokeStyle=WARN; g.lineWidth=1.2; g.setLineDash([4,3]);
+  g.beginPath(); g.moveTo(x1,RY(TLIM)); g.lineTo(x1+pw,RY(TLIM)); g.stroke(); g.setLineDash([]);
+  haloText(g,'目标 0.15',x1+pw-6,RY(TLIM)-8,WARN,10.5,'right');
+  haloText(g,'中心 0.150',RX(0)+8,RY(pv[0])-2,TEALD,10.5,'left');
+  haloText(g,'1cm 0.099',RX(1)+8,RY(pv[2])+14,INK2,10.5,'left');
+  haloText(g,'表面 0.081',RX(Rc)+8,RY(pv[3])-14,WARN,10.5,'left');
+}
+
+/* ================= 表格填充 ================= */
+function buildTb6(){
+  var box=$('#tbProfile'); if(!box) return;
+  var rows=[[6,'6'],[12,'12'],[18,'18'],[21,'21']];
+  var html='<tr><th>时刻</th><th>R(t) cm</th><th>中心 r=0cm</th><th>r=0.5cm</th><th>r=1cm</th><th>表面 r=R(t)</th></tr>';
+  rows.forEach(function(rw){
+    var v=TAB6[rw[1]];
+    html+='<tr><td>'+rw[0]+' h</td>'+
+      '<td class="num">'+interpR(rw[0]).toFixed(3)+'</td>'+
+      '<td class="num">'+v[0].toFixed(4)+'</td>'+
+      '<td class="num">'+v[1].toFixed(4)+'</td>'+
+      '<td class="num">'+v[2].toFixed(4)+'</td>'+
+      '<td class="num">'+v[3].toFixed(4)+'</td></tr>';
+  });
+  box.innerHTML=html;
+}
+
+/* ================= 结论幕 KPI count-up ================= */
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  $$('.bigkpi .bk-v[data-cnt]').forEach(function(el){
+    var target=parseFloat(el.dataset.cnt), dec=parseInt(el.dataset.dec||'0',10);
+    var uspan=el.querySelector('.bk-u'), unitHtml=uspan?uspan.outerHTML:'';
+    if(reduceOn()){ el.innerHTML=fmt(target,dec)+unitHtml; return; }
+    var t0=performance.now(), dur=1200;
+    function step(t){
+      var p=clamp((t-t0)/dur,0,1);
+      el.innerHTML=fmt(target*easeOutCubic(p),dec)+unitHtml;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ================= 幕调度 ================= */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var st={last:0,armed:false,fired:0};
+var sceneStarters=[
+  function(){ anim(function(t){ drawHero(t); }); },
+  function(){ anim(function(t){ drawLandau(t); }); },
+  function(){ anim(function(t){ drawDual(t); }); },
+  function(){ anim(function(t){ drawProfile(t); }); },
+  function(){ anim(function(t){ drawAnswer(t); }); startKPIs(); }
+];
+function beatsAuto(sc){ return $$('.wrap > *',sc); }
+function resetScene(sc){
+  kpiStarted=false;
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('in'); });
+  $$('.bigkpi .bk-v[data-cnt]',sc).forEach(function(el){
+    var uspan=el.querySelector('.bk-u'), unitHtml=uspan?uspan.outerHTML:'';
+    el.innerHTML=fmt(0,parseInt(el.dataset.dec||'0',10))+unitHtml;
+  });
+}
+function goTo(i){
+  i=clamp(i,0,N-1);
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i;
+  stopAllAnims();
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  beatsAuto(sc).forEach(function(b){ b.classList.add('in'); });
+  if(sceneStarters[i]) sceneStarters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v) $$('.wrap > *').forEach(function(e){ e.classList.add('in'); });
+  stopAllAnims();
+  if(cur>=0 && sceneStarters[cur]) sceneStarters[cur]();
+}
+function init(){
+  buildTb6();
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){
+    resetScene(SCENES[cur]);
+    beatsAuto(SCENES[cur]).forEach(function(b){ b.classList.add('in'); });
+    if(sceneStarters[cur]) sceneStarters[cur]();
+  };
+  $('#btnFx').onclick=function(){ setReduce(!reduceOn()); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  window.addEventListener('resize',function(){
+    stopAllAnims();
+    if(cur>=0 && sceneStarters[cur]) sceneStarters[cur]();
+  });
+  setReduce(false);
+  goTo(0);
+}
+init();
+window.__deck={goTo:goTo,get cur(){return cur;},sceneStarters:sceneStarters,D4:D4,TAB6:TAB6};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+# AgentScope 智能体平台 Helm values
+#
+# 架构说明：
+#   backend  —— Spring Boot (agent-platform-java)，端口 8080，暴露 /api 与 /agui（AG-UI SSE）
+#   frontend —— nginx 托管 Vite 构建产物（dist/），并将 /api、/agui 反代到 backend
+#   postgres —— 可选内置 PG16+pgvector（镜像需自建，见 docker/postgres/Dockerfile）
+#   redis    —— 可选内置 Redis 7
+#
+# 必填项（启动 fail-fast 校验，缺失 Pod 会 CrashLoop）：
+#   secrets.jwtSecret     -> AGENT_PLATFORM_JWT_SECRET      (HS256, >=32 字节)
+#   secrets.externalKey   -> AGENT_PLATFORM_EXTERNAL_KEY    (AES-256-GCM, base64 的 32 字节)
+#   生成方式：openssl rand -base64 48 / openssl rand -base64 32
+
+fullnameOverride: ""
+
+## ---------- 全局 ----------
+global:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  # 后端时区（调度 cron、日志时间）
+  timezone: "Asia/Shanghai"
+
+## ---------- 后端 ----------
+backend:
+  image:
+    repository: registry.example.com/agent-platform/backend
+    tag: "latest"
+  replicaCount: 1
+  port: 8080
+  # 工作空间根目录（AgentScope 会话工作区 + artifacts/ 产物目录），必须持久化
+  workspaceRoot: /data/workspace
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  # JVM 参数
+  javaOpts: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+  livenessProbe:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 90
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+  # 附件上传上限 25MB（见 application.yml multipart 配置）
+  extraEnv: []
+  #  - name: AGENT_PLATFORM_MAX_ITERS
+  #    value: "10"
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  # 多副本时须改用 RWX 存储类；默认单副本 + RWO
+  # 多副本还会导致 form-interrupts（进程内存）与 Studio 观测不一致，谨慎开启
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 50Gi
+
+## ---------- 前端 ----------
+frontend:
+  image:
+    repository: registry.example.com/agent-platform/frontend
+    tag: "latest"
+  replicaCount: 1
+  port: 80
+  # nginx 反代目标（集群内 Service 名，通常无需修改）
+  backendService: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ---------- 内置 PostgreSQL（pgvector） ----------
+postgres:
+  # 关闭则使用 externalDatabase 提供的外部库
+  # External PostgreSQL is already deployed on the server; set true only for an in-cluster instance.
+  enabled: false
+  # ⚠️ 该镜像为自建（pgvector 0.8.1 源码编译，见 docker/postgres/Dockerfile），
+  # 需推送到集群可达的镜像仓库
+  image:
+    repository: registry.example.com/agent-platform/postgres
+    tag: "16-alpine-pgvector"
+  port: 5432
+  database: agent_platform
+  username: agent_platform
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    size: 20Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ---------- 内置 Redis ----------
+redis:
+  # External Redis is already deployed on the server; set true only for an in-cluster instance.
+  enabled: false
+  image:
+    repository: redis
+    tag: "7-alpine"
+  port: 6379
+  # AOF 持久化（对齐 docker-compose：redis-server --appendonly yes）
+  appendonly: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    size: 5Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ---------- 外部数据库 / Redis（postgres.enabled=false / redis.enabled=false 时生效） ----------
+externalDatabase:
+  host: "192.168.1.245"
+  port: 5432
+  name: agent_platform
+  username: agent_platform
+  # 留空则取 secrets.dbPassword
+  password: ""
+
+externalRedis:
+  host: "192.168.1.245"
+  port: 6379
+  db: 0
+  # 留空则取 secrets.redisPassword（可空=无密码）
+  password: ""
+
+## ---------- 敏感配置 ----------
+secrets:
+  # 引用已有 Secret（跳过内置 Secret 创建）。键名约定：
+  #   jwt-secret / external-key / db-password / redis-password
+  existingSecret: ""
+  # ⚠️ 必填：JWT 签名密钥（HS256，>=32 字节），否则后端启动即失败
+  jwtSecret: ""
+  # ⚠️ 必填：外部凭据加密密钥（AES-256-GCM，base64 的 32 字节），否则后端启动即失败
+  # ⚠️ 轮换会使存量密文全部不可解密，须先配过渡值再逐条重存
+  externalKey: ""
+  # 内置 postgres 时作为 POSTGRES_PASSWORD 使用
+  dbPassword: "agent_platform"
+  # 留空 = Redis 无密码
+  redisPassword: ""
+
+## ---------- 业务开关（透传后端环境变量） ----------
+config:
+  dashscopeApiKey: ""          # DASHSCOPE_API_KEY（模型调用）
+  bochaApiKey: ""              # BOCHA_API_KEY（web_search 工具）
+  studioEnabled: "false"       # AGENTSCOPE_STUDIO_ENABLED
+  studioUrl: ""                # AGENTSCOPE_STUDIO_URL
+  allowPrivateOutbound: "false" # AGENT_PLATFORM_ALLOW_PRIVATE_OUTBOUND（内网 RAGFlow/IM 网关需设 true）
+  artifactsDir: "artifacts"    # AGENT_PLATFORM_ARTIFACTS_DIR
+
+## ---------- Ingress ----------
+ingress:
+  enabled: true
+  className: nginx
+  host: agent-platform.example.com
+  # 附件上传上限 25MB
+  bodySize: 25m
+  # AG-UI SSE / 通知 SSE 需要长连接：关闭代理缓冲 + 2h 读超时（对齐 run-timeout）
+  readTimeout: 7200
+  sendTimeout: 7200
+  tls:
+    enabled: false
+    secretName: agent-platform-tls
+  annotations: {}
+
+## ---------- Service 暴露 ----------
+## type=NodePort 时固定 nodePort（留空则随机分配），便于 VIP/防火墙放行
+service:
+  frontend:
+    type: ClusterIP
+    port: 80
+    nodePort: ""
+  backend:
+    type: ClusterIP
+    port: 8080
+    nodePort: ""

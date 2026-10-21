@@ -1,0 +1,13 @@
+### M-PRE-003 决策树、随机森林与梯度提升树
+- **task_types**：分类、回归、非线性预测、特征重要性。
+- **problem_signature**：非线性、变量交互、混合类型特征、无需强分布假设。
+- **core_idea**：递归划分或加法集成拟合复杂函数。
+- **inputs**：特征、标签、类别处理、缺失策略、超参数。
+- **outputs**：预测、概率、重要性、局部解释、误差指标。
+- **assumptions**：训练分布对未来有代表性；样本独立性至少近似成立。
+- **hard_constraints**：时间序列必须按时间切分；类别极不平衡不能只看准确率。
+- **validation**：交叉验证、时间外推验证、校准、混淆矩阵、分组误差、SHAP/置换重要性。
+- **selection_tags**：`nonlinear, ensemble, tabular, robust`
+- **composable_with**：`M-PRE-006, M-STA-002, M-OPT-001`
+- **fallbacks**：线性模型作为可解释基线；限制树深度防过拟合。
+- **agent_actions**：建立基线 -> 防泄漏预处理 -> 调参 -> 分组验证 -> 解释误差。

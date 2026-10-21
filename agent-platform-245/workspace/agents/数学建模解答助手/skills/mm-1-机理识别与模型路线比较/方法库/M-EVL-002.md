@@ -1,0 +1,13 @@
+### M-EVL-002 熵权法 / CRITIC 客观赋权
+- **task_types**：多指标评价、数据驱动权重、指标差异性分析。
+- **problem_signature**：有较多横截面样本；希望减少主观赋权。
+- **core_idea**：利用信息熵、标准差和指标间冲突程度确定权重。
+- **inputs**：指标矩阵、正负向属性、标准化方法、缺失处理。
+- **outputs**：客观权重、综合得分、排名。
+- **assumptions**：指标变异度可以代表信息量；标准化不会扭曲含义。
+- **hard_constraints**：样本极少或指标方差接近零时结果不稳定。
+- **validation**：标准化敏感性、样本重采样、与主观权重对照、排名稳定性。
+- **selection_tags**：`evaluation, objective-weight, index`
+- **composable_with**：`M-EVL-001, M-EVL-003`
+- **fallbacks**：等权、组合赋权、PCA 权重。
+- **agent_actions**：确认指标方向 -> 标准化 -> 计算权重 -> 做重采样稳定性 -> 比较排名。

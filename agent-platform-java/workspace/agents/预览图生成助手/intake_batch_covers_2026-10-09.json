@@ -1,0 +1,42 @@
+{
+  "task": "case-cover-preview-batch",
+  "status": "READY_FOR_HUMAN_REVIEW",
+  "generated_at": "2026-10-09",
+  "asset_root": "public/hero-assets/",
+  "data_file": "src/legacy/prototype/core.ts",
+  "field": "coverImage",
+  "excluded_cases": [
+    { "case_id": "p1", "reason": "user reported existing cover" },
+    { "case_id": "p3", "reason": "user reported existing cover" }
+  ],
+  "cases": [
+    { "case_id": "p2", "file": "radio-interference-localization-cover-v1.png", "url": "/hero-assets/radio-interference-localization-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p4", "file": "frequency-conflict-resolution-cover-v1.png", "url": "/hero-assets/frequency-conflict-resolution-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p5", "file": "sem-ad-optimization-cover-v1.png", "url": "/hero-assets/sem-ad-optimization-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p6", "file": "smartphone-battery-cover-v1.png", "url": "/hero-assets/smartphone-battery-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p7", "file": "space-elevator-moon-cover-v1.png", "url": "/hero-assets/space-elevator-moon-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p8", "file": "dancing-stars-insight-cover-v1.png", "url": "/hero-assets/dancing-stars-insight-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p9", "file": "sports-management-cover-v1.png", "url": "/hero-assets/sports-management-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p10", "file": "passive-solar-shading-cover-v1.png", "url": "/hero-assets/passive-solar-shading-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" },
+    { "case_id": "p11", "file": "generative-ai-tradeoffs-cover-v1.png", "url": "/hero-assets/generative-ai-tradeoffs-cover-v1.png", "width": 1536, "height": 1024, "engine_status": "PASS" }
+  ],
+  "static_checks": {
+    "file_exists": true,
+    "readable_png": true,
+    "landscape": true,
+    "expected_size": "1536x1024"
+  },
+  "pending_human_review": [
+    "central_safe_zone",
+    "small_card_recognition",
+    "no_text_or_watermark",
+    "topic_visual_match"
+  ],
+  "browser_check": "http://localhost:5181/",
+  "notes": [
+    "p1 and p3 were intentionally skipped per user instruction.",
+    "Old failed placeholder images referenced by p1/p3 were removed from core.ts; no broken links remain.",
+    "The current model session cannot visually inspect bitmaps, so visual acceptance is left to human review.",
+    "Existing images were never overwritten; the raw generated files are also retained."
+  ]
+}

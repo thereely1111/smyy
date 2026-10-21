@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 美赛D题 · 问题二 · 动态决策模型</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p9-0.html">全局</a>
+    <a href="./mod-p9-1.html">问题一</a>
+    <a href="./mod-p9-2.html" class="on">问题二</a>
+    <a href="./mod-p9-3.html">问题三</a>
+    <a href="./mod-p9-4.html">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===== 第一幕 · 决策状态网格 ===== -->
+<section class="scene" id="s1" data-title="问题二 · 一 · 决策状态网格">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题二 · 动态决策模型（动态规划）</div>
+    <h1>5 个薪资档 × 3 个运营档 = <b>15 个决策状态</b>，每档对应一个固定的战绩与利润
+      <small>每一年，业主只要在 15 个状态里挑一个：薪资档决定阵容质量与胜率，运营档把商品 + 赞助收入放大 1.00 / 1.07 / 1.15 倍，两者共同决定当年利润 Π 与末年估值 V。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">薪资档 5 档</span>
+      <span class="decochip t">运营档 3 档</span>
+      <span class="decochip g">状态数 15</span>
+      <span class="decochip w">换档升 18 / 降 25 M$</span>
+    </div>
+  </div>
+
+  <div class="flexrow stg">
+    <div class="card" style="flex:0 0 300px">
+      <h3>状态定义 <em>PS × OPS</em></h3>
+      <p><b class="hl-t">薪资档 PS</b> ∈ {110, 135, 160, 185, 210} M$，对应胜率 0.368 / 0.480 / 0.575 / 0.652 / 0.713。</p>
+      <p><b class="hl-t">运营档 OPS</b> ∈ {0, 8, 20} M$，把商品 + 赞助收入放大 1.00 / 1.07 / 1.15 倍。</p>
+      <p class="small"><b class="hl">动作约束</b>：每年每档最多移动一档（阵容重建需要时间）；<b class="hl">换档成本</b>：升档 18 M$、降档 25 M$。</p>
+    </div>
+    <div class="canvasbox grow">
+      <div class="cvtop">
+        <div class="ct">15 个状态的当年利润（M$）+ 各薪资档对应胜率</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>运营档 0</span>
+          <span><i style="background:#1e9fc4"></i>运营档 8</span>
+          <span><i style="background:#e0a04a"></i>运营档 20</span>
+          <span><i class="ln" style="background:#0b6e68"></i>胜率（右轴 0~0.8）</span>
+        </div>
+      </div>
+      <canvas id="cvGrid"></canvas>
+      <p class="note" style="margin-top:8px">当年利润最高的是「低薪资 + 零运营」的 <b class="hl-t">52.50 M$</b>，最低的是「顶档薪资 + 高运营」的 <b class="hl">25.23~28.24 M$</b> —— 但该口径低估了战绩对末年估值的影响，所以要动态规划。</p>
+    </div>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="kpi"><div class="k">决策状态数</div><div class="v">15 <u>个</u></div><div class="sub">5 薪资档 × 3 运营档</div></div>
+    <div class="kpi b"><div class="k">胜率跨度</div><div class="v">0.368 <u>→ 0.713</u></div><div class="sub">最低档 110 → 顶档 210</div></div>
+    <div class="kpi w"><div class="k">当年利润跨度</div><div class="v">52.50 <u>→ 25.23 M$</u></div><div class="sub">反向：投入越多，当年利润越低</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 第二幕 · 动态规划最优路径 ===== -->
+<section class="scene" id="s2" data-title="问题二 · 二 · 动态规划最优路径">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题二 · 动态决策模型</div>
+    <h1>从现状 <b>160 / 8</b> 出发：前 3 年守住中档阵容，第 4、5 年集中升档冲顶
+      <small>倒推求解：末年估值 V(s) 越高，越值得在前一年牺牲一点当年利润去升档；递推式把 5 年经营利润现值与末年估值现值一起最大化。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">状态 15 个</span>
+      <span class="decochip t">每年各档最多移动一档</span>
+      <span class="decochip g">末年估值 2170.8 M$</span>
+      <span class="decochip w">U* = 1632.6 M$</span>
+    </div>
+  </div>
+
+  <div class="flexrow stg">
+    <div class="card" style="flex:0 0 320px">
+      <h3>递推式 <em>Bellman 方程</em></h3>
+      <div class="formula">F_t(sp) = max_s [ Π(s) − 换档(sp,s) + γ·F_{t+1}(s) ]
+
+F_6(s) = V(s)          <span class="c"># 末年估值</span>
+
+γ = 1/1.08             <span class="dim"># 折现因子</span></div>
+      <p class="small" style="margin-top:8px">换档成本：升档 18 M$、降档 25 M$；业主效用 = 5 年经营利润现值 + 末年估值现值。</p>
+    </div>
+    <div class="canvasbox grow">
+      <div class="cvtop">
+        <div class="ct">最优路径：当年利润（柱）+ 胜率（折线）</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>前 3 年 · 薪资 160</span>
+          <span><i style="background:#e0a04a"></i>第 4、5 年 · 升档</span>
+          <span><i class="ln" style="background:#0b6e68"></i>胜率（右轴 0~0.8）</span>
+        </div>
+      </div>
+      <canvas id="cvPath"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="kpi"><div class="k">累计利润（5 年）</div><div class="v">208.50 <u>M$</u></div><div class="sub">47.01 + 47.01 + 47.01 + 39.23 + 28.24</div></div>
+    <div class="kpi g"><div class="k">末年估值</div><div class="v">2170.8 <u>M$</u></div><div class="sub">第 5 年冲到 210 / 20</div></div>
+    <div class="kpi b"><div class="k">最优业主效用 U*</div><div class="v">1632.6 <u>M$</u></div><div class="sub">5 年利润现值 + 末年估值现值</div></div>
+  </div>
+
+  <p class="note stg">最优路径的解读：<b class="hl-t">前 3 年维持高利润的中档阵容（160 / 8，47.01 M$/年）、把现金攒住</b>；在 <b class="hl-g">第 4、5 年集中升档冲顶</b>（185 / 8 → 210 / 20，各付换档 18 M$），用最小的利润代价把末年估值拉到最高的 2170.8 M$。</p>
+</div>
+</section>
+
+<!-- ===== 第三幕 · 三条策略对照 ===== -->
+<section class="scene" id="s3" data-title="问题二 · 三 · 三条策略对照">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题二 · 动态决策模型</div>
+    <h1>三条对照策略 vs DP 最优：业主效用从 <span class="hl-t">1276.4 M$</span> 到 <span class="hl-t">1632.6 M$</span>
+      <small>统一口径：5 年窗，含换档成本与末年估值。自适应反馈规则不需要未来信息，却能逼近动态规划最优解。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">四条策略的业主效用 U（M$）</div>
+      <div class="legend">
+        <span><i style="background:#8aa3aa"></i>对照策略</span>
+        <span><i style="background:#0b6e68"></i>DP 最优路径</span>
+      </div>
+    </div>
+    <canvas id="cvCmp"></canvas>
+    <p class="note" style="margin-top:8px">DP 最优路径的业主效用 <b class="hl-t">1632.6 M$</b> 最高；自适应反馈策略 <b class="hl-t">1536.7 M$</b> 达到 DP 最优的 <b>94.1%</b>，且不需要未来信息；稳健经营累计利润最高，但业主效用垫底。</p>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="card">
+      <h3>A 争冠冲刺 <em>顶档 210 + 高运营 20</em></h3>
+      <p>5 年一直顶档高投入：当年利润最差（累计 159.97 M$），但末年估值最高（2170.8 M$），业主效用 1601.3 M$。</p>
+      <p class="small">平均胜率 0.686；估值与 DP 相同，代价是 5 年经营利润的损失。</p>
+    </div>
+    <div class="card">
+      <h3>B 稳健经营 <em>最低档 110 + 零运营</em></h3>
+      <p>始终最低档零运营：累计利润最高 <b class="hl-t">257.01 M$</b>，但末年估值只有 1584.9 M$、业主效用垫底 1276.4 M$。</p>
+      <p class="small">平均胜率 0.409；省钱不等于增值。</p>
+    </div>
+    <div class="card">
+      <h3>C 自适应反馈 <em>目标胜率 0.60 为标尺</em></h3>
+      <p>以目标胜率 0.60 为标尺滚动修正薪资档、按利润率修正运营档：业主效用 <b class="hl-t">1536.7 M$</b>，达到 DP 最优的 94.1%，且不需要未来信息。</p>
+      <p class="small">累计利润 228.14 M$、平均胜率 0.575、末年估值 1968.4 M$。</p>
+    </div>
+  </div>
+
+  <div class="quote stg">动态决策的价值在于「<b class="hl-t">用规则代替拍脑袋</b>」——自适应反馈规则在信息不完整时仍能逼近动态规划最优解（1536.7 / 1632.6 = 94.1%），而两条极端路线各自输掉一部分：争冠冲刺输在经营利润，稳健经营输在末年估值。</div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function tag(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-10):(x-2);
+  g.fillStyle='rgba(255,255,255,.95)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(bx+.5,y-8.5,tw+9,17);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function tagDark(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-8):(x-4);
+  g.fillStyle='rgba(11,46,54,.82)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){ if(!handle._alive) return; fn(t); handle._raf=requestAnimationFrame(loop); }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+function centerTag(g,x,y,text,col){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  tag(g, x-tw/2-3, y, text, col);
+}
+
+/* ===== 数据（单位 M$，γ = 1/1.08） ===== */
+var PSV=[110,135,160,185,210];
+var WPV=[0.368,0.480,0.575,0.652,0.713];
+var PRFV=[[52.50,50.88,46.18],
+          [51.05,50.84,47.74],
+          [46.02,47.01,45.28],
+          [37.27,39.23,38.62],
+          [25.23,27.97,28.24]];
+var OPC=['#12a594','#1e9fc4','#e0a04a'];
+var OPTAG=['#0b6e68','#146c87','#8a6313'];
+
+/* ===== 第一幕 · 决策状态网格 ===== */
+var gridT0=null;
+function drawGrid(t){
+  var cv=$('#cvGrid'); if(!cv)return;
+  if(cv._h===undefined) cv._h=300;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-gridT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.4,0,1));
+  var L=58,R=58,T=26,B=60, PW=w-L-R, PH=h-T-B;
+  var vmin=25, vmax=54, wm=0.8;
+  function Y(v){return T+PH*(1-(v-vmin)/(vmax-vmin));}
+  function YR(v){return T+PH*(1-clamp(v,0,wm)/wm);}
+
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=5;k++){
+    var v=vmin+(vmax-vmin)*k/5, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0), L-7, yy);
+  }
+  for(var k2=0;k2<=4;k2++){
+    var rv=wm*k2/4, y2=YR(rv);
+    g.fillStyle='#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(rv.toFixed(2), L+PW+8, y2);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.beginPath(); g.moveTo(L+PW,T); g.lineTo(L+PW,T+PH); g.stroke();
+  g.save(); g.translate(13,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('当年利润 Π (M$)',0,0); g.restore();
+  g.save(); g.translate(w-12,T+PH/2); g.rotate(Math.PI/2);
+  g.fillStyle='#0b6e68'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('胜率（右轴）',0,0); g.restore();
+
+  var slot=PW/5, bw=Math.min(40, slot*0.22), gapx=8;
+  var step=bw+gapx, showTags=step>=44;
+  for(var i=0;i<5;i++){
+    var cx=L+slot*(i+.5);
+    var start=cx-(3*bw+2*gapx)/2;
+    for(var j=0;j<3;j++){
+      var pv=PRFV[i][j];
+      var bh=PH*(pv-vmin)/(vmax-vmin)*rev;
+      if(bh<2) bh=2*rev;
+      var x=start+j*step, y=T+PH-bh;
+      g.fillStyle=OPC[j]; g.globalAlpha=.88; rr(g,x,y,bw,bh,4); g.fill(); g.globalAlpha=1;
+      g.strokeStyle=OPC[j]; g.lineWidth=1.1; rr(g,x+.5,y+.5,bw-1,bh-1,4); g.stroke();
+      if(rev>0.97 && showTags) centerTag(g, x+bw/2, y-13, pv.toFixed(2), OPTAG[j]);
+    }
+    g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(String(PSV[i]), cx, T+PH+18);
+  }
+  g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('薪资档 PS (M$) · 组内三柱依次为运营档 0 / 8 / 20', L+PW/2, T+PH+40);
+
+  var pts=[];
+  for(var i2=0;i2<5;i2++){ pts.push([L+slot*(i2+.5), YR(WPV[i2])]); }
+  g.strokeStyle='#0b6e68'; g.lineWidth=2.4; g.lineJoin='round';
+  g.globalAlpha=clamp(rev*1.3,0,1);
+  g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
+  for(var i3=1;i3<pts.length;i3++){ var p=pts[i3]; if(p) g.lineTo(p[0],p[1]); }
+  g.stroke(); g.globalAlpha=1;
+  for(var i4=0;i4<pts.length;i4++){
+    var q=pts[i4]; if(!q) continue;
+    g.beginPath(); g.arc(q[0],q[1],4,0,Math.PI*2); g.fillStyle='#0b6e68'; g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke();
+    if(rev>0.97) centerTag(g, q[0], q[1]+17, WPV[i4].toFixed(3), '#0b6e68');
+  }
+}
+function startGrid(){ gridT0=performance.now(); runAnim(function(t){ drawGrid(t); }); }
+
+/* ===== 第二幕 · 最优路径 ===== */
+var pathT0=null;
+function drawPath(t){
+  var cv=$('#cvPath'); if(!cv)return;
+  if(cv._h===undefined) cv._h=300;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-pathT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.5,0,1));
+  var L=58,R=58,T=30,B=60, PW=w-L-R, PH=h-T-B;
+  var pmax=50, wm=0.8;
+  function Y(v){return T+PH*(1-clamp(v,0,pmax)/pmax);}
+  function YR(v){return T+PH*(1-clamp(v,0,wm)/wm);}
+
+  var PF=[47.01,47.01,47.01,39.23,28.24];
+  var WR=[0.575,0.575,0.575,0.652,0.713];
+  var SA=[160,160,160,185,210];
+  var CH=[0,0,0,18,18];
+  var BRC=['#12a594','#12a594','#12a594','#e0a04a','#e0a04a'];
+  var PTIN=[0,0,0,1,0];
+  var WLO=[0,0,0,0,1];
+
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=5;k++){
+    var v=pmax*k/5, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0), L-7, yy);
+  }
+  for(var k2=0;k2<=4;k2++){
+    var rv=wm*k2/4, y2=YR(rv);
+    g.fillStyle='#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(rv.toFixed(2), L+PW+8, y2);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.beginPath(); g.moveTo(L+PW,T); g.lineTo(L+PW,T+PH); g.stroke();
+  g.save(); g.translate(13,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('当年利润 Π (M$)',0,0); g.restore();
+  g.save(); g.translate(w-12,T+PH/2); g.rotate(Math.PI/2);
+  g.fillStyle='#0b6e68'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('胜率（右轴）',0,0); g.restore();
+
+  var slot=PW/5, bw=Math.min(72, slot*0.42);
+  for(var i=0;i<5;i++){
+    var cx=L+slot*(i+.5), x=cx-bw/2;
+    var bh=PH*PF[i]/pmax*rev, y=T+PH-bh;
+    g.fillStyle=BRC[i]; g.globalAlpha=.88; rr(g,x,y,bw,bh,6); g.fill(); g.globalAlpha=1;
+    g.strokeStyle=BRC[i]; g.lineWidth=1.3; rr(g,x+.5,y+.5,bw-1,bh-1,6); g.stroke();
+    g.fillStyle=BRC[i]==='#e0a04a'?'#8a6313':'#0b6e68';
+    g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText('第'+(i+1)+'年', cx, T+PH+18);
+    g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.fillText('薪资 '+SA[i], cx, T+PH+35);
+    if(rev>0.97){
+      centerTag(g, cx, PTIN[i] ? y+16 : y-13, PF[i].toFixed(2), BRC[i]==='#e0a04a'?'#8a6313':'#0b6e68');
+      if(CH[i]>0) centerTag(g, cx, y+38, '换档 +'+CH[i]+' M$', '#b8543a');
+    }
+  }
+  g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('年份 / 当年薪资档（M$）', L+PW/2, T+PH+55);
+
+  var pts=[];
+  for(var i2=0;i2<5;i2++){ pts.push([L+slot*(i2+.5), YR(WR[i2])]); }
+  g.strokeStyle='#0b6e68'; g.lineWidth=2.4; g.lineJoin='round';
+  g.globalAlpha=clamp(rev*1.3,0,1);
+  g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
+  for(var i3=1;i3<pts.length;i3++){ var p=pts[i3]; if(p) g.lineTo(p[0],p[1]); }
+  g.stroke(); g.globalAlpha=1;
+  for(var i4=0;i4<pts.length;i4++){
+    var q=pts[i4]; if(!q) continue;
+    g.beginPath(); g.arc(q[0],q[1],4,0,Math.PI*2); g.fillStyle='#0b6e68'; g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke();
+    if(rev>0.97) centerTag(g, q[0], WLO[i4] ? q[1]+17 : q[1]-14, WR[i4].toFixed(3), '#0b6e68');
+  }
+  if(rev>0.9) tag(g, L+PW, T+14, '末年估值 2170.8 M$', '#0b6e68', 'right');
+}
+function startPath(){ pathT0=performance.now(); runAnim(function(t){ drawPath(t); }); }
+
+/* ===== 第三幕 · 三条策略对照 ===== */
+var cmpT0=null;
+function drawCmp(t){
+  var cv=$('#cvCmp'); if(!cv)return;
+  if(cv._h===undefined) cv._h=280;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-cmpT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.4,0,1));
+  var L=66,R=24,T=30,B=72, PW=w-L-R, PH=h-T-B;
+  var umax=1750;
+  function Y2(v){return T+PH*(1-clamp(v,0,umax)/umax);}
+
+  var items=[{n:'B 稳健经营',u:1276.4,r:0.409,v:1584.9,c:'#8aa3aa'},
+             {n:'C 自适应反馈',u:1536.7,r:0.575,v:1968.4,c:'#8aa3aa'},
+             {n:'A 争冠冲刺',u:1601.3,r:0.686,v:2170.8,c:'#8aa3aa'},
+             {n:'DP 最优路径',u:1632.6,r:0.618,v:2170.8,c:'#0b6e68'}];
+
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=5;k++){
+    var v=umax*k/5, yy=Y2(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0), L-7, yy);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.save(); g.translate(13,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('业主效用 U (M$)',0,0); g.restore();
+
+  var slot=PW/4, bw=Math.min(112, slot*0.46);
+  for(var i=0;i<items.length;i++){
+    var it=items[i], cx=L+slot*(i+.5), x=cx-bw/2;
+    var bh=PH*it.u/umax*rev, y=T+PH-bh;
+    g.fillStyle=it.c; g.globalAlpha=.9; rr(g,x,y,bw,bh,6); g.fill(); g.globalAlpha=1;
+    g.strokeStyle=it.c; g.lineWidth=1.4; rr(g,x+.5,y+.5,bw-1,bh-1,6); g.stroke();
+    if(rev>0.97){
+      centerTag(g, cx, y-14, '效用 '+it.u.toFixed(1), it.c==='#0b6e68'?'#0b6e68':'#57727c');
+    }
+    g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(it.n, cx, T+PH+18);
+    g.fillStyle='#57727c'; g.font='10.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText('胜率 '+it.r.toFixed(3), cx, T+PH+33);
+    g.fillStyle='#8a6313';
+    g.fillText('末年估值 '+it.v.toFixed(1)+' M$', cx, T+PH+47);
+  }
+
+  var hk=Math.max(0, Math.floor(tN*0.7)%items.length);
+  var pul=0.35+0.4*(0.5+0.5*Math.sin(tN*2.6));
+  var hx=L+slot*(hk+.5), hb=PH*items[hk].u/umax;
+  g.strokeStyle='rgba(18,165,148,'+pul+')'; g.lineWidth=2.2;
+  rr(g,hx-bw/2-3, T+PH-hb-3, bw+6, hb+3, 8); g.stroke();
+}
+function startCmp(){ cmpT0=performance.now(); runAnim(function(t){ drawCmp(t); }); }
+
+/* ===== 调度 ===== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var starters=[startGrid, startPath, startCmp];
+var st={last:0,armed:false,fired:0};
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; stopAllAnims();
+  var sc=SCENES[i]; sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); });
+  if(starters[i]) starters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v){ $$('.wrap > *').forEach(function(e){ e.classList.add('in'); }); stopAllAnims(); }
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i); });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ stopAllAnims(); if(starters[cur]) starters[cur](); };
+  $('#btnFx').onclick=function(){ var nv=!document.body.classList.contains('reduce'); setReduce(nv);
+    if(!nv && cur>=0 && starters[cur]) starters[cur](); };
+  document.addEventListener('keydown',function(e){
+    var tn=(e.target.tagName||'').toLowerCase(); if(tn==='input'||tn==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){ if(cur>=0 && starters[cur] && !document.body.classList.contains('reduce')) starters[cur](); });
+init();
+})();
+</script>
+</body>
+</html>

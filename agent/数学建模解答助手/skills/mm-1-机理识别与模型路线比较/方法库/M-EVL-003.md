@@ -1,0 +1,11 @@
+### M-EVL-003 TOPSIS / VIKOR
+- **task_types**：多方案接近理想解排序、折中方案选择。
+- **problem_signature**：指标有正负向；希望同时考虑最优和最劣距离。
+- **core_idea**：计算方案到正理想解和负理想解的相对接近度。
+- **inputs**：标准化指标矩阵、权重、指标方向。
+- **outputs**：理想解、距离、接近度、排序。
+- **assumptions**：指标可比；权重可信；欧氏距离或折中度量合理。
+- **validation**：权重、距离度量、标准化方案敏感性。
+- **selection_tags**：`evaluation, ranking, ideal-solution, compromise`
+- **fallbacks**：VIKOR、灰色关联、PROMETHEE。
+- **agent_actions**：处理方向与尺度 -> 选距离 -> 计算接近度 -> 做排序稳定性。

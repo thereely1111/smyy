@@ -1,0 +1,108 @@
+@use './tokens.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--c-ink);
+  background: var(--c-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* 通用小件 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--c-primary);
+    color: var(--c-primary-ink);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: var(--c-primary-ink);
+      border-color: var(--c-primary-ink);
+      color: #fff;
+    }
+  }
+}
+
+/* mock 模式水印 —— 必须显眼，不能让演示数据被当成真实结果 */
+.mock-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--c-warn);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.empty-hint {
+  padding: 24px 16px;
+  color: var(--c-muted);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--c-line-strong);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--c-muted);
+  }
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

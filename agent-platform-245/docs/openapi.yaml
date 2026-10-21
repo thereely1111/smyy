@@ -1,0 +1,2529 @@
+openapi: 3.1.0
+info:
+  title: Agent Platform API
+  version: 1.0.0
+  description: |
+    智能体平台（agent-platform-java）后端 HTTP 接口文档。
+
+    ## 通用约定
+
+    - **Base URL**：`http://localhost:8080`（无 context-path）。
+    - **鉴权**：除「公开端点」外，所有请求必须携带 `Authorization: Bearer <accessToken>`（JWT HS256）。
+      401 时响应体为 `{"code":"UNAUTHORIZED","message":"..."}`，并附带 `WWW-Authenticate: Bearer realm="agent-platform"` 头。
+    - **公开端点**（免 token）：`/api/auth/login`、`/api/auth/refresh`、`/api/auth/callback`、`/api/auth/oauth/login`、`/api/users/register`、`/api/users/captcha/*`、`/health`、`/actuator/*`，以及所有 `OPTIONS` 预检。
+    - **无统一成功包装**：成功响应直接返回业务 DTO（字段 camelCase）；错误响应统一为
+      `{"code": "<大写错误码>", "message": "<中文描述>"}`。已知错误码：
+      `VALIDATION_ERROR`、`BAD_REQUEST`、`CONFLICT`、`FILE_TOO_LARGE`、`NOT_FOUND`、`UNAUTHORIZED`、`FORBIDDEN`、`INTERNAL_ERROR`。
+    - **分页约定**：列表端点统一 `?search=&status=&page=&size=`（page 默认 0，size 默认 20），
+      返回 `PageResponse<T>`：`{"content":[...],"page":0,"size":20,"totalElements":100,"totalPages":5}`。
+      知识库、群组等少数域使用自定义包装（见各端点说明）。
+    - **会话归属**：所有 `/api/agents/{agentId}/sessions/{sessionId}/**` 资源按 JWT 用户（`sub`）校验归属
+      （owner 或 admin）；非本人会话返回 **404**（不暴露存在性）。
+    - **管理端权限**：按权限码控制——标注 **[admin]** 的端点要求 `admin:access` 权限码
+      （与前端 `/admin` 路由守卫一致），无权限码返回 403；部分端点要求特定权限码
+      （如 `credential:create` 创建平台共享凭证、`knowledge:create` 创建平台知识库、
+      `agent:menu` 查看智能体完整字段），见各端点说明。不再信任 `X-User-Role` 请求头。
+    - **归属即权限**：用户级资源（模型凭证、通知渠道、通知）按 JWT 用户归属校验，
+      越权访问他人资源返回 404（不暴露存在性）。
+    - **SSE 超时**：AG-UI 流 `sse-timeout` 与 `run-timeout` 均为 2h（人工确认审阅可能持续 1-2h，需要 2h 余量）；超时/中断时连接正常结束，不写错误体。长时间无响应的 run 由 `RunSilenceDetector`（20min 告警 / 60min 判定失效并自动恢复）处理。
+    - **run 互斥**：同一会话同时只允许一个活跃 run；已有 run 在跑时新 AG-UI 请求返回 **409**。停滞 run 由静默探测器检测（默认 60 分钟无事件）并自动恢复。
+
+servers:
+  - url: http://localhost:8080
+    description: 本地开发
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: 认证（登录/刷新/OAuth）
+  - name: Users
+    description: 用户注册与账号安全
+  - name: Agents
+    description: 智能体管理与装配
+  - name: Sessions
+    description: 会话管理、转录、HITL 恢复
+  - name: Attachments
+    description: 会话附件
+  - name: Artifacts
+    description: 会话产物（只读）
+  - name: SubagentReports
+    description: 子智能体汇报（只读）
+  - name: SessionKnowledge
+    description: 会话级知识库关联
+  - name: SessionExtensions
+    description: 会话扩展信息 KV
+  - name: KnowledgeBases
+    description: 知识库与检索
+  - name: Skills
+    description: 技能资源中心
+  - name: Tools
+    description: 工具资源中心
+  - name: SkillRepositories
+    description: 技能仓库（外部技能源浏览与导入）
+  - name: Tags
+    description: 标签（公开标签池 + 管理端 CRUD）
+  - name: ModelCredentials
+    description: 模型凭证（用户级，个人 / 平台共享）
+  - name: ModelCatalog
+    description: 模型目录（内建供应商模型枚举，按 provider 查询）
+  - name: Channels
+    description: 通知渠道（企业微信/钉钉/飞书/通用 webhook）
+  - name: Notifications
+    description: 平台通知（站内列表 + SSE 信号流）
+  - name: AguiEvents
+    description: AG-UI 事件审计记录查询（事件已持久化到数据库）
+  - name: Groups
+    description: 用户群组（知识库授权用）
+  - name: Agui
+    description: AG-UI 对话运行时（SSE）
+
+paths:
+
+  # ─────────────────────────── Auth ───────────────────────────
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: 登录
+      description: >
+        统一委托外部认证服务（tipdm OAuth2.0 密码模式）校验账号密码，并同步用户至本地 users 镜像表
+        （外部明确拒绝凭据时返回 401，不回退本地密码校验）。校验通过后拉取权限码存入 Redis，
+        最终签发本地 JWT（access/refresh）。未配置外部认证服务（auth-server-url/client-id）时
+        登录直接拒绝（503）。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: TokenResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+        "502":
+          description: 外部认证服务异常（AUTH_ERROR）
+          content:
+            application/json:
+              schema: { $ref: "#/components/responses/Error" }
+        "503":
+          description: 统一认证服务未启用或不可达（AUTH_UNAVAILABLE）
+          content:
+            application/json:
+              schema: { $ref: "#/components/responses/Error" }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: 当前用户信息
+      responses:
+        "200":
+          description: UserInfoResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserInfoResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 刷新 token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: 新的 token 对（access 默认 30 分钟，refresh 默认 7 天）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: 登出
+      description: JWT 无状态，服务端不吊销 token，但会清理该用户的 Redis 权限缓存；客户端同时清除本地存储。返回 204。
+      responses:
+        "204": { description: 无内容 }
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: 创建账号 [admin]
+      description: 管理端创建账号仅支持用户名（账密）方式；手机号/邮箱注册请使用公开入口 `POST /api/users/register`。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: UserInfoResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserInfoResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+
+  /api/auth/oauth/login:
+    get:
+      tags: [Auth]
+      summary: 获取 OAuth 登录参数
+      description: OAuth2.0 Authorization Code + PKCE。未配置 OAuth 时报错。
+      security: []
+      responses:
+        "200":
+          description: 登录跳转参数
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loginUrl: { type: string }
+                  state: { type: string }
+                  redirectUri: { type: string }
+
+  /api/auth/callback:
+    post:
+      tags: [Auth]
+      summary: OAuth 回调换取本地 token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code: { type: string }
+                state: { type: string }
+      responses:
+        "200":
+          description: TokenResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+
+  # ─────────────────────────── Users ───────────────────────────
+
+  /api/users/register:
+    post:
+      tags: [Users]
+      summary: 公开注册
+      description: |
+        免登录。`registerType`：`username`（默认，账密注册）/ `phone` / `email`；
+        `principal` 在账密时为用户名，phone/email 时为对应手机号/邮箱（且必须携带先经
+        `/api/users/captcha/*` 获取的验证码 `captcha`）。手机号/邮箱注册不在本地创建账号记录，
+        响应为字段为空的 UserInfoResponse，调用方随后直接调用登录接口。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: UserInfoResponse（手机号/邮箱注册时字段为空）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserInfoResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+
+  /api/users/password:
+    post:
+      tags: [Users]
+      summary: 修改自己的密码
+      description: 身份以 JWT 为准，不接受请求传 userId。返回 204。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oldPassword, newPassword]
+              properties:
+                oldPassword: { type: string }
+                newPassword: { type: string, minLength: 4, maxLength: 100 }
+      responses:
+        "204": { description: 无内容 }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /api/users/captcha/phone/{phone}:
+    get:
+      tags: [Users]
+      summary: 发送手机号注册验证码
+      description: 免登录，转发外部（tipdm）验证码服务。
+      security: []
+      parameters:
+        - { name: phone, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: 验证码发送受理标识
+          content:
+            application/json:
+              schema: { type: integer, format: int64 }
+
+  /api/users/captcha/email/{email}:
+    get:
+      tags: [Users]
+      summary: 发送邮箱注册验证码
+      description: 免登录，转发外部（tipdm）验证码服务。
+      security: []
+      parameters:
+        - { name: email, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: 验证码发送受理标识
+          content:
+            application/json:
+              schema: { type: integer, format: int64 }
+
+  # ─────────────────────────── Agents ───────────────────────────
+
+  /api/agents:
+    get:
+      tags: [Agents]
+      summary: 智能体分页列表（智能体广场数据源）
+      description: >
+        此端点不要求管理端权限码，普通登录用户通过它获取智能体广场数据。对非管理员
+        （无 `admin:access` 权限码）隐藏 `systemPrompt`（编排契约 + 提示词）；
+        管理端编辑页需 `agent:menu` 权限码才能获取完整字段。
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: tag, in: query, description: 按标签 ID 筛选（UUID）, schema: { type: string, format: uuid } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: PageResponse&lt;AgentConfigResponse&gt;（响应项额外带 tags[{id,name,color}]）
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: "#/components/schemas/AgentConfig" }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Agents]
+      summary: 创建智能体 [admin]
+      description: 保存时由 WorkspaceGenerator 生成 `workspace/agents/{agentId}/`（AGENTS.md + skills/ + subagents/）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentConfigRequest" }
+      responses:
+        "201":
+          description: AgentConfigResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentConfig" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+
+  /api/agents/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Agents]
+      summary: 智能体详情
+      responses:
+        "200":
+          description: AgentConfigResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentConfig" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [Agents]
+      summary: 更新智能体 [admin]
+      description: 更新后重建工作区。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentConfigRequest" }
+      responses:
+        "200":
+          description: AgentConfigResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentConfig" }
+    delete:
+      tags: [Agents]
+      summary: 删除智能体 [admin]
+      description: 递归清理工作区。返回 204。
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{id}/status:
+    patch:
+      tags: [Agents]
+      summary: 修改智能体状态 [admin]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [draft, active] }
+      responses:
+        "200": { description: 已更新 }
+        "403": { $ref: "#/components/responses/Error" }
+
+  /api/agents/{id}/assemble:
+    post:
+      tags: [Agents]
+      summary: 装配 HarnessAgent
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: AssembleResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agentId: { type: string }
+                  name: { type: string }
+                  model: { type: string }
+                  workspacePath: { type: string }
+                  tools:
+                    type: array
+                    items: { type: string }
+                  subagents:
+                    type: array
+                    items: { type: string }
+                  skills:
+                    type: array
+                    items: { type: string }
+                  stateStore: { type: string }
+
+  # ─────────────────────────── Sessions ───────────────────────────
+
+  /api/agents/{agentId}/sessions:
+    get:
+      tags: [Sessions]
+      summary: 当前用户的会话列表
+      description: 按 (agentId, 当前用户) 列会话。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: includeArchived, in: query, schema: { type: boolean, default: false } }
+      responses:
+        "200":
+          description: SessionInfo[]
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SessionInfo" }
+
+  /api/agents/{agentId}/sessions/{sessionId}/title:
+    patch:
+      tags: [Sessions]
+      summary: 修改会话标题
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/transcript:
+    get:
+      tags: [Sessions]
+      summary: 读取会话转录
+      description: |
+        返回按 (userId, sessionId) 分区存储的完整转录。除 SSE 推送外，
+        「后台 wakeup 续跑」产生的段落必须通过本接口拉取补齐（前端默认 5 秒轮询）。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: SessionTranscriptResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionTranscript" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/agents/{agentId}/sessions/{sessionId}/progress:
+    get:
+      tags: [Sessions]
+      summary: 会话进度快照
+      description: 会话停滞监控的进度快照；`hitlStuck=true` 表示权限确认长时间未处理，前端可调用 recover 恢复。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: SessionProgressResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId: { type: string }
+                  phase: { type: string }
+                  nextAction: { type: string, enum: [CONTINUE, WAIT_HITL, DONE, IDLE, UNKNOWN] }
+                  progressLine: { type: string }
+                  lastText: { type: string }
+                  lastActiveAt: { type: string, format: date-time }
+                  updatedAt: { type: string, format: date-time }
+                  stallNow: { type: boolean }
+                  hitlStuck: { type: boolean }
+
+  /api/agents/{agentId}/sessions/{sessionId}/form-interrupts:
+    parameters:
+      - { name: agentId, in: path, required: true, schema: { type: string } }
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Sessions]
+      summary: 查询未决表单中断
+      description: |
+        前端在收到 `RUN_FINISHED(outcome=interrupt)` 时上报登记（不等待结果）；
+        刷新页面后由此接口取回 interruptId 再走标准 resume 恢复。
+        进程内存存储：后端重启即清空。
+      responses:
+        "200":
+          description: PendingFormInterrupt[]
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PendingFormInterrupt" }
+    put:
+      tags: [Sessions]
+      summary: 上报未决表单中断
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PendingFormInterrupt" }
+      responses:
+        "204": { description: 无内容 }
+    delete:
+      tags: [Sessions]
+      summary: 清空未决表单中断
+      description: run 正常收尾（success）后由前端调用。
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/archive:
+    patch:
+      tags: [Sessions]
+      summary: 归档 / 取消归档（幂等）
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [archived]
+              properties:
+                archived: { type: boolean }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/clear:
+    post:
+      tags: [Sessions]
+      summary: 清空会话
+      description: 清空状态、产物目录、会话扩展与 form-interrupts。返回 204。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/recover:
+    post:
+      tags: [Sessions]
+      summary: 恢复会话
+      description: 清除遗留 ASKING/interrupt 状态；保留会话 ID 与产物目录。用于权限确认停滞（hitlStuck）后的恢复。返回 204。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/interrupt:
+    post:
+      tags: [Sessions]
+      summary: 中断正在运行的 run（停止按钮）
+      description: >
+        经框架 interrupt 真正停掉后端 run（前端停止按钮的后端支撑）。尽力等待收敛（最多 3s）后返回；
+        需会话归属（等同写操作）。幂等：会话无在跑 run（HITL 挂起等表单等场景）时
+        为静默 no-op，仍返回 202（interrupted=false）。注意：挂起态调用本端点
+        不会解除 open interrupts——挂起表单的解除由下次 send 前置对账完成。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "202":
+          description: 已受理（或幂等 no-op）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id: { type: string }
+                  interrupted: { type: boolean, description: 是否实际触发了中断（false=本就无在跑 run） }
+        "404": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Attachments ───────────────────────────
+
+  /api/agents/{agentId}/sessions/{sessionId}/attachments:
+    parameters:
+      - { name: agentId, in: path, required: true, schema: { type: string } }
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Attachments]
+      summary: 附件列表
+      responses:
+        "200":
+          description: ListAttachmentsResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fileId: { type: string }
+                        ref: { type: string, description: "如 @uploads/<存储名>，用户消息中以此引用" }
+                        fileName: { type: string }
+                        size: { type: integer }
+                        createdAt: { type: string, format: date-time }
+                  total: { type: integer }
+    post:
+      tags: [Attachments]
+      summary: 上传附件
+      description: |
+        单文件 ≤ 20MB；扩展名白名单（txt/md/json/csv/代码/pdf/office/png/jpg 等）。
+        保存到 `runtimes/{agentId}/{sessionId}/uploads/{uuid}-{ASCII名}`。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "201":
+          description: AttachmentResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fileName: { type: string, description: 原始文件名 }
+                  ref: { type: string, description: "@uploads/<存储名>，用户消息里携带的 @path 引用" }
+                  size: { type: integer }
+                  mimeType: { type: string }
+                  createdAt: { type: string, format: date-time }
+        "413": { $ref: "#/components/responses/Error" }
+
+  /api/agents/{agentId}/sessions/{sessionId}/attachments/{fileId}:
+    parameters:
+      - { name: agentId, in: path, required: true, schema: { type: string } }
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+      - { name: fileId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Attachments]
+      summary: 删除单个附件
+      responses:
+        "204": { description: 无内容 }
+
+  # ─────────────────────────── Artifacts ───────────────────────────
+
+  /api/agents/{agentId}/sessions/{sessionId}/artifacts:
+    get:
+      tags: [Artifacts]
+      summary: 产物文件树
+      description: |
+        聚合「本会话 + 全部子会话」（子会话各挂一个以 `sub-…` 命名的目录节点）。
+        递归 ≤ 6 层；隐藏 dotfile 与内部目录（agents/default/memory/plan/MEMORY.md）。
+        子会话路径仅接受当前会话派生的子会话 ID（防止越权访问）。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: ArtifactNode[]
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ArtifactNode" }
+
+  /api/agents/{agentId}/sessions/{sessionId}/artifacts/content:
+    get:
+      tags: [Artifacts]
+      summary: 读取产物内容
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+        - name: path
+          in: query
+          required: true
+          schema: { type: string }
+          description: 会话内相对路径
+      responses:
+        "200":
+          description: |
+            文本预览 ≤ 5MB；二进制/超限/非 UTF-8 时返回 content=null 并附 reason。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path: { type: string }
+                  content: { type: [string, "null"] }
+                  reason: { type: [string, "null"] }
+
+  # ─────────────────────────── Subagent reports ───────────────────────────
+
+  /api/agents/{agentId}/sessions/{sessionId}/subagents:
+    get:
+      tags: [SubagentReports]
+      summary: 子智能体汇报列表
+      description: 该会话派发的子智能体 + 最近【TASK_RESULT】汇报，平台核对产物存在性。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: SubagentReport[]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sessionId: { type: string, description: 子会话 ID（sub-…） }
+                    agentId: { type: string }
+                    label: { type: string }
+                    status: { type: [string, "null"], enum: [COMPLETED, PARTIAL, BLOCKED, FAILED, null] }
+                    stage: { type: string }
+                    summary: { type: string }
+                    nextAction: { type: string }
+                    resumable: { type: boolean }
+                    completed: { type: array, items: { type: string } }
+                    inProgress: { type: array, items: { type: string } }
+                    remaining: { type: array, items: { type: string } }
+                    artifacts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          path: { type: string }
+                          relativePath: { type: string }
+                          exists: { type: boolean }
+                          size: { type: [integer, "null"] }
+                          updatedAt: { type: [string, "null"], format: date-time }
+                    missing: { type: array, items: { type: string } }
+                    updatedAt: { type: string, format: date-time }
+
+  # ─────────────────────────── Session knowledge ───────────────────────────
+
+  /api/agents/{agentId}/sessions/{sessionId}/knowledge:
+    parameters:
+      - { name: agentId, in: path, required: true, schema: { type: string } }
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [SessionKnowledge]
+      summary: 查询会话关联的知识库
+      responses:
+        "200":
+          description: 关联的知识库 ID 集合
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  knowledgeBaseIds:
+                    type: array
+                    items: { type: string, format: uuid }
+    put:
+      tags: [SessionKnowledge]
+      summary: 覆盖式设置会话知识库
+      description: 空数组 = 解除全部关联。运行期由 RuntimeContext 注入供 knowledge_search 工具使用。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [knowledgeBaseIds]
+              properties:
+                knowledgeBaseIds:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "200":
+          description: 关联的知识库 ID 集合
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  knowledgeBaseIds:
+                    type: array
+                    items: { type: string, format: uuid }
+
+  # ─────────────────────────── Session extensions ───────────────────────────
+
+  /api/agents/{agentId}/sessions/{sessionId}/extensions:
+    parameters:
+      - { name: agentId, in: path, required: true, schema: { type: string } }
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [SessionExtensions]
+      summary: 查询会话扩展 KV
+      responses:
+        "200":
+          description: ExtensionResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExtensionResponse" }
+    put:
+      tags: [SessionExtensions]
+      summary: 整体覆盖会话扩展 KV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entries]
+              properties:
+                entries:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      key: { type: string }
+                      value: { type: string }
+      responses:
+        "200":
+          description: ExtensionResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExtensionResponse" }
+    delete:
+      tags: [SessionExtensions]
+      summary: 清空会话扩展 KV
+      responses:
+        "204": { description: 无内容 }
+
+  /api/agents/{agentId}/sessions/{sessionId}/extensions/entries:
+    post:
+      tags: [SessionExtensions]
+      summary: 新增/更新单条扩展 KV
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key: { type: string }
+                value: { type: string }
+      responses:
+        "200":
+          description: ExtensionResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExtensionResponse" }
+
+  /api/agents/{agentId}/sessions/{sessionId}/extensions/entries/{key}:
+    delete:
+      tags: [SessionExtensions]
+      summary: 删除单条扩展 KV
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+        - { name: key, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: 无内容 }
+
+  # ─────────────────────────── Knowledge bases ───────────────────────────
+
+  /api/knowledge-bases:
+    get:
+      tags: [KnowledgeBases]
+      summary: 当前用户可见的知识库列表
+      description: >
+        不分页，返回 {knowledgeBases, total}。按当前用户（JWT sub）过滤可见性
+        （owner / USER grant / GROUP grant；平台共享库 scope=PLATFORM 对全员可见）。
+      parameters:
+        - { name: tag, in: query, description: 按标签 ID 筛选（UUID）, schema: { type: string, format: uuid } }
+        - { name: scope, in: query, description: 按归属范围筛选, schema: { type: string, enum: [PERSONAL, PLATFORM] } }
+      responses:
+        "200":
+          description: 知识库列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  knowledgeBases:
+                    type: array
+                    items: { $ref: "#/components/schemas/KnowledgeBase" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [KnowledgeBases]
+      summary: 创建知识库（固定归属个人）
+      description: >
+        scope 由路由决定，不接受请求体传参（防止请求体覆盖）：本端点固定创建
+        `scope=PERSONAL`（owner=当前用户）；平台知识库走
+        `POST /api/knowledge-bases/platform`。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KnowledgeBaseUpsert" }
+      responses:
+        "201":
+          description: KnowledgeBaseView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KnowledgeBase" }
+
+  /api/knowledge-bases/platform:
+    post:
+      tags: [KnowledgeBases]
+      summary: 创建平台知识库 [admin]
+      description: >
+        固定创建 `scope=PLATFORM`（全员可见），要求 `knowledge:create` 权限码
+        （与「平台知识库」管理入口一致）；请求体与个人创建相同。
+        平台库的编辑/删除（`PUT|DELETE /{id}`）按实体 scope 分流要求
+        `knowledge:update` / `knowledge:delete`（个人库靠 owner/WRITE 数据授权）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KnowledgeBaseUpsert" }
+      responses:
+        "201":
+          description: KnowledgeBaseView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KnowledgeBase" }
+        "403": { $ref: "#/components/responses/Error" }
+
+  /api/knowledge-bases/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [KnowledgeBases]
+      summary: 知识库详情
+      responses:
+        "200":
+          description: KnowledgeBaseView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KnowledgeBase" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [KnowledgeBases]
+      summary: 更新知识库
+      description: externalApiKey 不回显；编辑时留空 = 不重新加密。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KnowledgeBaseUpsert" }
+      responses:
+        "200":
+          description: KnowledgeBaseView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KnowledgeBase" }
+    delete:
+      tags: [KnowledgeBases]
+      summary: 删除知识库
+      responses:
+        "204": { description: 无内容 }
+
+  /api/knowledge-bases/{id}/documents:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [KnowledgeBases]
+      summary: 文档列表（创建时间倒序）
+      responses:
+        "200":
+          description: 文档列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items: { $ref: "#/components/schemas/KnowledgeDocument" }
+                  total: { type: integer }
+    post:
+      tags: [KnowledgeBases]
+      summary: 上传文档（异步入库）
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "201":
+          description: 入库受理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentId: { type: string }
+                  filename: { type: string }
+                  status: { type: string }
+
+  /api/knowledge-bases/{id}/documents/status:
+    get:
+      tags: [KnowledgeBases]
+      summary: 轮询文档入库进度
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: ids
+          in: query
+          required: true
+          schema: { type: string }
+          description: 逗号分隔的文档 ID
+      responses:
+        "200":
+          description: 入库状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        status: { type: string }
+                        chunkCount: { type: [integer, "null"] }
+                        error: { type: [string, "null"] }
+
+  /api/knowledge-bases/{id}/documents/{docId}:
+    delete:
+      tags: [KnowledgeBases]
+      summary: 删除文档
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: docId, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/knowledge-bases/{id}/grants:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [KnowledgeBases]
+      summary: 查询授权列表
+      responses:
+        "200":
+          description: 授权与可选群组
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grants:
+                    type: array
+                    items: { $ref: "#/components/schemas/KnowledgeGrant" }
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+    post:
+      tags: [KnowledgeBases]
+      summary: 新增授权
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [principalType, principalId, permission]
+              properties:
+                principalType: { type: string, enum: [USER, GROUP] }
+                principalId: { type: string, format: uuid }
+                permission: { type: string, enum: [READ, WRITE] }
+      responses:
+        "201":
+          description: GrantView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KnowledgeGrant" }
+
+  /api/knowledge-bases/{id}/grants/{grantId}:
+    delete:
+      tags: [KnowledgeBases]
+      summary: 删除授权
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: grantId, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: 无内容 }
+
+  /api/knowledge-bases/{id}/search:
+    post:
+      tags: [KnowledgeBases]
+      summary: 知识库检索
+      description: |
+        按库类型返回两种结构：
+        - **rag / external**（向量型）：`{documentId, chunkIndex, score, content}`
+        - **text**（文本型，由服务端 grep 实现）：`{file, line, content, context[]}`
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+                topK: { type: integer, default: 5 }
+      responses:
+        "200":
+          description: 检索结果（按库 type 分支）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type: { type: string, enum: [rag, external, text] }
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - type: object
+                          title: VectorResult
+                          properties:
+                            documentId: { type: string }
+                            chunkIndex: { type: integer }
+                            score: { type: number }
+                            content: { type: string }
+                        - type: object
+                          title: TextResult
+                          properties:
+                            file: { type: string }
+                            line: { type: integer }
+                            content: { type: string }
+                            context:
+                              type: array
+                              items: { type: string }
+
+  # ─────────────────────────── Skills ───────────────────────────
+
+  /api/skills:
+    get:
+      tags: [Skills]
+      summary: 技能分页列表
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [active, inactive] } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: PageResponse&lt;SkillResponse&gt;
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: "#/components/schemas/ResourceItem" }
+    post:
+      tags: [Skills]
+      summary: 创建技能 [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResourceUpsert" }
+      responses:
+        "201":
+          description: SkillResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceItem" }
+
+  /api/skills/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Skills]
+      summary: 技能详情
+      responses:
+        "200":
+          description: SkillResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceItem" }
+    put:
+      tags: [Skills]
+      summary: 更新技能 [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResourceUpsert" }
+      responses:
+        "200":
+          description: SkillResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceItem" }
+    delete:
+      tags: [Skills]
+      summary: 删除技能 [admin]
+      responses:
+        "204": { description: 无内容 }
+
+  /api/skills/{id}/status:
+    patch:
+      tags: [Skills]
+      summary: 修改技能状态 [admin]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, inactive] }
+      responses:
+        "200": { description: 已更新 }
+
+  # ─────────────────────────── Tools ───────────────────────────
+
+  /api/tools:
+    get:
+      tags: [Tools]
+      summary: 工具分页列表
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [active, inactive] } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: PageResponse&lt;ToolResponse&gt;
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageResponse"
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: "#/components/schemas/ToolItem" }
+    post:
+      tags: [Tools]
+      summary: 创建工具 [admin]
+      description: |
+        `executionMode=internal` + `askConfirmation=true` 时，调用触发人工确认中断；
+        `executionMode=external` 时挂起等待前端经 AG-UI `resume[].payload.output` 回传结果。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ToolUpsert" }
+      responses:
+        "201":
+          description: ToolResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ToolItem" }
+
+  /api/tools/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Tools]
+      summary: 工具详情
+      responses:
+        "200":
+          description: ToolResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ToolItem" }
+    put:
+      tags: [Tools]
+      summary: 更新工具 [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ToolUpsert" }
+      responses:
+        "200":
+          description: ToolResponse
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ToolItem" }
+    delete:
+      tags: [Tools]
+      summary: 删除工具 [admin]
+      responses:
+        "204": { description: 无内容 }
+
+  /api/tools/{id}/status:
+    patch:
+      tags: [Tools]
+      summary: 修改工具状态 [admin]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, inactive] }
+      responses:
+        "200": { description: 已更新 }
+
+  # ─────────────────────────── Skill repositories ───────────────────────────
+
+  /api/skill-repositories:
+    get:
+      tags: [SkillRepositories]
+      summary: 技能仓库信息
+      description: 外部技能源（远程仓库）元信息与同步状态。
+      responses:
+        "200":
+          description: SkillRepoInfo
+          content:
+            application/json:
+              schema: { type: object }
+  /api/skill-repositories/sync:
+    post:
+      tags: [SkillRepositories]
+      summary: 触发技能仓库同步 [admin]
+      responses:
+        "200":
+          description: 同步后的 SkillRepoInfo
+          content:
+            application/json:
+              schema: { type: object }
+  /api/skill-repositories/skills:
+    get:
+      tags: [SkillRepositories]
+      summary: 仓库技能分页列表
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: PageResponse&lt;SkillRepoCard&gt;
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PageResponse" }
+  /api/skill-repositories/skills/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [SkillRepositories]
+      summary: 仓库技能详情
+      responses:
+        "200":
+          description: SkillRepoCard
+          content:
+            application/json:
+              schema: { type: object }
+  /api/skill-repositories/skills/{id}/import:
+    post:
+      tags: [SkillRepositories]
+      summary: 导入仓库技能到平台技能中心 [admin]
+      description: 权限码 `skill:create`。
+      responses:
+        "200":
+          description: SkillResponse
+          content:
+            application/json:
+              schema: { type: object }
+
+  # ─────────────────────────── Tags ───────────────────────────
+
+  /api/tags:
+    get:
+      tags: [Tags]
+      summary: 公开标签池
+      description: 登录即可访问，只返回启用标签的精简视图（id/name/color），供广场与知识库列表的筛选项及表单下拉使用。
+      responses:
+        "200":
+          description: 标签列表
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TagList" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /api/admin/tags:
+    get:
+      tags: [Tags]
+      summary: 标签管理列表 [admin]
+      description: 返回完整视图（含 sort/enabled 与 agentCount/kbCount 使用计数），包含停用标签。
+      responses:
+        "200":
+          description: 标签列表
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TagList" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [Tags]
+      summary: 创建标签 [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TagUpsert" }
+      responses:
+        "201":
+          description: TagView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TagView" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/admin/tags/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Tags]
+      summary: 更新标签（改名/换色/排序/启停） [admin]
+      description: 停用（enabled=false）不做物理删除，已关联数据保留；停用后不再出现在公开标签池与筛选中。改名/换色会同步应用到所有关联位置。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TagUpsert" }
+      responses:
+        "200":
+          description: TagView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TagView" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Tags]
+      summary: 删除标签 [admin]
+      description: 物理删除标签行，关联表行级联删除（FK CASCADE）。
+      responses:
+        "204": { description: 无内容 }
+        "404": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Model credentials ───────────────────────────
+
+  /api/credentials:
+    get:
+      tags: [ModelCredentials]
+      summary: 当前用户的模型凭证列表
+      description: >
+        按归属校验权限（访问他人资源返回 404）。密钥类字段脱敏回显（掩码），external_api_key 不回显。
+        每项含 `id/user_id/scope(USER|PLATFORM)/data(脱敏后配置，含 vendor_models 厂商核验模型清单)/
+        enabled_models(启用模型开关)/editable/created_at/updated_at`。
+      responses:
+        "200":
+          description: 凭证列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  credentials: { type: array, items: { type: object } }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [ModelCredentials]
+      summary: 创建个人模型凭证
+      description: >
+        请求体为按供应商 schema 的动态 JSON（`data.type` 决定供应商）。本端点固定创建
+        `scope=USER` 个人凭证（scope 不经请求体传递，由端点承载）。
+        保存即核验 KEY：调用厂商 /models 验证可用性，成功后把厂商模型清单缓存进
+        `data.vendor_models`；失败 400 阻断保存。可选 `enabled_models`（字符串数组）
+        限定启用模型。平台共享凭证走 `POST /api/credentials/platform`。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 创建后的凭证视图（脱敏）
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/credentials/platform:
+    post:
+      tags: [ModelCredentials]
+      summary: 创建平台共享模型凭证
+      description: >
+        创建 `scope=PLATFORM` 平台共享凭证（全员可在对话中选用），`credential:create`
+        注解把门（scope 由端点决定）。核验与字段语义同
+        `POST /api/credentials`。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 创建后的凭证视图（脱敏）
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/credentials/default-model:
+    get:
+      tags: [ModelCredentials]
+      summary: 平台默认模型（全局唯一）
+      description: >
+        登录可读。对话未选模型时后端按它兜底（V57 platform_model_default 单例行）；
+        未设置时 credential_id/model 为 null。仅 PLATFORM 凭证下的启用模型可被设为默认，
+        凭证删除/禁用自动清除。
+      responses:
+        "200":
+          description: 当前平台默认模型
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  credential_id: { type: string, nullable: true }
+                  model: { type: string, nullable: true }
+        "401": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [ModelCredentials]
+      summary: 设置平台默认模型（覆盖式）
+      description: >
+        body = {credential_id, model}，全局互斥（单例行覆盖更新）；权限复用
+        `credential:update`（与平台凭证编辑同级，不新增权限码）。只允许
+        PLATFORM 凭证下的启用模型，否则 400。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential_id, model]
+              properties:
+                credential_id: { type: string }
+                model: { type: string }
+      responses:
+        "200":
+          description: 设置后的平台默认模型
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/credentials/schemas:
+    get:
+      tags: [ModelCredentials]
+      summary: 供应商凭证 schema
+      description: 新建/编辑表单按其动态渲染；同时作为模型目录枚举（/api/models 等）的 provider 来源。
+      responses:
+        "200":
+          description: 供应商 schema 列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schemas: { type: array, items: { type: object } }
+  /api/credentials/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [ModelCredentials]
+      summary: 更新模型凭证
+      description: >
+        密钥字段留空 = 保留原值（不回显、不覆盖）。按实体 scope 分流：PLATFORM 凭证
+        要求 `credential:update`（个人凭证靠归属校验，越权 404）。`enabled_models`
+        可单独改（详情页开关只传该字段）：null = 清除限制恢复全部可用；数组 = 全量替换。
+        带 data 时保存即重新核验 KEY 并刷新 vendor_models。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 更新后的凭证视图（脱敏）
+          content:
+            application/json:
+              schema: { type: object }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [ModelCredentials]
+      summary: 删除模型凭证
+      description: >
+        按实体 scope 分流：PLATFORM 凭证要求 `credential:delete`（个人凭证靠归属校验，
+        越权 404）。删除默认模型所在凭证时平台默认模型自动清除。
+      responses:
+        "200":
+          description: { deleted: true }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+        "404": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Model catalog ───────────────────────────
+
+  /api/models:
+    get:
+      tags: [ModelCatalog]
+      summary: 对话模型目录
+      description: 按供应商枚举内建目录中的对话模型（与凭证页「可用模型」同源）。
+      parameters:
+        - { name: provider, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: 模型列表
+          content:
+            application/json:
+              schema: { type: object }
+  /api/tts-models:
+    get:
+      tags: [ModelCatalog]
+      summary: TTS 模型目录
+      parameters:
+        - { name: provider, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: 模型列表
+          content:
+            application/json:
+              schema: { type: object }
+  /api/embedding-models:
+    get:
+      tags: [ModelCatalog]
+      summary: Embedding 模型目录
+      description: 知识库创建/编辑弹窗的 Embedding 模型下拉数据源（仅 status=active）。
+      parameters:
+        - { name: provider, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: 模型列表
+          content:
+            application/json:
+              schema: { type: object }
+
+  # ─────────────────────────── Channels ───────────────────────────
+
+  /api/channels/types:
+    get:
+      tags: [Channels]
+      summary: 渠道类型元数据
+      description: 新建表单按 `credentials_schema` 动态渲染（wechat_work/dingtalk/feishu/webhook）。
+      responses:
+        "200":
+          description: 渠道类型列表
+          content:
+            application/json:
+              schema: { type: array, items: { type: object } }
+  /api/channels:
+    get:
+      tags: [Channels]
+      summary: 当前用户的通知渠道列表
+      description: 按归属校验权限（访问他人资源返回 404）；凭据字段脱敏回显。
+      responses:
+        "200":
+          description: 渠道列表
+          content:
+            application/json:
+              schema: { type: array, items: { type: object } }
+    post:
+      tags: [Channels]
+      summary: 创建通知渠道
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 渠道视图
+          content:
+            application/json:
+              schema: { type: object }
+  /api/channels/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Channels]
+      summary: 更新通知渠道
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 渠道视图
+          content:
+            application/json:
+              schema: { type: object }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Channels]
+      summary: 删除通知渠道
+      responses:
+        "200":
+          description: { deleted: true }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/channels/{id}/enable:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Channels]
+      summary: 启用渠道
+      responses:
+        "200":
+          description: 渠道视图
+          content:
+            application/json:
+              schema: { type: object }
+  /api/channels/{id}/disable:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Channels]
+      summary: 停用渠道
+      responses:
+        "200":
+          description: 渠道视图
+          content:
+            application/json:
+              schema: { type: object }
+  /api/channels/{id}/status:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Channels]
+      summary: 渠道连通状态
+      description: 出站型渠道由最近一次投递结果推导。
+      responses:
+        "200":
+          description: 状态视图
+          content:
+            application/json:
+              schema: { type: object }
+  /api/channels/{id}/test:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Channels]
+      summary: 发送测试消息
+      description: 结果同步返回并写入渠道状态。
+      responses:
+        "200":
+          description: 测试结果
+          content:
+            application/json:
+              schema: { type: object }
+
+  # ─────────────────────────── Notifications ───────────────────────────
+
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: 最近通知列表
+      parameters:
+        - { name: unreadOnly, in: query, schema: { type: boolean, default: false } }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        "200":
+          description: 通知列表（含 unreadCount）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+                  unreadCount: { type: integer }
+                  notifications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        level: { type: string }
+                        title: { type: string }
+                        body: { type: string }
+                        sessionId: { type: [string, "null"] }
+                        agentId: { type: [string, "null"] }
+                        readAt: { type: [string, "null"] }
+                        createdAt: { type: string }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: 未读通知数
+      responses:
+        "200":
+          description: 未读计数
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+  /api/notifications/{id}/read:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Notifications]
+      summary: 标记单条通知已读
+      responses:
+        "200": { description: 已标记 }
+  /api/notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: 全部标记已读
+      responses:
+        "200": { description: 已标记 }
+  /api/notify/stream:
+    get:
+      tags: [Notifications]
+      summary: 通知 SSE 信号流
+      description: >
+        `text/event-stream`。通知信号与 event_sequence 增量补拉的设计见
+        `docs/realtime-notification-design.md`；前端收到信号后按需拉取
+        /api/notifications 与 /api/agents/.../transcript。
+      responses:
+        "200":
+          description: SSE 事件流
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  # ─────────────────────────── AG-UI events (audit) ───────────────────────────
+
+  /api/agui-events:
+    get:
+      tags: [AguiEvents]
+      summary: 会话 AG-UI 事件审计记录
+      description: >
+        按用户 + 会话查询已持久化的 AG-UI 事件（V37 起异步批量写入数据库，键 (user, session, seq)）。
+        仅用于审计，前端对话渲染不使用此接口。支持 afterSequence 增量拉取。
+      parameters:
+        - { name: sessionId, in: query, required: true, schema: { type: string } }
+        - { name: afterSequence, in: query, schema: { type: integer, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, default: 500, maximum: 1000 } }
+      responses:
+        "200":
+          description: 事件记录列表
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Session alert push ───────────────────────────
+
+  /api/sessions/{sessionId}/alert-push:
+    parameters:
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Notifications]
+      summary: 会话告警推送配置
+      responses:
+        "200":
+          description: 配置视图
+          content:
+            application/json:
+              schema: { type: object }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [Notifications]
+      summary: 更新会话告警推送配置
+      description: 绑定会话到通知渠道（渠道归属本人）；命中规则时经 AlertNotifier 分发到各渠道。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200":
+          description: 配置视图
+          content:
+            application/json:
+              schema: { type: object }
+        "404": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Groups ───────────────────────────
+
+  /api/groups:
+    get:
+      tags: [Groups]
+      summary: 群组列表
+      responses:
+        "200":
+          description: 简要群组列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+    post:
+      tags: [Groups]
+      summary: 创建群组
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 120 }
+                memberUserIds:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "201":
+          description: GroupView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GroupView" }
+
+  /api/groups/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Groups]
+      summary: 群组详情
+      responses:
+        "200":
+          description: GroupView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GroupView" }
+    delete:
+      tags: [Groups]
+      summary: 删除群组
+      responses:
+        "204": { description: 无内容 }
+
+  /api/groups/{id}/members:
+    post:
+      tags: [Groups]
+      summary: 添加成员
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        "201":
+          description: GroupView
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GroupView" }
+
+  /api/groups/{id}/members/{userId}:
+    delete:
+      tags: [Groups]
+      summary: 移除成员
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: 无内容 }
+
+  # ─────────────────────────── AG-UI ───────────────────────────
+
+  /agui/run/{agentId}:
+    post:
+      tags: [Agui]
+      summary: 发起 / 恢复一次对话运行（SSE）
+      description: |
+        AG-UI v2 协议端点，响应为 `text/event-stream`（每行 `data: {JSON}`，兼容纯 JSON 行）。
+
+        **标识语义**
+        - `threadId` = 平台 `sessionId`（前端新会话生成 `main-{uuid}`，贯穿整个会话）。
+        - `runId` 平台约定填 agentId；HITL resume 复用同一 `(threadId, runId)` 直到本轮 `RUN_FINISHED`。
+        - 同一 thread 的 run 严格串行（并发 run 被框架拒绝："Thread already has an active run"）。
+        - **会话隔离**：userId 取 `Authorization: Bearer` JWT 的 `sub`，会话状态按 (userId, sessionId) 分区。
+
+        **HITL 恢复（resume）**
+        - 收到 `RUN_FINISHED(outcome={type:"interrupt", interrupts:[...]})` 后，
+          以同一 `(threadId, runId)` 重新 POST，并在 `resume[]` 中对全部 open interrupts 给出答复；
+          否则报 "Thread has unresolved interrupts; RunAgentInput.resume must address all of them"。
+        - `interruptId` 格式为 `{replyId}:{toolCallId}`。
+        - `status=resolved`：`payload.approved`（权限确认）、`payload.output`（external 工具/表单回传值）、
+          `payload.editedArgs`（编辑工具入参）。注意 external_execution 类中断只传 output，不传 approved。
+        - `status=cancelled`：取消该中断。
+        - 后端重启后中断登记丢失（进程内存），resume 会报 "does not match any open interrupt"，
+          前端应改为把答案作为 user message 发起新 run。
+
+        **可用事件**（详见事件说明）：`RUN_STARTED`、`RUN_FINISHED`、`RUN_ERROR`、
+        `TEXT_MESSAGE_START/CONTENT/END`、`THINKING_BLOCK_START/DELTA/END`、
+        `TOOL_CALL_START/ARGS/END`、`TOOL_CALL_RESULT` / `TOOL_RESULT_*`、
+        `DATA_BLOCK_START/DELTA/END`、`CUSTOM`。
+      parameters:
+        - { name: agentId, in: path, required: true, schema: { type: string } }
+        - name: X-Agent-Id
+          in: header
+          required: false
+          schema: { type: string }
+          description: 也可不带路径用 `POST /agui/run` + 此头指定 Agent（两种映射等价）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [threadId, runId, messages]
+              properties:
+                threadId:
+                  type: string
+                  description: = sessionId，如 main-<uuid>
+                runId:
+                  type: string
+                  description: 平台约定填 agentId；resume 时复用
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      role: { type: string, enum: [user, assistant, system, tool] }
+                      content:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type: { type: string, example: text }
+                            text: { type: string }
+                      metadata:
+                        type: object
+                        description: "如 {synthetic: true} 的消息在转录中不渲染"
+                resume:
+                  type: array
+                  description: HITL 恢复项；必须覆盖全部 open interrupts
+                  items:
+                    type: object
+                    required: [interruptId, status]
+                    properties:
+                      interruptId:
+                        type: string
+                        description: "{replyId}:{toolCallId}"
+                      status: { type: string, enum: [resolved, cancelled] }
+                      payload:
+                        type: object
+                        properties:
+                          approved: { type: boolean, description: 权限确认类使用 }
+                          editedArgs: { type: object, description: 编辑工具入参 }
+                          output: { type: string, description: external 工具 / 表单提交值（JSON 字符串） }
+                      metadata: { type: object }
+                state: { type: object }
+                tools: { type: array }
+                context: { type: array }
+                forwardedProps:
+                  type: object
+                  description: |
+                    平台扩展字段（均可省略）：
+                    - `credential_id` + `model`（成对出现）：对话轮次模型选择，按当前用户
+                      解密凭证并校验可用性，在本轮 run 装配覆盖模型实例；携带但凭证不可用
+                      仅降级不报错。未携带时优先平台默认模型（/api/credentials/default-model），
+                      动态默认未设置/解析失败再回落 `agent-platform.model` 配置。
+                      对话中可改，下一轮 run 重新装配生效；子智能体不跟随。
+                    - `skill_invocations`: `[{skill_id, name}, …]` 消息级技能调用（「/ 调用技能」）。
+      responses:
+        "200":
+          description: |
+            SSE 事件流。关键事件：
+            - `RUN_STARTED` / `RUN_FINISHED`（含 `outcome: {type: "success"|"interrupt"|"error"}`，
+              interrupt 时携带 `interrupts[]`：`{id, reason:"tool_call", toolCallId, message,
+              metadata:{agentscope.interruptKind, toolName, toolInput, toolContent, replyId}, responseSchema}`）
+            - `RUN_ERROR`（message）
+            - `TEXT_MESSAGE_START/CONTENT/END`（messageId, delta）
+            - `THINKING_BLOCK_START/DELTA/END`
+            - `TOOL_CALL_START/ARGS/END`（toolCallId, toolCallName, input）
+            - `TOOL_CALL_RESULT` / `TOOL_RESULT_END`（toolCallId, output, state）
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "401": { $ref: "#/components/responses/Error" }
+
+  # ─────────────────────────── Misc ───────────────────────────
+
+  /health:
+    get:
+      tags: [Misc]
+      summary: 健康检查
+      security: []
+      responses:
+        "200":
+          description: 服务状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service: { type: string, example: agent-platform }
+                  status: { type: string, example: ok }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: HS256 access token，iss=agent-platform，sub=userId(UUID)，默认 30 分钟有效。
+
+  responses:
+    Error:
+      description: 统一错误结构
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        code: { type: string, example: VALIDATION_ERROR }
+        message: { type: string, example: 参数校验失败 }
+
+    PageResponse:
+      type: object
+      properties:
+        page: { type: integer, default: 0 }
+        size: { type: integer, default: 20 }
+        totalElements: { type: integer }
+        totalPages: { type: integer }
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        tokenType: { type: string, example: bearer }
+        userId: { type: string, format: uuid }
+        username: { type: string }
+        role: { type: string, enum: [admin, developer, end_user] }
+        name: { type: [string, "null"], description: 显示名（OAuth 用户取 userAlias，本地为空可null） }
+
+    UserInfoResponse:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        username: { type: string }
+        role: { type: string, enum: [admin, developer, end_user] }
+        createdAt: { type: string, format: date-time }
+        name: { type: [string, "null"], description: 显示名 }
+        email: { type: [string, "null"] }
+        phone: { type: [string, "null"], description: 脱敏展示（如 138****1234） }
+
+    RegisterRequest:
+      type: object
+      required: [principal, password]
+      properties:
+        principal:
+          type: string
+          maxLength: 100
+          description: 账密注册时为用户名；phone/email 注册时为对应手机号/邮箱
+        password: { type: string }
+        role:
+          type: string
+          enum: [admin, developer, end_user]
+          default: end_user
+        registerType:
+          type: string
+          enum: [username, phone, email]
+          default: username
+        captcha:
+          type: [string, "null"]
+          description: phone/email 注册必填（先经 /api/users/captcha/* 获取）
+
+    AgentConfigRequest:
+      type: object
+      required: [name, model]
+      properties:
+        name: { type: string, maxLength: 128 }
+        description: { type: string }
+        systemPrompt: { type: string }
+        model: { type: string, maxLength: 128, example: "dashscope:qwen3.8-flash" }
+        status: { type: string, enum: [draft, active] }
+        skillIds: { type: array, items: { type: string, format: uuid } }
+        toolIds: { type: array, items: { type: string, format: uuid } }
+        subagentIds: { type: array, items: { type: string, format: uuid } }
+        launchTemplates: { type: array, items: { type: object } }
+        planEnabled: { type: boolean }
+        skillSedimentation: { type: boolean }
+        welcomeForm: { type: object, description: 欢迎表单（见 docs/form-config-contract.md） }
+        form: { type: object, description: 配置驱动表单（M11） }
+        formTrigger: { type: string, enum: [disabled, on_session_start, on_round_start, once] }
+        tagIds: { type: array, description: 关联标签（全量替换语义，重复提交以最后一次为准）, items: { type: string, format: uuid } }
+
+    AgentConfig:
+      allOf:
+        - $ref: "#/components/schemas/AgentConfigRequest"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            workspacePath: { type: string }
+            fileBased: { type: boolean, description: true = 文件型智能体（workspace/agents/ 下直接定义，frontmatter tags 按名同步进标签池） }
+            tags: { type: array, description: 关联标签（展示字段，脱敏时保留）, items: { $ref: "#/components/schemas/TagView" } }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    SessionInfo:
+      type: object
+      properties:
+        sessionId: { type: string, example: main-<uuid> }
+        summary: { type: string }
+        title: { type: string }
+        updatedAt: { type: string, format: date-time }
+        archivedAt: { type: [string, "null"], format: date-time, description: null = 未归档 }
+
+    SessionTranscript:
+      type: object
+      properties:
+        sessionId: { type: string }
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              role: { type: string }
+              name: { type: [string, "null"] }
+              createdAt: { type: string, format: date-time }
+              metadata: { type: object }
+              content:
+                type: array
+                description: 与 AG-UI ContentBlock 对齐
+                items:
+                  oneOf:
+                    - type: object
+                      title: TextBlock
+                      properties:
+                        type: { type: string, example: text }
+                        id: { type: string }
+                        text: { type: string }
+                        createdAt: { type: string }
+                    - type: object
+                      title: ThinkingBlock
+                      properties:
+                        type: { type: string, example: thinking }
+                        id: { type: string }
+                        thinking: { type: string }
+                        createdAt: { type: string }
+                    - type: object
+                      title: ToolCallBlock
+                      properties:
+                        type: { type: string, example: tool_call }
+                        id: { type: string }
+                        name: { type: string }
+                        input: { type: string, description: JSON 字符串 }
+                        state: { type: string }
+                        createdAt: { type: string }
+                    - type: object
+                      title: ToolResultBlock
+                      properties:
+                        type: { type: string, example: tool_result }
+                        id: { type: string }
+                        name: { type: string }
+                        output: { type: string }
+                        state: { type: string }
+                        createdAt: { type: string }
+
+    PendingFormInterrupt:
+      type: object
+      required: [interruptId, toolCallId]
+      properties:
+        interruptId: { type: string, description: "{replyId}:{toolCallId}" }
+        replyId: { type: string }
+        toolCallId: { type: string }
+        toolName: { type: string, example: ui_gate }
+        toolInput: { type: object }
+        createdAt: { type: string, format: date-time }
+
+    ArtifactNode:
+      type: object
+      properties:
+        name: { type: string }
+        path: { type: string }
+        type: { type: string, enum: [dir, file] }
+        size: { type: [integer, "null"], description: 目录为 null }
+        updatedAt: { type: [integer, "null"], description: epoch 毫秒 }
+        children:
+          type: [array, "null"]
+          items: { $ref: "#/components/schemas/ArtifactNode" }
+
+    ExtensionResponse:
+      type: object
+      properties:
+        id: { type: string }
+        agentId: { type: string }
+        sessionId: { type: string }
+        userId: { type: string }
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              value: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    KnowledgeBase:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        type: { type: string, enum: [rag, external, text], description: rag=本地 pgvector；external=外部 RAG 平台（RAGFlow/Dify/百炼）；text=文本 grep 检索 }
+        owner:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+        embeddingModelConfig: { type: object }
+        externalProvider: { type: [string, "null"] }
+        externalEndpoint: { type: [string, "null"] }
+        chunkSize: { type: [integer, "null"] }
+        chunkOverlap: { type: [integer, "null"] }
+        scope: { type: string, enum: [PERSONAL, PLATFORM], description: PERSONAL=个人知识库（owner 可见）；PLATFORM=平台共享（V52 迁移后全员可见） }
+        tags:
+          type: array
+          description: 关联标签（id/name/color）
+          items: { $ref: "#/components/schemas/TagView" }
+        editable: { type: boolean }
+        permission: { type: string, description: 当前用户对该库的有效权限 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    KnowledgeBaseUpsert:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 200 }
+        description: { type: string }
+        type: { type: string, enum: [rag, external, text] }
+        embeddingModelConfig: { type: object, description: 向量维度固定 1536 }
+        externalProvider: { type: string }
+        externalEndpoint: { type: string }
+        externalApiKey: { type: string, description: 不回显；编辑时留空 = 不重加密 }
+        externalExtra: { type: object }
+        chunkSize: { type: integer }
+        chunkOverlap: { type: integer }
+
+    KnowledgeDocument:
+      type: object
+      properties:
+        id: { type: string }
+        filename: { type: string }
+        size: { type: integer, description: 实时读盘 }
+        contentType: { type: string, description: 按扩展名推断 }
+        status: { type: string }
+        error: { type: [string, "null"] }
+        chunkCount: { type: [integer, "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    KnowledgeGrant:
+      type: object
+      properties:
+        id: { type: string }
+        principalType: { type: string, enum: [USER, GROUP] }
+        principalId: { type: string, format: uuid }
+        principalName: { type: string }
+        permission: { type: string, enum: [READ, WRITE], description: WRITE 包含 READ }
+        grantedBy: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    ResourceUpsert:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 128 }
+        description: { type: string }
+        status: { type: string, enum: [active, inactive] }
+        createdBy: { type: string, maxLength: 128 }
+
+    ResourceItem:
+      allOf:
+        - $ref: "#/components/schemas/ResourceUpsert"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            implementationType: { type: string, maxLength: 64 }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    ToolUpsert:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 128 }
+        description: { type: string }
+        toolType: { type: string, maxLength: 64 }
+        executionMode: { type: string, enum: [internal, external] }
+        askConfirmation: { type: boolean }
+        inputSchema: { type: object, description: JSON Schema }
+        mcpEndpoint: { type: string, maxLength: 512 }
+        status: { type: string, enum: [active, inactive] }
+
+    ToolItem:
+      allOf:
+        - $ref: "#/components/schemas/ToolUpsert"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    TagView:
+      type: object
+      description: 标签视图；公开标签池只含 id/name/color，管理接口额外返回管理字段与使用计数。
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        color: { type: string, description: "HEX 颜色（如 #2563eb）" }
+        sort: { type: [integer, "null"] }
+        enabled: { type: [boolean, "null"] }
+        agentCount: { type: [integer, "null"] }
+        kbCount: { type: [integer, "null"] }
+    TagUpsert:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 50 }
+        color: { type: string, description: "HEX 颜色" }
+        sort: { type: [integer, "null"] }
+        enabled: { type: [boolean, "null"] }
+    TagList:
+      type: object
+      properties:
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/TagView" }
+        total: { type: integer }
+
+    GroupView:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        createdBy: { type: string }
+        createdByName: { type: string }
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string, format: uuid }
+              userName: { type: string }
+        createdAt: { type: string, format: date-time }

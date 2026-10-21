@@ -1,0 +1,15 @@
+### M-OPT-003 非线性规划（NLP）
+- **task_types**：非线性成本、物理约束、连续参数校准、资源配置。
+- **problem_signature**：目标或约束出现乘积、幂、指数、对数、分式或非线性响应。
+- **core_idea**：在非线性可行域上寻找局部或全局最优。
+- **mathematical_form**：`min f(x)`，满足 `g(x)<=0, h(x)=0`。
+- **assumptions**：函数可计算；梯度或近似梯度可靠；初值合理。
+- **hard_constraints**：函数不连续、不可导或存在大量局部极值时不能仅依赖局部算法。
+- **strengths**：表达能力强，适合连续机制模型。
+- **limitations**：局部最优、初值敏感、尺度敏感、全局性难保证。
+- **validation**：多初值、梯度检查、约束残差、局部扰动和全局启发式对照。
+- **sensitivity**：初值、参数、正则项、约束边界和求解容差。
+- **selection_tags**：`nonlinear, continuous, calibration`
+- **composable_with**：`M-OPT-004, M-MATH-002, M-SIM-001`
+- **fallbacks**：线性化、分段线性化、全局优化、元启发式。
+- **agent_actions**：分析可微性 -> 缩放变量 -> 选初值和算法 -> 多起点求解 -> 诊断局部性。

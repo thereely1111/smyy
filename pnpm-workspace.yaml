@@ -1,0 +1,14 @@
+# pnpm 构建脚本白名单
+#
+# ⚠ pnpm 11 起白名单从 .npmrc 的 onlyBuiltDependencies[] 挪到了这里。
+#   原先这三项的值是占位符 `set this to true or false`，pnpm 会直接跳过构建脚本 ——
+#   本机因为有 store 硬链接兜底还能跑，换一台机器就会卡在
+#   「包装好了但 pnpm dev 起不来」。三项都必须放行：
+#     esbuild          → 不跑构建脚本就拿不到可执行文件，vite 起不来
+#     @parcel/watcher  → dev 的文件监听
+#     vue-demi         → Vue 2/3 兼容层的构建产物
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: set this to true or false
+  esbuild: true
+  vue-demi: true

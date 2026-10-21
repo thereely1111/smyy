@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM D题 · 问题三 · 容量最大化</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --r:12px; --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);overflow:hidden;
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:none}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.w .v{color:var(--warn)}
+.kpi.b .v{color:var(--blue)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:320px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+
+.blink-red{animation:blinkRed 1.2s ease-in-out infinite}
+@keyframes blinkRed{0%,100%{opacity:.9}50%{opacity:.3}}
+.pop-in{animation:popIn .5s cubic-bezier(.22,1.2,.4,1)}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}100%{opacity:.95;transform:scale(1)}}
+.formula{font-family:"SFMono-Regular",Consolas,monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto}
+.formula .c{color:#7fd8c9}
+.formula .k{color:#ffd88a;font-weight:600}
+.tf-grid{background:#0b2e36;border-radius:10px;padding:14px}
+
+/* 交互组件 */
+.interact-hint{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--teal-d);
+  background:#eef8f6;border:1px solid #cfebe6;border-left:3px solid var(--teal);border-radius:0 9px 9px 0;padding:9px 13px}
+.interact-hint b{color:var(--teal-d)}
+.interact-hint .ico{font-size:15px}
+.approach-tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  color:#fff;background:linear-gradient(135deg,var(--teal-d),var(--cyan));border-radius:999px;padding:4px 12px;letter-spacing:.03em}
+.approach-tag.gold{background:linear-gradient(135deg,var(--gold-d),var(--gold))}
+.approach-tag.warn{background:linear-gradient(135deg,#8d4229,#c2683f)}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600}
+.badge.q{background:#eef7f6;color:var(--teal-d)}
+.badge.w{background:var(--warn-bg);color:var(--warn)}
+.badge.g{background:#fdf4e8;color:var(--gold-d)}
+
+.logline{font-size:12px;color:var(--ink2);padding:3px 8px;border-radius:4px;margin:2px 0;background:#fafdfd;border:1px solid var(--line2);
+  display:flex;gap:8px;align-items:center}
+.logline .tag{font-size:10px;padding:1px 6px;border-radius:999px;font-weight:600;flex:0 0 auto}
+.tag.g{background:#fdf4e8;color:var(--gold-d)}
+.tag.r{background:var(--warn-bg);color:var(--warn)}
+
+/* 空洞示意 */
+.holes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+.hole{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:#fafdfd}
+.hole .t{font-size:11.5px;color:var(--muted)}
+.hole .n{font-size:17px;font-weight:600;color:var(--gold-d);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">问题三 · 容量最大化</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ========= 幕 1：问题重述 ========= -->
+<section class="scene" id="s1" data-title="一 · 问题重述与上界">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题三</div>
+      <h1>在无冲突基线上，不限平移幅度塞更多 C 类
+        <small>等价于：在问题二消解后的时频网格里做矩形装箱（2D packing）。</small>
+      </h1>
+      <p class="lead">题面说「如果不限制频段和时间的平移幅度」——这意味着新增的 C 类装备可以被放到时频网格上的 <b>任何位置</b>，唯一约束是不能与现有（已消解、无冲突的）装备相撞。问题要问的是：<span class="hl">最多</span>还能塞下多少个 C 类装备。</p>
+      <p class="lead">这本质上是一道 <b>二维装箱 / 装填密度最大化</b> 问题：把时频平面看作一块 100Δf × maxΔt 的「货舱」，把每件 C 类装备看作一个由 n 个矩形组成的「非连续长条」，问货舱里最多能塞几条。关键在「最多」二字——论文必须给出数量、给出上界、并说明为什么这是一个好的下界。</p>
+    </div>
+
+    <div class="interact-hint">
+      <span class="ico">🧭</span>
+      <span><b>本页怎么用：</b>本幕说明问题三与问题二的区别并给出容量上界；第二幕讲装箱算法；第三幕是可交互的扩容动画（逐个点亮新装备，实时更新装填密度）；第四幕说明 result3.xlsx 的输出格式。← → 切换幕，底部圆点可跳转。</span>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>与问题二的区别 <em>同一张网格，两种目标</em></h3>
+        <table class="tb">
+          <tr><th>维度</th><th>问题二</th><th>问题三</th></tr>
+          <tr><td class="l">操作对象</td><td class="l">原 150 装备</td><td class="l">新增虚拟 C 类装备</td></tr>
+          <tr><td class="l">平移幅度</td><td class="l">频 ±10Δf、时 ±5Δt</td><td class="l"><b>无限制</b></td></tr>
+          <tr><td class="l">优化目标</td><td class="l">消除全部冲突</td><td class="l">塞入数量最大化</td></tr>
+          <tr><td class="l">问题本质</td><td class="l">约束满足（CSP）</td><td class="l">装箱 / 装填密度</td></tr>
+          <tr class="on"><td class="l">可行解性质</td><td class="l">必须可行</td><td class="l">求最优 / 给上界</td></tr>
+        </table>
+        <div class="note" style="margin-top:8px">一句话概括：问题二是「把已有的摆平」，问题三是「在摆平的基础上多塞点」。</div>
+      </div>
+      <div class="card">
+        <h3>新装备的形态假设 <em>必须先说清楚</em></h3>
+        <p class="small">题面未指定要新增的 C 类装备的具体参数，因此作答时必须<b>自行设定并论证</b>。动画演示采用一个标准的 C 类模板作为代表形态：</p>
+        <div class="formula">
+<span class="c">// 新增 C 类模板（可自行设定）</span>
+bw = 12Δf      <span class="c">// 频段宽度</span>
+τ  = 8Δt       <span class="c">// 单次使用时长</span>
+iv = 60Δt      <span class="c">// 使用间隔</span>
+n  = 3         <span class="c">// 使用次数</span>
+<span class="c">// 单个装备总占用 = bw × τ × n</span>
+= 12 × 8 × 3 = <span class="k">288</span> 时频格
+        </div>
+        <div class="note w" style="margin-top:8px">模板选得越大，能塞进去的越少。所以论文里务必做<b>敏感性分析</b>：给出不同 (bw, τ, iv, n) 下的容量曲线，才能说明结论的鲁棒性。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>容量上界 <em>先估计天花板在哪</em></h3>
+      <div class="grid4">
+        <div class="kpi g"><div class="k">时频资源总量</div><div class="v" id="ubTotal">—</div><div class="small">100Δf × maxΔt 的总格数</div></div>
+        <div class="kpi"><div class="k">原装备已占用</div><div class="v" id="ubUsed">—</div><div class="small">消解后仍活跃的装备</div></div>
+        <div class="kpi b"><div class="k">理论剩余空格</div><div class="v" id="ubFree">—</div><div class="small">总量 − 已占用</div></div>
+        <div class="kpi w"><div class="k">宽松上界 M₀</div><div class="v" id="ubM">—</div><div class="small">剩余格子 ÷ 288（忽略碎片）</div></div>
+      </div>
+      <div class="note" style="margin-top:10px">这个 M₀ 是「把所有空格当一整块」的理想上界，实际因为原装备排布不规则、存在大量碎小空洞，可达值通常<b>明显低于 M₀</b>。论文的价值恰恰在于：给出一个尽量接近 M₀ 的可行方案，或证明为什么达不到。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 2：装箱算法 ========= -->
+<section class="scene" id="s2" data-title="二 · 装箱算法">
+  <div class="wrap">
+    <div>
+      <div class="kicker">算法思路</div>
+      <h1>贪心在可行空洞里塞矩形
+        <small>按候选位置逐个尝试，能放下就放，直到放不下为止。</small>
+      </h1>
+      <p class="lead">最朴素的做法：枚举所有可能的起始频段（0 ~ 100−bw）和首次时间（0 ~ maxT−…），挑第一个不冲突的位置放进去，再重复。这是一次「先来先占」的贪心——简单、快，且能给出一个可靠的下界。</p>
+      <p class="lead">更聪明的做法是先找<b>空洞</b>（网格上被现有装备包围但空着的区域），再用某种启发式决定填洞顺序。不同的填洞顺序会得到不同的最终数量，这是装箱问题的固有特征：<span class="hl">贪心不保证全局最优</span>。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>主循环 <em>朴素枚举版（本页动画所用）</em></h3>
+        <div class="formula">
+<span class="c">输入</span>: 已消解的无冲突装备集 S
+<span class="c">输入</span>: 新 C 类模板 E = (bw, τ, iv, n)
+<span class="c">输出</span>: 可塞入的数量 M 与位置清单
+
+M ← 0
+<span class="k">for</span> fs = 0 .. 100−bw:
+  <span class="k">for</span> ts = 0 .. maxT−iv·(n−1)−τ:   <span class="c">// 步进 2 提速</span>
+    候选 rects ← [(fs, fs+bw) × (ts+k·iv, ts+k·iv+τ), k=0..n−1]
+    <span class="k">if</span> 候选 rects 与 S 中所有装备均无重叠:
+       S ← S ∪ {候选装备};  M ← M + 1
+       <span class="c">// 就地放入，影响后续判断（因此越早放越占优）</span>
+返回 M
+        </div>
+        <p class="small" style="margin-top:8px">算法是<b>在线式</b>的：每放一个，就立刻成为后续判断的障碍。所以先枚举到的位置会"抢"掉空间——这与现实中"先到先得"的频谱分配逻辑一致。</p>
+      </div>
+      <div class="card">
+        <h3>枚举顺序为何影响结果</h3>
+        <p class="small">本页动画按 <b>fs 从小到大、ts 从小到大</b> 枚举（相当于"从左上往右下扫着填"）。若换顺序，结果可能不同：</p>
+        <ul style="font-size:13.5px;color:var(--ink2);line-height:1.9;padding-left:18px;margin:0 0 8px">
+          <li><b>按空洞大小优先</b>：先填大空洞，通常更省空间（大件难放，先安排）</li>
+          <li><b>按时间维度优先</b>：先把时间轴排满，再考虑频段，适合对时延敏感的场景</li>
+          <li><b>随机 + 多次重启</b>：跑多组随机顺序取最好，简单有效</li>
+        </ul>
+        <div class="note">这四种顺序的结果差异，正好可以做成论文里的一组对照实验，说明"启发式选择"的重要性。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>复杂度与可行性 <em>为什么枚举得动</em></h3>
+      <table class="tb">
+        <tr><th>环节</th><th>操作</th><th>复杂度</th><th>量级估算</th></tr>
+        <tr><td>候选位置枚举</td><td>(100−bw) × maxT/2</td><td>O(F·T)</td><td>约 88 × 130 ≈ 1.1×10⁴</td></tr>
+        <tr><td>单次可行性判定</td><td>候选 n 个矩形 vs 全部活跃装备</td><td>O(N·n²)</td><td>约 150 × 9 = 1.4×10³</td></tr>
+        <tr class="on"><td>整体</td><td>枚举 × 判定</td><td>O(F·T·N·n²)</td><td>约 1.5×10⁷ 次，浏览器毫秒~秒级</td></tr>
+      </table>
+      <div class="note" style="margin-top:10px">动画里每点一次「下一步」就真实执行一次"找下一个可放位置"的完整扫描——所以进度条走到头时，你看到的数量就是这段代码真实算出来的结果，不是预设数字。</div>
+    </div>
+
+    <div class="card">
+      <h3>更优方法 <em>从可行解走向近似最优</em></h3>
+      <div class="grid3">
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <span class="approach-tag">Maximal Rectangle</span>
+          <p class="small" style="margin-top:8px">先把网格所有<b>极大空矩形</b>求出来（类似直方图的"最大矩形"），再在空矩形集合里做匹配——比逐格枚举更贴近空间结构。</p>
+        </div>
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <span class="approach-tag gold">模拟退火 / 遗传</span>
+          <p class="small" style="margin-top:8px">允许"先搬走已放装备，再腾位置放新的"，用元启发式在解空间里跳出局部最优，通常能比纯贪心多塞若干个。</p>
+        </div>
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <span class="approach-tag warn">整数规划（ILP）</span>
+          <p class="small" style="margin-top:8px">变量 = 每个候选位置是否放置，约束 = 相互不重叠。小规模可求最优；同时它给出的<b>线性松弛</b>就是更强的容量上界。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 3：扩容动画 ========= -->
+<section class="scene" id="s3" data-title="三 · 扩容动画（可交互）">
+  <div class="wrap">
+    <div>
+      <div class="kicker">逐步填充 · 实时密度</div>
+      <h1>从无冲突基线开始，逐个点亮新装备
+        <small>灰淡色 = 已消解的原装备，金色 = 新增的 C 类装备。</small>
+      </h1>
+      <p class="lead">下面网格里的底图是问题二消解后的无冲突基线（含被撤销装备的灰色残影）。点「自动扩容」，你会看到金色方块一块块被填进空洞里，同时右侧的装填密度实时攀升——这正是"在有限时频资源里榨出最大容量"的直观过程。</p>
+    </div>
+
+    <div class="interact-hint">
+      <span class="ico">🖱️</span>
+      <span><b>操作指引：</b>「下一步」= 放置下一个新装备；「自动扩容」= 连续放置直到填满（可随时「停止」）；「重置」= 清空新增装备从头再来。观察重点：① 金色块怎样避开原装备；② 时间轴上的空白被如何切成一段段；③ 装填密度最终能到多少。</span>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">C 类扩容动画 · 频域 0–100Δf × 时域 0–maxΔt</div>
+        <div class="ctl">
+          <button class="tbtn" id="btnStep">下一步</button>
+          <button class="tbtn" id="btnAuto">自动扩容</button>
+          <button class="tbtn" id="btnReset">重置</button>
+          <span class="hint" id="stepHint">已加 0 / — 个</span>
+        </div>
+      </div>
+      <div id="tfPack" class="tf-grid"></div>
+      <div class="legend">
+        <span><i style="background:rgba(224,122,95,.55)"></i>原 A 类</span>
+        <span><i style="background:rgba(30,159,196,.55)"></i>原 B 类</span>
+        <span><i style="background:rgba(18,165,148,.55)"></i>原 C 类</span>
+        <span><i style="background:rgba(224,160,74,.95)"></i><b>新增 C 类</b></span>
+        <span><i style="background:#9ab7bd;opacity:.4"></i>灰色 = 已撤销</span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>扩容日志 <em>每个新装备的落位</em></h3>
+        <div id="packLog" style="max-height:240px;overflow-y:auto"></div>
+        <div class="note" id="packNote" style="margin-top:8px">点击「自动扩容」或「下一步」开始。</div>
+      </div>
+      <div class="card">
+        <h3>实时统计 <em>容量与装填密度</em></h3>
+        <table class="tb">
+          <tr><th>指标</th><th>数值</th></tr>
+          <tr><td class="l">消解后原装备总数</td><td class="num" id="baseCount">—</td></tr>
+          <tr><td class="l">其中活跃（未撤销）</td><td class="num" id="baseAct">—</td></tr>
+          <tr class="on"><td class="l"><b>新增 C 类数量</b></td><td class="num" id="addCount">—</td></tr>
+          <tr><td class="l">当前总占用时频格</td><td class="num" id="occCount">—</td></tr>
+          <tr><td class="l">网格装填密度</td><td class="num" id="density">—</td></tr>
+        </table>
+        <div class="note" style="margin-top:8px">「装填密度」= 已占用格数 ÷ 总格数。这个数字与「新增数量」一起，构成问题三在论文里的两个核心汇报指标。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 4：输出与小结 ========= -->
+<section class="scene" id="s4" data-title="四 · result3.xlsx 与小结">
+  <div class="wrap">
+    <div>
+      <div class="kicker">交付物 &amp; 方法总结</div>
+      <h1>result3.xlsx 的格式与容量结论
+        <small>新增 C 类编号、频段区间、时间区间（首次）。</small>
+      </h1>
+      <p class="lead">交付物 result3.xlsx 记录每一个新增 C 类装备的落位：序号、频段区间、首次时间区间。由于新增装备都是<b>同一种 C 类模板</b>，其间隔与使用次数相同，无需逐行填写——只要在论文里统一说明模板参数即可。</p>
+      <p class="lead">论文里最有价值的部分不是"塞了 N 个"这个数字本身，而是：<b>N 是怎么求出来的</b>（算法）、<b>N 距离上界有多远</b>（最优性讨论）、<b>换个模板会怎样</b>（敏感性分析）。这三点决定了这一问的得分层次。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>result3.xlsx 模板 <em>逐新增装备一行</em></h3>
+        <table class="tb">
+          <tr><th style="width:80px">序号</th><th>频段区间</th><th>时间区间（首次）</th></tr>
+          <tr><td class="num">1</td><td>[5, 17)</td><td>[10, 18)</td></tr>
+          <tr><td class="num">2</td><td>[38, 50)</td><td>[12, 20)</td></tr>
+          <tr><td class="num">3</td><td>[72, 84)</td><td>[0, 8)</td></tr>
+          <tr class="on"><td class="num">4</td><td>[5, 17)</td><td>[70, 78)</td></tr>
+          <tr><td class="num">…</td><td>…</td><td>…</td></tr>
+        </table>
+        <p class="small">同一频段区间可以在不同时间区间重复出现——只要时间上错开即可。</p>
+      </div>
+      <div class="card">
+        <h3>论文必须交代的关键假设</h3>
+        <ul style="font-size:13.5px;color:var(--ink2);line-height:1.9;padding-left:18px;margin:0">
+          <li>新增 C 类装备的<b>形态模板</b>（bw、τ、iv、n 各取何值、依据是什么）</li>
+          <li>不同模板会导致完全不同的容量——必须做 <b>敏感性分析</b></li>
+          <li>新装备之间也需互不冲突（动画中已保证），不能只检查与原装备的关系</li>
+          <li>若题面隐含"C 类新装备参数固定"，则需严格遵守并说明</li>
+        </ul>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="approach-tag">贪心装箱</span>
+          <span class="approach-tag gold">极大空矩形</span>
+          <span class="approach-tag">模拟退火</span>
+          <span class="approach-tag warn">ILP 上界</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote">「基于问题 2 求解得到的无冲突用频计划，如果不限制频段和时间的平移幅度，在不增加时频资源的前提下，最多还能安排多少 C 类用频装备？」
+      <div class="small" style="margin-top:6px">→ 核心在"最多"二字：不能只给一个贪心数，而要给「可行下界（实际塞了多少）」+「理论上界（最多可能多少）」+「两者差距的成因分析」。</div>
+    </div>
+
+    <div class="card">
+      <h3>论文里应该给出的完整答案结构</h3>
+      <div class="grid4">
+        <div class="kpi"><div class="k">① 可行解</div><div class="v" id="resFeas">—</div><div class="small">贪心装箱实际塞入的数量</div></div>
+        <div class="kpi w"><div class="k">② 上界</div><div class="v" id="resUB">—</div><div class="small">理论容量上界（面积估算法）</div></div>
+        <div class="kpi g"><div class="k">③ 装填密度</div><div class="v" id="resDen">—</div><div class="small">已占用 / 总资源</div></div>
+        <div class="kpi b"><div class="k">④ 差距</div><div class="v" id="resGap">—</div><div class="small">上界与可行解之间的空隙</div></div>
+      </div>
+      <div class="note" style="margin-top:10px">若 ① 明显小于 ②，说明还有优化空间，可继续用模拟退火 / 局部搜索改进；若 ① 已接近 ②，则贪心解已足够好，可据此论证最优性。</div>
+    </div>
+
+    <div class="grid3">
+      <div class="card"><h3>方法论定位</h3><p>问题三是 <b>二维装箱 / 装填密度最大化</b> 问题。它是 NP-hard 的，因此工程上以"贪心给下界 + 面积给上界 + 启发式逼近"三板斧作答最稳妥。</p></div>
+      <div class="card"><h3>与问题二的衔接</h3><p>问题二消解得越干净（撤销越少、越紧凑），留下的空洞越规整，问题三能塞的就越多。两问在数据上是串联的。</p></div>
+      <div class="card"><h3>承上启下</h3><p>问题四回到问题一的冲突，但这次放开 C 类的<b>使用间隔</b>调整。间隔一放开，"挪一点点"就多了一个全新自由度。继续最后一页。</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+
+<script>
+/* 数据与工具 */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+
+function mulberry32(seed){return function(){
+  let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);
+  return((t^t>>>14)>>>0)/4294967296;
+};}
+function genData(seed){
+  const rnd=mulberry32(seed||42);
+  const CLASS=[{k:"A",n:20,priority:3,color:"#e07a5f"},{k:"B",n:50,priority:2,color:"#1e9fc4"},{k:"C",n:80,priority:1,color:"#12a594"}];
+  const all=[];let idx=1;
+  for(const c of CLASS){
+    for(let i=0;i<c.n;i++){
+      const bw=4+Math.floor(rnd()*2);const fs=Math.floor(rnd()*(100-bw));
+      const tau=5+Math.floor(rnd()*2);const ts=Math.floor(rnd()*220);
+      const iv=50+Math.floor(rnd()*60);const n=2+Math.floor(rnd()*3);
+      const id=c.k+String(idx).padStart(3,"0");
+      all.push({id,cls:c.k,priority:c.priority,color:c.color,
+        fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,rects:[],status:"active"});idx++;
+    }
+  }
+  for(const e of all)for(let k=0;k<e.n;k++){
+    const t0=e.ts+k*e.iv;e.rects.push({fs:e.fs,fe:e.fe,ts:t0,te:t0+e.tau,k});
+  }
+  let maxT=0;for(const e of all)for(const r of e.rects)if(r.te>maxT)maxT=r.te;
+  return {equip:all,maxT,classes:CLASS};
+}
+function detectConflicts(equip){
+  const conflicts=[];const act=equip.filter(e=>e.status==="active");
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){
+    const e1=act[i],e2=act[j];const ov=[];
+    for(const r1 of e1.rects)for(const r2 of e2.rects)
+      if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe)&&Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te))
+        ov.push({});
+    if(ov.length)conflicts.push({a:e1,b:e2});
+  }return conflicts;
+}
+function isConflictFree(rects, equipList, exceptEquip){
+  for(const e of equipList){
+    if(e===exceptEquip||e.status==="cancelled")continue;
+    for(const r1 of rects)for(const r2 of e.rects)
+      if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe)&&Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te))return false;
+  }return true;
+}
+
+/* 消解（复用问题二的算法）*/
+function greedySolve(data){
+  const equip=data.equip.map(e=>({...e,rects:e.rects.map(r=>({...r}))}));
+  const FSHIFT=10,TSHIFT=5;
+  let iter=0;
+  while(iter++<2000){
+    const confs=detectConflicts(equip);if(!confs.length)break;
+    const c=confs[0];let high,low;
+    if(c.a.priority!==c.b.priority){high=c.a.priority>c.b.priority?c.a:c.b;low=c.a.priority<c.b.priority?c.a:c.b;}
+    else{high=c.a;low=c.b;}
+    let found=null;
+    for(let d=1;d<=FSHIFT&&!found;d++)for(const sign of [1,-1]){
+      const newRects=low.rects.map(r=>({fs:r.fs+sign*d,fe:r.fe+sign*d,ts:r.ts,te:r.te,k:r.k}));
+      if(newRects.some(r=>r.fs<0||r.fe>100))continue;
+      if(isConflictFree(newRects,equip,low)){found={type:"freq",delta:sign*d,newRects};break;}
+    }
+    if(!found)for(let d=1;d<=TSHIFT&&!found;d++)for(const sign of [1,-1]){
+      const newRects=low.rects.map(r=>({fs:r.fs,fe:r.fe,ts:r.ts+sign*d,te:r.te+sign*d,k:r.k}));
+      if(isConflictFree(newRects,equip,low)){found={type:"time",delta:sign*d,newRects};break;}
+    }
+    if(found){low.rects=found.newRects;low.action=found.type;low.delta=found.delta;
+      if(found.type==="freq"){low.fs+=found.delta;low.fe+=found.delta;}
+      else{low.ts+=found.delta;low.te+=found.delta;}}
+    else{low.status="cancelled";}
+  }
+  return equip;
+}
+
+/* 装箱：枚举 (fs, ts) 位置，找到第一个可放的 */
+const C_TEMPLATE={bw:12,tau:8,iv:60,n:3};
+function packGreedy(baseEquip,maxT){
+  const placed=[];let idxC=1;
+  const bw=C_TEMPLATE.bw,tau=C_TEMPLATE.tau,iv=C_TEMPLATE.iv,n=C_TEMPLATE.n;
+  for(let fs=0;fs<=100-bw;fs++){
+    for(let ts=0;ts<=maxT-iv*(n-1)-tau;ts+=2){
+      const rects=[];
+      for(let k=0;k<n;k++){
+        rects.push({fs,fe:fs+bw,ts:ts+k*iv,te:ts+k*iv+tau,k});
+      }
+      if(isConflictFree(rects,baseEquip,null)){
+        const nequip={id:"NEW"+String(idxC).padStart(3,"0"),cls:"C",priority:1,color:"#e0a04a",
+          fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,rects,status:"new"};
+        baseEquip.push(nequip);placed.push(nequip);idxC++;
+      }
+    }
+  }
+  return placed;
+}
+
+/* 时频网格 */
+function tfGrid(containerId,opts){
+  opts=opts||{};
+  const W=opts.W||900,H=opts.H||340,pad=opts.pad||50;
+  const maxF=opts.maxF||100,maxT=opts.maxT||(BASEDATA.maxT);
+  const yStep=10, xStep=100;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"xMidYMid meet"});
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(el("line",{x1:pad,y1:y,x2:W-pad,y2:y,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(el("line",{x1:x,y1:pad,x2:x,y2:H-pad,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  for(let f=0;f<=maxF;f+=yStep){const y=pad+(H-pad*2)*f/maxF;svg.appendChild(txt(pad-6,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));}
+  for(let t=0;t<=maxT;t+=xStep){const x=pad+(W-pad*2)*t/maxT;svg.appendChild(txt(x,H-pad+12,String(t),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));}
+  svg.appendChild(txt(pad-38,pad-18,"Δf",{"font-size":9.5,fill:"#7fd8c9","font-weight":"600"}));
+  svg.appendChild(txt(W-pad,pad-18,"Δt",{"text-anchor":"end","font-size":9.5,fill:"#7fd8c9","font-weight":"600"}));
+  svg._tf={W,H,pad,maxF,maxT};
+  document.getElementById(containerId).appendChild(svg);return svg;
+}
+function tfDrawRect(svg,rect,color,opts){
+  opts=opts||{};const g=svg._tf;if(!g)return;
+  const x=g.pad+(g.W-g.pad*2)*rect.ts/g.maxT;
+  const y=g.pad+(g.H-g.pad*2)*rect.fs/g.maxF;
+  const w=(g.W-g.pad*2)*(rect.te-rect.ts)/g.maxT;
+  const h=(g.H-g.pad*2)*(rect.fe-rect.fs)/g.maxF;
+  const r=el("rect",{x,y,width:Math.max(w,.5),height:Math.max(h,.5),rx:1.2,
+    fill:color,opacity:opts.opacity||.78,stroke:opts.stroke||color,"stroke-width":opts.sw||.6});
+  if(opts.cls)r.setAttribute("class",opts.cls);
+  svg.appendChild(r);return r;
+}
+
+/* 页面状态 */
+const BASEDATA=genData(42);
+const BASE=greedySolve(genData(42));
+const BASE_COPY=BASE.map(e=>({...e,rects:e.rects.map(r=>({...r}))}));
+const PLACED=packGreedy(BASE_COPY.slice(), BASEDATA.maxT);
+let addStep=0, autoTimer=null;
+
+/* 幕 1 上界计算 */
+(function(){
+  const act=BASE.filter(e=>e.status==="active");
+  let used=0;
+  for(const e of act)for(const r of e.rects)used+=(r.fe-r.fs)*(r.te-r.ts);
+  const total=100*BASEDATA.maxT;
+  const free=Math.max(0,total-used);
+  const per=C_TEMPLATE.bw*C_TEMPLATE.tau*C_TEMPLATE.n;
+  document.getElementById("ubTotal").textContent=total.toLocaleString();
+  document.getElementById("ubUsed").textContent=used.toLocaleString();
+  document.getElementById("ubFree").textContent=free.toLocaleString();
+  document.getElementById("ubM").textContent=Math.floor(free/per);
+})();
+
+/* ========= 场景控制 ========= */
+(function(){
+  const scenes=document.querySelectorAll(".scene");
+  const dots=document.getElementById("dots");
+  let cur=0;
+  scenes.forEach((s,i)=>{const d=document.createElement("button");d.className="dot"+(i===0?" on":"");
+    d.title=s.getAttribute("data-title");d.onclick=()=>goto(i);dots.appendChild(d);});
+  function goto(i){
+    cur=Math.max(0,Math.min(scenes.length-1,i));
+    for(let k=0;k<scenes.length;k++){scenes[k].classList.toggle("active",k===cur);dots.children[k].classList.toggle("on",k===cur);}
+    document.getElementById("scTitle").textContent=scenes[cur].getAttribute("data-title");
+    document.getElementById("pgNow").textContent=cur+1;document.getElementById("pgAll").textContent=scenes.length;
+    document.getElementById("prog").style.width=((cur+1)/scenes.length*100)+"%";
+    if(scenes[cur]._onEnter)scenes[cur]._onEnter();
+  }
+  document.getElementById("btnPrev").onclick=()=>goto(cur-1);
+  document.getElementById("btnNext").onclick=()=>goto(cur+1);
+  document.getElementById("btnReplay").onclick=()=>goto(cur);
+  document.getElementById("btnFx").onclick=function(){
+    document.body.classList.toggle("reduce");this.classList.toggle("on",!document.body.classList.contains("reduce"));
+    this.textContent=document.body.classList.contains("reduce")?"动效 关":"动效 开";};
+  document.addEventListener("keydown",ev=>{
+    if(ev.key==="ArrowRight")goto(cur+1);else if(ev.key==="ArrowLeft")goto(cur-1);
+  });
+
+  /* 幕 3 初始化 */
+  function initStage(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;
+      const ba=document.getElementById("btnAuto");ba.textContent="自动扩容";ba.classList.remove("on");}
+    clear("tfPack");addStep=0;clear("packLog");
+    const svg=tfGrid("tfPack",{W:900,H:320,maxT:BASEDATA.maxT,xStep:100});
+    for(const e of BASE){
+      const o=e.status==="cancelled"?0.13:0.5;
+      for(const r of e.rects){tfDrawRect(svg,r,e.status==="cancelled"?"#9ab7bd":e.color,{opacity:o,sw:.4,cls:"bg"});}
+    }
+    updateStat();
+    document.getElementById("stepHint").textContent="已加 0 / "+PLACED.length+" 个";
+    document.getElementById("packNote").textContent="点击「自动扩容」开始填充，或「下一步」逐个观察。";
+  }
+  scenes[2]._onEnter=initStage;
+
+  /* 幕 4 结果面板：可行解 / 上界 / 装填密度 / 差距 */
+  scenes[3]._onEnter=function(){
+    let used=0;
+    for(const e of BASE)if(e.status==="active")for(const r of e.rects)used+=(r.fe-r.fs)*(r.te-r.ts);
+    let packed=0;
+    for(const e of PLACED)for(const r of e.rects)packed+=(r.fe-r.fs)*(r.te-r.ts);
+    const total=100*BASEDATA.maxT;
+    const free=Math.max(0,total-used);
+    const per=C_TEMPLATE.bw*C_TEMPLATE.tau*C_TEMPLATE.n;
+    const feas=PLACED.length,ub=Math.floor(free/per);
+    document.getElementById("resFeas").textContent=feas+" 个";
+    document.getElementById("resUB").textContent=ub+" 个";
+    document.getElementById("resDen").textContent=((used+packed)/total*100).toFixed(1)+"%";
+    document.getElementById("resGap").textContent="+"+Math.max(0,ub-feas)+" 个";
+  };
+
+  function updateStat(){
+    const act=BASE.filter(e=>e.status==="active");
+    let occ=0;
+    for(const e of act)for(const r of e.rects)occ+=(r.fe-r.fs)*(r.te-r.ts);
+    for(let i=0;i<addStep;i++){const e=PLACED[i];for(const r of e.rects)occ+=(r.fe-r.fs)*(r.te-r.ts);}
+    const gridSz=100*BASEDATA.maxT;
+    document.getElementById("baseCount").textContent=BASE.length;
+    document.getElementById("baseAct").textContent=act.length;
+    document.getElementById("addCount").textContent=addStep;
+    document.getElementById("occCount").textContent=occ.toLocaleString();
+    document.getElementById("density").textContent=(occ/gridSz*100).toFixed(1)+"%";
+  }
+
+  function doStep(){
+    if(addStep>=PLACED.length){
+      document.getElementById("stepHint").textContent="已全部填满（上限 "+PLACED.length+" 个）";
+      document.getElementById("packNote").textContent="✓ 贪心装箱结束：共新增 "+PLACED.length+" 个 C 类装备。";
+      return;
+    }
+    const e=PLACED[addStep];
+    const svg=document.querySelector("#tfPack svg");
+    for(const r of e.rects){tfDrawRect(svg,r,e.color,{opacity:.95,sw:1.5,cls:"pop-in"});}
+    const log=document.getElementById("packLog");
+    const line=document.createElement("div");line.className="logline";
+    line.innerHTML="<span class='tag g'>NEW</span><span>"+e.id+" 频段["+e.fs+","+e.fe+") × 首次["+e.ts+","+e.te+")</span>";
+    log.appendChild(line);log.scrollTop=log.scrollHeight;
+    addStep++;updateStat();
+    document.getElementById("stepHint").textContent="已加 "+addStep+" / "+PLACED.length+" 个";
+    document.getElementById("packNote").textContent="已放置 "+addStep+" / "+PLACED.length+" 个，装填密度 "+
+      document.getElementById("density").textContent+"。";
+  }
+
+  document.getElementById("btnStep").onclick=doStep;
+  document.getElementById("btnReset").onclick=()=>{
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;document.getElementById("btnAuto").textContent="自动扩容";}
+    initStage();
+  };
+  document.getElementById("btnAuto").onclick=function(){
+    const ba=this;
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;ba.textContent="自动扩容";ba.classList.remove("on");return;}
+    if(addStep>=PLACED.length){initStage();}
+    ba.textContent="停止";ba.classList.add("on");
+    autoTimer=setInterval(()=>{
+      doStep();
+      if(addStep>=PLACED.length){clearInterval(autoTimer);autoTimer=null;
+        ba.textContent="自动扩容完成 ✓";ba.classList.remove("on");}
+    },50);
+  };
+
+  goto(0);
+})();
+</script>
+</body>
+</html>

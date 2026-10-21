@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 美赛A题 · 问题四 · 灵敏度分析与总结 · 智能手机电池耗电建模</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+.cklist{counter-reset:ck}
+.ckrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line2)}
+.ckrow:last-child{border-bottom:0}
+.cknum{flex:0 0 24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center}
+.cknum.g{background:var(--gold)}
+.cknum.w{background:var(--warn)}
+.ckbody{flex:1;min-width:0}
+.ckbody b{display:block;font-size:13.5px;margin-bottom:2px}
+.ckbody span{font-size:12.5px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p6-0.html">全局</a>
+    <a href="./mod-p6-1.html">问题一</a>
+    <a href="./mod-p6-2.html">问题二</a>
+    <a href="./mod-p6-3.html">问题三</a>
+    <a href="./mod-p6-4.html" class="on">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===== 第一幕 · 灵敏度龙卷风图 ===== -->
+<section class="scene" id="s1" data-title="问题四 · 一 · 参数灵敏度龙卷风图">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">2026 美赛 A 题 · 问题四 灵敏度分析</div>
+    <h1>参数灵敏度：<span class="hl-t">a_s 最灵敏</span>，屏幕项是续航第一杀手
+      <small>令每个参数单独变动 ±10%，观察中度场景续航的反向变动幅度：屏幕系数 a_s 引起的续航变化最大（−3.7%），其次是处理器 a_c（−3.1%）、网络 a_n（−2.2%），基础功耗 P_base 最小（−0.8%）。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">a_s −3.7%</span>
+      <span class="decochip t">a_c −3.1%</span>
+      <span class="decochip g">a_n −2.2%</span>
+      <span class="decochip w">P_base −0.8%</span>
+    </div>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">续航灵敏度龙卷风图（参数 ±10% → 续航变动 %）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>参数增大 → 续航下降</span>
+        <span><i style="background:#146c87"></i>参数减小 → 续航上升</span>
+      </div>
+    </div>
+    <canvas id="cvTornado"></canvas>
+    <p class="note" style="margin-top:8px">灵敏度排序：<b class="hl-t">a_s（−3.7%）> a_c（−3.1%）> a_n（−2.2%）> P_base（−0.8%）</b>。这与「亮度是续航第一杀手」的业界经验完全一致。</p>
+  </div>
+
+  <div class="card stg">
+    <h3>灵敏度明细 <em>中度场景基准 7.85 h</em></h3>
+    <table class="tb">
+      <tr><th>参数</th><th>含义</th><th class="num">参数变动</th><th class="num">续航变动</th><th>解读</th></tr>
+      <tr><td>a_s</td><td>屏幕系数</td><td class="num">±10%</td><td class="num">−3.7%</td><td>最灵敏 · 优先约束</td></tr>
+      <tr><td>a_c</td><td>处理器系数</td><td class="num">±10%</td><td class="num">−3.1%</td><td>可由调度缓解</td></tr>
+      <tr><td>a_n</td><td>网络系数</td><td class="num">±10%</td><td class="num">−2.2%</td><td>后台限制有效</td></tr>
+      <tr class="on"><td>P_base</td><td>待机基础功耗</td><td class="num">±10%</td><td class="num">−0.8%</td><td>占比小 · 影响有限</td></tr>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ===== 第二幕 · 温度影响 ===== -->
+<section class="scene" id="s2" data-title="问题四 · 二 · φ(T) 温度影响">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">温度灵敏度 · 每偏离 5 ℃ 的代价</div>
+    <h1>温度每偏离基准 <span class="hl-t">5 ℃</span>：φ ≈ <span class="hl-t">+3.9%</span>，续航 ≈ <span class="hl">−3.7%</span>
+      <small>φ(T) 二次型意味着温差的边际影响递增：越偏离 25 ℃，每多 1 ℃ 对功率的放大越明显。因此「避免边充边玩、保持 25 ℃ 附近」是稳定可控的收益。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">φ(T) 曲线与 5 ℃ 温升台阶（25 → 30 ℃）</div>
+      <div class="legend">
+        <span><i class="ln" style="background:#12a594"></i>φ(T) 曲线</span>
+        <span><i class="dn" style="border-color:#e0a04a"></i>5 ℃ 台阶</span>
+        <span><i class="ln" style="background:#8aa3aa"></i>25 ℃ 基准</span>
+      </div>
+    </div>
+    <canvas id="cvTemp"></canvas>
+    <p class="note" style="margin-top:8px">|T−25| 每升高 <b class="hl-t">5 ℃</b>：φ 上升约 <b class="hl-t">3.9%</b>，对应续航下降约 <b class="hl">3.7%</b>。低温端同样适用：−10 ℃ 时 φ 高达 1.639。</p>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="kpi"><div class="k">温差步长</div><div class="v">5 <u>℃</u></div><div class="sub">|T−25| 每步</div></div>
+    <div class="kpi b"><div class="k">φ 上升</div><div class="v">+3.9 <u>%</u></div><div class="sub">每 5 ℃</div></div>
+    <div class="kpi w"><div class="k">续航下降</div><div class="v">−3.7 <u>%</u></div><div class="sub">每 5 ℃</div></div>
+  </div>
+
+  <div class="card stg">
+    <h3>温度策略 <em>被动散热为主</em></h3>
+    <p>① <b class="hl-t">避免边充边玩</b>：充放电叠加是主要热源，掐断后温度最易回到 25 ℃ 附近。</p>
+    <p>② <b class="hl-t">主动散热外壳</b>：极端场景（如 D 场景车载 35 ℃）需硬件辅助，把 φ 从 1.095 压回 1.000。</p>
+    <p class="small">温控建议在问题三中对应「+9.5%（7.85 → 8.60 h）」，代价是需要额外散热硬件。</p>
+  </div>
+</div>
+</section>
+
+<!-- ===== 第三幕 · 结论清单 ===== -->
+<section class="scene" id="s3" data-title="问题四 · 三 · 结论清单与优化优先级">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">全题总结 · 优化优先级与结论</div>
+    <h1>优化优先级：<span class="hl-t">屏幕亮度</span> > 网络活动 > 处理器负载 > 温度
+      <small>结合灵敏度与可行性给出执行顺序：先约束最灵敏且最易实现的屏幕亮度，再限制后台网络；处理器靠系统调度缓解，温度靠被动散热，亮度与网络联合后中度场景可达 10.30 h。</small>
+    </h1>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="bigkpi">
+      <div class="bk-k">问题一 R²</div>
+      <div class="bk-v" data-cnt="0.988" data-dec="3">0.000<span class="bk-u">—</span></div>
+      <div class="bk-sub">附件1 拟合</div>
+    </div>
+    <div class="bigkpi">
+      <div class="bk-k">问题二 重度续航</div>
+      <div class="bk-v" data-cnt="3.98" data-dec="2">0.00<span class="bk-u">h</span></div>
+      <div class="bk-sub">C 场景最短</div>
+    </div>
+    <div class="bigkpi g">
+      <div class="bk-k">问题三 累计增益</div>
+      <div class="bk-v" data-cnt="31.3" data-dec="1">0.0<span class="bk-u">%</span></div>
+      <div class="bk-sub">7.85 → 10.30 h</div>
+    </div>
+    <div class="bigkpi g">
+      <div class="bk-k">最灵敏参数 a_s</div>
+      <div class="bk-v" data-cnt="3.7" data-dec="1">0.0<span class="bk-u">%</span></div>
+      <div class="bk-sub">±10% → −3.7%</div>
+    </div>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">各因素灵敏度（得分 ≈ 单因素 ±10% 引起的续航变动 %）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>灵敏度得分</span>
+      </div>
+    </div>
+    <canvas id="cvRank"></canvas>
+    <p class="note" style="margin-top:8px">灵敏度得分：<b class="hl-t">屏幕 a_s = 3.7</b>、处理器 a_c = 3.1、网络 a_n = 2.2、温度（每 5 ℃）≈ 3.7（均为单因素 ±10% 引起的续航变动 %）。优先级 = 灵敏度 × 可行性：<b class="hl-t">屏幕亮度最先约束</b>；网络虽灵敏度略低但后台限制最易落地，故排在处理器之前；处理器靠调度缓解、温度靠被动散热。</p>
+  </div>
+
+  <div class="grid2 stg">
+    <div class="card">
+      <h3>结论清单 <em>4 条</em></h3>
+      <div class="cklist">
+        <div class="ckrow">
+          <div class="cknum">1</div>
+          <div class="ckbody"><b>模型成立且精度高</b><span>SOC 连续时间模型 R² = 0.988、RMSE = 0.021 SOC；真实日志 MAPE = 4.6%。</span></div>
+        </div>
+        <div class="ckrow">
+          <div class="cknum">2</div>
+          <div class="ckbody"><b>四场景续航差异巨大</b><span>A 23.51 h、B 7.85 h、C 3.98 h、D 5.30 h，重度是轻度的 5.9 倍差距。</span></div>
+        </div>
+        <div class="ckrow">
+          <div class="cknum g">3</div>
+          <div class="ckbody"><b>亮度与网络联合收益最高</b><span>亮度 + 网络联合后 P 由 1.963 → 1.4945 W，续航 7.85 → 10.30 h（+31.3%）。</span></div>
+        </div>
+        <div class="ckrow">
+          <div class="cknum w">4</div>
+          <div class="ckbody"><b>屏幕亮度是第一优先级</b><span>a_s 灵敏度 −3.7% 最高，与业界经验一致，应先约束亮度再限制网络。</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>核心结论回顾 <em>关键数字</em></h3>
+      <div class="formula">参数   P_base=0.15  a_s=1.35  a_c=1.80  a_n=1.10  C=15.4 Wh
+精度   R²=0.988   RMSE=0.021 SOC   MAPE=4.6%
+场景   A 23.51h   B 7.85h   C 3.98h   D 5.30h
+优化   亮度+16.0%  网络+11.2%  温控+9.5%
+联合   P 1.963→1.4945 W   7.85→<span class="c">10.30</span> h   <span class="y">+31.3%</span></div>
+      <p class="small" style="margin-top:8px">优先级：<b class="hl-t">先约束屏幕亮度</b>，其次网络活动；处理器负载可通过调度缓解，温度靠被动散热。</p>
+    </div>
+  </div>
+
+  <div class="quote stg">总结论：手机续航的第一杀手是<b class="hl-t">屏幕亮度</b>（a_s 灵敏度 −3.7%），其次网络活动，处理器负载与温度可通过调度与散热缓解。亮度与网络联合优化后，中度场景续航从 7.85 h 提升到 <b class="hl">10.30 h（累计 +31.3%）</b>，模型精度（R² = 0.988）足以支撑上述全部结论。</div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function phiT(T){ return 1 + 0.006*Math.abs(T-25) + 0.00035*(T-25)*(T-25); }
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function tag(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-10):(x-2);
+  g.fillStyle='rgba(255,255,255,.95)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(bx+.5,y-8.5,tw+9,17);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){ if(!handle._alive) return; fn(t); handle._raf=requestAnimationFrame(loop); }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+
+/* ===== 第一幕 · 龙卷风图 ===== */
+var torT0=null;
+var TOR=[{k:'a_s 屏幕',v:3.7,c:'#12a594'},{k:'a_c 处理器',v:3.1,c:'#e0a04a'},
+         {k:'a_n 网络',v:2.2,c:'#1e9fc4'},{k:'P_base 基础',v:0.8,c:'#8aa3aa'}];
+function drawTornado(t){
+  var cv=$('#cvTornado'); if(!cv)return;
+  if(cv._h===undefined) cv._h=280;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-torT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.6,0,1));
+  var L=118,R=118,T=30,B=34, PW=w-L-R, PH=h-T-B;
+  var half=4.5, cx=L+PW/2;
+  function X(v){return cx+PW/2*(v/half);}
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var v=-4.5;v<=4.5;v+=1.5){
+    var xx=X(v);
+    g.strokeStyle=(v===0)?'#cfe4e4':'#eaf4f4'; g.lineWidth=(v===0)?1.4:1;
+    g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText(v, xx, T+PH+16);
+  }
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText('续航变动 (%)', cx, T+PH+30);
+
+  var n=TOR.length, slot=PH/n, bh=Math.min(26,slot*0.46);
+  TOR.forEach(function(r2,i){
+    var cy=T+slot*(i+.5), y=cy-bh/2;
+    var ww=PW/2*(r2.v*rev/half);
+    g.fillStyle='#146c87'; g.globalAlpha=.85; rr(g,cx-ww,y,ww,bh,4); g.fill(); g.globalAlpha=1;
+    g.fillStyle=r2.c; g.globalAlpha=.92; rr(g,cx,y,ww,bh,4); g.fill(); g.globalAlpha=1;
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='right'; g.textBaseline='middle'; g.fillText(r2.k, L-10, cy);
+    if(rev>0.9){
+      tag(g, cx+ww+8, y+9, '−'+r2.v.toFixed(1)+'%', '#b8543a');
+      tag(g, cx-ww-8, y+bh-8, '+'+r2.v.toFixed(1)+'%', '#146c87','right');
+    }
+  });
+  if(rev>0.95){
+    g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('参数 +10% → 续航下降；参数 −10% → 续航上升', cx, T-14);
+  }
+}
+function startTornado(){ torT0=performance.now(); runAnim(function(t){ drawTornado(t); }); }
+
+/* ===== 第二幕 · 温度影响 ===== */
+var tmpT0=null;
+function drawTemp(t){
+  var cv=$('#cvTemp'); if(!cv)return;
+  if(cv._h===undefined) cv._h=290;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-tmpT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.8,0,1));
+  var L=54,R=34,T=26,B=44, PW=w-L-R, PH=h-T-B;
+  var tmin=15, tmax=45, ymin=0.98, ymax=1.32;
+  function X(v){return L+PW*(v-tmin)/(tmax-tmin);} function Y(v){return T+PH*(1-(v-ymin)/(ymax-ymin));}
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(v.toFixed(2),L-7,yy);
+  }
+  [15,20,25,30,35,40,45].forEach(function(o){
+    var xx=X(o);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText(o, xx, T+PH+16);
+  });
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText('环境温度 T (℃)', L+PW/2, T+PH+34);
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('φ(T)',0,0); g.restore();
+
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='rgba(138,163,170,.85)'; g.lineWidth=1.3;
+  g.beginPath(); g.moveTo(L,Y(1.0)); g.lineTo(L+PW,Y(1.0)); g.stroke(); g.restore();
+
+  g.strokeStyle='#12a594'; g.lineWidth=2.6; g.lineJoin='round';
+  g.beginPath(); var first=true;
+  var tEnd=tmin+(tmax-tmin)*rev;
+  for(var Tt=tmin;Tt<=tEnd+0.001;Tt+=0.25){
+    var px=X(Tt), py=Y(phiT(Tt));
+    if(first){ g.moveTo(px,py); first=false; } else g.lineTo(px,py);
+  }
+  g.stroke();
+
+  /* 5 ℃ 台阶：25 → 30 */
+  var showStep=clamp((rev-0.55)/0.3,0,1);
+  if(showStep>0){
+    var x1=X(25), x2=X(30), y1=Y(phiT(25)), y2=Y(phiT(30));
+    g.save(); g.globalAlpha=showStep;
+    g.strokeStyle='#e0a04a'; g.lineWidth=1.6; g.setLineDash([4,3]);
+    g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y1); g.lineTo(x2,y2); g.stroke(); g.setLineDash([]);
+    g.fillStyle='#e0a04a';
+    g.beginPath(); g.arc(x1,y1,4.2,0,Math.PI*2); g.fill();
+    g.beginPath(); g.arc(x2,y2,4.2,0,Math.PI*2); g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.5;
+    g.beginPath(); g.arc(x1,y1,4.2,0,Math.PI*2); g.stroke();
+    g.beginPath(); g.arc(x2,y2,4.2,0,Math.PI*2); g.stroke();
+    g.restore();
+  }
+  if(rev>0.9){
+    tag(g, X(25)-4, Y(phiT(25))+18, '25 ℃ 基准 φ=1.000','#0b2e36','right');
+    tag(g, X(30)+6, Y(phiT(30))-4, '25→30 ℃：φ +3.9% · 续航 −3.7%','#8a6313');
+  }
+}
+function startTemp(){ tmpT0=performance.now(); runAnim(function(t){ drawTemp(t); }); }
+
+/* ===== 第三幕 · 优先级得分 ===== */
+var rankT0=null;
+var RANK=[{l:'屏幕亮度（阈值 0.35）',v:3.7,c:'#12a594'},{l:'处理器负载（调度缓解）',v:3.1,c:'#e0a04a'},
+          {l:'网络活动（后台限制）',v:2.2,c:'#1e9fc4'},{l:'温度（被动散热）',v:3.7,c:'#b8543a'}];
+function drawRank(t){
+  var cv=$('#cvRank'); if(!cv)return;
+  if(cv._h===undefined) cv._h=230;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-rankT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.4,0,1));
+  var L=170,R=60,T=26,B=36, PW=w-L-R, PH=h-T-B;
+  var vmax=4.5;
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var xv=0;xv<=4.5;xv+=1.5){
+    var xx=L+PW*xv/vmax;
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(xx+.5,T); g.lineTo(xx+.5,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText(xv, xx, T+PH+16);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText('优先级得分（≈ 续航灵敏度 %）', L+PW/2, T+PH+30);
+
+  var n=RANK.length, slot=PH/n, bh=Math.min(24,slot*0.5);
+  RANK.forEach(function(r2,i){
+    var cy=T+slot*(i+.5), y=cy-bh/2, bwid=PW*(r2.v*rev)/vmax;
+    g.fillStyle=r2.c; g.globalAlpha=.9; rr(g,L,y,bwid,bh,5); g.fill(); g.globalAlpha=1;
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='right'; g.textBaseline='middle'; g.fillText(r2.l, L-8, cy);
+    if(rev>0.9){
+      var lab=(i===0)?('+'+r2.v.toFixed(1)+'% 最优先'):(r2.v.toFixed(1)+'%');
+      tag(g, L+bwid+8, cy, lab, '#0b6e68');
+    }
+  });
+}
+function startRank(){ rankT0=performance.now(); runAnim(function(t){ drawRank(t); }); }
+
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  $$('[data-cnt]').forEach(function(el){
+    var target=parseFloat(el.dataset.cnt);
+    var dec=parseInt(el.dataset.dec||'0',10);
+    var uspan=el.querySelector('.bk-u');
+    var unitHtml=uspan?uspan.outerHTML:'';
+    var t0=performance.now(), dur=1100;
+    function step(tt){
+      var p=clamp((tt-t0)/dur,0,1);
+      el.innerHTML=fmt(target*easeOutCubic(p),dec)+unitHtml;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var starters=[startTornado, startTemp, startRank];
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; stopAllAnims(); kpiStarted=false;
+  var sc=SCENES[i]; sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); });
+  if(starters[i]) starters[i]();
+  if(i===2) startKPIs();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v){ $$('.wrap > *').forEach(function(e){ e.classList.add('in'); }); stopAllAnims(); }
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i); });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ stopAllAnims(); kpiStarted=false; if(starters[cur]) starters[cur](); if(cur===2) startKPIs(); };
+  $('#btnFx').onclick=function(){ var nv=!document.body.classList.contains('reduce'); setReduce(nv);
+    if(!nv && cur>=0){ if(starters[cur]) starters[cur](); if(cur===2) startKPIs(); } };
+  document.addEventListener('keydown',function(e){
+    var tn=(e.target.tagName||'').toLowerCase(); if(tn==='input'||tn==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){ if(cur>=0 && starters[cur] && !document.body.classList.contains('reduce')) starters[cur](); });
+init();
+})();
+</script>
+</body>
+</html>

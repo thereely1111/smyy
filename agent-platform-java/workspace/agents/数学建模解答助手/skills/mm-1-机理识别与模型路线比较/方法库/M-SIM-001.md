@@ -1,0 +1,13 @@
+### M-SIM-001 离散事件仿真
+- **task_types**：排队系统、生产线、交通、服务流程、库存、应急系统。
+- **problem_signature**：事件按时间发生；系统状态由到达、服务、故障、补货等事件改变；解析解困难。
+- **core_idea**：按事件顺序模拟系统演化，估计性能分布。
+- **inputs**：实体、事件、状态、到达/服务分布、资源规则、调度规则、随机种子。
+- **outputs**：等待时间、吞吐量、利用率、队长、服务水平、置信区间。
+- **assumptions**：事件机制和分布能代表真实系统；随机源可复现。
+- **validation**：极端情形、守恒关系、与解析排队公式、小规模真实数据对照。
+- **sensitivity**：到达率、服务率、资源数、规则和分布尾部。
+- **selection_tags**：`simulation, discrete-event, queueing, stochastic`
+- **composable_with**：`M-OPT-007, M-OPT-006, M-SIM-002`
+- **fallbacks**：排队论、系统动力学、蒙特卡洛。
+- **agent_actions**：定义事件与状态 -> 校准分布 -> 预热和重复 -> 统计置信区间 -> 情景比较。

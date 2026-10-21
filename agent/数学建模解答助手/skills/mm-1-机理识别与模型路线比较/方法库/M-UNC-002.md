@@ -1,0 +1,12 @@
+### M-UNC-002 情景分析、机会约束与分布鲁棒优化
+- **task_types**：不确定需求下规划、风险约束、概率可行性。
+- **problem_signature**：不确定参数有情景或分布信息；希望约束“满足概率至少为某值”。
+- **core_idea**：在多个情景或概率约束下平衡成本与服务可靠性。
+- **mathematical_form**：`P(g(x,ξ)<=0) >= 1-α` 或基于样本近似/分布集合优化。
+- **inputs**：情景/样本、概率阈值、分布或分布集合、风险度量。
+- **outputs**：决策、违约概率、CVaR、情景性能、可靠性-成本曲线。
+- **assumptions**：情景覆盖关键不确定性；概率阈值具有业务含义。
+- **validation**：留出情景、样本外违约率、情景覆盖率、风险度量敏感性。
+- **selection_tags**：`chance-constraint, scenario, cvar, distributionally-robust`
+- **fallbacks**：鲁棒优化、确定性安全裕度、蒙特卡洛评估。
+- **agent_actions**：定义不确定性 -> 生成/审查情景 -> 构造风险约束 -> 样本外验证 -> 报告成本与可靠性。

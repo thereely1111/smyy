@@ -1,0 +1,12 @@
+### M-NET-004 空间回归与空间自相关
+- **task_types**：区域数据解释、空间预测、地理因素分析。
+- **problem_signature**：邻近区域结果相似或存在空间扩散；普通回归残差有空间自相关。
+- **core_idea**：用空间权重矩阵描述邻接关系和空间依赖。
+- **models**：SAR、SEM、空间杜宾模型、Moran's I。
+- **inputs**：空间单元、坐标/邻接、空间权重矩阵、响应和特征。
+- **outputs**：空间效应、系数、残差、局部热点。
+- **assumptions**：空间权重有实质依据；空间单元和尺度合适。
+- **validation**：Moran's I、残差空间自相关、权重矩阵敏感性、空间留出验证。
+- **selection_tags**：`spatial, autocorrelation, regional, hotspot`
+- **fallbacks**：空间随机效应、地理加权回归、普通回归+空间诊断。
+- **agent_actions**：定义邻接 -> 选权重 -> 检查自相关 -> 拟合 -> 做空间留出和尺度敏感性。

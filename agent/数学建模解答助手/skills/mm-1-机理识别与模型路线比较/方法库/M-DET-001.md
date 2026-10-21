@@ -1,0 +1,12 @@
+### M-DET-001 异常检测与变点检测
+- **task_types**：质量监控、设备异常、金融/流量突变、结构变化识别。
+- **problem_signature**：目标是找异常点、异常段或机制变化，而非直接预测。
+- **core_idea**：通过残差、距离、密度、控制图或统计分布变化识别异常。
+- **methods**：IQR/MAD、Isolation Forest、One-Class SVM、控制图、CUSUM、变点模型。
+- **inputs**：时间/样本、正常期定义、特征、异常成本、阈值。
+- **outputs**：异常分数、标签、变点位置、告警延迟、误报率。
+- **assumptions**：正常机制可定义或异常相对稀少；阈值与成本匹配。
+- **validation**：人工标签、注入异常、误报/漏报、告警延迟、阈值敏感性。
+- **selection_tags**：`anomaly, change-point, monitoring, quality`
+- **fallbacks**：残差控制图、季节分解后检测、分层阈值。
+- **agent_actions**：定义正常/异常 -> 去趋势季节 -> 计算分数 -> 设阈值 -> 回放告警。

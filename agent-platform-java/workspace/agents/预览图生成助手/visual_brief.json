@@ -1,0 +1,17 @@
+{
+  "case_id": "herb-drying",
+  "title": "中药材热风烘干过程的热湿耦合建模",
+  "topic_summary": "热风作用下圆柱形药材内部传热、传质与表面蒸发的两阶段过程",
+  "core_objects": ["圆柱形药材切片与根茎", "干燥托盘", "热风"],
+  "modeling_relations": ["热量向药材内部传导", "水分向外扩散", "热风推动表面蒸发"],
+  "visual_elements": ["柔和水平热流线", "少量水分扩散等值线", "简化的内部温度网格"],
+  "composition": {
+    "orientation": "landscape",
+    "safe_zone": "center-horizontal",
+    "edge_policy": "edges-background-only"
+  },
+  "style": "restrained academic editorial illustration",
+  "palette": ["teal", "blue-green", "ink", "small amber accent"],
+  "negative_constraints": ["text", "letters", "numbers", "formulas", "logo", "watermark", "border", "people", "unrelated decoration"],
+  "confidence": "source-backed"
+}

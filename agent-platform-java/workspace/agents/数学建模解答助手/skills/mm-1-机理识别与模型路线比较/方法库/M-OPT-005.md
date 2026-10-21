@@ -1,0 +1,16 @@
+### M-OPT-005 动态规划（DP）
+- **task_types**：多阶段决策、库存、路径、设备更换、背包、资源跨期分配。
+- **problem_signature**：问题可按阶段分解；当前决策只通过状态影响未来；存在最优子结构。
+- **core_idea**：利用 Bellman 最优性递推价值函数。
+- **mathematical_form**：`V_t(s)=min_a { c_t(s,a)+V_{t+1}(T(s,a)) }`。
+- **inputs**：阶段、状态、动作、转移、成本、终止条件。
+- **outputs**：最优策略、价值函数、状态轨迹。
+- **assumptions**：状态足以概括历史；状态空间可枚举或可近似。
+- **hard_constraints**：状态遗漏关键历史信息时递推不成立。
+- **strengths**：能处理多阶段决策和路径依赖。
+- **limitations**：维数灾难；连续状态需要离散化或近似。
+- **validation**：小规模穷举、递推一致性、策略回放、状态离散敏感性。
+- **selection_tags**：`sequential, multistage, policy, recursion`
+- **composable_with**：`M-OPT-002, M-UNC-001, M-SIM-001`
+- **fallbacks**：滚动优化、近似动态规划、强化学习、启发式。
+- **agent_actions**：定义最小充分状态 -> 写出转移 -> 递推/反推 -> 回放策略 -> 与基线比较。

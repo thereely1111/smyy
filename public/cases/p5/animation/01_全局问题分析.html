@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM E题 · 全局问题分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 标签行 ---------- */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{
+  font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;
+}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.pill b{font-weight:600}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+#cvSoc{cursor:crosshair;touch-action:none}
+.pill:disabled{cursor:default}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 滑块 ---------- */
+.slider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.slider input[type=range]{
+  flex:1;height:22px;background:transparent;cursor:pointer;
+  appearance:none;-webkit-appearance:none;accent-color:var(--teal);
+}
+.slider input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(11,46,54,.28);
+}
+.slider input[type=range]:focus{outline:none}
+.slider input[type=range]:focus::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(18,165,148,.22)}
+.slider input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid #fff;
+}
+.slider .sv{min-width:104px;text-align:right;font-size:14px;font-weight:600;color:var(--teal-d);
+  font-variant-numeric:tabular-nums}
+
+/* ---------- 矩阵 ---------- */
+.mx{display:grid;gap:6px}
+.mx .mh{font-size:11.5px;color:var(--muted);text-align:center;padding:2px 0}
+.mx .mr{font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+.mx .mc{
+  border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:.16s;
+  padding:7px 6px;font-size:12px;text-align:center;color:var(--muted);line-height:1.45;
+}
+.mx .mc:hover{border-color:var(--teal)}
+.mx .mc.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.mx .mc.dim{opacity:.55}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+
+/* 动效总开关（类名驱动，不用媒体查询） */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce.wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+ .splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+
+/* ====== 本演示追加的组件（位置与尺寸沿用原型栅格） ====== */
+.canvasbox svg{display:block;width:100%;height:auto}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl .pills{margin:0}
+.ctl input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.ctl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);
+  min-width:52px;text-align:right;font-size:13.5px}
+.ctl .hint{font-size:11.5px;color:var(--muted);flex:none}
+.legend .lgi{cursor:pointer;user-select:none}
+.legend .lgi.off{opacity:.32;text-decoration:line-through}
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:300px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+#tip .row{display:flex;justify-content:space-between;gap:14px}
+table.tb tr.dim td{opacity:.36}
+table.tb tr.on td{background:#eef8f6}
+table.tb td:first-child{white-space:nowrap}
+
+/* ====== 滑块（拖动即重算，档位全部由数据通道预置） ====== */
+.slwrap{margin:9px 0 2px}
+.sllab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.sllab b{font-size:14px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+input.sl{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;
+  background:var(--line2);outline:none;margin:0;padding:0;display:block}
+input.sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.20);cursor:pointer}
+input.sl::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);
+  border:2px solid #fff;cursor:pointer}
+.slticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.slval{font-variant-numeric:tabular-nums}
+
+/* ====== 入场动画（动效总开关关闭时全部禁用，见 body.reduce） ====== */
+.grow{transform-box:fill-box;transform-origin:50% 100%;
+  animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.growx{transform-box:fill-box;transform-origin:0 50%;
+  animation:growX .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growX{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
+.draw{animation:drawIn .85s ease-out both}
+@keyframes drawIn{from{stroke-dashoffset:var(--len,1200)}to{stroke-dashoffset:0}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+body.reduce .grow,body.reduce .growx,body.reduce .draw,body.reduce .fadein{animation:none !important}
+body.reduce .draw{stroke-dashoffset:0 !important}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./01_全局问题分析.html" class="on">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+<section class="scene" id="s1" data-title="一 · 题面与数据规模">
+    <div class="wrap">
+      <div>
+        <div class="kicker">2026 高教社杯全国大学生数学建模竞赛 E 题</div>
+        <h1>SEM 广告投放策略优化
+          <small>五个方案、十二个推广单元、一年逐日明细。四个问题共用同一套投放系统，差别在于你能看到哪一层数据。</small>
+        </h1>
+        <p class="lead" style="margin:10px 0 0">一家企业在某搜索引擎投放 SEM 广告，2025 年留下三张明细表：投放记录、每日新注册、关键词表现。题面要求先评价这一年投得合不合理，再按成本与效益给关键词分类，然后在预算约束下为每个推广单元选词建模，最后在 2026 年预算不增、指标全部不确定的条件下给出 9 月的投放策略与指标期望范围。</p>
+      </div>
+      <div>
+        <div class="kicker">先看规模：题面引文与附件实算是否对得上</div>
+        <h1>四个子问题与一年的数据规模
+          <small>先把题面给出的规模用附件核对一遍，再展开四个子问题各自的输入。</small>
+        </h1>
+        <p class="lead" id="panLead"></p>
+      </div>
+      <div class="grid2">
+        <div>
+          <div class="pills" id="cvPills"></div>
+          <div class="card" id="cvTrace" style="text-align:left;margin-top:14px"></div>
+        </div>
+        <div>
+          <div class="pills" id="probCards"></div>
+          <div class="card" id="pbDetail"></div>
+        </div>
+      </div>
+      <div class="note" id="panNote"></div>
+      <div class="grid4" id="kpiA"></div>
+      <div class="grid4" id="kpiB"></div>
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">2025 年逐月投入与效益</div>
+          <div class="pills" id="monPills"></div>
+        </div>
+        <div id="monChart"></div>
+        <div class="legend"><span><i class="ln" style="background:var(--teal)"></i>所选指标</span><span><i class="ln" style="background:var(--muted)"></i>全年月均水平</span></div>
+        <div class="note" id="monNote"></div>
+      </div>
+    </div>
+</section><section class="scene" id="s2" data-title="二 · 三张附件与四个问题的对应">
+    <div class="wrap">
+      <div>
+        <div class="kicker">一 · 三张附件与四个问题的对应</div>
+        <h1>哪个问题用哪张表
+          <small>附件只给了一年的观测值，没有给转化明细。四问的分歧点，往往就卡在「这一问能用哪张表」。</small>
+        </h1>
+        <p class="lead">Sheet1 记录每个方案—单元—日期的展现、点击、消费与上方位拆分；Sheet2 只有每日新注册数；Sheet3 是关键词的消费、点击、浏览、跳出率与平均访问时长。三张表通过日期对齐，但没有关键词级别的注册字段——这决定了问题2 的效益口径只能取到点击一层。</p>
+      </div>
+      <div class="card">
+        <h3>数据集 → 字段 → 支撑的问题<em>点选一个问题，看它用得到哪张表</em></h3>
+        <div class="pills" id="mapPills"></div>
+        <table class="tb" id="mapTable">
+          <tr><th>数据集</th><th>字段</th><th>支撑的问题</th></tr>
+          <tr data-q="1 3 4"><td class="l">附件1 · Sheet1<br><span class="small">方案—单元—日期明细</span></td>
+              <td class="l">展现量、点击量、消费额、上方位展现量、上方位点击量、上方位消费额、上方首位展现量</td>
+              <td class="l">问题1 的规模复核与出价结构；问题1 的时间规律；问题3 的预算上限；问题4 的波动刻画</td></tr>
+          <tr data-q="1 3 4"><td class="l">附件1 · Sheet2<br><span class="small">每日新注册数</span></td>
+              <td class="l">日期、新注册数</td>
+              <td class="l">问题1 的效益时间规律与假日效应；问题3 的窗口核算；问题4 的期望区间</td></tr>
+          <tr data-q="2 3"><td class="l">附件1 · Sheet3<br><span class="small">关键词表现</span></td>
+              <td class="l">关键词、展现量、点击量、浏览量、消费额、跳出率、平均访问时长</td>
+              <td class="l">问题2 的分类；问题3 的选词依据</td></tr>
+          <tr data-q="1 2 3 4"><td class="l">E题.pdf<br><span class="small">题面与子问题定义</span></td>
+              <td class="l">问题陈述、约束条件、输出要求</td>
+              <td class="l">引文通道：定义、约束与判定标准</td></tr>
+        </table>
+        <div class="note" id="mapNote" style="margin-top:10px">三张表通过日期对齐，但都没有关键词级别的注册或成交字段——这一缺口决定了问题2 的效益口径只能取到点击一层。</div>
+      </div>
+      <div class="grid3">
+        <div class="card"><h3>Sheet1 投放记录</h3><p>按方案—单元—日期展开，覆盖 2025 全年。提供展现、点击、消费三个基础量，以及上方位与上方首位的拆分，是判断出价结构是否偏移的唯一依据。</p></div>
+        <div class="card"><h3>Sheet2 每日新注册</h3><p>全年逐日一个数字。它是全题唯一的效益总量口径，但粒度只到天，无法下钻到方案、单元或关键词。</p></div>
+        <div class="card"><h3>Sheet3 关键词表现</h3><p>逐词的成本与到达质量。跳出率与平均访问时长构成质量维度，使分类不至于只按花多少钱排序。</p></div>
+      </div>
+    </div>
+</section><section class="scene" id="s3" data-title="三 · 五方案 × 十二单元的投入结构">
+    <div class="wrap">
+      <div>
+        <div class="kicker">二 · 五个方案与十二个单元的投入结构</div>
+        <h1>消费额集中到什么程度
+          <small>Sheet3 带方案 ID 与推广单元 ID，预算可以一路下钻到单元和词。</small>
+        </h1>
+        <p class="lead">把消费额按方案与按单元各拆一次，两层的集中度都极高：<span id="stHead"></span>。集中本身不是问题，真正的问题是集中方向上的单位成本是否更低——这一点由下一幕回答。</p>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>十二个推广单元的投入结构 <em id="stSortLab">按消费额降序</em></h3>
+          <div class="pills" id="stSortPills"></div>
+          <table class="tb" id="unitTable"></table>
+          <div class="note" id="stSortNote"></div>
+          <div class="note">单元维度的词数按出现计（同一词可出现在多个单元，其中 <span id="stCross"></span> 个词跨单元投放）；消费额与各单元的实际投放一致。<span id="stEff"></span></div>
+        </div>
+        <div class="card">
+          <h3>五个方案的投入结构</h3>
+          <table class="tb" id="planTable"></table>
+          <div class="note" id="stPlanNote"></div>
+        </div>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">关键词消费额的累计集中度（按词降序累计）</div></div>
+        <div id="concChart"></div>
+        <div class="legend" id="concLegend">
+          <span class="lgi" data-s="cost"><i style="background:var(--gold)"></i>消费额占比</span>
+          <span class="lgi" data-s="num"><i style="background:var(--teal)"></i>词数占比</span>
+        </div>
+        <div class="note" id="stConcNote"></div>
+      </div>
+    </div>
+</section><section class="scene" id="s4" data-title="四 · 贯穿全题的结构性事实">
+    <div class="wrap">
+      <div>
+        <div class="kicker">三 · 贯穿全题的结构性事实</div>
+        <h1>预算的集中度，比预算的总量更值得看
+          <small>两处不均衡——位置上的不均衡与关键词之间的不均衡——分别是后续合理性判定与分类的出发点。</small>
+        </h1>
+        <p class="lead">把全年数据按位置与按关键词各拆一次，会得到两个方向一致的结论：钱花得很集中，但集中方向上的边际回报并不更好。这两条不依赖任何模型假设，只由附件直接算出。</p>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop">
+            <div class="ct">首页上方位的资源占用与资源消耗</div>
+          </div>
+          <div id="barTop"></div>
+          <div class="legend"><span><i style="background:var(--teal)"></i>展现量占比</span><span><i style="background:var(--cyan)"></i>首位展现占比</span><span><i style="background:var(--gold)"></i>消费额占比</span></div>
+          <div class="note">上方位消费额占全年总消费的 <b id="topCostPct"></b>，但上方位展现量仅占全部展现的 <b id="topImpPct"></b>，上方首位展现占 <b id="top1Pct"></b>。出价高度集中于首页顶部，而顶部位置的边际曝光成本高于平均位。</div>
+        </div>
+        <div class="card">
+          <h3>消费额在关键词之间的分布<em>点选类别，看它的处置方向</em></h3>
+          <div class="pills" id="lvPills"></div>
+          <table class="tb" id="leverTable"></table>
+          <div id="lvDetail"></div>
+          <div class="note"><span id="lvNote"></span>单位成本从黄金词的 <b id="lvGold"></b> 元/有效访问一路升到问题词的 <b id="lvBad"></b> 元，四类之间单调有序。</div>
+        </div>
+      </div>
+      <div class="quote">「单纯依靠增加预算抢占流量的传统模式已不可持续，还可能出现投入的广告成本与其产生的效益不成比例的情况。」<div class="small" style="margin-top:6px">引文来源：E题.pdf · 题面背景段（逐字）</div></div>
+      <div class="note">这两条事实共同指向同一个杠杆：预算在关键词之间与位置之间的再分配，而不是预算总量的增减。后续各问的建模都将建立在这个杠杆上。</div>
+    </div>
+</section>
+</main><div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div><div id="tip"></div>
+<script>
+const DATA = {"overview": {"plans": 5, "units": 12, "kw_distinct": 1884, "kw_active": 1183, "kw_dead": 701, "total_cost": 1425949.79, "total_imp": 22580381, "total_clk": 834815, "ctr": 0.037, "top_imp_share": 0.2711, "top1_share": 0.1039, "top_cost_share": 0.7035, "total_reg": 85313, "reg_per_1000yuan": 59.8, "eff_total": 404901.8, "site_bounce": 0.515, "site_dur": 291.5}, "monthly": {"month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "cost": [104527, 148348, 202974, 80690, 120876, 75401, 69911, 165108, 115845, 87807, 124405, 130058], "reg": [7149, 8385, 11229, 6297, 7046, 3430, 4547, 8130, 8079, 6176, 7525, 7320], "clk": [40107, 64495, 98305, 72615, 81623, 37416, 58268, 121826, 68347, 56541, 63965, 71307], "imp": [427871, 637989, 1704448, 1647394, 2778337, 1680515, 2056385, 4297078, 1913116, 1694901, 1916592, 1825755], "ctr": [0.0937, 0.1011, 0.0577, 0.0441, 0.0294, 0.0223, 0.0283, 0.0284, 0.0357, 0.0334, 0.0334, 0.0391], "reg_cv": 0.265}, "unit_dim": [{"unit": "9657930100", "plan": "500635396", "kw": 45, "cost": 808153.3, "cost_share": 0.5667, "clk": 358634, "imp": 8769221, "eff": 153284.3, "cpe": 5.27, "up_cost_share": 0.8103, "days": 321}, {"unit": "9811363528", "plan": "525368335", "kw": 1055, "cost": 181497.5, "cost_share": 0.1273, "clk": 100380, "imp": 4780540, "eff": 25038.3, "cpe": 7.25, "up_cost_share": 0.2903, "days": 259}, {"unit": "9630806627", "plan": "495817671", "kw": 442, "cost": 171870.0, "cost_share": 0.1205, "clk": 107520, "imp": 4417936, "eff": 34783.9, "cpe": 4.94, "up_cost_share": 0.5448, "days": 309}, {"unit": "8878077181", "plan": "495403620", "kw": 4, "cost": 124225.7, "cost_share": 0.0871, "clk": 168752, "imp": 255414, "eff": 154901.4, "cpe": 0.8, "up_cost_share": 0.9665, "days": 225}, {"unit": "9628223555", "plan": "495403620", "kw": 364, "cost": 91605.2, "cost_share": 0.0642, "clk": 72103, "imp": 3454523, "eff": 28641.2, "cpe": 3.2, "up_cost_share": 0.6581, "days": 321}, {"unit": "9700005700", "plan": "500635396", "kw": 17, "cost": 26939.5, "cost_share": 0.0189, "clk": 12173, "imp": 163203, "eff": 3709.0, "cpe": 7.26, "up_cost_share": 0.2189, "days": 148}, {"unit": "9773660250", "plan": "500635396", "kw": 6, "cost": 6433.9, "cost_share": 0.0045, "clk": 4206, "imp": 180446, "eff": 1449.6, "cpe": 4.44, "up_cost_share": 0.8146, "days": 161}, {"unit": "4190988310", "plan": "63563817", "kw": 73, "cost": 4981.9, "cost_share": 0.0035, "clk": 3283, "imp": 125307, "eff": 564.2, "cpe": 8.83, "up_cost_share": 0.4294, "days": 172}, {"unit": "1841014603", "plan": "63563817", "kw": 76, "cost": 4767.6, "cost_share": 0.0033, "clk": 4023, "imp": 113857, "eff": 1503.4, "cpe": 3.17, "up_cost_share": 0.8018, "days": 178}, {"unit": "2874903000", "plan": "63563817", "kw": 72, "cost": 2847.9, "cost_share": 0.002, "clk": 2019, "imp": 87675, "eff": 108.4, "cpe": 26.28, "up_cost_share": 0.8602, "days": 178}, {"unit": "4190988309", "plan": "63563817", "kw": 47, "cost": 2478.0, "cost_share": 0.0017, "clk": 1635, "imp": 222330, "eff": 897.5, "cpe": 2.76, "up_cost_share": 0.7978, "days": 178}, {"unit": "2526158329", "plan": "63563817", "kw": 26, "cost": 149.2, "cost_share": 0.0001, "clk": 87, "imp": 9929, "eff": 20.4, "cpe": 7.3, "up_cost_share": 0.3886, "days": 177}], "plan_dim": [{"plan": "500635396", "unit": 3, "kw": 68, "cost": 841526.8, "clk": 375013, "cost_share": 0.5902}, {"plan": "495403620", "unit": 2, "kw": 367, "cost": 215830.9, "clk": 240855, "cost_share": 0.1514}, {"plan": "525368335", "unit": 1, "kw": 1055, "cost": 181497.5, "clk": 100380, "cost_share": 0.1273}, {"plan": "495817671", "unit": 1, "kw": 442, "cost": 171870.0, "clk": 107520, "cost_share": 0.1205}, {"plan": "63563817", "unit": 5, "kw": 228, "cost": 15224.6, "clk": 11047, "cost_share": 0.0107}], "conc": {"1%": {"n": 19, "share": 0.7801}, "5%": {"n": 94, "share": 0.9652}, "10%": {"n": 188, "share": 0.9886}, "20%": {"n": 377, "share": 0.9964}}, "kw_scale": {"rows": 2227, "distinct": 1884, "multi": 290, "max_dup": 4, "statement": 6000}, "kw_class": {"method": "pareto", "frac": 0.8, "benefit": "clk", "benefit_label": "点击量", "cut_cost": 12164.19, "cut_benefit": 6640, "total_kw": 1884, "class_order": ["黄金词", "重点词", "潜力词", "问题词", "无效词"], "classes": {"黄金词": {"n": 2, "cost": 22325.7, "clk": 17493, "eff": 10526.8, "cost_share": 0.0157, "bounce": 0.3982, "dur_sec": 362.8, "cpe": 2.12}, "重点词": {"n": 19, "cost": 1103487.3, "clk": 656355, "eff": 352819.5, "cost_share": 0.7739, "bounce": 0.4625, "dur_sec": 320.0, "cpe": 3.13}, "潜力词": {"n": 1159, "cost": 254358.5, "clk": 158084, "eff": 40798.9, "cost_share": 0.1784, "bounce": 0.7419, "dur_sec": 166.9, "cpe": 6.23}, "问题词": {"n": 3, "cost": 45778.3, "clk": 2883, "eff": 756.6, "cost_share": 0.0321, "bounce": 0.7376, "dur_sec": 202.4, "cpe": 60.51}, "无效词": {"n": 701, "cost": 0.0, "clk": 0, "eff": 0.0, "cost_share": 0.0, "bounce": null, "dur_sec": null, "cpe": null}}, "fracs": [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], "sensitivity": [{"frac": 0.6, "黄金词": {"n": 2, "cpe": 1.82, "cost_share": 0.0329, "bounce": 0.5641}, "重点词": {"n": 7, "cpe": 2.73, "cost_share": 0.5192, "bounce": 0.3933}, "潜力词": {"n": 1172, "cpe": 5.9, "cost_share": 0.3631, "bounce": 0.6882}, "问题词": {"n": 2, "cpe": 6.04, "cost_share": 0.0848, "bounce": 0.5726}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.65, "黄金词": {"n": 2, "cpe": 1.82, "cost_share": 0.0329, "bounce": 0.5641}, "重点词": {"n": 9, "cpe": 2.95, "cost_share": 0.6002, "bounce": 0.414}, "潜力词": {"n": 1170, "cpe": 6.15, "cost_share": 0.3063, "bounce": 0.705}, "问题词": {"n": 2, "cpe": 4.91, "cost_share": 0.0606, "bounce": 0.5517}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.7, "黄金词": {"n": 2, "cpe": 2.47, "cost_share": 0.0298, "bounce": 0.6343}, "重点词": {"n": 11, "cpe": 2.98, "cost_share": 0.6505, "bounce": 0.4324}, "潜力词": {"n": 1167, "cpe": 5.89, "cost_share": 0.2537, "bounce": 0.6912}, "问题词": {"n": 3, "cpe": 6.07, "cost_share": 0.066, "bounce": 0.6249}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.75, "黄金词": {"n": 1, "cpe": 2.48, "cost_share": 0.0075, "bounce": 0.5927}, "重点词": {"n": 15, "cpe": 3.02, "cost_share": 0.7244, "bounce": 0.4529}, "潜力词": {"n": 1165, "cpe": 5.8, "cost_share": 0.2313, "bounce": 0.6962}, "问题词": {"n": 2, "cpe": 38.33, "cost_share": 0.0368, "bounce": 0.8787}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.8, "黄金词": {"n": 2, "cpe": 2.12, "cost_share": 0.0157, "bounce": 0.3982}, "重点词": {"n": 19, "cpe": 3.13, "cost_share": 0.7739, "bounce": 0.4625}, "潜力词": {"n": 1159, "cpe": 6.23, "cost_share": 0.1784, "bounce": 0.7419}, "问题词": {"n": 3, "cpe": 60.51, "cost_share": 0.0321, "bounce": 0.7376}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.85, "黄金词": {"n": 5, "cpe": 4.71, "cost_share": 0.0133, "bounce": 0.8567}, "重点词": {"n": 23, "cpe": 3.11, "cost_share": 0.8006, "bounce": 0.4626}, "潜力词": {"n": 1149, "cpe": 6.48, "cost_share": 0.1349, "bounce": 0.7323}, "问题词": {"n": 6, "cpe": 17.96, "cost_share": 0.0513, "bounce": 0.6804}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.9, "黄金词": {"n": 7, "cpe": 2.34, "cost_share": 0.0095, "bounce": 0.7669}, "重点词": {"n": 34, "cpe": 3.19, "cost_share": 0.8437, "bounce": 0.4811}, "潜力词": {"n": 1130, "cpe": 7.52, "cost_share": 0.0891, "bounce": 0.7418}, "问题词": {"n": 12, "cpe": 16.24, "cost_share": 0.0577, "bounce": 0.7139}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.95, "黄金词": {"n": 10, "cpe": 2.5, "cost_share": 0.008, "bounce": 0.6975}, "重点词": {"n": 59, "cpe": 3.33, "cost_share": 0.9108, "bounce": 0.4992}, "潜力词": {"n": 1094, "cpe": 7.62, "cost_share": 0.041, "bounce": 0.7608}, "问题词": {"n": 20, "cpe": 19.98, "cost_share": 0.0402, "bounce": 0.6905}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}], "cross_unit": 290}};
+
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtInt(v){return Number(v).toLocaleString("en-US");}
+function fmtDur(sec){const m=Math.floor(sec/60),s=Math.round(sec%60);return m+" 分 "+s+" 秒";}
+function pct(v,d){return v==null?"—":(v*100).toFixed(d==null?1:d)+"%";}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+const tipEl=document.getElementById("tip");
+function tipShow(html,x,y){
+  tipEl.innerHTML=html; tipEl.classList.add("on");
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let nx=x+16, ny=y+16;
+  if(nx+w>window.innerWidth-10) nx=x-w-16;
+  if(ny+h>window.innerHeight-10) ny=y-h-16;
+  tipEl.style.left=Math.max(8,nx)+"px"; tipEl.style.top=Math.max(8,ny)+"px";
+}
+function tipHide(){tipEl.classList.remove("on");}
+function bindTip(node,build){
+  node.setAttribute("class",(node.getAttribute("class")||"")+" hit");
+  node.addEventListener("mouseenter",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mousemove",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mouseleave",tipHide);
+}
+function trow(a,b){return "<div class='row'><span>"+esc(a)+"</span><span>"+b+"</span></div>";}
+function ttitle(s){return "<span class='tt'>"+esc(s)+"</span>";}
+function mkPills(boxId,labels,onPick){
+  const box=document.getElementById(boxId);
+  if(!box) return;
+  labels.forEach((lab,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="pill"+(i===0?" on":""); b.textContent=lab;
+    b.onclick=function(){
+      const cs=box.children;
+      for(let k=0;k<cs.length;k++) cs[k].classList.toggle("on",k===i);
+      onPick(i,lab);
+    };
+    box.appendChild(b);
+  });
+  if(labels.length) onPick(0,labels[0]);
+}
+/* 数值滚动：从 0 缓动到目标值。动效关闭或环境不支持时直接落位。 */
+function countUp(node,target,opt){
+  if(!node) return;
+  opt=opt||{};
+  const dur=opt.dur||760, dec=opt.dec==null?0:opt.dec;
+  const fmt=opt.fmt||function(v){
+    return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  };
+  const reduce=document.body&&document.body.classList&&document.body.classList.contains("reduce");
+  if(reduce||typeof requestAnimationFrame!=="function"){ node.textContent=fmt(target); return; }
+  let t0=null;
+  function step(ts){
+    if(t0===null) t0=ts;
+    const p=Math.min(1,(ts-t0)/dur);
+    node.textContent=fmt(target*(1-Math.pow(1-p,3)));
+    if(p<1) requestAnimationFrame(step); else node.textContent=fmt(target);
+  }
+  node.textContent=fmt(0);
+  requestAnimationFrame(step);
+}
+/* 连续滑块：档位由数据通道预先算定，onChange 只做查表与重绘。 */
+function mkSlider(boxId,opt,onChange){
+  const box=document.getElementById(boxId);
+  if(!box) return null;
+  const w=document.createElement("div"); w.className="slwrap";
+  const lab=document.createElement("div"); lab.className="sllab";
+  const inp=document.createElement("input");
+  // 用属性而非字段赋值，便于无头校验脚本按 input[type=range] 定位并驱动
+  inp.setAttribute("type","range"); inp.setAttribute("class","sl");
+  ["min","max","step"].forEach(function(a){ inp.setAttribute(a,opt[a]); });
+  inp.value=(opt.value==null?opt.min:opt.value);
+  w.appendChild(lab); w.appendChild(inp);
+  if(opt.ticks){
+    const t=document.createElement("div"); t.className="slticks";
+    opt.ticks.forEach(function(x){
+      const s=document.createElement("span"); s.textContent=x; t.appendChild(s);
+    });
+    w.appendChild(t);
+  }
+  box.appendChild(w);
+  function upd(){
+    const v=Number(inp.value);
+    inp.setAttribute("value",v);          // 与当前值同步，便于校验脚本读取
+    lab.innerHTML=(opt.label?opt.label(v):"")
+      +"<b class='slval'>"+(opt.readout?opt.readout(v):v)+"</b>";
+    onChange(v);
+  }
+  inp.oninput=upd;
+  upd();
+  return inp;
+}
+/* 入场动画：给 SVG 节点挂动画类。动效关闭时直接跳过，不影响最终形态。 */
+function anim(node,kind){
+  if(!node) return node;
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce")) return node;
+  node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);
+  return node;
+}
+function animDraw(path,len){
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))
+    return path;
+  path.style.setProperty("--len",len||1200);
+  path.setAttribute("stroke-dasharray",len||1200);
+  return anim(path,"draw");
+}
+
+
+(function(){
+  const o=DATA.overview, S=DATA.kw_scale;
+  /* 每一项都给出「题面口径 / 附件口径」两个取值：前者逐字取自 E题.pdf，
+     后者由附件1 实算。两者是否一致，本身就是全局分析的第一条结论。 */
+  const IT=[
+    {lab:"投放方案", v:o.plans, dec:0, pre:"", suf:" 个",
+     stmt:"5 个（题面引文）", same:true,
+     txt:"Sheet1 与 Sheet3 的方案ID 去重后均为该值，题面与附件一致。方案是本演示下钻路径的第一层，逐月、逐单元、逐词的汇总都由它向上归并。"},
+    {lab:"推广单元", v:o.units, dec:0, pre:"", suf:" 个",
+     stmt:"12 个（题面引文）", same:true,
+     txt:"单元是后续选词建模的决策主体——题面要求「为每个推广单元选词建模」，因此单元数直接决定决策变量的规模。"},
+    {lab:"去重关键词", v:o.kw_distinct, dec:0, pre:"", suf:" 个",
+     stmt:fmtInt(S.statement)+" 多个（题面引文）", same:false,
+     txt:"唯一对不上的一项：Sheet3 只有 "+fmtInt(S.rows)+" 条投放记录，其中 "+fmtInt(S.multi)
+         +" 个词被投放在多个推广单元（单个词最多出现 "+S.max_dup+" 次），按关键词文本去重后 "+fmtInt(S.distinct)
+         +" 个。两个口径都低于题面所述，本演示一律以附件实测为准，并在论文中声明该差异。"},
+    {lab:"全年投入", v:o.total_cost/10000, dec:1, pre:"¥", suf:" 万",
+     stmt:"约 142 余万元（题面引文）", same:true,
+     txt:"实算 ¥"+fmtInt(o.total_cost)+"，与题面一致。它同时是后续预算约束的上限与「预算不增」的基准。"}
+  ];
+  const fmtOf=function(x){ return function(v){
+    return x.pre+Number(v).toLocaleString("en-US",
+      {minimumFractionDigits:x.dec,maximumFractionDigits:x.dec})+x.suf; }; };
+  mkPills("cvPills", IT.map(function(x){ return fmtOf(x)(x.v)+" · "+x.lab; }), function(i){
+    const x=IT[i];
+    document.getElementById("cvTrace").innerHTML=
+      "<h3>"+esc(x.lab)+"<em>题面口径与附件口径逐项对照</em></h3>"
+      +"<table class='tb'><tr><th>口径</th><th>取值</th><th>结论</th></tr>"
+      +"<tr><td class='l'>题面引文（E题.pdf）</td><td class='num'>"+esc(x.stmt)+"</td>"
+      +"<td class='num'><span class='badge "+(x.same?"q":"w")+"'>"+(x.same?"一致":"不一致")+"</span></td></tr>"
+      +"<tr class='on'><td class='l'>附件1 实算</td><td class='num'><b id='cvNum'>—</b></td>"
+      +"<td class='num'>本演示采用</td></tr></table>"
+      +"<p style='margin:10px 0 0'>"+x.txt+"</p>";
+    countUp(document.getElementById("cvNum"), x.v, {dec:x.dec, fmt:fmtOf(x)});
+  });
+})();
+
+
+(function(){
+  const o=DATA.overview;
+  /* KPI 一律走数值滚动：第 4 位起为 [目标值, 小数位, 前缀, 后缀]，缺目标值则原样落位。 */
+  const a=[[o.plans,"投放方案","题面引文 · 附件1 复核",o.plans,0,""," 个"],
+           [o.units,"推广单元","题面引文 · 附件1 复核",o.units,0,""," 个"],
+           [fmtInt(o.kw_distinct),"去重关键词","活跃 "+fmtInt(o.kw_active)+" 个",o.kw_distinct,0,""," 个"],
+           ["¥"+(o.total_cost/10000).toFixed(1)+"万","全年消费额","实算 "+fmtInt(o.total_cost)+" 元",
+            o.total_cost/10000,1,"¥"," 万"]];
+  const b=[[fmtInt(o.total_reg),"全年新注册","附件1 · Sheet2",o.total_reg,0,""," 人"],
+           [(o.ctr*100).toFixed(2)+"%","整体点击率","点击量 / 展现量",o.ctr*100,2,"","%"],
+           [o.reg_per_1000yuan,"每千元注册（人）","derived：注册 / 消费×1000",o.reg_per_1000yuan,1,""," 人"],
+           [(o.site_bounce*100).toFixed(1)+"%","站点加权跳出率","点击加权",o.site_bounce*100,1,"","%"]];
+  const card=function(x){
+    const v=(x.length>3&&x[3]!=null)
+      ? "<span data-cn='"+x[3]+"' data-cd='"+x[4]+"' data-cp='"+x[5]+"' data-cs='"+x[6]+"'>—</span>"
+      : x[0];
+    return "<div class='kpi'><div class='k'>"+x[1]+"</div><div class='v'>"+v+"</div>"
+         + "<div class='small'>"+x[2]+"</div></div>";
+  };
+  document.getElementById("kpiA").innerHTML=a.map(card).join("");
+  document.getElementById("kpiB").innerHTML=b.map(card).join("");
+  const cns=document.querySelectorAll("[data-cn]");
+  for(let ci=0;ci<cns.length;ci++){
+    const node=cns[ci], dec=Number(node.getAttribute("data-cd")||0);
+    const pre=node.getAttribute("data-cp")||"", suf=node.getAttribute("data-cs")||"";
+    countUp(node,Number(node.getAttribute("data-cn")),{dec:dec,fmt:function(v){
+      return pre+Number(v).toLocaleString("en-US",
+        {minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;
+    }});
+  }
+  const probs=[
+    {t:"问题一", d:"评估 2025 年投放策略的合理性，并揭示效益随时间的变化规律。",
+     q:"评估该企业 2025 年 SEM 投放策略的合理性（为什么有效、哪里存在浪费），并分析效益（如每天新注册数）随时间的变化规律，包括节假日效应、星期效应等。",
+     a:"用 Sheet1 核对题面规模与出价结构，在方案/单元层建立注册贡献归因模型，用 Sheet2 逐日新注册数刻画时间规律与假日/星期效应。",
+     i:"Sheet1 的展现、点击、消费与上方位拆分；Sheet2 的逐日新注册",
+     o:"合理性判定与浪费识别，以及效益的时间规律与假日效应"},
+    {t:"问题二", d:"按成本与效益对关键词分类，给出各类词的投放策略。",
+     q:"对该企业 2025 年 SEM 广告投放中的关键词进行分类，依据成本与效益将其分为五类（黄金词、重点词、潜力词、问题词、无效词），并为每类关键词制定投放策略。",
+     a:"建立'曝光—点击—浏览—注册—成本'效益链条，将单元层注册贡献向关键词层归因，构造边际效益后用帕累托分界划为五类。",
+     i:"Sheet3 的逐词消费、点击、浏览、跳出率与访问时长；Sheet1/Sheet2 的单元级归因",
+     o:"五类词划分、各类词数与消费占比，以及 result2.xlsx"},
+    {t:"问题三", d:"在预算约束下为每个推广单元选词建模，给出指定窗口的最优投放策略。",
+     q:"在给定预算约束下，为每个推广单元建立关键词选择模型，给出 2 月 1—8 日和 8 月 1—8 日每天每个单元投哪些词、投多少钱的最优策略。",
+     a:"采用'推广单元日级时序＋关键词年度画像'层次框架，Sheet3 选词、Sheet1 定预算上限，在已知日级环境下做确定性预算优化。",
+     i:"Sheet3 的选词依据；Sheet1 的预算约束与日级环境",
+     o:"2 月 1—8 日与 8 月 1—8 日逐日逐单元选词与预算明细，写入 result3.xlsx"},
+    {t:"问题四", d:"2026 年预算不增且指标不确定，给出 9 月窗口策略并估计指标期望范围。",
+     q:"假设 2026 年总预算不超过 2025 年，且竞价、展现、展位、点击、浏览、注册均存在不确定性，给出 9 月 11—17 日的逐日投放策略并估计六项指标的期望范围。",
+     a:"用时间滚动预测或 Bootstrap/分位数方法给出竞价与各效果指标的区间，纳入情景优化或鲁棒优化，输出区间而非点估计。",
+     i:"Sheet1 的波动刻画；Sheet2 的效益分布；题面的预算与不确定性约束",
+     o:"9 月 11—17 日逐日策略，以及竞价、展现、展位、点击、浏览、注册六项指标的期望范围"}];
+  document.getElementById("probCards").innerHTML=probs.map(function(x,i){
+    return "<button class='pill' data-i='"+i+"' type='button'>"+x.t+"</button>";
+  }).join("");
+  const showProb=function(i){
+    const x=probs[i];
+    const cs=document.getElementById("probCards").children;
+    for(let k=0;k<cs.length;k++) cs[k].classList.toggle("on",k===i);
+    document.getElementById("pbDetail").innerHTML=
+      "<h3>"+esc(x.t)+"<em>原题、思路与交付</em></h3>"
+      +"<div class='quote'>"+esc(x.q)+"</div>"
+      +"<table class='tb'><tr><th>环节</th><th>内容</th></tr>"
+      +"<tr><td class='l'>思路</td><td class='l'>"+esc(x.a)+"</td></tr>"
+      +"<tr><td class='l'>输入数据</td><td class='l'>"+esc(x.i)+"</td></tr>"
+      +"<tr><td class='l'>交付结果</td><td class='l'>"+esc(x.o)+"</td></tr></table>"
+      +"<p style='margin:10px 0 0'>"+esc(x.d)+"</p>";
+  };
+  const pcards=document.getElementById("probCards").children;
+  for(let k=0;k<pcards.length;k++){
+    pcards[k].onclick=function(){ showProb(Number(this.getAttribute("data-i"))); };
+  }
+  showProb(0);
+  /* 逐月曲线：指标可切换，悬停给出该月全部月度字段。数据取自 DATA.monthly，
+     峰谷与月均由所选序列现算（derived），不引入任何外部估计。 */
+  const m=DATA.monthly;
+  const MET=[
+    {k:"新注册数", d:m.reg, f:function(v){return fmtInt(Math.round(v))+" 人";},
+     ax:function(v){return Math.round(v);}, c:"var(--teal)"},
+    {k:"消费额", d:m.cost, f:function(v){return "¥"+fmtInt(Math.round(v));},
+     ax:function(v){return (v/10000).toFixed(1)+"万";}, c:"var(--gold)"},
+    {k:"点击量", d:m.clk, f:function(v){return fmtInt(Math.round(v))+" 次";},
+     ax:function(v){return Math.round(v);}, c:"var(--cyan)"},
+    {k:"点击率", d:m.ctr, f:function(v){return pct(v,2);},
+     ax:function(v){return pct(v,1);}, c:"var(--blue)"}
+  ];
+  function drawMon(M){
+    clear("monChart");
+    const W=880,H=300,p=58, n=m.month.length;
+    const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+    const vals=M.d, maxv=Math.max.apply(null,vals)*1.12;
+    let sum=0; vals.forEach(function(v){ sum+=v; });
+    const avg=sum/n;
+    const X=function(i){return p+(W-2*p)*i/(n-1);};
+    const Y=function(v){return H-34-(H-34-20)*v/maxv;};
+    for(let g=0;g<=4;g++){
+      const y=20+(H-34-20)*g/4;
+      svg.appendChild(el("line",{x1:p,y1:y,x2:W-p,y2:y,stroke:"var(--line2)"}));
+      svg.appendChild(txt(p-7,y+3.5,M.ax(maxv*(1-g/4)),{"text-anchor":"end","font-size":9.5,fill:"var(--muted)"}));
+    }
+    svg.appendChild(el("line",{x1:p,y1:Y(avg),x2:W-p,y2:Y(avg),
+      stroke:"var(--muted)","stroke-width":1.2,"stroke-dasharray":"5 4"}));
+    svg.appendChild(txt(W-p-2,Y(avg)-5,"全年月均 "+M.f(avg),
+      {"text-anchor":"end","font-size":10,fill:"var(--muted)"}));
+    let d=""; vals.forEach(function(v,i){ d+=(i?"L":"M")+X(i)+" "+Y(v)+" "; });
+    svg.appendChild(animDraw(el("path",{d:d,fill:"none",stroke:M.c,"stroke-width":2.6,
+      "stroke-linejoin":"round","stroke-linecap":"round"}),1500));
+    vals.forEach(function(v,i){
+      svg.appendChild(el("circle",{cx:X(i),cy:Y(v),r:3.4,fill:"#fff",stroke:M.c,"stroke-width":2}));
+      svg.appendChild(txt(X(i),H-15,m.month[i]+"月",{"text-anchor":"middle","font-size":9.5,fill:"var(--muted)"}));
+    });
+    svg.appendChild(el("line",{x1:p,y1:H-34,x2:W-p,y2:H-34,stroke:"var(--line)"}));
+    const cw=(W-2*p)/(n-1);
+    m.month.forEach(function(mo,i){
+      const hit=el("rect",{x:X(i)-cw/2,y:20,width:cw,height:H-34-20,fill:"transparent"});
+      bindTip(hit,function(){
+        return ttitle("2025 年 "+mo+" 月")
+          +trow("新注册数",fmtInt(m.reg[i])+" 人")
+          +trow("消费额","¥"+fmtInt(m.cost[i]))
+          +trow("展现量",fmtInt(m.imp[i]))
+          +trow("点击量",fmtInt(m.clk[i]))
+          +trow("点击率",pct(m.ctr[i],2))
+          +trow("每万元注册",(m.reg[i]/(m.cost[i]/10000)).toFixed(1)+" 人");
+      });
+      svg.appendChild(hit);
+    });
+    document.getElementById("monChart").appendChild(svg);
+    const hi=vals.indexOf(Math.max.apply(null,vals)), lo=vals.indexOf(Math.min.apply(null,vals));
+    document.getElementById("monNote").innerHTML=
+      M.k+"的逐月起伏："+m.month[hi]+"月最高（"+M.f(vals[hi])+"），"+m.month[lo]
+      +"月最低（"+M.f(vals[lo])+"），峰谷相差 "+(vals[hi]/vals[lo]).toFixed(2)+" 倍，全年月均 "+M.f(avg)
+      +"。这条曲线是效益时间规律的直接证据，其波动幅度则构成后续不确定性分析的经验来源。";
+  }
+  mkPills("monPills",MET.map(function(x){ return x.k; }),function(i){ drawMon(MET[i]); });
+  const S=DATA.kw_scale;
+  document.getElementById("panLead").innerHTML=
+    "题面称「5 个方案、12 个推广单元、"+fmtInt(S.statement)+" 多个关键词、投入约 142 余万元」。"
+    +"用附件1 逐条复核：方案 "+o.plans+" 个、单元 "+o.units+" 个与题面一致，"
+    +"全年消费额 "+fmtInt(o.total_cost)+" 元与「约 142 余万元」一致；"
+    +"关键词一项对不上——Sheet3 只有 "+fmtInt(S.rows)+" 条投放记录，按关键词文本去重后 "+fmtInt(S.distinct)+" 个，"
+    +"两个口径均低于题面所述。以下全部指标取自附件，未经任何估计。";
+  document.getElementById("panNote").innerHTML=
+    "关键词口径的差异无法由附件消解：Sheet3 的 "+fmtInt(S.rows)+" 条记录中，"
+    +fmtInt(S.multi)+" 个词被投放在多个推广单元（单个词最多出现 "+S.max_dup+" 次），"
+    +"去重后为 "+fmtInt(S.distinct)+" 个，即便按出现次数计也远不到 "+fmtInt(S.statement)+"。"
+    +"本演示一律以附件实测为准：分析主体取去重后的 "+fmtInt(S.distinct)+" 个关键词，"
+    +"其中 "+fmtInt(o.kw_active)+" 个在 2025 年有消耗或有点击，"
+    +"并在论文中声明该差异——题面描述的关键词规模与附件实际提供的不一致。";
+})();
+
+
+(function(){
+  /* 按问题筛选：高亮该问用得到的表，其余淡出。结论只描述「用得到 / 缺什么」，
+     不引入任何附件之外的字段或数值。 */
+  const Q=[
+    {k:"全部", note:"三张表通过日期对齐，但都没有关键词级别的注册或成交字段——这一缺口决定了问题2 的效益口径只能取到点击一层。"},
+    {k:"问题 1", note:"用 Sheet1 复核题面给出的规模与出价结构，用 Sheet2 的逐日注册刻画效益的时间规律与假日效应。<b>缺</b>：关键词级别的效益字段，因此无法区分是哪个词带来了注册。"},
+    {k:"问题 2", note:"只用 Sheet3：逐词的消费、点击、浏览、跳出率与访问时长构成成本与质量两个维度。<b>缺</b>：注册与成交字段，效益只能取点击量或其派生量。"},
+    {k:"问题 3", note:"Sheet3 提供选词依据，Sheet2 核算窗口效益，预算上限取自 Sheet1 实算的全年投入——这是四问中唯一同时用到三张表的一问。"},
+    {k:"问题 4", note:"用 Sheet1 刻画各指标的波动幅度，用 Sheet2 给出效益的期望区间。<b>缺</b>：2026 年的任何观测值，只能由 2025 年的分布外推，因此结论必须给出区间而非点估计。"}
+  ];
+  const tbl=document.getElementById("mapTable");
+  const rows=tbl?tbl.querySelectorAll("tr[data-q]"):[];
+  mkPills("mapPills",["全部","问题一","问题二","问题三","问题四"],function(i){
+    const q=Q[i].k==="全部"?null:Q[i].k.replace("问题 ","").trim();
+    for(let k=0;k<rows.length;k++){
+      const hit=!q||(" "+rows[k].getAttribute("data-q")+" ").indexOf(" "+q+" ")>=0;
+      rows[k].classList.toggle("on",!!q&&hit);
+      rows[k].classList.toggle("dim",!hit);
+    }
+    document.getElementById("mapNote").innerHTML=Q[i].note;
+  });
+})();
+
+
+(function(){
+  const U=DATA.unit_dim, P=DATA.plan_dim, C=DATA.conc, K=DATA.kw_class;
+  document.getElementById("stCross").textContent=K.cross_unit;
+  document.getElementById("stHead").textContent=
+    "前 1% 的关键词（"+C["1%"]["n"]+" 个）占去 "+pct(C["1%"]["share"],1)
+    +" 的消费额，第一大推广单元独占 "+pct(U[0]["cost_share"],1);
+  const row=function(a){ return "<tr>"+a.map(function(x,i){
+    return "<td"+(i===0?" class='l'":" class='num'")+">"+x+"</td>"; }).join("")+"</tr>"; };
+  /* 单元表可换排序口径：名次随口径变化本身就是结论——变化越大，错配越强。 */
+  const SORT=[
+    {k:"按消费额", t:"消费额", f:function(a,b){ return b.cost-a.cost; }},
+    {k:"按词数", t:"词数", f:function(a,b){ return b.kw-a.kw; }},
+    {k:"按单位成本", t:"元/有效访问", f:function(a,b){
+      return (a.cpe==null?Infinity:a.cpe)-(b.cpe==null?Infinity:b.cpe); }}
+  ];
+  function drawUnits(mi){
+    const arr=U.slice().sort(SORT[mi].f);
+    document.getElementById("stSortLab").textContent="按"+SORT[mi].t+"降序";
+    document.getElementById("unitTable").innerHTML=
+      "<tr><th>推广单元</th><th>方案</th><th>词数</th><th>消费额</th><th>占比</th>"
+      +"<th>元/有效访问</th><th>上方位消费占比</th></tr>"
+      +arr.map(function(r){
+        return row([r.unit,r.plan,fmtInt(r.kw),"¥"+fmtInt(Math.round(r.cost)),
+                    pct(r.cost_share,1),
+                    r.cpe==null?"—":r.cpe.toFixed(2),
+                    r.up_cost_share==null?"—":pct(r.up_cost_share,1)]);
+      }).join("");
+    const top3=arr.slice(0,3).map(function(r){ return r.unit; }).join("、");
+    document.getElementById("stSortNote").innerHTML=
+      "当前口径下前三名为 "+esc(top3)+"。切换口径看名次如何变化：名次变动越大，说明各口径之间的错配越强，"
+      +"而错配正是再分配能够产生收益的前提。";
+  }
+  mkPills("stSortPills",SORT.map(function(x){ return x.k; }),function(i){ drawUnits(i); });
+  document.getElementById("planTable").innerHTML=
+    "<tr><th>方案</th><th>单元数</th><th>词数</th><th>消费额</th><th>占比</th><th>点击量</th></tr>"
+    +P.map(function(r){
+      return row([r.plan,r.unit,fmtInt(r.kw),"¥"+fmtInt(Math.round(r.cost)),
+                  pct(r.cost_share,1),fmtInt(r.clk)]);
+    }).join("");
+  document.getElementById("stPlanNote").innerHTML=
+    "第一大方案占 "+pct(P[0]["cost_share"],1)+" 的消费额，末位方案仅占 "+pct(P[P.length-1]["cost_share"],1)
+    +"。方案之间的单元数与词数同样悬殊：最大的方案有 "+P[0]["unit"]+" 个单元，"
+    +"而单个方案最多承载 "+Math.max.apply(null,P.map(function(r){ return r.kw; }))+" 个关键词。";
+  const cand=U.slice().filter(function(r){ return r.cpe!=null && r.cost>=10000; })
+    .sort(function(a,b){ return a.cpe-b.cpe; })[0];
+  document.getElementById("stEff").textContent=
+    (U[0]["cpe"]!=null&&cand)
+      ? "消费额第一的单元 "+U[0]["unit"]+"（占 "+pct(U[0]["cost_share"],1)+"）单位成本 "
+        +U[0]["cpe"].toFixed(2)+" 元/有效访问，而消费额万元以上、单位成本最低的单元 "
+        +cand["unit"]+"（占 "+pct(cand["cost_share"],1)+"）只要 "+cand["cpe"].toFixed(2)
+        +" 元——花钱最多的单元并不是效率最高的单元。"
+      : "各单元的单位成本差异见末列。";
+  const W=440,H=210,p=46, keys=["1%","5%","10%","20%"];
+  const show={cost:true,num:true};
+  function drawConc(){
+    clear("concChart");
+    const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+    const n=keys.length, step=(W-2*p)/n, bw=step/2-8;
+    const Y=function(v){ return H-30-(H-30-18)*v; };
+    for(let g=0;g<=4;g++){ const y=18+(H-30-18)*g/4;
+      svg.appendChild(el("line",{x1:p,y1:y,x2:W-p,y2:y,stroke:"var(--line2)"}));
+      svg.appendChild(txt(p-6,y+3,(100-g*25)+"%",{"text-anchor":"end","font-size":9,fill:"var(--muted)"})); }
+    keys.forEach(function(k,i){
+      const c=C[k], x0=p+i*step+6;
+      const share=c.share, nshare=c.n/K.total_kw;
+      const a=el("rect",{x:x0,y:Y(share),width:bw,height:H-30-Y(share),rx:4,fill:"var(--gold)",opacity:.9});
+      const b=el("rect",{x:x0+bw+4,y:Y(nshare),width:bw,height:H-30-Y(nshare),rx:4,fill:"var(--teal)",opacity:.85});
+      bindTip(a,function(){ return ttitle("消费额 Top "+k+" 词")
+        +trow("词数",c.n+" 个")+trow("占消费额",pct(share,2)); });
+      bindTip(b,function(){ return ttitle("词数占比 Top "+k)
+        +trow("词数",c.n+" 个")+trow("占全部词",pct(nshare,2)); });
+      if(show.cost){
+        svg.appendChild(anim(a,"grow"));
+        svg.appendChild(txt(x0+bw/2,Y(share)-5,pct(share,0),
+          {"text-anchor":"middle","font-size":10,"font-weight":600,fill:"var(--ink)"}));
+      }
+      if(show.num) svg.appendChild(anim(b,"grow"));
+      svg.appendChild(txt(x0+bw,Y(0)+14,"Top "+k,{"text-anchor":"middle","font-size":10,fill:"var(--muted)"}));
+    });
+    svg.appendChild(el("line",{x1:p,y1:H-30,x2:W-p,y2:H-30,stroke:"var(--line)"}));
+    document.getElementById("concChart").appendChild(svg);
+  }
+  drawConc();
+  const lgBox=document.getElementById("concLegend");
+  const lgs=lgBox?lgBox.querySelectorAll(".lgi"):[];
+  for(let li=0;li<lgs.length;li++){
+    lgs[li].onclick=function(){
+      const s=this.getAttribute("data-s"), other=(s==="cost"?"num":"cost");
+      /* 不允许两个系列同时隐藏：关掉最后一个可见系列时改为聚焦另一个，
+         避免出现一张空图。 */
+      if(show[s]&&!show[other]){ show[s]=false; show[other]=true; }
+      else show[s]=!show[s];
+      for(let k=0;k<lgs.length;k++) lgs[k].classList.toggle("off",!show[lgs[k].getAttribute("data-s")]);
+      drawConc();
+    };
+  }
+  document.getElementById("stConcNote").innerHTML=
+    "按消费额降序累计：前 1% 的词（"+C["1%"]["n"]+" 个）占 "+pct(C["1%"]["share"],1)
+    +"，前 5%（"+C["5%"]["n"]+" 个）占 "+pct(C["5%"]["share"],1)
+    +"，前 20%（"+C["20%"]["n"]+" 个）已占 "+pct(C["20%"]["share"],1)
+    +"。消费额呈极强的幂律分布，这也是后续分类弃用中位数、改用帕累托分界的原因："
+    +"中位数切分会把近乎全部消费额归入同一类。";
+})();
+
+
+(function(){
+  const o=DATA.overview;
+  const pctUp=function(id,v){ countUp(document.getElementById(id),v*100,{dec:2,
+    fmt:function(x){ return x.toFixed(2)+"%"; }}); };
+  pctUp("topCostPct",o.top_cost_share);
+  pctUp("topImpPct",o.top_imp_share);
+  pctUp("top1Pct",o.top1_share);
+  const W=440,H=250,p=44;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+  const bars=[["展现量占比",o.top_imp_share,"var(--teal)","上方位展现量 ÷ 全部展现量"],
+              ["首位展现占比",o.top1_share,"var(--cyan)","上方首位展现量 ÷ 全部展现量"],
+              ["上方位消费占比",o.top_cost_share,"var(--gold)","上方位消费额 ÷ 全年总消费额"]];
+  const bw=70, gap=(W-2*p-bars.length*bw)/(bars.length-1);
+  bars.forEach(function(it,i){
+    const x=p+i*(bw+gap), h=it[1]*(H-p-24);
+    const r=el("rect",{x:x,y:H-24-h,width:bw,height:h,rx:6,fill:it[2],opacity:.9});
+    bindTip(r,function(){
+      return ttitle(it[0])+trow("占比",(it[1]*100).toFixed(2)+"%")+trow("口径",it[3])
+        +"<div style='margin-top:5px;opacity:.75'>三者同源，均取自附件1 · Sheet1 的上方位与上方首位拆分字段</div>";
+    });
+    svg.appendChild(anim(r,"grow"));
+    svg.appendChild(txt(x+bw/2,H-24-h-8,(it[1]*100).toFixed(1)+"%",{"text-anchor":"middle","font-size":13,"font-weight":600,fill:"var(--ink)"}));
+    svg.appendChild(txt(x+bw/2,H-10,it[0],{"text-anchor":"middle","font-size":11,fill:"var(--muted)"}));
+  });
+  svg.appendChild(el("line",{x1:p,y1:H-24,x2:W-p,y2:H-24,stroke:"var(--line)"}));
+  document.getElementById("barTop").appendChild(svg);
+  const K=DATA.kw_class, ord=K.class_order;
+  const col={"黄金词":"var(--gold)","重点词":"var(--teal)","潜力词":"var(--cyan)","问题词":"var(--warn)","无效词":"var(--grey)"};
+  /* 处置方向只陈述由类别语义与单位成本排序直接得到的动作，不做任何收益预测。 */
+  const OPS={
+    "黄金词":["维持并优先保证预算",
+      "单位成本最低，是再分配的承接方之一；但词数很少、容量有限，承接超过容量后单位成本会随之上升。"],
+    "重点词":["主力盘，承接释放出来的预算",
+      "全年消费额集中在此，是预算再分配的主要承接方，承接至其边际单位成本追平其他类别为止。"],
+    "潜力词":["小步加投并观察",
+      "跳出率偏高、平均访问时长偏短，先在低价位试投，观察单位成本是否随投放量抬升再决定是否加码。"],
+    "问题词":["削减或重定出价",
+      "单位成本远高于其余类别，是再分配中预算的主要释放方；释放出的预算按单位成本由低到高承接。"],
+    "无效词":["暂停投放",
+      "全年零消耗零点击，不占用预算；处置它释放的是账户管理与核对成本，而非预算本身。"]
+  };
+  let rows="<tr><th>类别</th><th>词数</th><th>消费占比</th><th>元/有效访问</th></tr>";
+  ord.forEach(function(k,i){
+    const c=K.classes[k]; if(!c) return;
+    rows+="<tr data-i='"+i+"' style='cursor:pointer'><td class='l'><span class='dotc' style='background:"+col[k]+"'></span>"+k+"</td>"
+      +"<td class='num'>"+c.n+"</td><td class='num'>"+(c.cost_share*100).toFixed(1)+"%</td>"
+      +"<td class='num'>"+(c.cpe==null?"—":c.cpe.toFixed(2))+"</td></tr>";
+  });
+  document.getElementById("leverTable").innerHTML=rows;
+  function pickCls(i){
+    const box=document.getElementById("lvPills");
+    const cs=box?box.children:[];
+    for(let k=0;k<cs.length;k++) cs[k].classList.toggle("on",k===i);
+    const trows=document.getElementById("leverTable").querySelectorAll("tr[data-i]");
+    for(let k=0;k<trows.length;k++) trows[k].classList.toggle("on",Number(trows[k].getAttribute("data-i"))===i);
+    const name=ord[i], c=K.classes[name], op=OPS[name];
+    document.getElementById("lvDetail").innerHTML=
+      "<table class='tb'><tr><th>指标</th><th>数值</th></tr>"
+      +"<tr><td class='l'>词数</td><td class='num'><b id='lvNum'>—</b> 个</td></tr>"
+      +"<tr><td class='l'>消费额占比</td><td class='num'>"+pct(c.cost_share,2)+"</td></tr>"
+      +"<tr><td class='l'>单位成本</td><td class='num'>"+(c.cpe==null?"—":c.cpe.toFixed(2)+" 元/有效访问")+"</td></tr>"
+      +"<tr><td class='l'>加权跳出率</td><td class='num'>"+(c.bounce==null?"—":pct(c.bounce,1))+"</td></tr>"
+      +"<tr><td class='l'>平均访问时长</td><td class='num'>"+(c.dur_sec==null?"—":fmtDur(c.dur_sec))+"</td></tr></table>"
+      +"<p style='margin:10px 0 0'><b>"+esc(op[0])+"</b>——"+esc(op[1])+"</p>";
+    countUp(document.getElementById("lvNum"),c.n,{dec:0});
+  }
+  mkPills("lvPills",ord,function(i){ pickCls(i); });
+  const lt=document.getElementById("leverTable").querySelectorAll("tr[data-i]");
+  for(let k=0;k<lt.length;k++){
+    lt[k].onclick=function(){ pickCls(Number(this.getAttribute("data-i"))); };
+  }
+  const cl=K.classes;
+  document.getElementById("lvGold").textContent=cl["黄金词"].cpe.toFixed(2);
+  document.getElementById("lvBad").textContent=cl["问题词"].cpe.toFixed(2);
+  document.getElementById("lvNote").innerHTML=
+    "重点词 "+cl["重点词"].n+" 个承载 "+(cl["重点词"].cost_share*100).toFixed(1)
+    +"% 的消费额，无效词 "+cl["无效词"].n+" 个全年零消耗零点击。";
+})();
+
+
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var auto=false, tlT=[], st={armed:false,last:0,fired:0};
+function beats(sc){ return $$('.wrap > *',sc); }
+function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+function tlRun(i){
+  tlStop();
+  var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+  if(document.body.classList.contains('reduce')){
+    bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+    return;
+  }
+  bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+  bs.forEach(function(b,k){
+    var t=260+k*gap; pos=t;
+    tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+  });
+  tlT.push(setTimeout(function(){
+    if(tk!==TOKEN) return;
+    bs.forEach(function(b){ b.classList.remove('stg'); });
+    auto=false; syncAuto();
+  },pos+820));
+}
+function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(auto){ tlRun(i); } else { beats(sc).forEach(function(b){ b.classList.add('in'); }); }
+}
+function syncAuto(){}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+function boot(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null;
+    if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    var now=Date.now();
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false; goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false); auto=false; syncAuto(); goTo(0);
+}
+boot();
+})();
+
+</script>
+</body>
+</html>

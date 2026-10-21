@@ -1,0 +1,12 @@
+### M-UNC-001 贝叶斯建模与层次模型
+- **task_types**：小样本、分组异质性、参数不确定性、预测分布。
+- **problem_signature**：需要融合先验与数据；多个群组有共享信息；需要完整不确定性。
+- **core_idea**：通过先验、似然和后验分布联合推断参数。
+- **inputs**：数据、似然、先验、层次结构、MCMC/变分设置。
+- **outputs**：后验分布、可信区间、预测分布、群组效应、模型比较。
+- **assumptions**：先验可解释；似然合理；后验采样/近似收敛。
+- **validation**：R-hat、有效样本量、trace、后验预测检验、先验敏感性。
+- **selection_tags**：`bayesian, hierarchical, uncertainty, small-sample`
+- **composable_with**：`M-PRE-001, M-TIME-003, M-OPT-006`
+- **fallbacks**：频率学派混合模型、bootstrap、剖面似然。
+- **agent_actions**：声明先验 -> 拟合 -> 收敛检查 -> 后验预测 -> 先验/模型敏感性。

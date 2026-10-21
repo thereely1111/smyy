@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 MCM Problem B · 问题一分析 · 太空电梯双目标优化</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+/* 动效总开关 */
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.shimmer{
+  background:linear-gradient(110deg,transparent 0%,transparent 40%,rgba(18,165,148,.18) 50%,transparent 60%,transparent 100%);
+  background-size:200% 100%;animation:shimmer 2.4s linear infinite;
+}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.floaty{animation:floaty 3s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(18,165,148,.0)}50%{box-shadow:0 0 0 6px rgba(18,165,148,.10)}}
+.glow{animation:glow 2.4s ease-in-out infinite}
+
+/* 公式块 */
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+
+/* hero 区 */
+.hero{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch;
+}
+@media(max-width:960px){.hero{grid-template-columns:1fr}}
+.heroleft{display:flex;flex-direction:column;gap:14px}
+.heroright{
+  position:relative;background:#0b2e36;border-radius:var(--r);overflow:hidden;
+  box-shadow:0 8px 26px rgba(11,46,54,.18);min-height:340px;
+}
+.heroright canvas{position:absolute;inset:0;width:100%;height:100%}
+.herolabel{
+  position:absolute;left:14px;top:12px;color:#cdeee9;font-size:12px;letter-spacing:.06em;
+  font-weight:600;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.5)
+}
+.herosublabel{
+  position:absolute;right:14px;bottom:12px;color:rgba(205,238,233,.7);font-size:11.5px;z-index:2;
+  text-align:right;line-height:1.6;text-shadow:0 1px 4px rgba(0,0,0,.5)
+}
+
+/* 大号 KPI（结论幕） */
+.bigkpi{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh);
+}
+.bigkpi::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;
+  border-radius:50%;background:radial-gradient(circle,rgba(18,165,148,.10),transparent 70%);}
+.bigkpi.g::after{background:radial-gradient(circle,rgba(224,160,74,.14),transparent 70%);}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+
+/* 流程节点 */
+.flowrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flownode{
+  font-size:12px;padding:6px 11px;border-radius:8px;background:#fff;border:1px solid var(--line);
+  color:var(--ink2);font-weight:600;position:relative;
+}
+.flownode.on{background:var(--teal-d);color:#fff;border-color:var(--teal-d)}
+.flowarrow{color:var(--cyan);font-size:14px;font-weight:700}
+
+/* 装饰条 */
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p7-0.html">全局</a>
+    <a href="./mod-p7-1.html" class="on">问题一</a>
+    <a href="./mod-p7-2.html">问题二</a>
+    <a href="./mod-p7-3.html">问题三</a>
+    <a href="./mod-p7-4.html">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ============== 第一幕 · 问题一概述 ============== -->
+<section class="scene" id="s1" data-title="一 · 双目标优化框架">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">2026 MCM Problem B · 问题一</div>
+    <h1>双目标优化：<span class="hl-t">最小成本</span> 与 <span class="hl-g">最小时间</span>
+      <small>2050 年月球殖民地 10 万人，需向月球运送 1 亿公吨（10⁸ 吨）物资；在成本-时间双目标下评估纯太空电梯、纯火箭、混合三方案，用 NSGA-II 求帕累托前沿。</small>
+    </h1>
+  </div>
+
+  <div class="hero stg">
+    <div class="heroleft">
+      <div class="card">
+        <h3>双目标定义 <em>min 同时</em></h3>
+        <p><b class="hl-t">min C(M, t)</b>　总成本 = 电梯子模型 + 火箭子模型</p>
+        <p><b class="hl-g">min t</b>　完工时间 = 子模型容量上限倒数</p>
+        <p class="small">约束：运送总量 <b class="num">M = 10⁸ 吨</b>；电梯年容量 Cap_SE、火箭年发射次 N_re 各有上限。</p>
+        <div class="decochips">
+          <span class="decochip t">双目标</span>
+          <span class="decochip t">NSGA-II</span>
+          <span class="decochip g">帕累托前沿</span>
+          <span class="decochip w">约束 M=10⁸t</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>三方案 <em>决策变量 γ</em></h3>
+        <p><span class="badge w">纯电梯</span>γ = 1，全走电梯</p>
+        <p><span class="badge p">纯火箭</span>γ = 0，全走火箭</p>
+        <p><span class="badge q">混合</span>0 &lt; γ &lt; 1，电梯承担 γ，火箭承担 (1−γ)</p>
+        <div class="flowrow" style="margin-top:6px">
+          <span class="flownode">γ=0</span><span class="flowarrow">→</span>
+          <span class="flownode">γ=0.3</span><span class="flowarrow">→</span>
+          <span class="flownode on">γ=0.5</span><span class="flowarrow">→</span>
+          <span class="flownode">γ=0.7</span><span class="flowarrow">→</span>
+          <span class="flownode">γ=1</span>
+        </div>
+      </div>
+    </div>
+    <div class="heroright">
+      <div class="herolabel">太空电梯 · 月球运输概念图</div>
+      <div class="herosublabel">地球 → 同步轨道 → 月球<br>1 亿吨 · 双目标优化</div>
+      <canvas id="cvHero"></canvas>
+    </div>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="kpi"><div class="k">运送总量 M</div><div class="v">10⁸ <u>吨</u></div><div class="sub">1 亿公吨</div></div>
+    <div class="kpi w"><div class="k">混合 C1 · 最快</div><div class="v">93.74 <u>年</u></div><div class="sub">9052.9 B USD</div></div>
+    <div class="kpi g"><div class="k">混合 C2 · 最省</div><div class="v">2151.5 <u>B USD</u></div><div class="sub">250 年</div></div>
+    <div class="kpi b"><div class="k">求解算法</div><div class="v">NSGA-<u>II</u></div><div class="sub">非支配排序</div></div>
+  </div>
+
+  <div class="quote stg">问题一要求建立 <b class="hl-t">cost-time 双目标优化模型</b>，比较四种运输方案：纯太空电梯、纯火箭、混合最快 C1、混合最省 C2。求解工具为 NSGA-II 非支配排序遗传算法，输出帕累托前沿。</div>
+</div>
+</section>
+
+<!-- ============== 第二幕 · 成本模型推导 ============== -->
+<section class="scene" id="s2" data-title="二 · 成本模型推导">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">子模型 · 成本推导</div>
+    <h1>两个子模型：电梯线性成本 与 火箭线性叠加
+      <small>电梯：固定维护 + 按吨可变运费；火箭：单次发射成本 × 年发射次。混合方案 γ 在两者间线性配比。</small>
+    </h1>
+  </div>
+
+  <div class="grid2 stg">
+    <div class="card">
+      <h3>电梯成本公式 <em>C_SE</em></h3>
+      <div class="formula">C_SE(t) = <span class="c">C_main</span> · t + <span class="y">C_var</span> · M
+  <span class="dim">/* 固定 + 可变 */</span>
+
+  C_main = 10⁹  <span class="dim">USD/年（缆索/配重维护）</span>
+  C_var  = 2.2×10⁵ <span class="dim">USD/吨（电力/损耗）</span>
+  Cap_SE = 5.37×10⁵ <span class="dim">吨/年</span>
+
+  t_min  = M / Cap_SE = <span class="c">186.22 年</span></div>
+      <p class="small" style="margin-top:8px">固定维护 <b class="hl-t">C_main = 10⁹ USD/年</b> 只贡献斜率（1 B/年），<b class="hl-g">9805 B 的可变运费</b> 几乎把曲线拉成水平线——电梯省不了多少钱，但能压低时间。</p>
+    </div>
+    <div class="card">
+      <h3>火箭成本公式 <em>C_R</em></h3>
+      <div class="formula">C_R(t) = <span class="w">C_r</span> · N · t
+  <span class="dim">/* 单次 × 次数 × 年 */</span>
+
+  C_r  = 7.13×10⁷ <span class="dim">USD/次</span>
+  Cap_r = 2750   <span class="dim">吨/次</span>
+  N    = 3641   <span class="dim">次/年（工位约束）</span>
+
+  t_min = M / (N·Cap_r) = <span class="c">183.14 年</span></div>
+      <p class="small" style="margin-top:8px">单次便宜 <b class="hl-t">C_r = 7.13×10⁷ USD</b>，但 3641 次/年 × 183.14 年累计 ≈ 66.7 万次，对应总成本 <b class="hl">≈ 2.60×10⁴ B USD</b>——快，但总量贵。</p>
+    </div>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">成本公式可视化：C_main·t（固定）+ C_var·M（可变）= C_SE 总成本</div>
+      <div class="legend">
+        <span><i style="background:#0b6e68"></i>固定项 C_main·t</span>
+        <span><i style="background:#e0a04a"></i>可变项 C_var·M</span>
+        <span><i class="ln" style="background:#12a594"></i>总成本 C_SE</span>
+        <span><i class="ln" style="background:#b8543a"></i>容量约束 t_min</span>
+      </div>
+    </div>
+    <canvas id="cvCost"></canvas>
+    <p class="note" style="margin-top:8px">可变项 <b class="hl-g">C_var·M = 2.2×10⁵ × 10⁸ = 2.2×10¹³ USD = 22000 B</b> 占绝对主体；固定项 C_main·t 仅 ~186 B。所以电梯总成本 ≈ <b class="hl-t">9991.2 B USD</b>，几乎不随时间变化。</p>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="kpi"><div class="k">电梯 C_main</div><div class="v">10⁹ <u>USD/年</u></div></div>
+    <div class="kpi g"><div class="k">电梯 C_var</div><div class="v">2.2×10⁵ <u>USD/吨</u></div></div>
+    <div class="kpi b"><div class="k">火箭 C_r</div><div class="v">7.13×10⁷ <u>USD/次</u></div></div>
+    <div class="kpi"><div class="k">火箭 Cap_r</div><div class="v">2750 <u>吨/次</u></div></div>
+  </div>
+
+  <div class="quote stg">混合方案成本 = <b class="hl-t">γ · C_SE(t) + (1−γ) · C_R(t)</b>；混合容量 = <b class="hl-t">γ · Cap_SE + (1−γ) · N · Cap_r</b>。γ ∈ [0,1] 把慢而省的电梯与快而贵的火箭按任意比例配比，从而在 C-t 平面上铺出连续折中曲线。</div>
+</div>
+</section>
+
+<!-- ============== 第三幕 · 帕累托前沿 ============== -->
+<section class="scene" id="s3" data-title="三 · 帕累托前沿">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">Pareto Frontier · NSGA-II</div>
+    <h1>帕累托前沿：混合方案支配纯方案
+      <small>四方案点画在 C-t 平面：C1 占时间最短端、C2 占成本最低端，二者连线即前沿；纯电梯与纯火箭都落在前沿上方、被混合支配。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">成本-时间平面：四方案散点 + 帕累托前沿（C1 → C2）</div>
+      <div class="legend">
+        <span><i style="background:#12a594;border-radius:50%"></i>混合 C1（前沿·最快）</span>
+        <span><i style="background:#e0a04a;border-radius:50%"></i>混合 C2（前沿·最省）</span>
+        <span><i class="dn" style="border-color:#b8543a"></i>纯电梯（被支配）</span>
+        <span><i class="dn" style="border-color:#8a6313"></i>纯火箭（被支配）</span>
+        <span><i class="ln" style="background:#12a594"></i>帕累托前沿</span>
+        <span><i style="background:rgba(18,165,148,.40);border-radius:50%"></i>NSGA-II 种群</span>
+      </div>
+    </div>
+    <canvas id="cvPareto"></canvas>
+    <p class="note" style="margin-top:8px">C1(93.74 年, 9052.9 B) 与 C2(250 年, 2151.5 B) 连成前沿：两者互不支配——C1 更快但更贵，C2 更省但更慢。纯电梯(186.22, 9991.2) 被 C1 支配（C1 更快且更省）；纯火箭(183.14, ≈2.60×10⁴) 同样被 C1 支配。<b class="hl-t">两个纯方案都落在前沿上方而被淘汰</b>。</p>
+  </div>
+
+  <div class="grid2 stg">
+    <div class="card">
+      <h3>NSGA-II 流程 <em>非支配排序</em></h3>
+      <div class="flowrow">
+        <span class="flownode on">① 初始化种群</span><span class="flowarrow">→</span>
+        <span class="flownode on">② 非支配排序</span><span class="flowarrow">→</span>
+        <span class="flownode on">③ 拥挤度</span>
+      </div>
+      <div class="flowrow" style="margin-top:6px">
+        <span class="flownode on">④ 锦标赛+交叉</span><span class="flowarrow">→</span>
+        <span class="flownode on">⑤ 精英保留</span><span class="flowarrow">→</span>
+        <span class="flownode">迭代至收敛</span>
+      </div>
+      <p class="small" style="margin-top:8px">拥挤度保证前沿分布均匀，是双目标求解的标准算法。种群沿前沿抖动并最终收敛到 C1↔C2 连线附近。</p>
+    </div>
+    <div class="card">
+      <h3>被支配判定 <em>dominance</em></h3>
+      <p>方案 A 支配 B ⟺ <b class="hl-t">A 在 C 与 t 上都不劣于 B，且至少一项严格更优</b>。</p>
+      <p><span class="badge q">C1 vs 纯电梯</span> C1：93.74 &lt; 186.22 且 9052.9 &lt; 9991.2 → C1 支配</p>
+      <p><span class="badge q">C1 vs 纯火箭</span> C1：93.74 &lt; 183.14 且 9052.9 &lt; 25960 → C1 支配</p>
+      <p><span class="badge w">C1 vs C2</span> C1 更快但更贵 → <b class="hl">互不支配</b>（同在前沿）</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============== 第四幕 · 方案对比 ============== -->
+<section class="scene" id="s4" data-title="四 · 方案对比">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">方案对比 · 四方案汇总</div>
+    <h1>四方案对比：成本柱 与 时间柱
+      <small>把四个方案的 C 与 t 并排画成柱状图，按归一化高度直接读出谁最快、谁最省——以及两个被支配的纯方案在两项上都不占优。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">四方案成本柱（归一化到最大值 26000 B USD）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>混合 C1</span>
+        <span><i style="background:#e0a04a"></i>混合 C2</span>
+        <span><i style="background:#b8543a"></i>纯电梯</span>
+        <span><i style="background:#8a6313"></i>纯火箭</span>
+      </div>
+    </div>
+    <canvas id="cvBarsC"></canvas>
+    <p class="note" style="margin-top:8px">C2 = <b class="hl-g">2151.5 B</b>，仅为纯火箭 25960 B 的 <b>8.3%</b>；C1 = 9052.9 B，也只有纯火箭的 <b>34.9%</b>。混合方案在成本上完胜纯方案。</p>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">四方案完工时间柱（归一化到最大值 250 年）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>混合 C1</span>
+        <span><i style="background:#e0a04a"></i>混合 C2</span>
+        <span><i style="background:#b8543a"></i>纯电梯</span>
+        <span><i style="background:#8a6313"></i>纯火箭</span>
+      </div>
+    </div>
+    <canvas id="cvBarsT"></canvas>
+    <p class="note" style="margin-top:8px">C1 = <b class="hl-t">93.74 年</b>，比纯电梯 186.22 年快近一倍、比纯火箭 183.14 年也快近一倍。C2 = 250 年最慢但最省——时间与成本的取舍点。</p>
+  </div>
+
+  <div class="card stg">
+    <h3>四方案汇总 <em>问题一 NSGA-II 参考</em></h3>
+    <table class="tb">
+      <tr><th>方案</th><th>γ（电梯承担）</th><th class="num">完工时间 t (年)</th><th class="num">总成本 C (B USD)</th><th>帕累托状态</th></tr>
+      <tr><td><span class="badge q">混合 C1</span></td><td class="num">中-高</td><td class="num">93.74</td><td class="num">9052.9</td><td class="hl-t">前沿 · 最快</td></tr>
+      <tr><td><span class="badge q">混合 C2</span></td><td class="num">中-低</td><td class="num">250.00</td><td class="num">2151.5</td><td class="hl-g">前沿 · 最省</td></tr>
+      <tr><td><span class="badge w">纯电梯</span></td><td class="num">1.00</td><td class="num">186.22</td><td class="num">9991.2</td><td class="hl">被 C1 支配</td></tr>
+      <tr><td><span class="badge w">纯火箭</span></td><td class="num">0.00</td><td class="num">183.14</td><td class="num">≈2.60×10⁴</td><td class="hl">被 C1 支配</td></tr>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ============== 第五幕 · 结论 ============== -->
+<section class="scene" id="s5" data-title="五 · 结论与 KPI">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题一结论 · KPI 汇总</div>
+    <h1>结论：混合方案在 C-t 平面支配两个纯方案
+      <small>要快就拉高 γ（C1：93.74 年送达，代价 9052.9 B）；要省就压低 γ（C2：250 年送达，仅 2151.5 B）。决策者可在 C1↔C2 前沿上任取折中点。</small>
+    </h1>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="bigkpi">
+      <div class="bk-k">混合 C1 · 最快</div>
+      <div class="bk-v" data-cnt="93.74" data-dec="2">0.00<span class="bk-u">年</span></div>
+      <div class="bk-sub">成本 9052.9 B USD · γ 中-高</div>
+    </div>
+    <div class="bigkpi g">
+      <div class="bk-k">混合 C2 · 最省</div>
+      <div class="bk-v" data-cnt="2151.5" data-dec="1">0.0<span class="bk-u">B USD</span></div>
+      <div class="bk-sub">完工 250 年 · γ 中-低</div>
+    </div>
+    <div class="bigkpi">
+      <div class="bk-k">纯电梯 · 被支配</div>
+      <div class="bk-v" data-cnt="9991.2" data-dec="1">0.0<span class="bk-u">B</span></div>
+      <div class="bk-sub">186.22 年 · 被 C1 支配</div>
+    </div>
+    <div class="bigkpi g">
+      <div class="bk-k">纯火箭 · 被支配</div>
+      <div class="bk-v" data-cnt="25960" data-dec="0">0<span class="bk-u">B</span></div>
+      <div class="bk-sub">183.14 年 · 被 C1 支配</div>
+    </div>
+  </div>
+
+  <div class="grid2 stg">
+    <div class="card">
+      <h3>关键洞察 <em>双目标权衡</em></h3>
+      <p>① 电梯的<b class="hl-t">9805 B 可变运费</b>占比 98%+，固定项几乎可忽略。</p>
+      <p>② 火箭<b class="hl">单次便宜、总量很贵</b>：3641 次/年 × 183 年 ≈ 66.7 万次。</p>
+      <p>③ 混合方案通过 γ 配比，能到达纯方案够不到的前沿段。</p>
+      <p>④ 决策者按<b class="hl-g">预算/工期</b>在 C1↔C2 前沿上任取折中点。</p>
+    </div>
+    <div class="card">
+      <h3>模型结构 <em>NSGA-II 输出</em></h3>
+      <div class="formula" style="font-size:12.5px">min  C = γ·C_SE + (1−γ)·C_R
+min  t = M / (γ·Cap_SE + (1−γ)·N·Cap_r)
+s.t. 0 ≤ γ ≤ 1,  M = 10⁸ t
+
+<span class="dim">// 帕累托前沿：C1 ↔ C2 连线</span>
+<span class="c">C1</span> = (93.74 yr, 9052.9 B)  <span class="dim">γ 中-高</span>
+<span class="y">C2</span> = (250.0 yr, 2151.5 B)  <span class="dim">γ 中-低</span></div>
+    </div>
+  </div>
+
+  <div class="quote stg">问题一的结论：<b class="hl-t">混合方案在 C-t 平面上支配了两个纯方案</b>——要快就拉高 γ（C1：93.74 年送达，代价 9052.9 B），要省就压低 γ（C2：250 年送达，仅 2151.5 B）。决策者可在 C1↔C2 这条前沿上按预算/工期任取折中点。</div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script id="DATA" type="application/json">
+{
+  "schemes":[
+    {"k":"c1","n":"混合 C1","t":93.74,"c":9052.9,"col":"#12a594","dom":false,"lab":"最快"},
+    {"k":"c2","n":"混合 C2","t":250.00,"c":2151.5,"col":"#e0a04a","dom":false,"lab":"最省"},
+    {"k":"el","n":"纯电梯","t":186.22,"c":9991.2,"col":"#b8543a","dom":true,"lab":"被支配"},
+    {"k":"rk","n":"纯火箭","t":183.14,"c":25960.0,"col":"#8a6313","dom":true,"lab":"被支配"}
+  ],
+  "elevator":{"C_main":1e9,"C_var":2.2e5,"Cap_SE":5.37e5,"M_total":1e8,"t_min":186.22,"C_total":9991.2},
+  "rocket":{"C_r":7.13e7,"Cap_r":2750,"N_re":3641,"t_min":183.14,"C_total":25960}
+}
+</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var DATA=JSON.parse(document.getElementById('DATA').textContent);
+
+/* ============== 通用工具 ============== */
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+function fmt(v,dec){
+  if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+
+/* ============== 动画引擎 ============== */
+/* 每个画布有自己的 enter()，进入幕时被调用。连续动画用 requestAnimationFrame 在自身存活期间运行；幕切换时停止旧的。 */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){
+    if(!handle._alive) return;
+    fn(t);
+    handle._raf=requestAnimationFrame(loop);
+  }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+
+/* ============== 第一幕 · 太空电梯 hero 动画 ============== */
+var heroT0=null;
+function drawHero(t){
+  var cv=$('#cvHero');
+  if(!cv) return;
+  if(cv._h===undefined) cv._h=340;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tNow=(t-heroT0)/1000;
+
+  // 背景渐变（深空）
+  var bg=g.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#0b2e36');
+  bg.addColorStop(0.55,'#0e3a44');
+  bg.addColorStop(1,'#0b2e36');
+  g.fillStyle=bg; g.fillRect(0,0,w,h);
+
+  // 星星（缓慢闪烁）
+  for(var i=0;i<60;i++){
+    var sx=((i*97.13)%w), sy=((i*53.7)%(h-20))+10;
+    var tw=0.5+0.5*Math.sin(tNow*1.2+i*0.7);
+    g.fillStyle='rgba(205,238,233,'+(0.15+0.5*tw)+')';
+    g.fillRect(sx,sy,1.6,1.6);
+  }
+
+  // 地球弧（底部）
+  var earthR=h*1.4, earthCx=w/2, earthCy=h+earthR*0.85;
+  var eg=g.createRadialGradient(earthCx-30,earthCy-earthR+20,10,earthCx,earthCy,earthR);
+  eg.addColorStop(0,'#1e9fc4'); eg.addColorStop(0.5,'#0b6e68'); eg.addColorStop(1,'#06303a');
+  g.fillStyle=eg;
+  g.beginPath(); g.arc(earthCx,earthCy,earthR,Math.PI*1.15,Math.PI*1.85); g.fill();
+  // 地球大气光晕
+  g.strokeStyle='rgba(30,159,196,.35)'; g.lineWidth=3;
+  g.beginPath(); g.arc(earthCx,earthCy,earthR+4,Math.PI*1.15,Math.PI*1.85); g.stroke();
+
+  // 月球（右上）
+  var mx=w-50, my=42, mr=16;
+  var mg=g.createRadialGradient(mx-5,my-5,2,mx,my,mr);
+  mg.addColorStop(0,'#f4e3c1'); mg.addColorStop(1,'#8a6313');
+  g.fillStyle=mg; g.beginPath(); g.arc(mx,my,mr,0,Math.PI*2); g.fill();
+  // 月球轨道虚线（从地球到月球）
+  g.strokeStyle='rgba(127,216,201,.22)'; g.lineWidth=1; g.setLineDash([3,5]);
+  g.beginPath(); g.moveTo(w/2,h-12);
+  var cpx=w*0.72, cpy=h*0.2;
+  g.bezierCurveTo(cpx,h-40, w*0.4,cpy, mx,my+mr);
+  g.stroke(); g.setLineDash([]);
+
+  // 太空电梯主线（从地表到同步轨道高度）
+  var baseX=w*0.42, baseY=h-18;
+  var topX=w*0.42, topY=44;
+  // 主缆索
+  var cg=g.createLinearGradient(baseX,baseY,baseX,topY);
+  cg.addColorStop(0,'rgba(127,216,201,.85)');
+  cg.addColorStop(0.5,'rgba(127,216,201,.45)');
+  cg.addColorStop(1,'rgba(127,216,201,.85)');
+  g.strokeStyle=cg; g.lineWidth=2.2;
+  g.beginPath(); g.moveTo(baseX,baseY); g.lineTo(topX,topY); g.stroke();
+  // 缆索上的能量流（虚线 dashoffset 流动）
+  g.strokeStyle='rgba(18,165,148,.9)'; g.lineWidth=1.6;
+  g.setLineDash([4,8]); g.lineDashOffset=-(tNow*30)%12;
+  g.beginPath(); g.moveTo(baseX,baseY); g.lineTo(baseX,topY); g.stroke(); g.setLineDash([]);
+
+  // 配重（顶端节点）
+  g.fillStyle='#e0a04a';
+  g.beginPath(); g.arc(topX,topY,5,0,Math.PI*2); g.fill();
+  g.strokeStyle='rgba(224,160,74,.4)'; g.lineWidth=6;
+  g.beginPath(); g.arc(topX,topY,9+Math.sin(tNow*2)*1.5,0,Math.PI*2); g.stroke();
+
+  // climbers（电梯轿厢，沿缆索上下移动）
+  var climbers=[
+    {phase:0.0,spd:0.18,col:'#12a594'},
+    {phase:0.4,spd:0.22,col:'#1e9fc4'},
+    {phase:0.75,spd:0.15,col:'#7fd8c9'}
+  ];
+  climbers.forEach(function(c){
+    var u=(tNow*c.spd+c.phase)%1;
+    var y=lerp(baseY,topY,u);
+    // 拖尾
+    g.fillStyle='rgba(18,165,148,'+(0.25*(1-u*0.6))+')';
+    g.fillRect(baseX-3,y+4,6,18);
+    // 轿厢
+    g.fillStyle=c.col;
+    g.fillRect(baseX-5,y-3,10,8);
+    g.strokeStyle='rgba(255,255,255,.6)'; g.lineWidth=1; g.strokeRect(baseX-5,y-3,10,8);
+  });
+
+  // 上升粒子（从地表沿缆索向上）
+  for(var p=0;p<14;p++){
+    var pu=((tNow*0.5+p*0.071)%1);
+    var py=lerp(baseY,topY,pu);
+    var pa=Math.sin(pu*Math.PI);
+    g.fillStyle='rgba(127,216,201,'+(0.6*pa)+')';
+    g.beginPath(); g.arc(baseX+Math.sin(p*1.3+tNow*2)*4,py,1.6,0,Math.PI*2); g.fill();
+  }
+
+  // 标注线：地球 → 月球
+  g.strokeStyle='rgba(127,216,201,.5)'; g.lineWidth=1;
+  g.beginPath();
+  g.moveTo(earthCx-12,h-20); g.lineTo(earthCx-60,h-50);
+  g.moveTo(mx-mr,my); g.lineTo(mx-mr-40,my+20);
+  g.stroke();
+  g.fillStyle='rgba(205,238,233,.85)'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='right'; g.textBaseline='middle';
+  g.fillText('地球', earthCx-65, h-50);
+  g.textAlign='left';
+  g.fillText('月球', mx-mr-36, my+20);
+  g.fillStyle='rgba(127,216,201,.7)'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.fillText('Cap_SE 5.37×10⁵ t/yr', baseX+10, (baseY+topY)/2);
+
+  // 底部信息条
+  g.fillStyle='rgba(127,216,201,.18)';
+  g.fillRect(0,h-26,w,26);
+  g.fillStyle='rgba(205,238,233,.85)'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('M = 10⁸ t  ·  双目标  min C / min t  ·  NSGA-II', 14, h-13);
+}
+function startHero(){
+  heroT0=performance.now();
+  runAnim(function(t){ drawHero(t); });
+}
+
+/* ============== 第二幕 · 成本公式可视化 ============== */
+var costT0=null;
+function drawCost(t){
+  var cv=$('#cvCost');
+  if(!cv) return;
+  if(cv._h===undefined) cv._h=280;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tNow=(t-costT0)/1000;
+  var reveal=clamp(tNow/1.6,0,1);
+  var revE=easeOutCubic(reveal);
+
+  var L=70,R=26,T=22,B=44, PW=w-L-R, PH=h-T-B;
+  var xmax=260, ymax=26000;
+  function X(v){return L+PW*v/xmax;}
+  function Y(v){return T+PH*(1-v/ymax);}
+
+  // 网格
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText((v/1000).toFixed(0)+'k',L-7,yy);
+  }
+  // x 刻度
+  [{t:0,s:'0'},{t:93.74,s:'94'},{t:186.22,s:'186'},{t:250,s:'250'},{t:280,s:'280'}].forEach(function(o){
+    var xx=X(o.t);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(o.s,xx,T+PH+16);
+  });
+  // 轴框
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  // 轴标题
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('完工时间 t (年)',L+PW/2,T+PH+36);
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.fillText('成本 (B USD)',0,0); g.restore();
+
+  // 计算曲线：固定项 + 可变项 + 总成本
+  var nPts=80, fixedArr=[], varArr=[], totArr=[];
+  for(var i=0;i<nPts;i++){
+    var tt=180+80*i/(nPts-1);
+    var fixed=1.0*tt;                 // C_main·t (B)
+    var variable=22000;               // C_var·M (B) — 几乎常数
+    var total=fixed+variable;
+    fixedArr.push({t:tt,v:fixed});
+    varArr.push({t:tt,v:variable});
+    totArr.push({t:tt,v:total});
+  }
+  // 画固定项堆叠区域
+  function drawArea(arr,col,rev){
+    g.fillStyle=col;
+    g.beginPath();
+    arr.forEach(function(p,i){
+      var xx=X(p.t), yy=Y(p.v*rev);
+      if(i===0) g.moveTo(xx,yy); else g.lineTo(xx,yy);
+    });
+    g.lineTo(X(arr[arr.length-1].t),Y(0)); g.lineTo(X(arr[0].t),Y(0)); g.closePath();
+    g.fill();
+  }
+  drawArea(fixedArr,'rgba(11,110,104,'+(0.55*revE)+')',revE);
+  // 可变项堆叠（在固定项之上）
+  g.save();
+  g.beginPath();
+  varArr.forEach(function(p,i){
+    var xx=X(p.t), yy=Y((p.v+fixedArr[i].v)*revE);
+    if(i===0) g.moveTo(xx,yy); else g.lineTo(xx,yy);
+  });
+  g.lineTo(X(varArr[varArr.length-1].t),Y(fixedArr[fixedArr.length-1].v*revE));
+  for(var j=fixedArr.length-1;j>=0;j--){
+    g.lineTo(X(fixedArr[j].t),Y(fixedArr[j].v*revE));
+  }
+  g.closePath();
+  g.fillStyle='rgba(224,160,74,'+(0.50*revE)+')'; g.fill();
+  g.restore();
+
+  // 总成本线
+  g.beginPath();
+  totArr.forEach(function(p,i){
+    var xx=X(p.t), yy=Y(p.v*revE);
+    if(i===0) g.moveTo(xx,yy); else g.lineTo(xx,yy);
+  });
+  g.strokeStyle='#12a594'; g.lineWidth=2.6; g.lineJoin='round';
+  // 流动 dashoffset
+  g.setLineDash([8,4]); g.lineDashOffset=-(tNow*40)%12;
+  g.stroke(); g.setLineDash([]);
+
+  // 容量约束竖线 t_min=186.22
+  var vx=X(186.22);
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='#b8543a'; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(vx,T); g.lineTo(vx,T+PH); g.stroke(); g.restore();
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('Cap_SE 容量约束 t_min=186.22',vx+6,T+12);
+
+  // 参考解点
+  var rx=X(186.22), ry=Y(9991.2*revE);
+  g.beginPath(); g.arc(rx,ry,5,0,Math.PI*2);
+  g.fillStyle='#b8543a'; g.fill();
+  g.strokeStyle='#fff'; g.lineWidth=2; g.stroke();
+  // 参考解标签
+  g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  var labelText='参考解  t=186.22 · C=9991.2B';
+  var mt=g.measureText(labelText); var tw=mt?mt.width:labelText.length*7;
+  g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(rx+8,ry-22,tw+12,18);
+  g.strokeStyle='#f0d5cd'; g.lineWidth=1; g.strokeRect(rx+8.5,ry-21.5,tw+11,17);
+  g.fillStyle='#b8543a'; g.fillText(labelText,rx+14,ry-13);
+
+  // 流动小点沿总成本线
+  if(revE>0.6){
+    var flowU=(tNow*0.3)%1, idx=Math.floor(flowU*(nPts-1));
+    var fp=totArr[idx];
+    var fx=X(fp.t), fy=Y(fp.v*revE);
+    g.beginPath(); g.arc(fx,fy,3.5,0,Math.PI*2);
+    g.fillStyle='#7fd8c9'; g.fill();
+    g.strokeStyle='rgba(127,216,201,.5)'; g.lineWidth=4;
+    g.beginPath(); g.arc(fx,fy,6,0,Math.PI*2); g.stroke();
+  }
+}
+function startCost(){ costT0=performance.now(); runAnim(function(t){ drawCost(t); }); }
+
+/* ============== 第三幕 · 帕累托前沿 ============== */
+var paretoT0=null;
+var popSeed=null;
+function drawPareto(t){
+  var cv=$('#cvPareto');
+  if(!cv) return;
+  if(cv._h===undefined) cv._h=360;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tNow=(t-paretoT0)/1000;
+
+  var L=62,R=26,T=26,B=44, PW=w-L-R, PH=h-T-B;
+  var xmax=280, ymax=28000;
+  function X(v){return L+PW*v/xmax;}
+  function Y(v){return T+PH*(1-v/ymax);}
+
+  // 网格 + y 轴
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText((v/1000).toFixed(0)+'k',L-7,yy);
+  }
+  // x 刻度
+  [{t:0,s:'0'},{t:93.74,s:'94'},{t:186.22,s:'186'},{t:250,s:'250'},{t:280,s:'280'}].forEach(function(o){
+    var xx=X(o.t);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(o.s,xx,T+PH+16);
+  });
+  // 轴框
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  // 轴标题
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('完工时间 t (年)',L+PW/2,T+PH+34);
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('总成本 C (B USD)',0,0); g.restore();
+
+  // 被支配区域（前沿上方）
+  var pc=[[93.74,9052.9],[110,7500],[135,5500],[170,3800],[210,2700],[250,2151.5]];
+  // 闪烁的被支配区
+  var shimmer=0.5+0.5*Math.sin(tNow*1.4);
+  g.fillStyle='rgba(184,84,58,'+(0.04+0.04*shimmer)+')';
+  g.beginPath();
+  pc.forEach(function(p,i){ var x=X(p[0]),y=Y(p[1]); if(i)g.lineTo(x,y); else g.moveTo(x,y); });
+  g.lineTo(X(250),Y(ymax)); g.lineTo(X(93.74),Y(ymax)); g.closePath(); g.fill();
+
+  // NSGA-II 种群点（前沿附近抖动）
+  if(!popSeed){
+    popSeed=[];
+    for(var i=0;i<35;i++){
+      var f=i/34;
+      var tt=94+(250-94)*f + (Math.random()-0.5)*6;
+      var cc=lerp(9052.9,2151.5,f) + (Math.random()-0.5)*900*Math.sin(f*3);
+      popSeed.push({t:tt,c:cc});
+    }
+  }
+  var popReveal=clamp(tNow/1.2,0,1);
+  popSeed.forEach(function(p,i){
+    var ap=clamp(popReveal*1.6-i*0.022,0,1);
+    if(ap<=0) return;
+    var wobble=Math.sin(tNow*1.5+i*0.7)*4;
+    var px=X(p.t+wobble), py=Y(p.c+wobble*8);
+    g.beginPath(); g.arc(px,py,2.6,0,Math.PI*2);
+    g.fillStyle='rgba(18,165,148,'+(0.45*ap)+')'; g.fill();
+  });
+
+  // 帕累托前沿曲线（C1 → C2） 画线动画
+  var frontReveal=clamp((tNow-0.6)/1.0,0,1);
+  var frE=easeInOutCubic(frontReveal);
+  g.save();
+  g.setLineDash([7,4]); g.lineDashOffset=-(tNow*16)%11;
+  g.strokeStyle='#12a594'; g.lineWidth=2.8;
+  g.beginPath();
+  var x0=X(93.74), y0=Y(9052.9), x1=X(250), y1=Y(2151.5);
+  g.moveTo(x0,y0);
+  g.lineTo(x0+(x1-x0)*frE, y0+(y1-y0)*frE);
+  g.stroke();
+  g.restore();
+  // 前沿标签
+  if(frontReveal>0.5){
+    g.fillStyle='#0b6e68'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    var lx=X(170), ly=Y(5200);
+    g.fillStyle='rgba(255,255,255,.92)'; g.fillRect(lx-58,ly-10,116,18);
+    g.strokeStyle='#cfe4e4'; g.lineWidth=1; g.strokeRect(lx-57.5,ly-9.5,115,17);
+    g.fillStyle='#0b6e68'; g.fillText('帕累托前沿 C1 → C2',lx,ly);
+  }
+
+  // 四方案点（按顺序揭示）
+  var pts=DATA.schemes;
+  pts.forEach(function(p,i){
+    var ap=clamp((tNow-0.4-i*0.35)/0.6,0,1);
+    if(ap<=0) return;
+    var aE=easeOutCubic(ap);
+    var x=X(p.t), y=Y(p.c);
+    // 入场：从下方升起到目标位置
+    var cy=y+(1-aE)*30;
+    g.beginPath(); g.arc(x,cy,p.dom?5.5:7,0,Math.PI*2);
+    if(p.dom){
+      g.fillStyle='#fff'; g.fill();
+      g.strokeStyle=p.col; g.lineWidth=2.4; g.stroke();
+    } else {
+      // 脉冲光晕（前沿点）
+      var pulse=0.5+0.5*Math.sin(tNow*3+i*1.2);
+      g.fillStyle='rgba(18,165,148,'+(0.25*pulse)+')';
+      g.beginPath(); g.arc(x,cy,12+pulse*3,0,Math.PI*2); g.fill();
+      g.fillStyle=p.col; g.fill();
+      g.strokeStyle='#fff'; g.lineWidth=2.2; g.stroke();
+    }
+    if(aE>0.6){
+      var la=clamp((aE-0.6)/0.4,0,1);
+      g.globalAlpha=la;
+      g.fillStyle=p.col; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='left'; g.textBaseline='middle';
+      var ty=(p.t>200)?cy-14:cy-16;
+      g.fillText(p.n,x+12,ty);
+      g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+      g.fillText(p.lab,x+12,ty+14);
+      g.globalAlpha=1;
+    }
+  });
+
+  // min C ↑ 与 → min t 标注
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('min C ↑',L+4,T+12);
+  g.textAlign='right'; g.fillText('→ min t',L+PW-4,T+PH-10);
+}
+function startPareto(){ paretoT0=performance.now(); popSeed=null; runAnim(function(t){ drawPareto(t); }); }
+
+/* ============== 第四幕 · 柱状图（成本与时间） ============== */
+function drawBars(cvId,field,maxVal,unit,t0Base){
+  var cv=$('#'+cvId);
+  if(!cv) return;
+  if(cv._h===undefined) cv._h=240;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tNow=(performance.now()-t0Base)/1000;
+  var reveal=clamp(tNow/1.4,0,1);
+
+  var L=58,R=24,T=24,B=46, PW=w-L-R, PH=h-T-B;
+  function Y(v){return T+PH*(1-v/maxVal);}
+
+  // 网格
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=maxVal*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText((v/1000).toFixed(1)+'k',L-7,yy);
+  }
+  // x 轴
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  // 轴标题
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText(unit,0,0); g.restore();
+
+  var schemes=DATA.schemes;
+  var step=PW/schemes.length, bw=Math.min(120,step*0.55);
+  schemes.forEach(function(s,i){
+    var target=s[field];
+    var ap=clamp(reveal*1.6-i*0.18,0,1);
+    var aE=easeOutCubic(ap);
+    var bh=PH*(target/maxVal)*aE;
+    var x=L+step*(i+0.5)-bw/2, y=T+PH-bh;
+    // 柱体渐变
+    var gr=g.createLinearGradient(x,y,x,y+bh);
+    gr.addColorStop(0,s.col);
+    gr.addColorStop(1,shade(s.col,-0.25));
+    g.fillStyle=gr;
+    roundRect(g,x,y,bw,bh,6); g.fill();
+    // 顶部高光
+    g.fillStyle='rgba(255,255,255,.22)'; g.fillRect(x,y,bw,4);
+    // 顶部数值
+    if(aE>0.4){
+      var la=clamp((aE-0.4)/0.6,0,1);
+      g.globalAlpha=la;
+      g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='alphabetic';
+      var valStr=field==='c' ? (target>=10000?target.toExponential(2):fmt(target,1)) : fmt(target,2);
+      g.fillText(valStr,x+bw/2,y-8);
+      g.globalAlpha=1;
+    }
+    // x 轴标签
+    g.fillStyle='#3d6570'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(s.n,x+bw/2,T+PH+18);
+    g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(s.lab,x+bw/2,T+PH+34);
+  });
+
+  // 流动高亮：在每根柱顶画一个上下浮动的光点
+  schemes.forEach(function(s,i){
+    var target=s[field];
+    var ap=clamp(reveal*1.6-i*0.18,0,1);
+    if(ap<0.7) return;
+    var aE=easeOutCubic(ap);
+    var bh=PH*(target/maxVal)*aE;
+    var x=L+step*(i+0.5), y=T+PH-bh;
+    var fy=Math.sin(tNow*2+i*0.5)*4;
+    g.beginPath(); g.arc(x,y+fy,2.5,0,Math.PI*2);
+    g.fillStyle='rgba(255,255,255,'+(0.6+0.3*Math.sin(tNow*3+i))+')'; g.fill();
+  });
+}
+function roundRect(g,x,y,w,h,r){
+  if(h<r) r=h;
+  g.beginPath();
+  g.moveTo(x+r,y);
+  g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h);
+  g.lineTo(x,y+h);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y);
+  g.closePath();
+}
+function shade(hex,amt){
+  // 简单 hex 调暗
+  var c=hex.replace('#','');
+  if(c.length!==6) return hex;
+  var r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), b=parseInt(c.slice(4,6),16);
+  r=clamp(Math.round(r*(1+amt)),0,255);
+  g=clamp(Math.round(g*(1+amt)),0,255);
+  b=clamp(Math.round(b*(1+amt)),0,255);
+  return 'rgb('+r+','+g+','+b+')';
+}
+
+var barsT0Base=null;
+function startBarsC(){
+  barsT0Base=performance.now();
+  runAnim(function(){
+    drawBars('cvBarsC','c',26000,'成本 (B USD)',barsT0Base);
+    drawBars('cvBarsT','t',250,'时间 (年)',barsT0Base);
+  });
+}
+
+/* ============== 第五幕 · KPI count-up ============== */
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  $$('.bigkpi .bk-v[data-cnt]').forEach(function(el){
+    var target=parseFloat(el.dataset.cnt);
+    var dec=parseInt(el.dataset.dec||'0',10);
+    var unitHtml='';
+    // 保留 unit span
+    var uspan=el.querySelector('.bk-u');
+    if(uspan) unitHtml=uspan.outerHTML;
+    var t0=performance.now(), dur=1200;
+    function step(t){
+      var p=clamp((t-t0)/dur,0,1);
+      var v=target*easeOutCubic(p);
+      el.innerHTML=fmt(v,dec)+unitHtml;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ============== 幕调度 ============== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var st={last:0,armed:false,fired:0};
+var sceneStarters=[startHero, startCost, startPareto, startBarsC, startKPIs];
+
+function ensure(id){
+  var cv=document.getElementById(id);
+  if(!cv) return;
+  // canvas 重置在 setupCanvas 中完成
+}
+function revealCanvas(el){ $$('canvas',el).forEach(function(cv){ ensure(cv.id); }); }
+function beatsAuto(sc){ return $$('.wrap > *',sc); }
+function ensureScene(i){
+  var sc=SCENES[i]; if(!sc) return;
+  $$('canvas',sc).forEach(function(cv){ ensure(cv.id); });
+}
+function startAnimLoop(){ /* mod-p7-1 用 sceneStarters 启动动画，不需 RAF loop */ }
+function resetScene(sc){
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+  kpiStarted=false;
+  // 重置 KPI 显示为 0
+  $$('.bigkpi .bk-v[data-cnt]',sc).forEach(function(el){
+    var uspan=el.querySelector('.bk-u');
+    var unitHtml=uspan?uspan.outerHTML:'';
+    el.innerHTML=fmt(0,parseInt(el.dataset.dec||'0',10))+unitHtml;
+  });
+}
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  stopAllAnims();
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  ensureScene(i); startAnimLoop();
+  beatsAuto(sc).forEach(function(b){ b.classList.add('in'); revealCanvas(b); });
+  if(sceneStarters[i]) sceneStarters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+  if(v) stopAllAnims();
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){
+    resetScene(SCENES[cur]);
+    beatsAuto(SCENES[cur]).forEach(function(b){ b.classList.add('in'); revealCanvas(b); });
+    if(sceneStarters[cur]) sceneStarters[cur]();
+  };
+  $('#btnFx').onclick=function(){
+    var nv=!document.body.classList.contains('reduce');
+    setReduce(nv);
+    if(!nv && cur>=0 && sceneStarters[cur]) sceneStarters[cur]();
+  };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){
+  if(cur>=0 && sceneStarters[cur] && !document.body.classList.contains('reduce')){
+    // 重启当前幕动画（触发画布尺寸重算）
+    if(cur===4){ /* KPI 无 canvas，无需重启 */ }
+    else sceneStarters[cur]();
+  }
+});
+init();
+window.__deck={goTo:goTo,get cur(){return cur;}};
+})();
+</script>
+</body>
+</html>

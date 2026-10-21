@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>成果 · 成功的体育管理：球队动态决策与商业运营优化</title>
+<style>
+  :root{
+    --bg:#f7fafa; --card:#ffffff; --line:#dcebeb; --line2:#eaf4f4;
+    --ink:#12252c; --ink2:#3d5560; --muted:#63757f;
+    --teal:#12a594; --teal-d:#0b6e68; --gold:#e0a04a; --gold-d:#8a6313;
+    --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.85 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:40px 24px 64px}
+  .hd{border-bottom:2px solid var(--teal);padding-bottom:18px;margin-bottom:26px}
+  .kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+  h1{font-size:26px;line-height:1.35;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .dc{font-size:13px;color:var(--muted);margin:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;
+    box-shadow:var(--sh);margin-bottom:18px}
+  h2{font-size:18px;font-weight:600;color:var(--teal-d);margin:0 0 12px}
+  h3{margin:18px 0 10px;font-size:15.5px;font-weight:600;color:var(--teal-d)}
+  h3:first-child{margin-top:0}
+  p{margin:0 0 10px;font-size:14.5px;color:var(--ink2);line-height:1.85}
+  b,strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 10px;padding-left:22px}
+  li{font-size:14px;color:var(--ink2);line-height:1.9;margin-bottom:3px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--sh)}
+  .kpi .k{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+  .kpi .v{font-size:22px;font-weight:600;color:var(--teal-d);line-height:1.2}
+  .kpi .d{font-size:12px;color:var(--muted);margin-top:3px}
+  @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}}
+  .formula{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+    color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.9;
+    overflow:auto;white-space:pre-wrap;margin:4px 0 12px;
+  }
+  .note{font-size:12.5px;color:#5a6b78;background:#fafdfd;border:1px dashed var(--line);
+    border-radius:9px;padding:10px 14px;line-height:1.8;margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 4px}
+  th,td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+  th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+  td b{color:var(--teal-d)}
+  .kw{font-size:13px;color:var(--muted);margin:0}
+  .kw b{color:var(--teal-d)}
+  .foot{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="kicker">2026 美赛 D 题 · 成果</div>
+    <h1>成功的体育管理：球队动态决策与商业运营优化</h1>
+    <p class="dc">论文初稿 · v1 · 单文件交付 · 状态 15 个 / 定价方案 4 个 / 投资情景 6 个</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">问题一 · 现状利润</div><div class="v">47.01</div><div class="d">M$ · 利润率 14.8% · 估值 1906.8 M$</div></div>
+    <div class="kpi"><div class="k">问题二 · 最优业主效用</div><div class="v">1632.6</div><div class="d">M$ · 末年估值 2170.8 M$</div></div>
+    <div class="kpi"><div class="k">问题三 · 推荐票价</div><div class="v">$105.72</div><div class="d">贡献利润 48.62 M$ · 球迷效用 32.41 M$</div></div>
+    <div class="kpi"><div class="k">问题四 · 经营口径 NPV</div><div class="v">+77.75</div><div class="d">M$ · 估值增量 +273.57 M$</div></div>
+  </div>
+
+  <div class="card">
+    <h2>摘要</h2>
+    <p>本文为职业体育俱乐部的业主建立了一套「竞技—财务」耦合的动态决策模型。以一支主场容量 18000 座、每赛季 41 场主场比赛的职业篮球俱乐部为对象，把球队压缩为「一个状态、一套损益、一个估值倍数」：薪资总额 PS 经对数映射为阵容评级 R = 50 + 18·ln(PS/140)，再经 logistic 映射为胜率 w = 1/(1+exp(−(R−50)/8))；每场需求 D(p) = 12000 + 9000(w−0.5) − 70(p−75) 同时受战绩拉动与票价抑制；球队估值按 V = 6.0 × 年收入折算。</p>
+    <p>问题一建立现状模型与四类 KPI 体系（竞技 / 财务 / 资产 / 球迷）。现状（薪资 160 M$、运营投入 8 M$、票价 $75）下胜率 0.5746、每场需求 12671 座、上座率 70.4%，年收入 <b>317.80 M$</b>、年成本 <b>270.79 M$</b>、年利润 <b>47.01 M$</b>、球队估值 <b>1906.8 M$</b>。对现状做同等强度扰动的关键驱动辨识给出排序 <b>战绩 &gt; 薪资 &gt; 票价 &gt; 运营 &gt; 附加收入</b>，胜率仅提高 0.05 即带来 +23.7% 的利润，是唯一的一级驱动。</p>
+    <p>问题二把决策空间离散化为 <b>5 个薪资档 × 3 个运营档 = 15 个状态</b>，以「每年每档最多移动一档」为动作集、升档 18 M$ / 降档 25 M$ 为换档成本，用后向递推 F_t(sp) = max_s[Π(s) − 换档(sp,s) + γ·F_{t+1}(s)]、F_6(s) = V(s)、γ = 1/1.08 求解 5 年业主效用最优路径。最优策略为「先守后攻」：<b>前 3 年维持薪资 160 M$ / 运营 8 M$ 攒现金，第 4 年升至 185 M$，第 5 年升至 210 M$ 并加码运营投入至 20 M$</b>，末年估值 <b>2170.8 M$</b>、最优业主效用 <b>U* = 1632.6 M$</b>。三条对照策略中，稳健经营（始终最低档）累计利润最高（257.01 M$）但业主效用垫底（1276.4 M$）；争冠冲刺（始终顶档）估值同样为 2170.8 M$ 但业主效用仅 1601.3 M$；自适应反馈策略（以目标胜率 0.60 滚动修正档位）在不需要未来信息的前提下达到 <b>1536.7 M$</b>，为最优值的 <b>94.1%</b>。</p>
+    <p>问题三在现状战绩下给出线性需求曲线 D(p) = 17921 − 70p、需求上界 $256，对比三个定价目标：票务收入最大价 <b>$128.01</b>（票务收入 47.03 M$、上座率 49.8%、弹性 1.000）、贡献利润最大价 <b>$124.51</b>（贡献利润 49.63 M$、上座率 51.1%）、以及兼顾球迷效用的推荐<b>均衡价 $105.72</b>（贡献利润 48.62 M$、球迷效用 32.41 M$、上座率 58.4%）。在 $106–$128 的整段宽区间内贡献利润最大差异仅约 <b>2.0%</b>，定价对利润不敏感而对上座率与球迷效用高度敏感，故取平台区偏低一侧的均衡价，用约 2.0% 的利润让步换取球迷效用 +30.6%、上座率 +7.3 个百分点。现状价 $75 的贡献利润 42.60 M$ 在四方案中最低，说明现行定价明显低于最优区间。</p>
+    <p>问题四在争冠态（胜率 0.713）与均衡价 $105.72 的基准上评估场馆投资：总投资 <b>420 M$</b>、球队自有出资 <b>40% = 168 M$</b>（公共部门分担 60%）、容量 18000 → 21500 座、每场需求上移 +7500 座、附加收入 22 → 30 $/人、年运营成本 +14 M$。投资后年收入 368.08 → <b>413.67 M$</b>、年利润 35.84 → <b>62.82 M$</b>（增量 26.98 M$）、球队估值 2208.46 → <b>2482.03 M$</b>（增量 <b>273.57 M$</b>）。15 年增量现金流折现（r = 7%，年金系数 9.108）现值 245.75 M$，扣减球队出资后经营口径 <b>NPV = +77.75 M$</b>，静态回收期 <b>6.2 年</b>；叠加估值增量后业主视角综合净收益 <b>+351.32 M$</b>。敏感性分析显示乐观情形 NPV +210.36 M$、悲观情形 −81.79 M$（但估值增量 +157.40 M$ 可完全抵消，综合仍 +75.61 M$）；需求上移的保本门槛为 <b>5775 座 / 场</b>，基准方案有 <b>30%</b> 安全边际。据此建议<b>分期建设</b>，并以首年上座率是否达到 89% 作为继续投入的触发条件。</p>
+    <h3>关键词</h3>
+    <p class="kw"><b>动态决策模型</b> · <b>动态规划（DP）</b> · <b>收益管理</b> · <b>门票定价优化</b> · <b>球迷效用 / 消费者剩余</b> · <b>球队估值倍数</b> · <b>场馆投资 NPV 与敏感性分析</b></p>
+  </div>
+
+  <div class="card">
+    <h2>一、问题重述</h2>
+    <p>职业体育俱乐部的经营是竞技目标与财务目标耦合的典型问题：薪资投入决定阵容实力，阵容实力决定战绩，战绩又反向决定门票需求、商品与赞助收入，最终决定球队利润与市场估值。要求为球队业主完成：</p>
+    <ul>
+      <li><b>问题一</b>：建立「战绩 + 财务 → 球队利润 / 估值」的现状模型与指标体系，辨识关键驱动因素；</li>
+      <li><b>问题二</b>：建立随战绩与财务变化滚动调整阵容招募与运营策略的<b>动态决策模型</b>；</li>
+      <li><b>问题三</b>：优化<b>门票定价</b>，量化票价对利润、上座率与球迷效用的影响；</li>
+      <li><b>问题四</b>：评估<b>场馆投资</b>等资本性决策对长期利润与球队估值的影响，并做敏感性分析与稳健性检验。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>二、模型建立</h2>
+    <p>把球队压缩为「一个状态、一套损益、一个估值倍数」，从竞技端到财务端建立单一传导链，四问共用同一骨架：</p>
+    <div class="formula">R = 50 + 18·ln( PS / 140 )                      —— 薪资 → 阵容评级（对数递减回报）
+w = 1 / (1 + exp( −(R − 50) / 8 ))，∈ [0.25, 0.72]   —— 评级 → 胜率（logistic）
+D(p) = 12000 + 9000·(w − 0.5) − 70·(p − 75)         —— 每场需求（战绩拉动 + 票价抑制）
+收入 = 41·min(D,CAP)·(p + ANC) + (15 + 95w) + (10 + 85w) + 130
+成本 = PS + 95 + 41·min(D,CAP)·VC + 运营投入
+利润 = 收入 − 成本，   V = 6.0 × 年收入</div>
+    <h3>符号说明</h3>
+    <table>
+      <tr><th>符号</th><th>含义</th><th>取值 / 范围</th><th>单位</th></tr>
+      <tr><td><b>PS</b></td><td>薪资总额（阵容招募投入，决策变量）</td><td>110 / 135 / 160 / 185 / 210</td><td>M$</td></tr>
+      <tr><td><b>R</b></td><td>阵容评级</td><td>由 PS 映射</td><td>—</td></tr>
+      <tr><td><b>w</b></td><td>胜率（战绩代理指标）</td><td>0.25 ~ 0.72</td><td>—</td></tr>
+      <tr><td><b>p</b></td><td>平均票价（决策变量）</td><td>60 ~ 135</td><td>$</td></tr>
+      <tr><td><b>D</b></td><td>每场门票需求</td><td>由 w 与 p 决定</td><td>座 / 场</td></tr>
+      <tr><td><b>CAP</b></td><td>主场容量</td><td>18000 → 21500</td><td>座</td></tr>
+      <tr><td><b>ANC</b></td><td>每人餐饮 / 纪念品附加收入</td><td>22 → 30</td><td>$ / 人</td></tr>
+      <tr><td><b>VC</b></td><td>每人边际服务成本</td><td>15</td><td>$ / 人</td></tr>
+      <tr><td><b>V</b></td><td>球队估值</td><td>6.0 × 年收入</td><td>M$</td></tr>
+    </table>
+    <div class="note">固定口径：联盟媒体分成与公共收入 130 M$ / 赛季，场馆运营与差旅等固定成本 95 M$ / 赛季，运营投入档位 0 / 8 / 20 M$（对商品 + 赞助收入分别放大 1.00 / 1.07 / 1.15 倍），年折现因子 γ = 1 / 1.08。t 之外的所有金额单位为 M$。</div>
+  </div>
+
+  <div class="card">
+    <h2>三、现状模型与关键驱动（问题一）</h2>
+    <p>现状参数：薪资 160 M$、运营投入 8 M$、平均票价 $75。代入模型得：</p>
+    <table>
+      <tr><th>指标</th><th>数值</th><th>指标</th><th>数值</th></tr>
+      <tr><td>阵容评级 R</td><td><b>52.40</b></td><td>胜率 w</td><td><b>0.5746</b>（82 场约 47.1 胜）</td></tr>
+      <tr><td>每场需求</td><td><b>12671 座</b></td><td>上座率</td><td><b>70.4%</b></td></tr>
+      <tr><td>年收入</td><td><b>317.80 M$</b></td><td>年成本</td><td><b>270.79 M$</b></td></tr>
+      <tr><td>年利润</td><td><b>47.01 M$</b></td><td>利润率 / 薪资收入比</td><td>14.8% / 50.3%</td></tr>
+      <tr><td>球队估值 V</td><td><b>1906.8 M$</b></td><td>估值倍数</td><td>6.0 ×</td></tr>
+    </table>
+    <h3>收入与成本结构（M$）</h3>
+    <table>
+      <tr><th>收入项</th><th>金额</th><th>成本项</th><th>金额</th></tr>
+      <tr><td>门票</td><td>38.96</td><td>薪资</td><td><b>160.00</b></td></tr>
+      <tr><td>餐饮 / 纪念品附加</td><td>11.43</td><td>固定成本</td><td>95.00</td></tr>
+      <tr><td>商品与本地收入</td><td>74.45</td><td>边际服务成本</td><td>7.79</td></tr>
+      <tr><td>赞助收入</td><td>62.96</td><td>运营投入</td><td>8.00</td></tr>
+      <tr><td>联盟分成与公共收入</td><td>130.00</td><td>—</td><td>—</td></tr>
+      <tr><td><b>合计</b></td><td><b>317.80</b></td><td><b>合计</b></td><td><b>270.79</b></td></tr>
+    </table>
+    <p>利润 <b>47.01 M$ = 317.80 − 270.79</b>。值得注意的是门票仅占年收入的 12.3%，而商品、赞助与联盟分成合计占 84.0%——<b>竞技端（战绩）对财务端的支配作用远大于票价</b>。</p>
+    <h3>关键驱动辨识</h3>
+    <table>
+      <tr><th>驱动</th><th>扰动</th><th>利润 (M$)</th><th>变化</th><th>排序</th></tr>
+      <tr><td><b>战绩 w</b></td><td>+0.05</td><td>58.15</td><td><b>+11.14（+23.7%）</b></td><td>1</td></tr>
+      <tr><td><b>薪资 PS</b></td><td>+10%</td><td>42.46</td><td>−4.54（−9.7%）</td><td>2</td></tr>
+      <tr><td><b>票价 p</b></td><td>+10%</td><td>48.98</td><td>+1.97（+4.2%）</td><td>3</td></tr>
+      <tr><td>运营投入</td><td>8 → 20 M$</td><td>45.28</td><td>−1.73（−3.7%）</td><td>4</td></tr>
+      <tr><td>附加收入</td><td>+10%</td><td>48.15</td><td>+1.14（+2.4%）</td><td>5</td></tr>
+    </table>
+    <div class="note">结论：<b>战绩是唯一的一级驱动</b>（+23.7%）；薪资与票价分列二、三且方向相反——薪资是可调的成本杠杆（负向）、票价是可调的收入杠杆（正向）；运营投入与附加收入属可调小项。由此确立四类 KPI：<b>竞技</b>（胜率 / 胜场）、<b>财务</b>（利润率 / 薪资收入比）、<b>资产</b>（估值 / 估值倍数）、<b>球迷</b>（上座率 / 消费者剩余）。</div>
+  </div>
+
+  <div class="card">
+    <h2>四、动态决策模型与结果（问题二）</h2>
+    <p>决策空间为 <b>5 个薪资档 × 3 个运营档 = 15 个状态</b>。各薪资档对应胜率：110 → 0.368、135 → 0.480、160 → 0.575、185 → 0.652、210 → 0.713。15 个状态的年度利润（行 = 薪资档，列 = 运营档 0 / 8 / 20，M$）：</p>
+    <table>
+      <tr><th>薪资 (M$)</th><th>胜率</th><th>运营 0</th><th>运营 8</th><th>运营 20</th></tr>
+      <tr><td><b>110</b></td><td>0.368</td><td><b>52.50</b></td><td>50.88</td><td>46.18</td></tr>
+      <tr><td><b>135</b></td><td>0.480</td><td>51.05</td><td>50.84</td><td>47.74</td></tr>
+      <tr><td><b>160</b></td><td>0.575</td><td>46.02</td><td>47.01</td><td>45.28</td></tr>
+      <tr><td><b>185</b></td><td>0.652</td><td>37.27</td><td>39.23</td><td>38.62</td></tr>
+      <tr><td><b>210</b></td><td>0.713</td><td>25.23</td><td>27.97</td><td>28.24</td></tr>
+    </table>
+    <p>年度利润随薪资单调下降（投入越多当年利润越低），而胜率单调上升——这正是业主面临的核心权衡。<b>动态规划</b>递推式与约束：</p>
+    <div class="formula">F_t(sp) = max_s [ Π(s) − 换档(sp, s) + γ·F_{t+1}(s) ]，   F_6(s) = V(s)，   γ = 1 / 1.08
+动作约束：每年薪资档与运营档各自最多移动一档（阵容重建需要时间）
+换档成本：升档签约 18 M$，降档买断 25 M$，持平 0
+目标（业主效用）：5 年经营利润现值 + 末年球队估值现值</div>
+    <h3>最优路径</h3>
+    <table>
+      <tr><th>年份</th><th>薪资 (M$)</th><th>运营 (M$)</th><th>胜率</th><th>当年利润 (M$)</th><th>换档成本 (M$)</th></tr>
+      <tr><td>第 1 年</td><td>160</td><td>8</td><td>0.575</td><td>47.01</td><td>0</td></tr>
+      <tr><td>第 2 年</td><td>160</td><td>8</td><td>0.575</td><td>47.01</td><td>0</td></tr>
+      <tr><td>第 3 年</td><td>160</td><td>8</td><td>0.575</td><td>47.01</td><td>0</td></tr>
+      <tr><td>第 4 年</td><td><b>185</b></td><td>8</td><td>0.652</td><td>39.23</td><td>18</td></tr>
+      <tr><td>第 5 年</td><td><b>210</b></td><td><b>20</b></td><td>0.713</td><td>28.24</td><td>18</td></tr>
+    </table>
+    <p>末年球队估值 <b>2170.8 M$</b>，累计经营利润 <b>208.50 M$</b>，最优业主效用 <b>U* = 1632.6 M$</b>。</p>
+    <h3>三条对照策略</h3>
+    <table>
+      <tr><th>策略</th><th>累计利润 (M$)</th><th>平均胜率</th><th>末年估值 (M$)</th><th>业主效用 (M$)</th></tr>
+      <tr><td>A 争冠冲刺（顶档 + 高运营）</td><td>159.97</td><td>0.686</td><td>2170.8</td><td>1601.3</td></tr>
+      <tr><td>B 稳健经营（最低档 + 零运营）</td><td><b>257.01</b></td><td>0.409</td><td>1584.9</td><td>1276.4</td></tr>
+      <tr><td>C 自适应反馈（目标胜率 0.60）</td><td>228.14</td><td>0.575</td><td>1968.4</td><td><b>1536.7</b></td></tr>
+      <tr><td><b>DP 最优路径</b></td><td>208.50</td><td>0.618</td><td><b>2170.8</b></td><td><b>1632.6</b></td></tr>
+    </table>
+    <div class="note">最优策略的本质是「<b>先守后攻</b>」：前 3 年维持中档阵容积累现金，第 4、5 年集中升档冲顶，把末年估值一次拉到最高；两条极端路线各自输掉一部分——争冠冲刺输在当年经营利润（159.97 M$），稳健经营输在末年估值（1584.9 M$）。自适应反馈策略以「目标胜率 0.60 为标尺修正薪资档、按利润率修正运营档」的规则滚动决策，在不需要未来信息的前提下达到 1536.7 M$，为最优值的 <b>94.1%</b>，是动态决策模型在现实中最可落地的形式。</div>
+  </div>
+
+  <div class="card">
+    <h2>五、门票定价优化（问题三）</h2>
+    <p>在现状战绩（w = 0.5746）下，每场需求为线性函数，需求曲线的截距与上界为：</p>
+    <div class="formula">D(p) = A1 − 70p，  A1 = 17921，  需求为零的价格上界 $256
+边际贡献口径：门票 + 附加 22 − 边际成本 15 = 每人 7 $（薪资与固定成本属既定支出）
+① 票务收入最大：argmax  41·D(p)·p                    → p = A1 / 140
+② 贡献利润最大：argmax  41·D(p)·(p + 7)              → p = (A1 − 70·7) / 140
+③ 球迷效用均衡：消费者剩余 41·½·($256 − p)·D(p) 加权 25% 后折中</div>
+    <table>
+      <tr><th>定价目标</th><th>票价 ($)</th><th>需求 (座)</th><th>上座率</th><th>票务收入 (M$)</th><th>贡献利润 (M$)</th><th>球迷效用 (M$)</th><th>弹性</th></tr>
+      <tr><td>现状价</td><td>75.00</td><td>12671</td><td>70.4%</td><td>38.96</td><td><b>42.60</b></td><td>47.02</td><td>0.414</td></tr>
+      <tr><td>① 票务收入最大</td><td><b>128.01</b></td><td>8960</td><td>49.8%</td><td><b>47.03</b></td><td>49.60</td><td>23.51</td><td>1.000</td></tr>
+      <tr><td>② 贡献利润最大</td><td>124.51</td><td>9205</td><td>51.1%</td><td>46.99</td><td><b>49.63</b></td><td>24.82</td><td>0.947</td></tr>
+      <tr><td><b>③ 推荐均衡价</b></td><td><b>105.72</b></td><td>10521</td><td>58.4%</td><td>45.60</td><td>48.62</td><td><b>32.41</b></td><td>0.703</td></tr>
+    </table>
+    <p>现状价 $75 的需求弹性仅 <b>0.414 &lt; 1</b>，说明需求对票价不敏感、现行票价偏低。在 $106–$128 的整段宽区间内贡献利润最大差异仅约 <b>2.0%</b>（49.63 → 48.62 M$），而球迷效用从 24.82 单调抬升到 32.41 M$（<b>+30.6%</b>）、上座率从 51.1% 抬到 58.4%（<b>+7.3 个百分点</b>）。</p>
+    <div class="note">推荐定价策略：<b>在 $106–$128 区间内取偏低价的 $105.72</b>，既保住 48.62 M$ 的贡献利润（相对利润最大价只让 2.0%），又比利润最大价多留下 7.3 个百分点的上座率和 +30.6% 的球迷效用。平台区存在的原因是线性需求下贡献利润对票价是凹函数，其顶点附近二阶导很小，因此定价决策应当把「球迷价值」而不是「利润小数点」作为取舍依据。</div>
+  </div>
+
+  <div class="card">
+    <h2>六、场馆投资与长期价值（问题四）</h2>
+    <p>在争冠态（胜率 0.713 = 薪资 210 M$ + 高运营）与均衡价 $105.72 的基准上评估投资方案：总投资 <b>420 M$</b>、球队自有出资 <b>40% = 168 M$</b>（公共部门分担 60%）、容量 18000 → <b>21500 座</b>、每场需求上移 <b>+7500 座</b>、附加收入 22 → 30 $/人、年运营成本 +14 M$。</p>
+    <table>
+      <tr><th>指标</th><th>现状场馆</th><th>新馆</th><th>增量</th></tr>
+      <tr><td>每场需求 (座)</td><td>11771</td><td>19271</td><td><b>+7500</b></td></tr>
+      <tr><td>上座率</td><td>65.4%</td><td>89.6%</td><td>+24.2 pt</td></tr>
+      <tr><td>年收入 (M$)</td><td>368.08</td><td>413.67</td><td>+45.59</td></tr>
+      <tr><td>年利润 (M$)</td><td>35.84</td><td>62.82</td><td><b>+26.98</b></td></tr>
+      <tr><td>球队估值 (M$)</td><td>2208.46</td><td>2482.03</td><td><b>+273.57</b></td></tr>
+    </table>
+    <div class="formula">NPV = 26.98 × 9.108 − 168 = +77.75 M$       —— 15 年增量现金流折现（r = 7%）− 球队出资
+ΔV  = 6.0 × 45.59 = 273.57 M$               —— 估值增量（收入增量 × 6 倍估值乘数）
+综合净收益 = 77.75 + 273.57 = +351.32 M$     —— 业主视角（经营 NPV + 估值增量）
+静态回收期 = 168 / 26.98 = 6.2 年</div>
+    <h3>敏感性分析</h3>
+    <table>
+      <tr><th>情景</th><th>增量年利润 (M$)</th><th>经营口径 NPV (M$)</th><th>估值增量 ΔV (M$)</th></tr>
+      <tr><td>悲观 · 需求上移 +4500 座</td><td>9.47</td><td><b>−81.79</b></td><td>+157.40</td></tr>
+      <tr><td><b>基准 · 需求上移 +7500 座</b></td><td><b>26.98</b></td><td><b>+77.75</b></td><td><b>+273.57</b></td></tr>
+      <tr><td>乐观 · 需求上移 +10500 座</td><td>41.54</td><td>+210.36</td><td>+369.15</td></tr>
+      <tr><td>造价超支 +20%</td><td>26.98</td><td>+44.15</td><td>+273.57</td></tr>
+      <tr><td>折现率升至 9%</td><td>26.98</td><td>+49.50</td><td>+273.57</td></tr>
+      <tr><td>折现率降至 5%</td><td>26.98</td><td>+112.07</td><td>+273.57</td></tr>
+    </table>
+    <h3>稳健性与风控结论</h3>
+    <ul>
+      <li><b>第一敏感变量是需求上移的兑现程度</b>：乐观（+10500 座，NPV +210.36 M$）与悲观（+4500 座，NPV −81.79 M$）相差 3 倍以上；造价超支 20% 与折现率变化的弹性都明显更小（NPV 仍为正）。</li>
+      <li><b>保本门槛</b>：需求上移需 <b>≥ 5775 座 / 场</b>才能覆盖新增运营成本与 168 M$ 球队出资；基准方案 +7500 座，安全边际 <b>30%</b>。</li>
+      <li><b>估值缓冲</b>：悲观情景经营口径 NPV 为 −81.79 M$，但其估值增量 +157.40 M$ 可完全抵消，综合净收益仍为 <b>+75.61 M$</b>。</li>
+      <li><b>建议</b>：分期建设，以「首年上座率是否达到 89%」作为继续投入的触发条件，把 168 M$ 的风险敞口压到最小。</li>
+    </ul>
+    <div class="note">口径提醒：投资的价值主体是<b>资产增值</b>（ΔV 273.57 M$，占综合净收益的 77.9%）而非当年现金流（NPV 77.75 M$）。这解释了为什么现实中职业体育场馆常走「公共部门分担 + 球队自付部分」的 PPP 融资结构——球队真正看重的是资产端的估值抬升与由此带来的融资与议价能力。</div>
+  </div>
+
+  <div class="card">
+    <h2>七、结论与建议</h2>
+    <ul>
+      <li><b>问题一</b>：现状球队年收入 <b>317.80 M$</b>、年成本 <b>270.79 M$</b>、利润 <b>47.01 M$</b>、估值 <b>1906.8 M$</b>；关键驱动排序 <b>战绩 &gt; 薪资 &gt; 票价 &gt; 运营 &gt; 附加收入</b>，战绩是唯一的一级驱动。</li>
+      <li><b>问题二</b>：最优动态策略是「先守后攻」——前 3 年维持薪资 160 M$ / 运营 8 M$，第 4 年升档 185 M$，第 5 年升档 210 M$ 并加码运营至 20 M$；末年估值 <b>2170.8 M$</b>、最优业主效用 <b>1632.6 M$</b>，比稳健经营高 27.9%、比争冠冲刺高 2.0%。</li>
+      <li><b>问题三</b>：推荐均衡票价 <b>$105.72</b>（现状 $75 明显偏低）；贡献利润 48.62 M$、球迷效用 32.41 M$、上座率 58.4%，以约 2.0% 的利润让步换取球迷效用 +30.6%。</li>
+      <li><b>问题四</b>：自付 168 M$ 的场馆投资在基准情景下经营口径 NPV <b>+77.75 M$</b>、估值增量 <b>+273.57 M$</b>、综合净收益 <b>+351.32 M$</b>，回收期 6.2 年；建议分期建设并以首年上座率 89% 为触发条件。</li>
+    </ul>
+    <p><b>四问的连贯性</b>（本题核心得分点）：问题二选出的争冠态（薪资 210 M$）为问题四提供了收入基数，问题三选出的均衡价（$105.72）决定了问题四的需求水平。若把定价换成利润最大价 $124.51，问题四的增量年收入会明显缩水——因为容量扩张所服务的新增座位恰恰是价格敏感度最高的那部分需求。这说明<b>定价决策与投资决策必须联合优化</b>，而不是各自独立取最优。</p>
+    <p class="foot">2026 美赛 D 题 · 成功的体育管理 · 成果 · 全部数字由 体育管理-代码.py 实际运行输出</p>
+  </div>
+</div>
+</body>
+</html>

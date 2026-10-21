@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无线电干扰源的快速自动定位与清除 · 实训指导书</title>
+<style>
+  :root{
+    --ink:#0B2E36; --sub:#4A6572; --line:#E2EAEE; --bg:#F4F8FA;
+    --brand:#1E6FA8; --brand2:#12A594; --note:#FFF8E6; --note-b:#F0C36D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.75;font-size:15px}
+  .wrap{max-width:880px;margin:0 auto;padding:32px 22px 72px}
+  header.top{background:linear-gradient(120deg,#0B2E36,#1E6FA8);color:#fff;
+    border-radius:16px;padding:30px 30px 26px;box-shadow:0 10px 30px rgba(11,46,54,.18)}
+  header.top h1{margin:0 0 8px;font-size:26px;letter-spacing:.5px}
+  header.top .sub{opacity:.9;font-size:13.5px}
+  header.top .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  header.top .tags span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+    padding:4px 11px;border-radius:999px;font-size:12px}
+  nav.toc{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px 20px;margin:20px 0 26px}
+  nav.toc h2{margin:0 0 10px;font-size:14px;color:var(--sub);font-weight:600;letter-spacing:1px}
+  nav.toc ol{margin:0;padding-left:20px}
+  nav.toc li{margin:4px 0}
+  nav.toc a{color:var(--brand);text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+  section.ch{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:24px 26px;margin-bottom:20px;box-shadow:0 2px 10px rgba(11,46,54,.04)}
+  h3{font-size:19px;margin:0 0 12px;color:var(--ink);
+    border-left:4px solid var(--brand2);padding-left:12px}
+  p{margin:10px 0;color:#22323A}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  b{color:var(--ink)}
+  .mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+    background:#EEF4F7;border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:13px;color:#0B5E70}
+  .formula{background:#F0F7FA;border:1px dashed #9CC7D8;border-radius:10px;
+    padding:12px 16px;margin:12px 0;font-family:"SFMono-Regular",Consolas,monospace;
+    font-size:14px;color:#0B4A5C;text-align:center;overflow-x:auto}
+  .note{background:var(--note);border-left:4px solid var(--note-b);border-radius:8px;
+    padding:12px 16px;margin:14px 0;font-size:13.5px;color:#6B5320}
+  footer{margin-top:28px;text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>无线电干扰源的快速自动定位与清除 · 实训指导书</h1>
+    <div class="sub">2026 全国大学生数学建模竞赛 · B 题 · 干扰源定位与清除策略</div>
+    <div class="tags">
+      <span>6 章实训要点</span><span>示向度交会 · 有界误差</span>
+      <span>正六边形覆盖</span><span>最优第二测点</span><span>方向鲁棒网格</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#c1">题目重述与信息结构</a></li>
+      <li><a href="#c2">环境参数与有界不确定性</a></li>
+      <li><a href="#c3">示向度交会与清除判据</a></li>
+      <li><a href="#c4">从问题一到问题四的升级</a></li>
+      <li><a href="#c5">结果、灵敏度与稳健性</a></li>
+      <li><a href="#c6">模型评价与论文写作</a></li>
+    </ol>
+  </nav>
+
+  <section class="ch" id="c1">
+    <h3>一、题目重述与信息结构</h3>
+    <p>一台机器狗搭载测向机，在<b>半径 1800 m 的圆形区域</b>内寻找并清除无线电干扰源。机器狗只能通过测向机「听」到源：每次测量给出一个示向度（方向角），误差不超过 <b>±1°</b>。移动、测量、切换频道与执行清除都要花时间，且不能瞬移。题目要求给出从进入区域到退出区域的完整策略，并在官方模拟器上接受三次正式测试。</p>
+    <p>四个问题的递进，本质是<b>已知信息</b>与<b>源的辐射类型</b>不同：</p>
+    <ul>
+      <li><b>问题一</b>：同一源的多条示向度 → 求定位区域及其直径 D，判断能否一次清除 → 确定性集合的几何问题；</li>
+      <li><b>问题二</b>：已知第一个检测点与一条示向度 → 求最优第二检测点 → 单目标布点优化；</li>
+      <li><b>问题三</b>：仅有 10–16 个全向源、位置未知 → 保证全部发现并清除 → 全局覆盖 + 局部清除；</li>
+      <li><b>问题四</b>：混入定向源（仅朝 ±90° 扇区辐射）→ 距离 + 方向的联合覆盖 → 方向鲁棒布点。</li>
+    </ul>
+    <p><b>信息结构核对</b>：前两问处理「听到之后怎么算出位置」，输入是若干测点与示向度；后两问处理「怎么保证一定听得到」，输入是区域尺寸与源数量范围。四问共用同一套「发现—定位—清除」骨架。</p>
+    <div class="note">写这一步的关键是画出「已知信息 × 四问」对应矩阵：哪一问已知什么、要产出什么、约束在哪里。评委一眼就能看出是否理清了数据结构。</div>
+  </section>
+
+  <section class="ch" id="c2">
+    <h3>二、环境参数与有界不确定性</h3>
+    <p>把题面参数整理成一张表，是全部建模的起点：</p>
+    <ul>
+      <li><b>目标区域</b>：半径 1800 m 的圆形；</li>
+      <li><b>可用频道</b>：20 个，每频道至多一个源；</li>
+      <li><b>示向度误差</b>：±1°，<b>有界</b>而非随机；</li>
+      <li><b>有效接收半径</b>：1000–1500 m（全向源在此范围内可测到）；</li>
+      <li><b>光学清除半径</b>：20 m，进入即执行 <span class="mono">/clear</span>；</li>
+      <li><b>时间规则</b>：移动 5 m/s，检测 5 s，切换频道 1 s，清除 3 s（未发现）/ 5 s（已清除）。</li>
+    </ul>
+    <div class="formula">示向度误差 ∈ [−1°, +1°]　⇒　源 100% 落在扇形内，不含概率</div>
+    <p>「±1° 有界」是全题的分水岭：它意味着定位结果是一个<b>确定性集合</b>，后续一切判定都用「必然 / 不可能」，而不是「大概率 / 可能」。</p>
+    <div class="note">红线：不要给示向度误差套一个正态分布再算置信区间——题面说的是「误差不超过 ±1°」，是有界约束。把有界误差当随机误差处理，会得出与实际不符的结论。</div>
+  </section>
+
+  <section class="ch" id="c3">
+    <h3>三、示向度交会与清除判据</h3>
+    <p>每次测量是一条<b>中心线 ±1° 的扇形</b>。从不同位置对同一源测量，把多条扇形求交，即得定位区域 A：</p>
+    <div class="formula">A = ∩_k Sector(p_k, θ_k ± 1°)　；　R = radius(MinEnclosingCircle(A))</div>
+    <p>这里有一个常见的坑：题面提到「以区域直径 D 为直径作圆」，但对非圆形的定位区域，这个圆<b>通常盖不全</b>区域，因此不能拿 D 当清除判据。真正决定「能否一次清除」的是最小包围圆半径：</p>
+    <div class="formula">可一次清除　⟺　R ≤ 20 m　（与直径 D 无直接关系）</div>
+    <p>数值上，当两测点相距 1000 m 时，D 在交会角过小时急剧膨胀，而最坏后验半径 R 随交会角呈 <b>U 形</b>，在 90° 附近取到最小，在 60°–120° 区间相对稳定。</p>
+    <div class="note">U 形曲线是问题二的直接依据：交会角越接近直角，后验不确定区域越小。把这一条讲透，问题二的「最优第二测点」就顺理成章。</div>
+  </section>
+
+  <section class="ch" id="c4">
+    <h3>四、从问题一到问题四的模型升级路径</h3>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题二：最优第二测点</h3>
+    <p>为了交会，机器狗要从第一测点移动到第二个位置再测一次。这个位置受两条约束：一是到源的距离须在有效接收半径内；二是<i>强保证口径</i>——必须对定位区域 A 内<b>任意</b>位置都成立，于是可行域半径要在乐观圆基础上再减去 A 的尺寸 r<sub>A</sub>。</p>
+    <div class="formula">S_feasible = { s : max_{p∈A} dist(s, p) ≤ 1000 }　；　J(S) = maxR(A | S) + λ · dist(p₁, S)</div>
+    <p>把候选区按固定步长（如 50 m）离散成网格，对每个网格点计算 J(S)，取最小者。题面更看重「一次性把源定准」，故正式解取较小的 λ，λ 的扫描用于说明结论的稳健性。</p>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题三：全局保证覆盖 + 局部清除</h3>
+    <p>源位置完全未知，先用少数测点把整个区域「盖住」。每个测点的有效接收半径至少 1000 m，取工作半径 ρ 画成覆盖圆：</p>
+    <div class="formula">中心 1 点 + 圆周 6 点（相邻夹角 60°）；　覆盖充分条件：ρ ≥ 1800 / √3 ≈ 1039 m</div>
+    <p>这是圆盘覆盖的经典正六边形构型：取 ρ ≈ 1150 m 留出裕量，相邻覆盖圆相互叠压不留缝。任何位置的源都至少被一个测点听到。一旦某频道被听到，即转入局部流程——多次交会把定位区域缩到 R ≤ 20 m，再移动到源附近执行清除，核销该频道；20 个频道全部核销后方可 <span class="mono">/exit</span>。</p>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题四：定向源下的方向鲁棒覆盖</h3>
+    <p>定向源只朝 ±90°（共 180°）的扇区辐射，于是多了一条<b>方向约束</b>：测点要听到源，必须同时满足距离与方向两条：</p>
+    <div class="formula">距离：|ST| ≤ 1500 m　且　方向：|angle(ST) − θ| ≤ 90°</div>
+    <p>由于源的朝向 θ 对机器狗未知，仅按距离布点的圆形覆盖会被「朝向」击穿。判据升级为<b>方向鲁棒覆盖</b>：对区域内任意点 p、任意朝向 θ，都存在测点 S 同时满足两条件，等价于从 p 望出去能覆盖完整的 360° 方位。最省的构造是成对镜像测点，再铺成网格。</p>
+  </section>
+
+  <section class="ch" id="c5">
+    <h3>五、结果与灵敏度分析</h3>
+    <p>把四问的关键结论摆在一起看，约束在逐层加码：</p>
+    <ul>
+      <li><b>问题一</b>：最小包围圆 R ≤ 20 m 才是清除判据；D 只是区域尺寸的直观度量；</li>
+      <li><b>问题二</b>：第二测点使最坏后验半径 R 最小，交会角落在 60°–120° 区间；</li>
+      <li><b>问题三</b>：「中心 1 点 + 圆周 6 点」共 7 点即可保证全区域覆盖；</li>
+      <li><b>问题四</b>：镜像成对测点 + 方向鲁棒网格，覆盖位置的同时覆盖朝向。</li>
+    </ul>
+    <p>值得写进论文的几个灵敏度结论：</p>
+    <ul>
+      <li><b>工作半径 ρ</b>：ρ 越小所需测点越多，ρ 越大外圈越难覆盖；ρ ≈ 1150 m 是「叠压不留缝」与「外圈可覆盖」之间的平衡点；</li>
+      <li><b>候选区口径</b>：改用「强保证」口径会使可行域半径减少约 r<sub>A</sub>，直接影响最优第二测点位置与移动耗时；</li>
+      <li><b>网格步长</b>：问题四网格步长越小，朝向覆盖越密，但测点数量与移动耗时同步上升——这是覆盖保证与时间预算之间的直接权衡。</li>
+    </ul>
+    <div class="note">最后一条是很好的创新点：它把「方向鲁棒」的代价量化成可调的步长—耗时曲线，而不是笼统地说「定向源更难」。</div>
+  </section>
+
+  <section class="ch" id="c6">
+    <h3>六、模型评价与论文写作要点</h3>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">优点</h3>
+    <ul>
+      <li>四问共用一套「发现—定位—清除」骨架，只改已知信息与辐射类型，论文结构紧凑、代码可复用；</li>
+      <li>抓住「±1° 有界误差」这一关键，把定位结果写成确定性集合，判定用「必然 / 不可能」，逻辑严密；</li>
+      <li>问题三给出正六边形覆盖的充分条件 ρ ≥ 1800/√3，问题四给出方向鲁棒的可检验判据，结论可复算。</li>
+    </ul>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">局限与改进</h3>
+    <ul>
+      <li>问题三、四的覆盖构型假设测点在理想圆上铺放，未显式优化移动路径；下一步可做路径规划与覆盖联合优化；</li>
+      <li>问题四把朝向视为任意未知，未利用「朝向在多次观测间保持不变」这一可推断信息；可引入朝向估计；</li>
+      <li>耗时模型只按直线距离除以速度估算，未考虑转弯与避障；可在模拟器上实测校准。</li>
+    </ul>
+    <div class="note">论文结构建议：摘要（务必写出四问的分层结论与 ρ ≥ 1800/√3）→ 问题重述 → 假设与符号说明（<b>记得补「单位」列</b>）→ 环境参数与不确定性分析 → 问题一～四模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（代码 + 结果文件说明）。</div>
+  </section>
+
+  <footer>2026 CUMCM B 题 · 无线电干扰源的快速自动定位与清除 · 实训指导书</footer>
+</div>
+</body>
+</html>

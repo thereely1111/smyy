@@ -1,0 +1,25 @@
+{
+  "status": "PARTIAL",
+  "case_id": "p2",
+  "file": "public/hero-assets/radio-interference-localization-cover-v1.png",
+  "mime": "image/png",
+  "width": 1536,
+  "height": 1024,
+  "aspect_ratio": 1.5,
+  "checks": {
+    "file_exists": true,
+    "readable": true,
+    "landscape": true,
+    "central_safe_zone": "NOT_TESTED",
+    "small_card_recognition": "NOT_TESTED",
+    "no_text_or_watermark": "NOT_TESTED",
+    "topic_matches_case": "PROMPT_ALIGNED"
+  },
+  "human_review_required": true,
+  "notes": [
+    "Static PNG validation passed with the project-required 1536x1024 dimensions.",
+    "The current model session could not visually inspect the generated bitmap; verify the image on the homepage before treating it as final.",
+    "The original generated file is preserved; the normalized v1 asset does not overwrite existing assets.",
+    "No mathematical result or simulated measurement is represented."
+  ]
+}

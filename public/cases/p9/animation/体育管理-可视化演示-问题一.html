@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 美赛D题 · 问题一 · 现状建模与关键驱动</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:stretch}
+@media(max-width:960px){.hero{grid-template-columns:1fr}}
+.heroleft{display:flex;flex-direction:column;gap:14px}
+.heroright{
+  position:relative;background:#0b2e36;border-radius:var(--r);overflow:hidden;
+  box-shadow:0 8px 26px rgba(11,46,54,.18);min-height:360px;
+}
+.heroright canvas{position:absolute;inset:0;width:100%;height:100%}
+.herolabel{position:absolute;left:14px;top:12px;color:#cdeee9;font-size:12px;letter-spacing:.06em;
+  font-weight:600;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.herosublabel{position:absolute;right:14px;bottom:12px;color:rgba(205,238,233,.7);font-size:11.5px;z-index:2;
+  text-align:right;line-height:1.6;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p9-0.html">全局</a>
+    <a href="./mod-p9-1.html" class="on">问题一</a>
+    <a href="./mod-p9-2.html">问题二</a>
+    <a href="./mod-p9-3.html">问题三</a>
+    <a href="./mod-p9-4.html">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===== 第一幕 · 战绩—财务传导链 ===== -->
+<section class="scene" id="s1" data-title="问题一 · 一 · 战绩—财务传导链">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题一 · 现状建模与指标体系</div>
+    <h1><b>薪资 → 评级 → 胜率 → 收入 → 利润 / 估值</b>：用一条传导链把竞技与财务打通
+      <small>薪资 PS 决定阵容评级 R = 50 + 18·ln(PS/140)；评级经 Logistic 映射为胜率 w；胜率与票价 p 共同决定每场需求 D；需求折成收入与利润；估值 V = 6.0 × 年收入。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">战绩 ↔ 财务传导链</span>
+      <span class="decochip t">41 个主场</span>
+      <span class="decochip g">估值倍数 6.0</span>
+      <span class="decochip w">现状：薪资 160 · 票价 $75</span>
+    </div>
+  </div>
+
+  <div class="hero stg">
+    <div class="heroleft">
+      <div class="card">
+        <h3>传导链方程 <em>问题一定式</em></h3>
+        <div class="formula"><span class="c">R</span> = 50 + 18·ln(PS/140)
+
+<span class="c">w</span> = 1/(1+exp(−(R−50)/8))，∈ [0.25, 0.72]
+
+<span class="c">D(p)</span> = 12000 + 9000(w−0.5) − 70(p−75)
+
+<span class="y">利润</span> = 收入 − 成本，V = 6.0 × 年收入</div>
+        <p class="small" style="margin-top:8px">链条自左向右单向传导：薪资 → 阵容评级 → 胜率 → 每场需求 → 收入 → 利润；估值再由年收入按 6.0 倍放大。</p>
+      </div>
+      <div class="card">
+        <h3>现状参数 <em>薪资 160 · 运营 8 · 票价 $75</em></h3>
+        <p>主场容量 <b class="hl-t">18000</b> 座 · 每赛季 <b class="hl-t">41</b> 个主场 · 联盟分成 <b class="hl-t">130</b> M$</p>
+        <p>固定成本 <b class="hl-t">95</b> M$ · 每人附加收入 <b class="hl-g">$22</b> · 每人边际成本 <b class="hl">$15</b></p>
+        <p class="small">现状每场需求 <b class="hl-t">12671</b> 座、上座率 <b class="hl-t">70.4%</b>；估值 V = 6.0 × 317.80 = <b class="hl-g">1906.8</b> M$。</p>
+      </div>
+    </div>
+    <div class="heroright">
+      <div class="herolabel">传导链 · 竞技端 → 财务端</div>
+      <div class="herosublabel">现状：薪资 160 M$<br>V = 6.0 × 年收入</div>
+      <canvas id="cvFlow"></canvas>
+    </div>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="kpi"><div class="k">阵容评级 R</div><div class="v">52.40</div><div class="sub">R = 50 + 18·ln(PS/140)</div></div>
+    <div class="kpi b"><div class="k">胜率 w</div><div class="v">0.575</div><div class="sub">82 场赛季约 47.1 胜</div></div>
+    <div class="kpi g"><div class="k">每场需求 D</div><div class="v">12671 <u>座</u></div><div class="sub">上座率 70.4%</div></div>
+    <div class="kpi w"><div class="k">估值 V</div><div class="v">1906.8 <u>M$</u></div><div class="sub">V = 6.0 × 年收入</div></div>
+  </div>
+
+  <div class="quote stg">问题一关键：把竞技端（<b class="hl-t">薪资 → 评级 → 胜率</b>）与财务端（<b class="hl-t">需求 → 收入 → 利润 → 估值</b>）用一条可辨识的传导链打通；现状利润 <b>47.01</b> M$、估值 <b class="hl-g">1906.8</b> M$，任何一端变动都会沿链条传到利润。</div>
+</div>
+</section>
+
+<!-- ===== 第二幕 · 现状损益结构 ===== -->
+<section class="scene" id="s2" data-title="问题一 · 二 · 现状损益结构">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">现状损益结构 · 收入 − 成本</div>
+    <h1>现状：收入 <span class="hl-t">317.80</span> M$、成本 <span class="hl">270.79</span> M$、利润 <b>47.01</b> M$
+      <small>收入由门票、附加、商品、赞助、联盟分成五项构成，成本由薪资、固定、边际、运营四项构成；两组柱统一在 0～340 M$ 的纵轴上逐段堆叠，其高度差即为利润。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">现状损益结构：收入五项 vs 成本四项（统一纵轴 0～340 M$）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>门票</span>
+        <span><i style="background:#1e9fc4"></i>附加</span>
+        <span><i style="background:#e0a04a"></i>商品</span>
+        <span><i style="background:#8a6313"></i>赞助</span>
+        <span><i style="background:#146c87"></i>联盟分成</span>
+        <span><i style="background:#b8543a"></i>成本（薪资/固定/边际/运营）</span>
+      </div>
+    </div>
+    <canvas id="cvPL"></canvas>
+    <p class="note" style="margin-top:8px">利润率 <b>14.8%</b>、薪资收入比 <b>50.3%</b>（联盟警戒线通常 <b>55%</b>）；收入 38.96 + 11.43 + 74.45 + 62.96 + 130.00 = <b class="hl-t">317.80</b> M$，成本 160 + 95 + 7.79 + 8 = <b class="hl">270.79</b> M$。</p>
+  </div>
+</div>
+</section>
+
+<!-- ===== 第三幕 · 关键驱动辨识 ===== -->
+<section class="scene" id="s3" data-title="问题一 · 三 · 关键驱动辨识">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">关键驱动辨识 · 同等强度扰动</div>
+    <h1>同等强度扰动下，<span class="hl-t">战绩 w</span> 的利润弹性最大：+11.14 M$（+23.7%）
+      <small>对现状模型分别施加同等强度的扰动，观察利润的相对变化；按利润变化量排序为 战绩 &gt; 薪资 &gt; 票价 &gt; 运营 &gt; 附加。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">关键驱动辨识：扰动后利润变化（M$，零轴为现状 47.01 M$）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>正向驱动</span>
+        <span><i style="background:#b8543a"></i>负向驱动</span>
+      </div>
+    </div>
+    <canvas id="cvSens"></canvas>
+    <p class="note" style="margin-top:8px">同等强度扰动：战绩 w +0.05 → 利润 <b>58.15</b>（+11.14，+23.7%）；薪资 PS +10% → <b>42.46</b>（−4.54，−9.7%）；票价 p +10% → <b>48.98</b>（+1.97，+4.2%）；运营投入 8→20 → <b>45.28</b>（−1.73，−3.7%）；附加收入 +10% → <b>48.15</b>（+1.14，+2.4%）。</p>
+  </div>
+
+  <div class="card stg">
+    <h3>驱动解读 <em>谁最值得优先调整</em></h3>
+    <p>胜率每提高 0.05 即可带来 <b class="hl-t">+23.7%</b> 的利润，是唯一的<b class="hl-t">一级驱动</b>：它同时抬高每场需求与上座率，且不增加薪资以外的大额固定支出。</p>
+    <p>薪资是按档位可调的成本杠杆，票价是可调的收入杠杆，二者方向相反——薪资 +10% 使利润 <b class="hl">−9.7%</b>，票价 +10% 使利润 <b class="hl-t">+4.2%</b>。</p>
+    <p class="small">运营投入（8→20）与附加收入（+10%）的量级最弱，属于二级驱动，适合在主杠杆确定后做微调。</p>
+  </div>
+
+  <div class="stg">
+    <div class="quote">KPI 体系四类：<b class="hl-t">竞技</b>（胜率 / 胜场）、<b class="hl-t">财务</b>（利润率 / 薪资收入比）、<b class="hl-t">资产</b>（估值 / 估值倍数）、<b class="hl-t">球迷</b>（上座率 / 消费者剩余）。</div>
+  </div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function tag(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-10):(x-2);
+  g.fillStyle='rgba(255,255,255,.95)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(bx+.5,y-8.5,tw+9,17);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function tagDark(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-8):(x-4);
+  g.fillStyle='rgba(11,46,54,.82)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+
+/* ===== 动画引擎 ===== */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){ if(!handle._alive) return; fn(t); handle._raf=requestAnimationFrame(loop); }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+
+/* ===== 第一幕 · 传导链 hero ===== */
+var flowT0=null;
+function drawFlow(t){
+  var cv=$('#cvFlow'); if(!cv)return;
+  if(cv._h===undefined) cv._h=320;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-flowT0)/1000;
+
+  var bg=g.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#0b2e36'); bg.addColorStop(.55,'#0e3a44'); bg.addColorStop(1,'#0b2e36');
+  g.fillStyle=bg; g.fillRect(0,0,w,h);
+  for(var i=0;i<44;i++){
+    var sx=((i*97.13)%w), sy=((i*53.7)%(h-20))+10;
+    var tw=0.5+0.5*Math.sin(tN*1.1+i*0.6);
+    g.fillStyle='rgba(205,238,233,'+(0.05+0.16*tw)+')';
+    g.fillRect(sx,sy,1.5,1.5);
+  }
+
+  var nodes=[
+    {k:'薪资 PS',    v:'160 M$',    s:''},
+    {k:'阵容评级 R', v:'52.40',     s:''},
+    {k:'胜率 w',     v:'0.575',     s:'约 47.1 胜'},
+    {k:'年收入',     v:'317.80 M$', s:''},
+    {k:'估值 V',     v:'1906.8 M$', s:''}
+  ];
+  var n=nodes.length, padX=10;
+  var bw=Math.min(98,Math.max(44,(w-2*padX)*0.72/n));
+  var gapX=Math.max(8,(w-2*padX-n*bw)/(n-1));
+  var bh=66, cy=h*0.46, by=cy-bh/2;
+  function nx(j){ return padX+j*(bw+gapX); }
+
+  function flow(pts,phase,col){
+    if(!pts||!pts.length) return;
+    var u=((tN*0.55+phase)%1+1)%1;
+    var idx=Math.max(0,Math.min(pts.length-1,Math.floor(u*(pts.length-1))));
+    var p=pts[idx]; if(!p) return;
+    g.beginPath(); g.arc(p[0],p[1],3.0,0,Math.PI*2);
+    g.fillStyle=col; g.fill();
+    g.beginPath(); g.arc(p[0],p[1],5.6,0,Math.PI*2);
+    g.fillStyle=col.replace(/[\d.]+\)$/,'0.18)'); g.fill();
+  }
+  function curve(x0,y0,x1,y1,cx,cyy,phase,col){
+    g.strokeStyle='rgba(127,216,201,.35)'; g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(x0,y0); g.quadraticCurveTo(cx,cyy,x1,y1); g.stroke();
+    var pts=[]; for(var k=0;k<=24;k++){ var u=k/24;
+      var xx=(1-u)*(1-u)*x0+2*(1-u)*u*cx+u*u*x1;
+      var yy=(1-u)*(1-u)*y0+2*(1-u)*u*cyy+u*u*y1; pts.push([xx,yy]); }
+    flow(pts,phase,col);
+  }
+
+  var lit=[];
+  for(var j=0;j<n;j++) lit[j]=easeOutCubic(clamp((tN-j*0.5)/0.5,0,1));
+
+  for(var c1=0;c1<n-1;c1++){
+    if(lit[c1+1]>0.02){
+      curve(nx(c1)+bw, cy, nx(c1+1), cy, (nx(c1)+bw+nx(c1+1))/2, cy-12, c1*0.22, 'rgba(127,216,201,.95)');
+    }
+  }
+  for(var j2=0;j2<n;j2++){
+    var x=nx(j2), a=lit[j2];
+    g.fillStyle='rgba(255,255,255,'+(0.05+0.06*a)+')'; rr(g,x,by,bw,bh,9); g.fill();
+    g.strokeStyle='rgba(127,216,201,'+(0.25+0.60*a)+')'; g.lineWidth=1.4;
+    rr(g,x+.5,by+.5,bw-1,bh-1,9); g.stroke();
+    g.fillStyle='rgba(18,165,148,'+(0.18+0.72*a)+')'; g.fillRect(x+1,by+1,3,bh-2);
+    g.globalAlpha=0.35+0.65*a;
+    g.fillStyle='#7fd8c9'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(nodes[j2].k, x+bw/2, by+19);
+    g.fillStyle='#eaf4f4'; g.font='700 12.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(nodes[j2].v, x+bw/2, by+40);
+    if(nodes[j2].s){
+      g.fillStyle='rgba(205,238,233,.85)'; g.font='10px "PingFang SC",system-ui,sans-serif';
+      g.fillText(nodes[j2].s, x+bw/2, by+56);
+    }
+    g.globalAlpha=1;
+  }
+  tagDark(g, 14, h-20, '现状：运营 8 M$ · 票价 $75 · 容量 18000 座', '#cdeee9', 'left');
+}
+function startFlow(){ flowT0=performance.now(); runAnim(function(t){ drawFlow(t); }); }
+
+/* ===== 第二幕 · 现状损益结构 ===== */
+var plT0=null;
+var PL_REV=[
+  {n:'门票',    v:38.96,  c:'#12a594', tc:'#0b6e68'},
+  {n:'附加',    v:11.43,  c:'#1e9fc4', tc:'#146c87'},
+  {n:'商品',    v:74.45,  c:'#e0a04a', tc:'#8a6313'},
+  {n:'赞助',    v:62.96,  c:'#8a6313', tc:'#6b4d0e'},
+  {n:'联盟分成',v:130.00, c:'#146c87', tc:'#0b2e36'}
+];
+var PL_COST=[
+  {n:'薪资', v:160.00, c:'#b8543a', tc:'#8d3f2a'},
+  {n:'固定', v:95.00,  c:'#c17a63', tc:'#8d4a36'},
+  {n:'边际', v:7.79,   c:'#9a6a5c', tc:'#7a5147'},
+  {n:'运营', v:8.00,   c:'#cf9d8b', tc:'#8d4229'}
+];
+function drawPL(t){
+  var cv=$('#cvPL'); if(!cv)return;
+  if(cv._h===undefined) cv._h=280;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-plT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.6,0,1));
+  var L=58,R=26,T=26,B=44, PH=h-T-B;
+  var PW=Math.max(160,w-L-R);
+  var vmax=340;
+  function Y(v){ return T+PH*(1-v/vmax); }
+
+  /* 统一纵轴 0~340 M$ */
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=vmax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0), L-7, yy);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.save(); g.translate(16,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('M$',0,0); g.restore();
+
+  var bw=Math.min(104,Math.max(58,PW*0.15));
+  var revCX=L+PW*0.26, costCX=L+PW*0.74;
+  var revLeft=revCX-bw/2, revRight=revCX+bw/2, costLeft=costCX-bw/2, costRight=costCX+bw/2;
+
+  /* 目标框 */
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1;
+  g.strokeRect(revLeft+.5, Y(317.80)+.5, bw-1, 317.80/vmax*PH);
+  g.strokeRect(costLeft+.5, Y(270.79)+.5, bw-1, 270.79/vmax*PH);
+
+  /* 收入堆叠（自下而上） */
+  var acc=0, drawn=rev*317.80;
+  PL_REV.forEach(function(it){
+    var sh=clamp(drawn-acc,0,it.v);
+    if(sh>0.001){
+      var yBot=Y(acc), hh=sh/vmax*PH;
+      g.fillStyle=it.c; g.globalAlpha=.9; g.fillRect(revLeft+1, yBot-hh, bw-2, hh); g.globalAlpha=1;
+    }
+    acc+=it.v;
+  });
+  /* 成本堆叠（自下而上） */
+  acc=0; var drawn2=rev*270.79;
+  PL_COST.forEach(function(it){
+    var sh=clamp(drawn2-acc,0,it.v);
+    if(sh>0.001){
+      var yBot=Y(acc), hh=sh/vmax*PH;
+      g.fillStyle=it.c; g.globalAlpha=.9; g.fillRect(costLeft+1, yBot-hh, bw-2, hh); g.globalAlpha=1;
+    }
+    acc+=it.v;
+  });
+
+  /* 柱下名称 */
+  g.fillStyle='#0b6e68'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('收入 317.80 M$', revCX, T+PH+18);
+  g.fillStyle='#b8543a';
+  g.fillText('成本 270.79 M$', costCX, T+PH+18);
+
+  if(rev>0.9){
+    /* 段内/段旁标签：短段挪到柱外，避免文字互相遮挡 */
+    acc=0;
+    PL_REV.forEach(function(it){
+      var yc=Y(acc+it.v/2), fh=it.v/vmax*PH;
+      if(fh>=22) tag(g, revLeft+4, yc, it.n+' '+it.v.toFixed(2), it.tc, 'left');
+      else tag(g, revRight+6, yc, it.n+' '+it.v.toFixed(2), it.tc, 'left');
+      acc+=it.v;
+    });
+    acc=0;
+    PL_COST.forEach(function(it){
+      var yc=Y(acc+it.v/2), fh=it.v/vmax*PH;
+      if(fh>=22) tag(g, costLeft+4, yc, it.n+' '+it.v.toFixed(2), it.tc, 'left');
+      else if(it.v>=7.9) tag(g, costRight+6, yc, it.n+' '+it.v.toFixed(2), it.tc, 'left');
+      else tag(g, costLeft-6, yc, it.n+' '+it.v.toFixed(2), it.tc, 'right');
+      acc+=it.v;
+    });
+
+    /* 两柱之间：水平虚线 + 竖直箭头 标出利润 */
+    var yR=Y(317.80), yC=Y(270.79), ax=revRight+30;
+    g.save(); g.setLineDash([5,4]); g.strokeStyle='rgba(11,110,104,.55)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(revRight, yR); g.lineTo(revRight+165, yR); g.stroke();
+    g.beginPath(); g.moveTo(revRight, yC); g.lineTo(revRight+165, yC); g.stroke();
+    g.restore();
+    g.strokeStyle='#0b6e68'; g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(ax,yR+4); g.lineTo(ax,yC-4); g.stroke();
+    g.beginPath(); g.moveTo(ax,yR); g.lineTo(ax-4,yR+6); g.lineTo(ax+4,yR+6); g.closePath();
+    g.fillStyle='#0b6e68'; g.fill();
+    g.beginPath(); g.moveTo(ax,yC); g.lineTo(ax-4,yC-6); g.lineTo(ax+4,yC-6); g.closePath(); g.fill();
+    tag(g, costLeft-6, yR+10, '利润 = 317.80 − 270.79 = 47.01 M$', '#0b6e68', 'right');
+  }
+}
+function startPL(){ plT0=performance.now(); runAnim(function(t){ drawPL(t); }); }
+
+/* ===== 第三幕 · 关键驱动辨识 ===== */
+var sensT0=null;
+var SENS=[
+  {k:'战绩 w (+0.05)', v:11.14, l:'+11.14 M$ (+23.7%)', pc:'#0b6e68'},
+  {k:'薪资 PS (+10%)', v:-4.54, l:'−4.54 M$ (−9.7%)',  pc:'#b8543a'},
+  {k:'票价 p (+10%)',  v:1.97,  l:'+1.97 M$ (+4.2%)',   pc:'#0b6e68'},
+  {k:'运营投入 (8→20)',v:-1.73, l:'−1.73 M$ (−3.7%)',   pc:'#b8543a'},
+  {k:'附加收入 (+10%)',v:1.14,  l:'+1.14 M$ (+2.4%)',   pc:'#0b6e68'}
+];
+function drawSens(t){
+  var cv=$('#cvSens'); if(!cv)return;
+  if(cv._h===undefined) cv._h=260;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-sensT0)/1000;
+  var L=(w<620)?88:118, R=(w<620)?96:132, T=26, B=40, PH=h-T-B;
+  var PW=Math.max(90,w-L-R);
+  var xmin=-5, xmax=12;
+  function X(v){ return L+PW*(v-xmin)/(xmax-xmin); }
+
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  [-5,0,5,10,12].forEach(function(v){
+    var xx=X(v);
+    g.strokeStyle=(v===0)?'#cfe4e4':'#f2f9f9'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(v, xx, T+PH+16);
+  });
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('利润变化 (M$)', L+PW/2, T+PH+33);
+  g.strokeStyle='#8aa3aa'; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(X(0),T-4); g.lineTo(X(0),T+PH); g.stroke();
+
+  var n=SENS.length, rh=PH/n, barH=18, x0=X(0);
+  function endTag(px,rowY,txt,col){
+    g.font='600 11px "PingFang SC",system-ui,sans-serif';
+    var twd=g.measureText(txt).width+10;
+    if(px+twd<=w-4) tag(g,px,rowY,txt,col,'left');
+    else tag(g,w-4,rowY,txt,col,'right');
+  }
+  for(var i=0;i<n;i++){
+    var it=SENS[i], rowY=T+rh*(i+0.5);
+    var grow=easeOutCubic(clamp((tN-i*0.32)/0.6,0,1));
+    var x1=X(it.v*grow);
+    var bx=Math.min(x0,x1), bw2=Math.abs(x1-x0);
+    g.fillStyle=(it.v>=0)?'#12a594':'#b8543a'; g.globalAlpha=.88;
+    rr(g,bx,rowY-barH/2,Math.max(0.5,bw2),barH,4); g.fill(); g.globalAlpha=1;
+    if(grow>0.9){
+      if(it.v>=0) endTag(x1+8, rowY, it.l, it.pc);
+      else endTag(x0+10, rowY, it.l, it.pc);
+    }
+    g.fillStyle='#3d6570'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(it.k, L-8, rowY);
+  }
+}
+function startSens(){ sensT0=performance.now(); runAnim(function(t){ drawSens(t); }); }
+
+/* ===== 调度 ===== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var starters=[startFlow, startPL, startSens];
+var st={last:0,armed:false,fired:0};
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; stopAllAnims();
+  var sc=SCENES[i]; sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); });
+  if(starters[i]) starters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v){ $$('.wrap > *').forEach(function(e){ e.classList.add('in'); }); stopAllAnims(); }
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i); });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ stopAllAnims(); if(starters[cur]) starters[cur](); };
+  $('#btnFx').onclick=function(){ var nv=!document.body.classList.contains('reduce'); setReduce(nv);
+    if(!nv && cur>=0 && starters[cur]) starters[cur](); };
+  document.addEventListener('keydown',function(e){
+    var tn=(e.target.tagName||'').toLowerCase(); if(tn==='input'||tn==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){ if(cur>=0 && starters[cur] && !document.body.classList.contains('reduce')) starters[cur](); });
+init();
+})();
+</script>
+</body>
+</html>

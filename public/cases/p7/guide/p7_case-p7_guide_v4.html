@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>实训指导书 · 太空电梯系统建立月球殖民地的运输策略</title>
+<style>
+  :root{
+    --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+    --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+    --teal:#12a594; --teal-d:#0b6e68; --gold:#e0a04a; --gold-d:#8a6313;
+    --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.8 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:40px 24px 64px}
+  .hd{border-bottom:2px solid var(--teal);padding-bottom:18px;margin-bottom:28px}
+  .kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+  h1{font-size:27px;line-height:1.35;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .sub{font-size:14px;color:var(--muted);margin:0}
+  .blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;
+    box-shadow:var(--sh);margin-bottom:18px}
+  h3{margin:0 0 12px;font-size:17px;font-weight:600;color:var(--teal-d)}
+  h3 + h3{margin-top:14px}
+  p{margin:0 0 10px;font-size:14.5px;color:var(--ink2);line-height:1.85}
+  p:last-child{margin-bottom:0}
+  b,strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 10px;padding-left:22px}
+  li{font-size:14px;color:var(--ink2);line-height:1.9;margin-bottom:3px}
+  .kv{font-weight:600;color:var(--gold-d)}
+  .mono{font-family:Consolas,"SFMono-Regular",monospace;font-size:13px;background:#eef7f6;
+    color:var(--teal-d);border-radius:4px;padding:0 5px}
+  .note{
+    font-size:13px;color:#5a6b78;background:#fafdfd;border:1px dashed var(--line);
+    border-radius:9px;padding:10px 14px;line-height:1.8;margin-top:12px;
+  }
+  .formula{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+    color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.9;
+    overflow:auto;white-space:pre-wrap;margin:4px 0 12px;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 12px}
+  th,td{border-bottom:1px solid var(--line2);padding:7px 10px;text-align:left}
+  th{font-size:12px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+  .foot{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="kicker">2026 MCM B 题 · 实训指导书</div>
+    <h1>太空电梯系统建立月球殖民地的运输策略</h1>
+    <p class="sub">双目标 cost-time 优化骨架 · 故障调整 / 水循环 / LCA 四问递进</p>
+  </div>
+
+  <section class="blk">
+    <h3>一、题目重述与信息结构</h3>
+    <p>2050 年，月球殖民地管理局（MCM Agency）计划在月球建立可容纳 <b>10 万人</b>的殖民地，预计需向月球运送 <b>1 亿公吨</b>物资。可选运输方案有三种：<b>太空电梯</b>、<b>传统火箭</b>、<b>两者混合</b>。</p>
+    <p>四个问题本质上是<b>决策视角的递进</b>：</p>
+    <ul>
+      <li><b>问题一</b>：构建双目标（最小成本 / 最短工期）优化模型，评估三方案 → 后三问的基准；</li>
+      <li><b>问题二</b>：在系统失效（缆索振动 / 热疲劳 / 发射失败）下重算，给出自适应策略；</li>
+      <li><b>问题三</b>：用 SIRS 水循环模型测算 10 万人年净需水（7.51 Mt）与运水分配；</li>
+      <li><b>问题四</b>：用 LCA 框架货币化 6 项环境影响，在固定时间 / 成本 / 双约束三场景下优化。</li>
+    </ul>
+    <p><b>关键参数</b>：太空电梯固定维护 10⁹ USD/年，可变运输 2.2×10⁵ USD/吨，年容量 Cap_SE = 5.37×10⁵ 吨/年；火箭基于 TRANSCOST + 纬度修正；殖民地闭环水循环回收率 η_h / η_a。</p>
+    <div class="note">这一步的关键是画出“地球—月球物流链”结构图，标清三方案路径与四个问题的递进关系。评委一眼就能看出你是否抓住了“成本-时间-风险-环境”四维权衡。</div>
+  </section>
+
+  <section class="blk">
+    <h3>二、参数假设与数据基础</h3>
+    <p>模型参数分三块：<b>太空电梯</b>、<b>传统火箭</b>、<b>殖民地水循环</b>。所有参数均按 2050 年技术成熟期校准。</p>
+    <ul>
+      <li><b>太空电梯</b>：固定维护 C_main = 10⁹ USD/年（缆索监测、设备维护、场地管理）；可变运输 C_var = 2.2×10⁵ USD/吨（能源、磨损、人工）；年最大容量 Cap_SE = 5.37×10⁵ 吨/年（三银河港）。</li>
+      <li><b>传统火箭</b>：基于 TRANSCOST 框架的可复用火箭成本模型，含 <span class="kv">制造 / 复用 / 运营 / 保险</span> 四模块，引入纬度修正因子；单次发射失败概率 P_fail,rocket。</li>
+      <li><b>水循环</b>：生活废水回收率 η_h、农业废水回收率 η_a，10 万人闭环系统年净需水 7.51 Mt。</li>
+    </ul>
+    <div class="formula">C_elevator(t) = (C_main + M_total·C_var / t) · t　　C_annual = C_main + C_var·M_annual</div>
+    <p>核心假设：① 2050 年材料/航天技术如期突破；② 不计通胀与折现（关注相对比较）；③ 殖民地闭环水循环稳定；④ 前 3 问不计环境外部性（第 4 问独立最小化）；⑤ 无极端太空天气。</p>
+    <div class="note">数据来源：电梯参数参考 Pearson/Edwards 经典估算；火箭成本用 TRANSCOST 7.3 版经验公式；水循环参考 ISS ECLSS 实测。论文里务必给每个参数标来源与置信区间。</div>
+  </section>
+
+  <section class="blk">
+    <h3>三、模型骨架：双目标 cost-time 优化</h3>
+    <p>决策变量：</p>
+    <ul>
+      <li><span class="mono">γ</span> —— 运输需求分配给太空电梯的比例（0-1）；</li>
+      <li><span class="mono">t</span> —— 总工期（年）；</li>
+      <li><span class="mono">N_l</span> —— 火箭累计发射次数。</li>
+    </ul>
+    <div class="formula">min　(C_total, t)　　C_total = C_elevator(t) + C_rocket(β, x_i, y_i, t)
+s.t.　γ·M_total ≤ Cap_SE · t　　　(电梯年容量约束)
+　　　(1−γ)·M_total = Σ 单次发射运载量　　(火箭运量闭合)
+　　　0 ≤ γ ≤ 1,　t ≥ M_total / Cap_SE</div>
+    <p>电梯子模型：C_elevator(t) = (C_main + M_total·C_var/t)·t，受 Cap_SE = 5.37×10⁵ 吨/年硬约束，最短工期 186 年。</p>
+    <p>火箭子模型（TRANSCOST）：C_base = C_m,avg + C_re,per + C_op,per + C_ins,per，C_ins,per = 0.1·C_m,avg；含制造学习曲线与纬度修正。</p>
+    <p>用 <b>NSGA-II</b> 求帕累托前沿，得到 C1（最快）与 C2（最省）两个代表解。</p>
+    <div class="note">本题最易踩坑：电梯“固定维护 10⁹/年”乘以 186 年 ≈ 1.86×10¹¹，这是电梯总成本的主要来源——纯电梯方案贵就贵在这里。很多论文忽略维护成本只算运输成本，导致结论失真。</div>
+  </section>
+
+  <section class="blk">
+    <h3>四、从问题一到问题四的模型升级路径</h3>
+    <h3 style="font-size:14.5px;margin-top:4px">问题一：双目标三方案评估</h3>
+    <p>纯电梯受 Cap_SE 约束最短 186.22 年、成本 9991.2B USD；纯火箭 183.14 年、259.6B USD；混合方案由 NSGA-II 帕累托前沿给出 C1 最快 93.74 年 / 9052.9B 与 C2 最省 250 年 / 2151.5B——<b>混合方案全面支配两个纯方案</b>。</p>
+    <h3 style="font-size:14.5px">问题二：故障调整优化</h3>
+    <p>引入三类失效因子：电梯缆索振动（年度断裂概率 P_fracture）、热疲劳（P_thermal）、火箭发射失败（P_fail,rocket）。故障使电梯有效年容量下降、火箭需补发。<span class="kv">关键结论：电梯对故障更敏感</span>，需自适应策略——故障高发期下调 γ、火箭补位。</p>
+    <div class="formula">Cap_SE^eff = Cap_SE · (1 − P_fracture − P_thermal)</div>
+    <p>调整后混合 C1 由 93.74 年 → 105.96 年，C2 由 2151.5B → 2565.3B USD。</p>
+    <h3 style="font-size:14.5px">问题三：水循环 SIRS 与运水分配</h3>
+    <p>建立基于 SIRS 的殖民地水循环动力学：生活/农业废水经 η_h / η_a 回收，不可回收部分需地球补给 Input_Earth(t)。年净需水 7.51 Mt 超过单系统运力，需电梯+火箭联合运水。</p>
+    <div class="formula">Input_Earth(t) = Σ年需求 − Σ回收量　　最优：电梯 27.5% / 火箭 72.5%</div>
+    <p>成本最优运水方案：电梯 2.06 Mt、火箭 5.45 Mt，总成本 129.19B USD（约每日 10 次火箭发射）。</p>
+    <h3 style="font-size:14.5px">问题四：LCA 环境影响最小化</h3>
+    <p>用生命周期评估框架货币化 6 项环境指标（碳排放、大气污染、臭氧消耗、生态毒性、资源消耗、噪声），在固定时间 / 固定成本 / 双约束三场景下优化。电梯电驱动低碳，火箭发射排放高。</p>
+    <p>固定成本优化方案：109.61 年，电梯 58.65% / 火箭 41.35%，实现环境效益与效率平衡。</p>
+  </section>
+
+  <section class="blk">
+    <h3>五、结果、灵敏度与稳健性</h3>
+    <p>四个问题的参考结果：</p>
+    <table>
+      <tr><th>问题</th><th>场景</th><th>关键结果</th></tr>
+      <tr><td>问题一</td><td>纯太空电梯</td><td>9991.2B USD / 186.22 年</td></tr>
+      <tr><td>问题一</td><td>纯传统火箭</td><td>259.6B USD / 183.14 年（3641 次/年）</td></tr>
+      <tr><td>问题一</td><td>混合 C1 最快</td><td>93.74 年 / 9052.9B USD</td></tr>
+      <tr><td>问题一</td><td>混合 C2 最省</td><td>250 年 / 2151.5B USD</td></tr>
+      <tr><td>问题二</td><td>故障调整</td><td>C1 → 105.96 年；C2 → 2565.3B USD</td></tr>
+      <tr><td>问题三</td><td>水供应</td><td>7.51 Mt/年；电梯 27.5% / 火箭 72.5% / 129.19B</td></tr>
+      <tr><td>问题四</td><td>LCA 优化</td><td>109.61 年；电梯 58.65% / 火箭 41.35%</td></tr>
+    </table>
+    <p>值得写进论文的几个灵敏度结论：</p>
+    <ul>
+      <li>电梯年容量 Cap_SE 从 5.0×10⁵ 升到 6.0×10⁵，纯电梯工期由 200 → 167 年<b>近似线性下降</b>，但维护成本仍是主导项；</li>
+      <li>火箭发射失败概率从 2% 升到 8%，混合方案总成本上升约 18%，<b>电梯敏感度更高</b>（故障期 γ 应主动下调）；</li>
+      <li>水回收率 η_h 从 0.9 降到 0.8，年净需水从 7.51 升到 11.2 Mt，<b>运水成本接近倍增</b>——说明闭环回收率是殖民地可持续性的关键杠杆。</li>
+    </ul>
+    <div class="note">最后一条是很好的创新点：它说明“殖民地可持续性”对水回收率高度敏感，而非单纯依赖运输能力。很多论文只算运输不算循环。</div>
+  </section>
+
+  <section class="blk">
+    <h3>六、模型评价与论文写作要点</h3>
+    <h3 style="font-size:14.5px;margin-top:4px">优点</h3>
+    <ul>
+      <li>四问共用一个双目标 cost-time 骨架，只改失效因子 / 水循环 / 环境指标，论文结构紧凑、代码可复用；</li>
+      <li>用 NSGA-II 给出帕累托前沿而非单点解，C1/C2 两个代表解覆盖“赶工”与“省钱”两种决策诉求；</li>
+      <li>对照组含纯电梯 / 纯火箭 / 混合三种，并做了故障 / 水回收 / 环境三组灵敏度，检验严格。</li>
+    </ul>
+    <h3 style="font-size:14.5px">局限与改进</h3>
+    <ul>
+      <li>电梯缆索断裂属小概率高后果事件，用年度概率均值化会低估尾部风险，下一步可用蒙特卡洛模拟极端工况；</li>
+      <li>火箭成本沿用 TRANSCOST 经验公式，2050 年可复用技术实际可能更低，参数需迭代；</li>
+      <li>水循环 SIRS 假设稳态需求，未刻画殖民地人口爬坡期的动态需水曲线。</li>
+    </ul>
+    <div class="note">论文结构建议：摘要（务必写关键数字）→ 问题重述 → 假设与符号说明（<b>记得补“单位”列</b>）→ 双目标模型 → 问题一～四模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（代码 + result1.xlsx ～ result4.xlsx 文件说明）。</div>
+  </section>
+
+  <div class="foot">数模演易 · 2026 MCM B 题实训指导书</div>
+</div>
+</body>
+</html>

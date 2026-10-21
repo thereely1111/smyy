@@ -1,0 +1,12 @@
+### M-NET-001 最短路与关键路径
+- **task_types**：路径规划、物流、项目工期、应急通道、网络延迟。
+- **problem_signature**：节点和边明确；目标是最小成本/时间或最长工期路径。
+- **core_idea**：在加权图上求路径；Dijkstra 适用于非负权，Bellman-Ford 可处理负权，CPM 用于项目依赖。
+- **inputs**：节点、边、方向、权重、起终点、前置关系。
+- **outputs**：路径、总成本、关键活动、松弛时间。
+- **assumptions**：边权稳定；图结构准确；路径可行。
+- **validation**：路径逐边核验、替代路径、权重扰动、连通性。
+- **selection_tags**：`graph, path, routing, project`
+- **composable_with**：`M-NET-002, M-OPT-002, M-SIM-001`
+- **fallbacks**：K 最短路、时间依赖路径、鲁棒路径。
+- **agent_actions**：构图 -> 检查方向/权重 -> 求路径 -> 验证边和成本 -> 分析替代路线。

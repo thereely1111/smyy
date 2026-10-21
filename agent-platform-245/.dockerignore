@@ -1,0 +1,17 @@
+# 构建上下文裁剪：只保留 COPY 真正用到的路径
+.git
+**/.DS_Store
+frontend/node_modules
+frontend/dist
+backend/target/*
+!backend/target/agent-platform-backend-0.1.0-SNAPSHOT.jar
+gui-test-screenshots
+black-monkey_assets
+*.miora
+docs
+# workspace 只需 file-based agent 定义作为种子
+workspace/*
+!workspace/agents
+# dev 环境的 DB Agent 运行时工作区（WorkspaceGenerator 生成，定义在 DB），
+# 不属于种子：打进镜像后会在无同名 DB 行的集群被误加载为文件型 Agent
+workspace/agents/cb12c8fb-72fa-4f8a-bf65-208c5e1f3754

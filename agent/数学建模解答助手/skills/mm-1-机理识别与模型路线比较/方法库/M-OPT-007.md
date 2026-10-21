@@ -1,0 +1,13 @@
+### M-OPT-007 元启发式与启发式优化
+- **task_types**：大规模组合优化、路径、排班、布局、非光滑黑箱优化。
+- **problem_signature**：目标不可导、搜索空间巨大、精确算法无法在时限内求解。
+- **core_idea**：通过局部搜索、遗传、模拟退火、禁忌搜索、蚁群等寻找高质量近似解。
+- **inputs**：编码、可行性修复、邻域/变异、停止准则、随机种子。
+- **outputs**：候选解、目标值、收敛曲线、重复运行统计。
+- **assumptions**：近似解足以支持决策；评价函数可靠。
+- **hard_constraints**：不能把一次随机运行结果声称为全局最优。
+- **validation**：多随机种子、基线算法、下界/上界、重复实验、稳定性。
+- **selection_tags**：`heuristic, blackbox, combinatorial, approximate`
+- **composable_with**：`M-OPT-002, M-NET-002, M-SIM-001`
+- **fallbacks**：构造启发式、局部搜索、MILP 小规模精确解作基准。
+- **agent_actions**：先定义可行解编码 -> 设计修复规则 -> 多次运行 -> 报告均值/最好/方差。

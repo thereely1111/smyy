@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM E题 · 问题一分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 标签行 ---------- */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{
+  font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;
+}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.pill b{font-weight:600}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+#cvSoc{cursor:crosshair;touch-action:none}
+.pill:disabled{cursor:default}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 滑块 ---------- */
+.slider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.slider input[type=range]{
+  flex:1;height:22px;background:transparent;cursor:pointer;
+  appearance:none;-webkit-appearance:none;accent-color:var(--teal);
+}
+.slider input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(11,46,54,.28);
+}
+.slider input[type=range]:focus{outline:none}
+.slider input[type=range]:focus::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(18,165,148,.22)}
+.slider input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid #fff;
+}
+.slider .sv{min-width:104px;text-align:right;font-size:14px;font-weight:600;color:var(--teal-d);
+  font-variant-numeric:tabular-nums}
+
+/* ---------- 矩阵 ---------- */
+.mx{display:grid;gap:6px}
+.mx .mh{font-size:11.5px;color:var(--muted);text-align:center;padding:2px 0}
+.mx .mr{font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+.mx .mc{
+  border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:.16s;
+  padding:7px 6px;font-size:12px;text-align:center;color:var(--muted);line-height:1.45;
+}
+.mx .mc:hover{border-color:var(--teal)}
+.mx .mc.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.mx .mc.dim{opacity:.55}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+
+/* 动效总开关（类名驱动，不用媒体查询） */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce.wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+ .splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+
+/* ====== 本演示追加的组件（位置与尺寸沿用原型栅格） ====== */
+.canvasbox svg{display:block;width:100%;height:auto}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl .pills{margin:0}
+.ctl input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.ctl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);
+  min-width:52px;text-align:right;font-size:13.5px}
+.ctl .hint{font-size:11.5px;color:var(--muted);flex:none}
+.legend .lgi{cursor:pointer;user-select:none}
+.legend .lgi.off{opacity:.32;text-decoration:line-through}
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:300px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+#tip .row{display:flex;justify-content:space-between;gap:14px}
+.pcard{cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .16s}
+.pcard:hover{border-color:var(--teal);transform:translateY(-2px)}
+.pcard.on{border-color:var(--teal-d);box-shadow:0 0 0 2px rgba(18,165,148,.16),var(--sh)}
+.pcard h3 em{margin-left:auto}
+table.tb tr.dim td{opacity:.36}
+table.tb tr.on td{background:#eef8f6}
+.cover{text-align:center;max-width:860px;margin:14px auto 0}
+.cover .big{font-size:38px;font-weight:650;letter-spacing:-.01em;line-height:1.25;margin:8px 0}
+.cover .big .ac{color:var(--teal-d)}
+.cover .meta{color:var(--muted);font-size:14.5px;margin:10px 0;line-height:1.8}
+.cover .pills{justify-content:center}
+.srcbox{display:inline-block;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:14px 18px;box-shadow:var(--sh);font-size:13px;color:var(--ink2);margin-top:18px}
+.srcbox b{color:var(--teal-d)}
+.trace{font-size:11.5px;color:var(--muted);line-height:1.8}
+@media(max-width:960px){.cover .big{font-size:28px}}
+
+/* ====== 滑块（拖动即重算，档位全部由数据通道预置） ====== */
+.slwrap{margin:9px 0 2px}
+.sllab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.sllab b{font-size:14px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+input.sl{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;
+  background:var(--line2);outline:none;margin:0;padding:0;display:block}
+input.sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.20);cursor:pointer}
+input.sl::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);
+  border:2px solid #fff;cursor:pointer}
+.slticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.slval{font-variant-numeric:tabular-nums}
+
+/* ====== 入场动画（动效总开关关闭时全部禁用，见 body.reduce） ====== */
+.grow{transform-box:fill-box;transform-origin:50% 100%;
+  animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.growx{transform-box:fill-box;transform-origin:0 50%;
+  animation:growX .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growX{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
+.draw{animation:drawIn .85s ease-out both}
+@keyframes drawIn{from{stroke-dashoffset:var(--len,1200)}to{stroke-dashoffset:0}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+body.reduce .grow,body.reduce .growx,body.reduce .draw,body.reduce .fadein{animation:none !important}
+body.reduce .draw{stroke-dashoffset:0 !important}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./01_全局问题分析.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+<section class="scene" id="s1" data-title="问题一 · 投放策略合理性">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题一 · 投放策略合理性</div>
+        <h1>四个评估维度，各自有可核算的入口
+          <small>题面要求从设计质量与创意、关键词管理、出价与预算、投放时间四个维度评价。下面给出每个维度的实算依据。</small>
+        </h1>
+        <p class="lead">四个维度中，「出价与预算」最容易量化：附件1 直接给出上方位与整体的拆分。其余三个维度用站点级或关键词级的汇总量给出可复核的入口，不做无法核验的定性判断。需注意：注册数据仅在方案/单元层汇总，不能直接把注册数除到关键词上——需在方案/单元层建立注册贡献归因模型，再向关键词层下钻（详见问题二）。</p>
+        <div class="note">整体分析遵循 SEM 业务漏斗链：<b>消费 → 展现 → 点击 → 网站访问 → 深入浏览 → 注册</b>，逐层评估各环节的转化与损耗，而非用一个综合评分概括投放好坏。</div>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop"><div class="ct">上方位的消费占比与展现占比</div></div>
+          <div id="barTop1"></div>
+          <div class="legend"><span><i style="background:var(--teal)"></i>展现量占比</span><span><i style="background:var(--cyan)"></i>首位展现占比</span><span><i style="background:var(--gold)"></i>消费额占比</span></div>
+          <div class="note">上方位消费额占全年 <b id="dTopCost"></b>，上方位展现量占 <b id="dTopImp"></b>，上方首位展现占 <b id="dTop1"></b>。三者的落差说明顶部溢价明显，出价结构有重估空间。</div>
+        </div>
+        <div class="card">
+          <h3>四个评估维度（题面要求）</h3>
+          <div class="pills" id="dimPills"></div>
+          <div id="dimBody"></div>
+          <div class="note">切换标签查看各维度的实算指标。四项均由附件1 直接计算或由其推导，无估计值。</div>
+        </div>
+      </div>
+      <div class="quote">「请结合附件1 中的数据，对该公司 2025 年 SEM 广告投放策略的合理性进行分析，并指出其中存在的问题。」<div class="small" style="margin-top:6px">引文来源：E题.pdf · 问题 1（逐字）</div></div>
+    </div>
+</section><section class="scene" id="s2" data-title="问题一 · 效益的时间规律与假日效应">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题一 · 效益的时间规律</div>
+        <h1>效益随月份起伏，节假日出现负效应
+          <small>节假日不是旺季。这一点与直觉相反，却在本数据上稳定成立。</small>
+        </h1>
+        <p class="lead">把 Sheet1 与 Sheet2 按日聚合到月份，注册量与消费额呈现一致的季节形态；再把四个主要假日的窗口单独取出，日均注册量跌至全年日均的四分之一左右。</p>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">2025 年月度新注册数与月度消费额</div>
+          <div class="legend"><span><i class="ln" style="background:var(--teal)"></i>月度新注册数（左轴）</span><span><i class="ln" style="background:var(--gold)"></i>月度消费额（右轴，千元）</span></div>
+        </div>
+        <div id="lineMonthly"></div>
+        <div class="note">月度注册量与月度消费额同向变化，但注册量的波动幅度大于消费额，说明单位预算的产出随月份变化。鼠标停在任一个月可看该月的展现、点击与点击率。</div>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop"><div class="ct" id="holChartT">节假日窗口每日新注册数</div></div>
+          <div class="pills" id="holPills"></div>
+          <div id="lineHoliday"></div>
+          <div class="note" id="holNote"></div>
+        </div>
+        <div class="card">
+          <h3>四个主要假日的窗口核算</h3>
+          <table class="tb" id="holTable"></table>
+          <div class="note">四个假日的窗口日均注册全部落在全年日均的 0.24–0.29 倍区间。SEM 注册的假日效应为负向：假期内搜索与注册意愿下降，应按淡季而非旺季配置预算。</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>日级注册时间效应模型 <em>控制广告投入后再看假日</em></h3>
+        <p>「节假日导致注册下降」有两种可能解释：（a）<b>企业减少投放</b>使展现、点击随之下降；（b）<b>用户需求本身下降</b>。必须先控制广告投入规模，才能把效应归因到假日本身。</p>
+        <div class="formula">Register_d = α + β1·Spend_d + β2·Click_d + f(Time_d) + Week_d + Holiday_d + ε_d</div>
+        <p>其中 f(Time) 取平滑/样条函数拟合年内趋势，Week_d 为星期固定效应，Holiday_d 为假日虚拟变量。模型回答的问题是：<b>在广告投入规模大致相同以后，假日当天本身是否仍然存在额外注册下降或提升</b>。</p>
+      </div>
+    </div>
+</section><section class="scene" id="s3" data-title="问题一 · 星期层面的变化规律">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题一 · 投放时间规律（星期层面）</div>
+        <h1>一周之内也有淡旺
+          <small>月度与假日之外，星期是更细的一层规律，且能直接落到逐日预算上。</small>
+        </h1>
+        <p class="lead">把全年逐日数据按星期聚合：<span id="wkBest"></span>的日均注册最高，<span id="wkWorst"></span>最低。日消费额的星期差异远小于注册量，说明投放节奏与效益节奏并不同步。</p>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop"><div class="ct">各星期几的日均注册与日均消费（相对全年日均）</div></div>
+          <div id="weekChart"></div>
+          <div class="legend"><span><i style="background:var(--teal)"></i>日均注册倍数</span><span><i style="background:var(--gold)"></i>日均消费倍数</span></div>
+          <div class="note">鼠标停在任一根柱上，可看该星期几的日均注册、日均消费与日均点击。</div>
+        </div>
+        <div class="card">
+          <h3>星期层面的投入产出</h3>
+          <table class="tb" id="weekTable"></table>
+          <div class="note" id="wkNote"></div>
+        </div>
+      </div>
+      <div class="quote">「分析投放效益与投放时间的变化规律和假日效应等。」<div class="small" style="margin-top:6px">引文来源：E题.pdf · 问题 1（逐字）</div></div>
+    </div>
+</section>
+</main><div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div><div id="tip"></div>
+<script>
+const DATA = {"overview": {"plans": 5, "units": 12, "kw_distinct": 1884, "kw_active": 1183, "kw_dead": 701, "total_cost": 1425949.79, "total_imp": 22580381, "total_clk": 834815, "ctr": 0.037, "top_imp_share": 0.2711, "top1_share": 0.1039, "top_cost_share": 0.7035, "total_reg": 85313, "reg_per_1000yuan": 59.8, "eff_total": 404901.8, "site_bounce": 0.515, "site_dur": 291.5}, "dim_eval": {"创意": {"n": "设计质量与创意", "metrics": [["站点加权跳出率", "51.5%"], ["站点加权平均访问时长", "4 分 51 秒"], ["有跳出率记录的关键词", "1337 个"]], "text": "落地页质量用跳出率与访问时长衡量：站点加权跳出率 51.5%，平均停留 4 分 51 秒。访问时长偏短、跳出偏高，说明创意与落地页匹配度有提升空间，仅靠提价抢量无法改善这一环节。"}, "关键词": {"n": "关键词管理与运用", "metrics": [["去重关键词总数", "1884 个"], ["活跃词（有消耗或有点击）", "1183 个"], ["全年零消耗零点击的无效词", "701 个（37.2%）"]], "text": "1884 个关键词中 701 个全年零消耗零点击，占 37.2%。关键词库存在明显冗余，未形成有效的生命周期管理。"}, "出价": {"n": "出价策略与预算", "metrics": [["上方位消费额占比", "70.35%"], ["上方位展现量占比", "27.11%"], ["上方首位展现占比", "10.39%"]], "text": "上方位吃掉 70.35% 的消费额，却只换回 27.11% 的展现量，首位展现占比 10.39%。预算高度集中于首页顶部，顶部位置的边际曝光成本显著高于平均位，出价结构是否最优需要检验。"}, "时间": {"n": "投放策略与时间", "metrics": [["月度注册量变异系数 CV", "0.265"], ["春节窗口日均 / 全年日均", "0.24 倍"], ["国庆窗口日均 / 全年日均", "0.24 倍"]], "text": "月度注册量 CV 达 0.265，节假日窗口日均注册降至全年的 0.24～0.24 倍。效益随月份与假日显著波动，存在错峰配置预算的空间。"}}, "monthly": {"month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "cost": [104527, 148348, 202974, 80690, 120876, 75401, 69911, 165108, 115845, 87807, 124405, 130058], "reg": [7149, 8385, 11229, 6297, 7046, 3430, 4547, 8130, 8079, 6176, 7525, 7320], "clk": [40107, 64495, 98305, 72615, 81623, 37416, 58268, 121826, 68347, 56541, 63965, 71307], "imp": [427871, 637989, 1704448, 1647394, 2778337, 1680515, 2056385, 4297078, 1913116, 1694901, 1916592, 1825755], "ctr": [0.0937, 0.1011, 0.0577, 0.0441, 0.0294, 0.0223, 0.0283, 0.0284, 0.0357, 0.0334, 0.0334, 0.0391], "reg_cv": 0.265}, "holiday": {"annual_avg_reg": 233.7, "mult": {"春节": {"core": ["01-29", "02-04"], "days": 7, "win_avg": 55.0, "mult": 0.24, "min": 40, "max": 92}, "劳动节": {"core": ["05-01", "05-05"], "days": 5, "win_avg": 66.6, "mult": 0.28, "min": 50, "max": 96}, "端午节": {"core": ["05-31", "06-02"], "days": 3, "win_avg": 68.0, "mult": 0.29, "min": 64, "max": 71}, "国庆节": {"core": ["10-01", "10-07"], "days": 7, "win_avg": 55.7, "mult": 0.24, "min": 41, "max": 76}}}, "holiday_win": {"春节": {"dates": ["01-19", "01-20", "01-21", "01-22", "01-23", "01-24", "01-25", "01-26", "01-27", "01-28", "01-29", "01-30", "01-31", "02-01", "02-02", "02-03", "02-04", "02-05", "02-06", "02-07", "02-08", "02-09", "02-10", "02-11", "02-12", "02-13", "02-14"], "reg": [360, 345, 375, 308, 314, 308, 325, 335, 187, 77, 40, 42, 40, 43, 56, 72, 92, 125, 110, 112, 121, 285, 329, 322, 293, 257, 164], "core_idx": [10, 11, 12, 13, 14, 15, 16]}, "劳动节": {"dates": ["04-21", "04-22", "04-23", "04-24", "04-25", "04-26", "04-27", "04-28", "04-29", "04-30", "05-01", "05-02", "05-03", "05-04", "05-05", "05-06", "05-07", "05-08", "05-09", "05-10", "05-11", "05-12", "05-13", "05-14", "05-15"], "reg": [156, 330, 337, 478, 305, 277, 159, 209, 183, 100, 50, 51, 60, 76, 96, 308, 441, 268, 272, 323, 269, 165, 323, 270, 253], "core_idx": [10, 11, 12, 13, 14]}, "端午节": {"dates": ["05-21", "05-22", "05-23", "05-24", "05-25", "05-26", "05-27", "05-28", "05-29", "05-30", "05-31", "06-01", "06-02", "06-03", "06-04", "06-05", "06-06", "06-07", "06-08", "06-09", "06-10", "06-11", "06-12"], "reg": [306, 294, 270, 222, 147, 193, 331, 279, 281, 256, 71, 69, 64, 161, 165, 184, 168, 116, 193, 125, 141, 207, 138], "core_idx": [10, 11, 12]}, "国庆节": {"dates": ["09-21", "09-22", "09-23", "09-24", "09-25", "09-26", "09-27", "09-28", "09-29", "09-30", "10-01", "10-02", "10-03", "10-04", "10-05", "10-06", "10-07", "10-08", "10-09", "10-10", "10-11", "10-12", "10-13", "10-14", "10-15", "10-16", "10-17"], "reg": [141, 167, 301, 345, 379, 340, 300, 140, 227, 161, 47, 45, 41, 52, 61, 68, 76, 162, 301, 327, 268, 226, 127, 365, 311, 296, 274], "core_idx": [10, 11, 12, 13, 14, 15, 16]}}, "weekday": {"label": ["周一", "周二", "周三", "周四", "周五", "周六", "周日"], "reg": [143.0, 266.6, 278.7, 275.8, 269.7, 243.4, 158.0], "cost": [1952, 4248, 4705, 4809, 4699, 4510, 2409], "clk": [1222, 2545, 2709, 2783, 2717, 2582, 1443], "mult": [0.612, 1.141, 1.193, 1.18, 1.154, 1.041, 0.676], "mult_cost": [0.5, 1.087, 1.204, 1.231, 1.203, 1.154, 0.617], "reg_per_1k": [73.3, 62.8, 59.2, 57.4, 57.4, 54.0, 65.6]}};
+
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtInt(v){return Number(v).toLocaleString("en-US");}
+function fmtDur(sec){const m=Math.floor(sec/60),s=Math.round(sec%60);return m+" 分 "+s+" 秒";}
+function pct(v,d){return v==null?"—":(v*100).toFixed(d==null?1:d)+"%";}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+const tipEl=document.getElementById("tip");
+function tipShow(html,x,y){
+  tipEl.innerHTML=html; tipEl.classList.add("on");
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let nx=x+16, ny=y+16;
+  if(nx+w>window.innerWidth-10) nx=x-w-16;
+  if(ny+h>window.innerHeight-10) ny=y-h-16;
+  tipEl.style.left=Math.max(8,nx)+"px"; tipEl.style.top=Math.max(8,ny)+"px";
+}
+function tipHide(){tipEl.classList.remove("on");}
+function bindTip(node,build){
+  node.setAttribute("class",(node.getAttribute("class")||"")+" hit");
+  node.addEventListener("mouseenter",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mousemove",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mouseleave",tipHide);
+}
+function trow(a,b){return "<div class='row'><span>"+esc(a)+"</span><span>"+b+"</span></div>";}
+function ttitle(s){return "<span class='tt'>"+esc(s)+"</span>";}
+function mkPills(boxId,labels,onPick){
+  const box=document.getElementById(boxId);
+  if(!box) return;
+  labels.forEach((lab,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="pill"+(i===0?" on":""); b.textContent=lab;
+    b.onclick=function(){
+      const cs=box.children;
+      for(let k=0;k<cs.length;k++) cs[k].classList.toggle("on",k===i);
+      onPick(i,lab);
+    };
+    box.appendChild(b);
+  });
+  if(labels.length) onPick(0,labels[0]);
+}
+/* 数值滚动：从 0 缓动到目标值。动效关闭或环境不支持时直接落位。 */
+function countUp(node,target,opt){
+  if(!node) return;
+  opt=opt||{};
+  const dur=opt.dur||760, dec=opt.dec==null?0:opt.dec;
+  const fmt=opt.fmt||function(v){
+    return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  };
+  const reduce=document.body&&document.body.classList&&document.body.classList.contains("reduce");
+  if(reduce||typeof requestAnimationFrame!=="function"){ node.textContent=fmt(target); return; }
+  let t0=null;
+  function step(ts){
+    if(t0===null) t0=ts;
+    const p=Math.min(1,(ts-t0)/dur);
+    node.textContent=fmt(target*(1-Math.pow(1-p,3)));
+    if(p<1) requestAnimationFrame(step); else node.textContent=fmt(target);
+  }
+  node.textContent=fmt(0);
+  requestAnimationFrame(step);
+}
+/* 连续滑块：档位由数据通道预先算定，onChange 只做查表与重绘。 */
+function mkSlider(boxId,opt,onChange){
+  const box=document.getElementById(boxId);
+  if(!box) return null;
+  const w=document.createElement("div"); w.className="slwrap";
+  const lab=document.createElement("div"); lab.className="sllab";
+  const inp=document.createElement("input");
+  // 用属性而非字段赋值，便于无头校验脚本按 input[type=range] 定位并驱动
+  inp.setAttribute("type","range"); inp.setAttribute("class","sl");
+  ["min","max","step"].forEach(function(a){ inp.setAttribute(a,opt[a]); });
+  inp.value=(opt.value==null?opt.min:opt.value);
+  w.appendChild(lab); w.appendChild(inp);
+  if(opt.ticks){
+    const t=document.createElement("div"); t.className="slticks";
+    opt.ticks.forEach(function(x){
+      const s=document.createElement("span"); s.textContent=x; t.appendChild(s);
+    });
+    w.appendChild(t);
+  }
+  box.appendChild(w);
+  function upd(){
+    const v=Number(inp.value);
+    inp.setAttribute("value",v);          // 与当前值同步，便于校验脚本读取
+    lab.innerHTML=(opt.label?opt.label(v):"")
+      +"<b class='slval'>"+(opt.readout?opt.readout(v):v)+"</b>";
+    onChange(v);
+  }
+  inp.oninput=upd;
+  upd();
+  return inp;
+}
+/* 入场动画：给 SVG 节点挂动画类。动效关闭时直接跳过，不影响最终形态。 */
+function anim(node,kind){
+  if(!node) return node;
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce")) return node;
+  node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);
+  return node;
+}
+function animDraw(path,len){
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))
+    return path;
+  path.style.setProperty("--len",len||1200);
+  path.setAttribute("stroke-dasharray",len||1200);
+  return anim(path,"draw");
+}
+
+
+(function(){
+  const o=DATA.overview;
+  document.getElementById("dTopCost").textContent=(o.top_cost_share*100).toFixed(2)+"%";
+  document.getElementById("dTopImp").textContent=(o.top_imp_share*100).toFixed(2)+"%";
+  document.getElementById("dTop1").textContent=(o.top1_share*100).toFixed(2)+"%";
+  const W=440,H=250,p=44;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+  const bars=[["展现量占比",o.top_imp_share,"var(--teal)"],
+              ["首位展现占比",o.top1_share,"var(--cyan)"],
+              ["上方位消费占比",o.top_cost_share,"var(--gold)"]];
+  const bw=70, gap=(W-2*p-bars.length*bw)/(bars.length-1);
+  bars.forEach(function(it,i){
+    const x=p+i*(bw+gap), h=it[1]*(H-p-24);
+    svg.appendChild(el("rect",{x:x,y:H-24-h,width:bw,height:h,rx:6,fill:it[2],opacity:.9}));
+    svg.appendChild(txt(x+bw/2,H-24-h-8,(it[1]*100).toFixed(1)+"%",{"text-anchor":"middle","font-size":13,"font-weight":600,fill:"var(--ink)"}));
+    svg.appendChild(txt(x+bw/2,H-10,it[0],{"text-anchor":"middle","font-size":11,fill:"var(--muted)"}));
+  });
+  svg.appendChild(el("line",{x1:p,y1:H-24,x2:W-p,y2:H-24,stroke:"var(--line)"}));
+  document.getElementById("barTop1").appendChild(svg);
+  const D=DATA.dim_eval, keys=Object.keys(D);
+  mkPills("dimPills",keys.map(function(k){return D[k].n;}),function(i){
+    const o2=D[keys[i]];
+    let h="<table class='tb'><tr><th>实算指标</th><th>数值</th></tr>";
+    o2.metrics.forEach(function(m){ h+="<tr><td class='l'>"+esc(m[0])+"</td><td class='num'>"+esc(m[1])+"</td></tr>"; });
+    h+="</table><p style='margin:10px 0 0'>"+esc(o2.text)+"</p>";
+    document.getElementById("dimBody").innerHTML=h;
+  });
+})();
+
+
+(function(){
+  const m=DATA.monthly;
+  const W=860,H=320,p=46;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+  const n=m.month.length;
+  const maxReg=Math.max.apply(null,m.reg), maxCost=Math.max.apply(null,m.cost)/1000;
+  const X=function(i){return p+(W-2*p)*i/(n-1);};
+  const Yl=function(v){return H-34-(H-34-18)*v/maxReg;};
+  const Yr=function(v){return H-34-(H-34-18)*v/maxCost;};
+  for(let g=0;g<=4;g++){
+    const y=18+(H-34-18)*g/4;
+    svg.appendChild(el("line",{x1:p,y1:y,x2:W-p,y2:y,stroke:"var(--line2)"}));
+    svg.appendChild(txt(p-6,y+4,(maxReg*(1-g/4)).toFixed(0),{"text-anchor":"end","font-size":10,fill:"var(--teal-d)"}));
+    svg.appendChild(txt(W-p+6,y+4,(maxCost*(1-g/4)).toFixed(0),{"text-anchor":"start","font-size":10,fill:"var(--gold-d)"}));
+  }
+  m.month.forEach(function(mo,i){ svg.appendChild(txt(X(i),H-16,mo+"月",{"text-anchor":"middle","font-size":10,fill:"var(--muted)"})); });
+  let dreg=""; m.reg.forEach(function(v,i){ dreg+=(i?"L":"M")+X(i)+" "+Yl(v)+" "; });
+  svg.appendChild(el("path",{d:dreg,fill:"none",stroke:"var(--teal)","stroke-width":2.5}));
+  m.reg.forEach(function(v,i){ svg.appendChild(el("circle",{cx:X(i),cy:Yl(v),r:3,fill:"var(--teal)"})); });
+  let dc=""; m.cost.forEach(function(v,i){ dc+=(i?"L":"M")+X(i)+" "+Yr(v/1000)+" "; });
+  svg.appendChild(el("path",{d:dc,fill:"none",stroke:"var(--gold)","stroke-width":2.5,"stroke-dasharray":"6 4"}));
+  m.cost.forEach(function(v,i){ svg.appendChild(el("circle",{cx:X(i),cy:Yr(v/1000),r:3,fill:"var(--gold)"})); });
+  m.month.forEach(function(mo,i){
+    const hit=el("rect",{x:X(i)-14,y:18,width:28,height:H-34-18,fill:"transparent"});
+    bindTip(hit,function(){
+      return ttitle("2025 年 "+mo+" 月")
+        +trow("新注册数",fmtInt(m.reg[i])+" 人")
+        +trow("消费额","¥"+fmtInt(m.cost[i]))
+        +trow("展现量",fmtInt(m.imp[i]))
+        +trow("点击量",fmtInt(m.clk[i]))
+        +trow("点击率",pct(m.ctr[i],2));
+    });
+    svg.appendChild(hit);
+  });
+  document.getElementById("lineMonthly").appendChild(svg);
+  const HW=DATA.holiday_win, HM=DATA.holiday.mult, AV=DATA.holiday.annual_avg_reg;
+  const names=Object.keys(HW);
+  mkPills("holPills",names,function(i,name){
+    const w=HW[name], info=HM[name];
+    clear("lineHoliday");
+    document.getElementById("holChartT").textContent=name+"窗口（"+w.dates[0]+" ~ "+w.dates[w.dates.length-1]+"）每日新注册数";
+    const CW=420,CH=240,cp=38;
+    const svg2=el("svg",{viewBox:"0 0 "+CW+" "+CH,width:"100%"});
+    const nn=w.dates.length, maxv=Math.max.apply(null,w.reg)*1.1;
+    const X2=function(k){return cp+(CW-2*cp)*k/(nn-1);};
+    const Y2=function(v){return CH-30-(CH-30-16)*v/maxv;};
+    for(let g=0;g<=3;g++){ const y=16+(CH-30-16)*g/3; svg2.appendChild(el("line",{x1:cp,y1:y,x2:CW-cp,y2:y,stroke:"var(--line2)"})); }
+    const ci=w.core_idx;
+    if(ci.length){
+      const x0=X2(ci[0])-4, x1=X2(ci[ci.length-1])+4;
+      svg2.appendChild(el("rect",{x:x0,y:16,width:x1-x0,height:CH-30-16,fill:"rgba(184,84,58,.08)"}));
+    }
+    let d=""; w.reg.forEach(function(v,k){ d+=(k?"L":"M")+X2(k)+" "+Y2(v)+" "; });
+    svg2.appendChild(el("path",{d:d,fill:"none",stroke:"var(--teal)","stroke-width":2.5}));
+    w.reg.forEach(function(v,k){ svg2.appendChild(el("circle",{cx:X2(k),cy:Y2(v),r:2.6,fill:"var(--teal)"})); });
+    svg2.appendChild(el("line",{x1:cp,y1:Y2(AV),x2:CW-cp,y2:Y2(AV),stroke:"var(--warn)","stroke-width":1.5,"stroke-dasharray":"5 4"}));
+    svg2.appendChild(txt(CW-cp-2,Y2(AV)-4,"全年日均 "+AV,{"text-anchor":"end","font-size":10,fill:"var(--warn)"}));
+    [0,6,12,18,23].forEach(function(k){
+      if(w.dates[k]) svg2.appendChild(txt(X2(k),CH-14,w.dates[k],{"text-anchor":"middle","font-size":9,fill:"var(--muted)"}));
+    });
+    w.dates.forEach(function(dk,k){
+      const hit=el("rect",{x:X2(k)-6,y:16,width:12,height:CH-30-16,fill:"transparent"});
+      bindTip(hit,function(){
+        return ttitle(dk+(ci.indexOf(k)>=0?"（"+name+"假期内）":""))
+          +trow("当日新注册",fmtInt(w.reg[k])+" 人")
+          +trow("全年日均",AV+" 人")
+          +trow("相当于年均",(w.reg[k]/AV).toFixed(2)+" 倍");
+      });
+      svg2.appendChild(hit);
+    });
+    document.getElementById("lineHoliday").appendChild(svg2);
+    document.getElementById("holNote").innerHTML=
+      "假日核心区间 "+info.core[0]+" ~ "+info.core[1]+" 共 "+info.days+" 天，日均注册 <b>"+info.win_avg
+      +"</b> 人（区间 "+info.min+"–"+info.max+"），仅为全年日均 "+AV+" 人的 <b>"+info.mult+" 倍</b>。";
+  });
+  let rows="<tr><th>假日</th><th>核心区间</th><th>窗口日均</th><th>为年均倍数</th></tr>";
+  names.forEach(function(k){
+    rows+="<tr><td class='l'>"+esc(k)+"</td><td>"+HM[k].core[0]+" ~ "+HM[k].core[1]+"</td>"
+      +"<td class='num'>"+HM[k].win_avg+"</td><td class='num'>"+HM[k].mult+"×</td></tr>";
+  });
+  document.getElementById("holTable").innerHTML=rows;
+})();
+
+
+(function(){
+  const D=DATA.weekday, lab=D.label, n=lab.length;
+  const best=D.mult.indexOf(Math.max.apply(null,D.mult));
+  const worst=D.mult.indexOf(Math.min.apply(null,D.mult));
+  document.getElementById("wkBest").textContent=lab[best]+"（"+D.mult[best].toFixed(2)+" 倍）";
+  document.getElementById("wkWorst").textContent=lab[worst]+"（"+D.mult[worst].toFixed(2)+" 倍）";
+  const W=420,H=232,p=42;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+  const maxv=Math.max.apply(null,D.mult.concat(D.mult_cost))*1.15;
+  const X=function(i){ return p+(W-2*p)*(i+0.5)/n; };
+  const Y=function(v){ return H-30-(H-30-18)*v/maxv; };
+  for(let g=0;g<=3;g++){ const y=18+(H-30-18)*g/3;
+    svg.appendChild(el("line",{x1:p,y1:y,x2:W-p,y2:y,stroke:"var(--line2)"})); }
+  svg.appendChild(el("line",{x1:p,y1:Y(1),x2:W-p,y2:Y(1),stroke:"var(--line)","stroke-dasharray":"4 3"}));
+  svg.appendChild(txt(W-p+2,Y(1)+3,"1.0",{"font-size":9,fill:"var(--muted)"}));
+  const bw=(W-2*p)/n/2-4;
+  lab.forEach(function(L,i){
+    const x0=X(i)-bw-1;
+    const a=el("rect",{x:x0,y:Y(D.mult[i]),width:bw,height:H-30-Y(D.mult[i]),rx:3,fill:"var(--teal)",opacity:.88});
+    const b=el("rect",{x:x0+bw+2,y:Y(D.mult_cost[i]),width:bw,height:H-30-Y(D.mult_cost[i]),rx:3,fill:"var(--gold)",opacity:.85});
+    bindTip(a,function(){ return ttitle(L)
+      +trow("日均注册",D.reg[i].toFixed(1)+" 人")
+      +trow("为全年日均",D.mult[i].toFixed(2)+" 倍")
+      +trow("日均消费","¥"+fmtInt(D.cost[i]))
+      +trow("日均点击",fmtInt(D.clk[i])+" 次")
+      +trow("每千元注册",D.reg_per_1k[i]+" 人"); });
+    bindTip(b,function(){ return ttitle(L+" · 消费")
+      +trow("日均消费","¥"+fmtInt(D.cost[i]))
+      +trow("为全年日均",D.mult_cost[i].toFixed(2)+" 倍"); });
+    svg.appendChild(a); svg.appendChild(b);
+    svg.appendChild(txt(X(i),H-16,L,{"text-anchor":"middle","font-size":9.5,fill:"var(--muted)"}));
+  });
+  svg.appendChild(el("line",{x1:p,y1:H-30,x2:W-p,y2:H-30,stroke:"var(--line)"}));
+  document.getElementById("weekChart").appendChild(svg);
+  const row=function(a){ return "<tr>"+a.map(function(x,i){
+    return "<td"+(i===0?" class='l'":" class='num'")+">"+x+"</td>"; }).join("")+"</tr>"; };
+  document.getElementById("weekTable").innerHTML=
+    "<tr><th>星期</th><th>日均注册</th><th>注册倍数</th><th>日均消费</th><th>消费倍数</th><th>每千元注册</th></tr>"
+    +lab.map(function(L,i){
+      return row([L,D.reg[i].toFixed(1)+" 人",D.mult[i].toFixed(2),
+                  "¥"+fmtInt(D.cost[i]),D.mult_cost[i].toFixed(2),D.reg_per_1k[i]+" 人"]);
+    }).join("");
+  document.getElementById("wkNote").innerHTML=
+    "注册的星期差异（最高 "+D.mult[best].toFixed(2)+" 倍、最低 "+D.mult[worst].toFixed(2)
+    +" 倍）明显大于消费的星期差异（"+Math.min.apply(null,D.mult_cost).toFixed(2)+"–"
+    +Math.max.apply(null,D.mult_cost).toFixed(2)+" 倍）。"
+    +"预算几乎按同一节奏投放，效益却随星期起伏，错峰配置的空间即由此而来。";
+})();
+
+
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var auto=false, tlT=[], st={armed:false,last:0,fired:0};
+function beats(sc){ return $$('.wrap > *',sc); }
+function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+function tlRun(i){
+  tlStop();
+  var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+  if(document.body.classList.contains('reduce')){
+    bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+    return;
+  }
+  bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+  bs.forEach(function(b,k){
+    var t=260+k*gap; pos=t;
+    tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+  });
+  tlT.push(setTimeout(function(){
+    if(tk!==TOKEN) return;
+    bs.forEach(function(b){ b.classList.remove('stg'); });
+    auto=false; syncAuto();
+  },pos+820));
+}
+function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(auto){ tlRun(i); } else { beats(sc).forEach(function(b){ b.classList.add('in'); }); }
+}
+function syncAuto(){}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+function boot(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null;
+    if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    var now=Date.now();
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false; goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false); auto=false; syncAuto(); goTo(0);
+}
+boot();
+})();
+
+</script>
+</body>
+</html>

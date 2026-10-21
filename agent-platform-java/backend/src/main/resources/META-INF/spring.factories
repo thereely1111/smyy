@@ -1,0 +1,10 @@
+# Spring Boot 3.5 的 EnvironmentPostProcessor 注册**只认这一个文件**。
+#
+# EnvironmentPostProcessorApplicationListener 走的是 Spring Framework 的
+# SpringFactoriesLoader.forDefaultResourceLocation(...)，它读的就是
+# `META-INF/spring.factories`（Boot 自己的 jar 亦如此，jar 内不存在任何
+# `META-INF/spring/*.imports`）。所以别改成 `.imports` 写法——那样本类
+# 会被静默忽略，表现为 /actuator/info 里缺 workspace-root-source / repo-root /
+# start-dir 三个键、且 logging.file.name 没被补上。
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.tipdm.agentplatform.config.RuntimePathEnvironmentPostProcessor

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 美赛D题 · 问题四 · 场馆投资与长期价值</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+.cklist{counter-reset:ck}
+.ckrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line2)}
+.ckrow:last-child{border-bottom:0}
+.cknum{flex:0 0 24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center}
+.cknum.g{background:var(--gold)}
+.cknum.w{background:var(--warn)}
+.ckbody{flex:1;min-width:0}
+.ckbody b{display:block;font-size:13.5px;margin-bottom:2px}
+.ckbody span{font-size:12.5px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p9-0.html">全局</a>
+    <a href="./mod-p9-1.html">问题一</a>
+    <a href="./mod-p9-2.html">问题二</a>
+    <a href="./mod-p9-3.html">问题三</a>
+    <a href="./mod-p9-4.html" class="on">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===== 第一幕 · 投资前后的球队基本面 ===== -->
+<section class="scene" id="s1" data-title="问题四 · 一 · 投资前后的球队基本面">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题四 · 场馆投资与长期价值</div>
+    <h1>一支争冠球队要不要花 <b>420 M$</b>（自付 168 M$）建新馆？
+      <small>评估基准为争冠态：胜率 w = 0.713（薪资 210 M$ + 高运营），定价采用问题三推荐均衡价 $105.72，估值口径 V = 6.0 × 年收入。新馆把容量从 18000 提到 21500 座，每场需求上移 +7500 座。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">总投资 420 M$</span>
+      <span class="decochip t">球队出资 168 M$</span>
+      <span class="decochip g">容量 18000 → 21500 座</span>
+      <span class="decochip w">需求上移 +7500 座/场</span>
+    </div>
+  </div>
+
+  <div class="flexrow stg">
+    <div class="card grow">
+      <h3>投资方案清单 <em>PPP 融资结构</em></h3>
+      <table class="tb">
+        <tr><th>项目</th><th class="num">数值</th></tr>
+        <tr><td>总投资</td><td class="num">420 M$</td></tr>
+        <tr class="on"><td>球队自有出资（40%）</td><td class="num">168 M$</td></tr>
+        <tr><td>公共部门分担（60%）</td><td class="num">420 − 168 = 252 M$</td></tr>
+        <tr><td>场馆容量</td><td class="num">18000 → 21500 座</td></tr>
+        <tr><td>新增每场需求</td><td class="num">+7500 座</td></tr>
+        <tr><td>每人附加收入</td><td class="num">22 → 30 $</td></tr>
+        <tr><td>年运营成本增量</td><td class="num">+14 M$</td></tr>
+      </table>
+      <p class="small" style="margin-top:8px">球队仅需自付 40%，公共部门分担 60% —— 这是美国职业体育场馆常见的 <b class="hl-t">PPP 融资安排</b>，它把球队的实际出资压到 168 M$，也让后面「经营口径 NPV」的分母更小。</p>
+    </div>
+
+    <div class="canvasbox grow">
+      <div class="cvtop">
+        <div class="ct">现状场馆 vs 新馆：五项基本面（每组按本组最大值归一化）</div>
+        <div class="legend">
+          <span><i style="background:#8aa3aa"></i>现状场馆</span>
+          <span><i style="background:#12a594"></i>新馆</span>
+          <span><i style="background:#e0a04a"></i>估值项</span>
+        </div>
+      </div>
+      <canvas id="cvBefore"></canvas>
+      <p class="note" style="margin-top:8px">五项全面上移：每场需求 11771 → 19271（+7500 座）、上座率 65.4% → 89.6%（+24.2 个百分点）、年收入 368.08 → 413.67（+45.59）、年利润 35.84 → 62.82（+26.98）、球队估值 2208.46 → 2482.03（+273.57）。</p>
+    </div>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="bigkpi">
+      <div class="bk-k">总投资</div>
+      <div class="bk-v" data-cnt="420" data-dec="0">0<span class="bk-u">M$</span></div>
+      <div class="bk-sub">公共部门分担 60%</div>
+    </div>
+    <div class="bigkpi">
+      <div class="bk-k">球队出资</div>
+      <div class="bk-v" data-cnt="168" data-dec="0">0<span class="bk-u">M$</span></div>
+      <div class="bk-sub">总投资的 40%</div>
+    </div>
+    <div class="bigkpi">
+      <div class="bk-k">增量年利润</div>
+      <div class="bk-v" data-cnt="26.98" data-dec="2">0.00<span class="bk-u">M$</span></div>
+      <div class="bk-sub">35.84 → 62.82</div>
+    </div>
+    <div class="bigkpi g">
+      <div class="bk-k">估值增量 ΔV</div>
+      <div class="bk-v" data-cnt="273.57" data-dec="2">0.00<span class="bk-u">M$</span></div>
+      <div class="bk-sub">2208.46 → 2482.03</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 第二幕 · 15 年增量现金流与累计 NPV ===== -->
+<section class="scene" id="s2" data-title="问题四 · 二 · 15 年增量现金流与累计 NPV">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">NPV 推导 · 15 年评估期 · 折现率 7%</div>
+    <h1>15 年增量现金流现值 <span class="hl-t">245.75 M$</span>，扣掉出资 168 M$ 得经营口径 NPV <span class="hl-t">+77.75 M$</span>
+      <small>每年增量现金流 +26.98 M$（第 0 年为初始出资 −168 M$）；按 7% 折现、15 年年金系数 9.108，累计折现现金流从 −168 起步逐年抬升，到第 15 年恰好落在 +77.75 M$。</small>
+    </h1>
+  </div>
+
+  <div class="flexrow stg">
+    <div class="card grow">
+      <h3>NPV 与估值增量 <em>核心两式</em></h3>
+      <div class="formula">年增量现金流   ΔCF = 26.98 M$
+年金系数       A(7%,15) = 9.108
+现值           PV = 26.98 × 9.108 = 245.75 M$
+净现值         NPV = 26.98 × 9.108 − 168 = <span class="c">+77.75</span> M$
+估值增量       ΔV = 6.0 × 45.59 = <span class="y">273.57</span> M$
+静态回收期     = 6.2 年</div>
+      <p class="small" style="margin-top:8px">年收入增量 45.59 M$ 经 6 倍估值乘数放大为 <b class="hl-g">273.57 M$</b> 的球队估值增量。</p>
+    </div>
+
+    <div class="canvasbox grow">
+      <div class="cvtop">
+        <div class="ct">每年增量现金流（柱）与累计折现现金流（线）</div>
+        <div class="legend">
+          <span><i style="background:#146c87"></i>每年增量现金流 +26.98</span>
+          <span><i style="background:#b8543a"></i>第 0 年出资 −168</span>
+          <span><i class="ln" style="background:#12a594"></i>累计折现现金流</span>
+          <span><i class="ln" style="background:#e0a04a"></i>NPV = +77.75</span>
+        </div>
+      </div>
+      <canvas id="cvNpv"></canvas>
+      <p class="note" style="margin-top:8px">横轴为第 0 ~ 15 年；折现率 7%、年金系数 9.108。累计折现现金流约在评估期中段穿越 0 轴，第 15 年到达 <b class="hl-t">+77.75 M$</b>。</p>
+    </div>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="kpi"><div class="k">15 年增量现金流现值</div><div class="v">245.75 <u>M$</u></div><div class="sub">26.98 × 9.108</div></div>
+    <div class="kpi b"><div class="k">球队出资</div><div class="v">168 <u>M$</u></div><div class="sub">总投资的 40%</div></div>
+    <div class="kpi w"><div class="k">经营口径 NPV</div><div class="v">+77.75 <u>M$</u></div><div class="sub">245.75 − 168</div></div>
+  </div>
+
+  <div class="note stg">估值增量（<b class="hl-g">+273.57 M$</b>）远大于经营口径 NPV（<b class="hl-t">+77.75 M$</b>）：场馆投资的价值主体是<b>资产增值</b>，而不是当年现金流。</div>
+</div>
+</section>
+
+<!-- ===== 第三幕 · 敏感性分析与稳健性 ===== -->
+<section class="scene" id="s3" data-title="问题四 · 三 · 敏感性分析与稳健性">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">敏感性分析 · 稳健性与保本门槛</div>
+    <h1>需求上移是<span class="hl-t">第一敏感变量</span>：同一方案，NPV 从 +210.36 M$ 一直摆到 −81.79 M$
+      <small>六个情景围绕基准 NPV +77.75 M$ 左右展开。乐观（+10500 座）与悲观（+4500 座）之间的落差最大；造价超支 20% 与折现率变动只带来中等幅度收缩。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">增量 NPV 龙卷风图（中线 = 基准 +77.75 M$，左右展开）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>需求情景</span>
+        <span><i style="background:#1e9fc4"></i>折现率情景</span>
+        <span><i style="background:#e0a04a"></i>造价情景</span>
+        <span><i class="ln" style="background:#0b6e68"></i>基准中线 +77.75</span>
+      </div>
+    </div>
+    <canvas id="cvTornado"></canvas>
+    <p class="note" style="margin-top:8px">横轴 −150 ~ +250 M$；中线＝基准情景 NPV <b class="hl-t">+77.75 M$</b>；红色虚线为 0 轴（保本线）。六根条由动画逐条展开。</p>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="card">
+      <h3>① 需求上移 <em>第一敏感变量</em></h3>
+      <p>乐观情景增量年利润 41.54 M$、经营口径 NPV <b class="hl-t">+210.36 M$</b>；悲观情景只有 9.47 M$ 与 <b class="hl">−81.79 M$</b>。</p>
+      <p class="small">同一变量的两个取值，把结论从「很赚」一路推到「亏损」，跨度远大于其他变量。</p>
+    </div>
+    <div class="card">
+      <h3>② 造价与折现率 <em>弹性有限</em></h3>
+      <p>造价超支 20% 只把 NPV 从 77.75 压到 <b class="hl-g">44.15 M$</b>；折现率升至 9% 为 <b class="hl-t">+49.50 M$</b>。</p>
+      <p class="small">折现率降至 5% 也只升到 +112.07 M$。二者都在基准附近小范围摆动，不改变可行结论。</p>
+    </div>
+    <div class="card">
+      <h3>③ 保本门槛与稳健性 <em>安全边际 30%</em></h3>
+      <p>需求上移 ≥ <b class="hl-t">5775 座/场</b>即可覆盖新增运营成本与 168 M$ 球队出资；基准 +7500 座，安全边际 <b>30%</b>。</p>
+      <p class="small">悲观情形经营 NPV 虽为 −81.79 M$，但估值增量 +157.40 M$ 完全抵消，综合净收益仍为 <b class="hl-g">+75.61 M$</b>。</p>
+    </div>
+  </div>
+
+  <div class="quote stg">结论：建议<b class="hl-t">分期建设</b>，以「首年上座率是否达到 89%」作为继续投入的触发条件；场馆投资在<b class="hl-t">基准与乐观</b>情景下均可行。</div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function tag(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-10):(x-2);
+  g.fillStyle='rgba(255,255,255,.95)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(bx+.5,y-8.5,tw+9,17);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function tagDark(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-8):(x-4);
+  g.fillStyle='rgba(11,46,54,.82)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+
+/* ===== 动画引擎 ===== */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){ if(!handle._alive) return; fn(t); handle._raf=requestAnimationFrame(loop); }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+
+/* ===== 第一幕 · 现状 vs 新馆 成对条形 ===== */
+var bfT0=null;
+var BF=[
+  {k:'每场需求 (座)', a:11771,   b:19271,   dec:0},
+  {k:'上座率 (%)',    a:65.4,    b:89.6,    dec:1},
+  {k:'年收入 (M$)',   a:368.08,  b:413.67,  dec:2},
+  {k:'年利润 (M$)',   a:35.84,   b:62.82,   dec:2},
+  {k:'球队估值 (M$)', a:2208.46, b:2482.03, dec:2, gold:true}
+];
+function drawBefore(t){
+  var cv=$('#cvBefore'); if(!cv)return;
+  if(cv._h===undefined) cv._h=300;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-bfT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.6,0,1));
+  var L=clamp(w*0.20,96,132), R=clamp(w*0.16,88,140);
+  var T=22, B=24, PW=Math.max(60,w-L-R), PH=h-T-B;
+  var n=BF.length, slot=PH/n, bh=12, gap=8;
+  BF.forEach(function(row,i){
+    var vmax=Math.max(row.a,row.b);
+    var cy=T+slot*(i+.5);
+    var y1=cy-(bh*2+gap)/2, y2=y1+bh+gap;
+    var cA='#8aa3aa', cB=row.gold?'#e0a04a':'#12a594';
+    var wA=PW*(row.a/vmax)*rev, wB=PW*(row.b/vmax)*rev;
+    g.fillStyle=cA; g.globalAlpha=.9; rr(g,L,y1,wA,bh,4); g.fill(); g.globalAlpha=1;
+    g.fillStyle=cB; g.globalAlpha=.92; rr(g,L,y2,wB,bh,4); g.fill(); g.globalAlpha=1;
+    g.fillStyle=row.gold?'#8a6313':'#0b2e36';
+    g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(row.k, L-8, cy);
+    if(rev>0.85){
+      tag(g, L+wA+8, y1+bh/2, row.a.toFixed(row.dec), '#57727c');
+      tag(g, L+wB+8, y2+bh/2, row.b.toFixed(row.dec), row.gold?'#8a6313':'#0b6e68');
+    }
+  });
+}
+function startBefore(){ bfT0=performance.now(); runAnim(function(t){ drawBefore(t); }); }
+
+/* ===== 第二幕 · 增量现金流柱 + 累计折现现金流线 ===== */
+var npvT0=null;
+var NPVC0=-168, NPVDELTA=26.98, NPVBASE=77.75;
+var NPVCUM=[];
+(function(){
+  for(var k=0;k<=15;k++){
+    NPVCUM.push(NPVC0+NPVDELTA*(1-Math.pow(1.07,-k))/0.07);
+  }
+  NPVCUM[15]=NPVBASE;
+})();
+function drawNpv(t){
+  var cv=$('#cvNpv'); if(!cv)return;
+  if(cv._h===undefined) cv._h=300;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-npvT0)/1000;
+  var rev=easeOutCubic(clamp(tN/2.0,0,1));
+  var L=clamp(w*0.07,30,54), R=clamp(w*0.05,20,42);
+  var T=26, B=44, PW=Math.max(60,w-L-R), PH=h-T-B;
+  var ymin=-190, ymax=200;
+  function X(k){return L+PW*k/15;}
+  function Y(v){return T+PH*(1-(v-ymin)/(ymax-ymin));}
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  [-150,-100,-50,0,50,100,150,200].forEach(function(v){
+    var yy=Y(v);
+    g.strokeStyle=(v===0)?'#cfe4e4':'#eaf4f4'; g.lineWidth=(v===0)?1.3:1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v, L-6, yy);
+  });
+  for(var k=0;k<=15;k++){
+    var xx=X(k);
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(k, xx, T+PH+16);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('年份（第 0 ~ 15 年）', L+PW/2, T+PH+32);
+  g.save(); g.translate(13,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('现金流 (M$)',0,0); g.restore();
+
+  var y0=Y(0);
+  var slot=PW/15, bw=Math.max(4,slot*0.46), vy;
+
+  /* 第 0 年：初始出资，向下红色柱 */
+  var x00=X(0), yb=Y(NPVC0*rev);
+  g.fillStyle='#b8543a'; g.globalAlpha=.9;
+  rr(g, x00-bw/2, y0, bw, Math.max(0,yb-y0), 3); g.fill(); g.globalAlpha=1;
+
+  /* 第 1~15 年：每年增量现金流，向上蓝色柱 */
+  vy=NPVDELTA*rev;
+  var yt=Y(vy);
+  g.fillStyle='#146c87'; g.globalAlpha=.62;
+  for(var kk=1;kk<=15;kk++){
+    rr(g, X(kk)-bw/2, yt, bw, Math.max(0,y0-yt), 3); g.fill();
+  }
+  g.globalAlpha=1;
+
+  /* 累计折现现金流折线 */
+  var totalPts=NPVCUM.length;
+  var shown=rev*(totalPts-1);
+  g.strokeStyle='#12a594'; g.lineWidth=2.6; g.lineJoin='round';
+  g.beginPath();
+  var first=true, kk2;
+  for(kk2=0;kk2<totalPts;kk2++){
+    if(kk2>shown) break;
+    var px=X(kk2), py=Y(NPVCUM[kk2]);
+    if(first){ g.moveTo(px,py); first=false; } else g.lineTo(px,py);
+  }
+  if(shown<totalPts-1){
+    var k0=clamp(Math.floor(shown),0,totalPts-2), frac=shown-k0;
+    var xa=X(k0), ya=Y(NPVCUM[k0]), xb=X(k0+1), yb2=Y(NPVCUM[k0+1]);
+    g.lineTo(xa+(xb-xa)*frac, ya+(yb2-ya)*frac);
+  }
+  g.stroke();
+
+  /* 沿折线移动的高亮点（非负取模 + 下界保护） */
+  if(shown>0.02){
+    var u=((tN*0.45)%1+1)%1;
+    var idx0=Math.floor(u*shown);
+    var idx=clamp(idx0,0,totalPts-1);
+    var mx=X(idx), my=Y(NPVCUM[idx]);
+    g.beginPath(); g.arc(mx,my,4.2,0,Math.PI*2); g.fillStyle='#0b6e68'; g.fill();
+    g.beginPath(); g.arc(mx,my,4.2,0,Math.PI*2); g.strokeStyle='#fff'; g.lineWidth=1.5; g.stroke();
+  }
+
+  /* NPV 基准水平虚线 */
+  g.save(); g.setLineDash([6,4]); g.strokeStyle='#e0a04a'; g.lineWidth=1.8;
+  g.beginPath(); g.moveTo(L,Y(NPVBASE)); g.lineTo(L+PW,Y(NPVBASE)); g.stroke(); g.restore();
+
+  /* 静态回收期标记（第 6.2 年，竖向虚线） */
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='rgba(20,108,135,.55)'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(X(6.2),T); g.lineTo(X(6.2),T+PH); g.stroke(); g.restore();
+
+  if(rev>0.9){
+    tag(g, L+PW-4, Y(NPVBASE)-16, 'NPV = +77.75 M$', '#8a6313', 'right');
+    tag(g, X(6.2)+6, T+12, '静态回收期 6.2 年', '#146c87');
+  }
+}
+function startNpv(){ npvT0=performance.now(); runAnim(function(t){ drawNpv(t); }); }
+
+/* ===== 第三幕 · 增量 NPV 龙卷风图 ===== */
+var torT0=null;
+var BASE=77.75;
+var TOR3=[
+  {k:'乐观 +10500 座',   v:210.36, c:'#12a594'},
+  {k:'折现率降至 5%',    v:112.07, c:'#1e9fc4'},
+  {k:'折现率升至 9%',    v:49.50,  c:'#146c87'},
+  {k:'造价超支 +20%',    v:44.15,  c:'#e0a04a'},
+  {k:'悲观 +4500 座',    v:-81.79, c:'#b8543a'},
+  {k:'基准 +7500 座',    v:77.75,  c:'#0b6e68', base:true}
+];
+function drawTornado(t){
+  var cv=$('#cvTornado'); if(!cv)return;
+  if(cv._h===undefined) cv._h=300;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-torT0)/1000;
+  var rev=easeOutCubic(clamp(tN/2.2,0,1));
+  var L=clamp(w*0.20,100,168), R=34, T=26, B=44;
+  var PW=Math.max(60,w-L-R), PH=h-T-B;
+  var vmin=-150, vmax=250;
+  function X(v){return L+PW*(v-vmin)/(vmax-vmin);}
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var vv=-150;vv<=250;vv+=50){
+    var xx=X(vv);
+    if(vv===0) continue;
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(vv, xx, T+PH+16);
+  }
+  g.fillStyle='#57727c'; g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText(0, X(0), T+PH+16);
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic'; g.fillText('增量 NPV (M$)', L+PW/2, T+PH+32);
+
+  /* 0 轴：虚线（保本线） */
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='rgba(184,84,58,.55)'; g.lineWidth=1.3;
+  g.beginPath(); g.moveTo(X(0),T); g.lineTo(X(0),T+PH); g.stroke(); g.restore();
+  /* 基准中线 */
+  g.save(); g.setLineDash([7,4]); g.strokeStyle='rgba(11,110,104,.85)'; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(X(BASE),T); g.lineTo(X(BASE),T+PH); g.stroke(); g.restore();
+
+  var n=TOR3.length, slot=PH/n, bh=Math.min(20,slot*0.5);
+  TOR3.forEach(function(r,i){
+    var cy=T+slot*(i+.5);
+    var seg=clamp(rev*n-i,0,1);
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='right'; g.textBaseline='middle'; g.fillText(r.k, L-8, cy);
+    if(r.base){
+      g.fillStyle=r.c; g.globalAlpha=seg;
+      rr(g, X(BASE)-4, cy-bh/2, 8, bh, 2); g.fill(); g.globalAlpha=1;
+      if(seg>0.9) tag(g, X(BASE)+12, cy, '+'+r.v.toFixed(2), '#0b6e68');
+      return;
+    }
+    var x0=X(BASE), x1=X(r.v);
+    var wid=Math.abs(x1-x0)*seg;
+    var tagCol=(r.c==='#b8543a')?'#b8543a':(r.c==='#e0a04a'?'#8a6313':'#0b6e68');
+    g.fillStyle=r.c; g.globalAlpha=.92;
+    if(r.v>=BASE) rr(g, x0, cy-bh/2, wid, bh, 4);
+    else rr(g, x0-wid, cy-bh/2, wid, bh, 4);
+    g.fill(); g.globalAlpha=1;
+    if(seg>0.9){
+      var lab=(r.v>0?'+':'')+r.v.toFixed(2);
+      if(r.v>=BASE) tag(g, x1+8, cy, lab, tagCol);
+      else tag(g, x1-8, cy, lab, tagCol, 'right');
+    }
+  });
+}
+function startTornado(){ torT0=performance.now(); runAnim(function(t){ drawTornado(t); }); }
+
+/* ===== KPI count-up ===== */
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  $$('[data-cnt]').forEach(function(el){
+    var target=parseFloat(el.dataset.cnt);
+    var dec=parseInt(el.dataset.dec||'0',10);
+    var uspan=el.querySelector('.bk-u');
+    var unitHtml=uspan?uspan.outerHTML:'';
+    var t0=performance.now(), dur=1100;
+    function step(tt){
+      var p=clamp((tt-t0)/dur,0,1);
+      el.innerHTML=fmt(target*easeOutCubic(p),dec)+unitHtml;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ===== 调度 ===== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var starters=[startBefore, startNpv, startTornado];
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; stopAllAnims(); kpiStarted=false;
+  var sc=SCENES[i]; sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); });
+  if(starters[i]) starters[i]();
+  if(i===0) startKPIs();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v){ $$('.wrap > *').forEach(function(e){ e.classList.add('in'); }); stopAllAnims(); }
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i); });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ stopAllAnims(); kpiStarted=false; if(starters[cur]) starters[cur](); if(cur===0) startKPIs(); };
+  $('#btnFx').onclick=function(){ var nv=!document.body.classList.contains('reduce'); setReduce(nv);
+    if(!nv && cur>=0){ if(starters[cur]) starters[cur](); if(cur===0) startKPIs(); } };
+  document.addEventListener('keydown',function(e){
+    var tn=(e.target.tagName||'').toLowerCase(); if(tn==='input'||tn==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){ if(cur>=0 && starters[cur] && !document.body.classList.contains('reduce')) starters[cur](); });
+init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A题 · 数模演易</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:12px;padding:0 16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:7px;flex-shrink:0}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;white-space:nowrap;}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:flex;gap:5px;align-items:center;margin-left:auto;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.splitnav::-webkit-scrollbar{display:none}
+.splitnav a{font-size:11.5px;font-weight:700;color:var(--ink2);padding:4px 8px;border-radius:7px;
+  border:1px solid var(--line);text-decoration:none;white-space:nowrap;transition:.18s;}
+.splitnav a:hover{background:#f0fbfa;color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:18px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.math-display{display:block;max-width:100%;overflow-x:auto;overflow-y:hidden;margin:8px 0;padding:5px 2px;
+  text-align:center;scrollbar-width:thin;scrollbar-color:#cfe4e4 transparent}
+.math-display math{display:inline-block;min-width:max-content;margin:0;font-size:1.06em;
+  font-family:"Cambria Math","STIX Two Math","Noto Sans Math",serif;color:var(--ink)}
+.math-inline{display:inline-block;vertical-align:-.12em;white-space:nowrap}
+.math-inline math{font-family:"Cambria Math","STIX Two Math","Noto Sans Math",serif;color:inherit}
+.math-fallback{display:inline-block;max-width:100%;overflow-x:auto;padding:3px 7px;border:1px solid var(--line);
+  border-radius:6px;background:#fbfefe;color:var(--warn);font:13px/1.65 Consolas,monospace;white-space:pre}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.pill b{font-weight:600}
+.pill:disabled{cursor:default;opacity:.5}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh);position:relative}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.tooltip{position:fixed;pointer-events:none;z-index:60;display:none;
+  background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:8px;
+  box-shadow:var(--sh);padding:7px 10px;font-size:12px;line-height:1.7;color:var(--ink2);min-width:96px;}
+.tooltip b{color:var(--teal-d)}
+.tooltip .ttr{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tooltip .ttr i{flex:none;width:10px;height:10px;border-radius:3px;display:inline-block}
+
+.slider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.slider input[type=range]{flex:1;height:22px;background:transparent;cursor:pointer;
+  appearance:none;-webkit-appearance:none;accent-color:var(--teal);}
+.slider input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:0 1px 4px rgba(11,46,54,.28);}
+.slider input[type=range]:focus{outline:none}
+.slider input[type=range]:focus::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(18,165,148,.22)}
+.slider input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid #fff;}
+.slider .sv{min-width:104px;text-align:right;font-size:14px;font-weight:600;color:var(--teal-d);
+  font-variant-numeric:tabular-nums}
+.slider input[type=number]{width:82px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;
+  color:var(--teal-d);background:#fff;font:600 13px inherit;font-variant-numeric:tabular-nums}
+.slider input[type=number]:focus{outline:2px solid rgba(18,165,148,.22);border-color:var(--teal)}
+
+.mx{display:grid;gap:6px}
+.mx .mh{font-size:11.5px;color:var(--muted);text-align:center;padding:2px 4px}
+.mx .mr{font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+.mx .mc{border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:.16s;
+  padding:7px 6px;font-size:12px;text-align:center;color:var(--muted);line-height:1.45;}
+.mx .mc:hover{border-color:var(--teal)}
+.mx .mc.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.mx .mc.dim{opacity:.55;cursor:default}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+.navbar button.nb:disabled{opacity:.35;cursor:not-allowed}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+@media (max-width:860px){.scene-title{display:none}.brand{display:none}.splitnav{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnAuto">自动讲解</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <nav class="splitnav" id="splitnav"></nav>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage"></main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕（←）">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕（→）">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script type="application/json" id="DATA">{
+  "title": "A题",
+  "summary": "Audited deterministic deck built from the problem statement and parsed attachment facts.",
+  "deck": {
+    "name": "问题二分析",
+    "idx": 2,
+    "names": [
+      "全局问题分析",
+      "问题一分析",
+      "问题二分析",
+      "问题三分析",
+      "问题四分析"
+    ],
+    "files": [
+      "01_全局问题分析.html",
+      "02_问题一分析.html",
+      "03_问题二分析.html",
+      "04_问题三分析.html",
+      "05_问题四分析.html"
+    ],
+    "labels": [
+      "全局",
+      "问题一",
+      "问题二",
+      "问题三",
+      "问题四"
+    ]
+  },
+  "scenes": [
+    {
+      "title": "问题二  建模分析",
+      "kicker": "QUESTION 2",
+      "h1": "问题二：从新增条件到可交付策略",
+      "small": "同一幕完成数据、模型、交互图表与结果口径",
+      "lead": "只讲相对前一问新增的条件，并把决策变量、约束、费用和输出文件逐项对齐。",
+      "blocks": [
+        {
+          "type": "pills",
+          "defaultIndex": 0,
+          "options": [
+            {
+              "label": "新增条件",
+              "html": "<div class='card'><h3>本问边界<\/h3><p>问题2 烘干过程一般持续2-3 天，预热平衡与恒温干燥阶段的参数有所不同。请建立 整个烘干过程药材温度和水分浓度变化规律的数学模型（为简化问题，相关经验公式统一采 用附录3 中的公式），在论文中按表3 和表4 的格式分别给出3 h 内每隔0.5 h、到药材中心 距离0、0.5、1、1.5、2 cm 处的结果，并将每隔1 s、到药材中心距离每隔0.1 cm 的完整结 果保存到文件result2.xlsx 中（模板文件见附件3）。 表3 3<\/p><\/div>"
+            },
+            {
+              "label": "模型与变量",
+              "html": "<div class='card'><h3>建模闭环<\/h3><p>把输入映射为决策变量、状态变量、约束与目标函数；所有单位和时间粒度保持一致。<\/p><\/div>"
+            },
+            {
+              "label": "输出核验",
+              "html": "<div class='card'><h3>交付检查<\/h3><p>结果字段与题目要求逐项对应，并通过边界、守恒、量纲和敏感性检查。<\/p><\/div>"
+            }
+          ],
+          "note": "<span class='badge q'>交互<\/span>切换查看本问的条件、模型与交付。"
+        },
+        {
+          "type": "slider",
+          "id": "q2Cursor",
+          "label": "当前观测：第 %v 点",
+          "min": 1,
+          "max": 241,
+          "step": 1,
+          "value": 1,
+          "unit": "",
+          "valueFmt": "%v",
+          "chartIds": [
+            "q2Chart"
+          ],
+          "cursorOffset": -1,
+          "labelW": 190
+        },
+        {
+          "type": "pills",
+          "chartId": "q2Chart",
+          "defaultIndex": 0,
+          "options": [
+            {
+              "label": "原始曲线",
+              "html": "<div class='note'><strong>原始曲线:<\/strong>保留附件中每个观测点，用于精确悬停读值。<\/div>",
+              "chartTitle": "问题二：附件数据交互图 · 原始值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/温度:series<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": 0.0,
+                "yMax": 54.26568,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q2Cursor",
+                "series": [
+                  {
+                    "name": "附件1/温度:series",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "fill": "rgba(20,108,135,.10)",
+                    "d": [
+                      28.0,
+                      28.528,
+                      29.192,
+                      29.684,
+                      30.037,
+                      30.834,
+                      31.293,
+                      31.82,
+                      32.121,
+                      32.73,
+                      33.202,
+                      33.879,
+                      34.268,
+                      34.806,
+                      35.142,
+                      35.524,
+                      36.091,
+                      36.354,
+                      37.067,
+                      37.419,
+                      37.882,
+                      38.134,
+                      38.767,
+                      39.125,
+                      39.458,
+                      39.595,
+                      40.061,
+                      40.238,
+                      40.621,
+                      41.166,
+                      41.513,
+                      41.918,
+                      41.952,
+                      42.263,
+                      42.589,
+                      42.745,
+                      42.985,
+                      43.393,
+                      43.534,
+                      43.97,
+                      44.102,
+                      44.503,
+                      44.663,
+                      44.701,
+                      45.138,
+                      45.323,
+                      45.324,
+                      45.462,
+                      45.818,
+                      45.739,
+                      45.93,
+                      45.999,
+                      46.512,
+                      46.602,
+                      46.761,
+                      46.933,
+                      46.912,
+                      47.089,
+                      47.008,
+                      47.111,
+                      47.485,
+                      47.498,
+                      47.646,
+                      47.84,
+                      47.873,
+                      47.926,
+                      48.016,
+                      47.977,
+                      47.926,
+                      48.199,
+                      48.166,
+                      48.331,
+                      48.615,
+                      48.38,
+                      48.357,
+                      48.526,
+                      48.59,
+                      48.825,
+                      48.827,
+                      48.988,
+                      48.979,
+                      48.9,
+                      49.144,
+                      48.87,
+                      48.84,
+                      48.913,
+                      49.261,
+                      49.169,
+                      49.056,
+                      49.257,
+                      49.116,
+                      49.415,
+                      49.321,
+                      49.317,
+                      49.304,
+                      49.492,
+                      49.384,
+                      49.272,
+                      49.31,
+                      49.749,
+                      49.743,
+                      49.66,
+                      49.463,
+                      49.83,
+                      49.753,
+                      49.739,
+                      49.622,
+                      49.55,
+                      49.477,
+                      49.891,
+                      49.683,
+                      49.569,
+                      49.633,
+                      49.781,
+                      49.592,
+                      49.941,
+                      49.902,
+                      49.892,
+                      49.759,
+                      49.865,
+                      49.852,
+                      49.893,
+                      49.619,
+                      49.792,
+                      49.612,
+                      49.845,
+                      49.77,
+                      49.683,
+                      49.669,
+                      49.916,
+                      49.714,
+                      50.095,
+                      49.929,
+                      49.817,
+                      49.943,
+                      49.664,
+                      50.135,
+                      49.902,
+                      50.056,
+                      49.71,
+                      49.915,
+                      49.92,
+                      50.147,
+                      49.967,
+                      49.921,
+                      49.821,
+                      49.856,
+                      49.953,
+                      49.915,
+                      49.708,
+                      50.163,
+                      50.198,
+                      49.82,
+                      50.027,
+                      49.804,
+                      50.086,
+                      49.891,
+                      50.08,
+                      50.113,
+                      50.134,
+                      49.804,
+                      50.208,
+                      49.865,
+                      49.769,
+                      50.027,
+                      49.935,
+                      50.165,
+                      50.154,
+                      49.909,
+                      50.226,
+                      49.895,
+                      50.008,
+                      49.878,
+                      50.218,
+                      49.832,
+                      49.772,
+                      49.968,
+                      50.246,
+                      50.196,
+                      50.124,
+                      50.195,
+                      50.197,
+                      50.009,
+                      49.908,
+                      50.136,
+                      50.081,
+                      49.937,
+                      49.797,
+                      50.123,
+                      49.881,
+                      50.218,
+                      49.87,
+                      49.811,
+                      50.166,
+                      49.827,
+                      49.84,
+                      50.05,
+                      50.187,
+                      49.848,
+                      49.905,
+                      50.139,
+                      50.236,
+                      50.0,
+                      49.822,
+                      49.757,
+                      49.865,
+                      49.816,
+                      50.089,
+                      49.811,
+                      50.003,
+                      50.097,
+                      50.041,
+                      49.85,
+                      50.152,
+                      50.108,
+                      50.119,
+                      49.816,
+                      49.812,
+                      50.214,
+                      49.949,
+                      49.9,
+                      49.994,
+                      50.081,
+                      50.228,
+                      49.893,
+                      50.212,
+                      49.762,
+                      50.028,
+                      50.067,
+                      49.803,
+                      49.82,
+                      49.96,
+                      50.233,
+                      50.048,
+                      50.217,
+                      50.152,
+                      49.984,
+                      50.142,
+                      49.759,
+                      49.805,
+                      50.165
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "label": "平滑趋势",
+              "html": "<div class='note'><strong>平滑趋势:<\/strong>压低高频波动，更清楚地看趋势与转折。<\/div>",
+              "chartTitle": "问题二：附件数据交互图 · 15 点滑动均值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/温度:series 滑动均值<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": 0.0,
+                "yMax": 54.26568,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q2Cursor",
+                "series": [
+                  {
+                    "name": "附件1/温度:series 滑动均值",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "d": [
+                      28.0,
+                      28.264,
+                      28.573333333333334,
+                      28.851,
+                      29.0882,
+                      29.379166666666666,
+                      29.65257142857143,
+                      29.9235,
+                      30.16766666666667,
+                      30.423900000000003,
+                      30.676454545454547,
+                      30.94333333333334,
+                      31.19907692307693,
+                      31.45671428571429,
+                      31.702400000000004,
+                      32.204,
+                      32.708200000000005,
+                      33.18566666666667,
+                      33.67786666666667,
+                      34.169999999999995,
+                      34.63986666666666,
+                      35.09593333333333,
+                      35.559066666666666,
+                      36.025999999999996,
+                      36.474533333333326,
+                      36.90073333333334,
+                      37.31286666666667,
+                      37.71086666666667,
+                      38.09853333333333,
+                      38.50013333333333,
+                      38.89940000000001,
+                      39.287866666666666,
+                      39.66106666666666,
+                      40.007466666666666,
+                      40.35213333333333,
+                      40.67633333333334,
+                      40.99973333333333,
+                      41.30813333333333,
+                      41.602066666666666,
+                      41.90286666666667,
+                      42.20333333333334,
+                      42.49946666666667,
+                      42.79446666666668,
+                      43.06646666666667,
+                      43.33126666666667,
+                      43.58526666666667,
+                      43.81233333333333,
+                      44.04633333333333,
+                      44.283333333333324,
+                      44.49333333333333,
+                      44.705666666666666,
+                      44.906600000000005,
+                      45.11453333333332,
+                      45.319066666666664,
+                      45.505133333333326,
+                      45.69386666666666,
+                      45.85446666666667,
+                      46.0162,
+                      46.17000000000001,
+                      46.30153333333333,
+                      46.44566666666666,
+                      46.5906,
+                      46.736200000000004,
+                      46.871,
+                      47.013266666666674,
+                      47.14633333333334,
+                      47.2808,
+                      47.37846666666667,
+                      47.46673333333334,
+                      47.562599999999996,
+                      47.644800000000004,
+                      47.7394,
+                      47.841133333333325,
+                      47.9326,
+                      48.01566666666667,
+                      48.08506666666666,
+                      48.15786666666666,
+                      48.236466666666665,
+                      48.302266666666675,
+                      48.37660000000001,
+                      48.4468,
+                      48.50573333333334,
+                      48.583533333333335,
+                      48.64646666666667,
+                      48.68920000000001,
+                      48.739000000000004,
+                      48.801,
+                      48.83793333333333,
+                      48.883,
+                      48.943,
+                      48.98233333333333,
+                      49.03733333333333,
+                      49.07039999999999,
+                      49.10306666666666,
+                      49.12413333333333,
+                      49.158333333333324,
+                      49.190599999999996,
+                      49.19913333333333,
+                      49.22846666666666,
+                      49.28906666666667,
+                      49.3444,
+                      49.371,
+                      49.39059999999999,
+                      49.4422,
+                      49.47526666666668,
+                      49.5168,
+                      49.53060000000001,
+                      49.54586666666667,
+                      49.55653333333333,
+                      49.59566666666665,
+                      49.60839999999999,
+                      49.62073333333332,
+                      49.6448,
+                      49.676199999999994,
+                      49.66573333333333,
+                      49.67893333333333,
+                      49.69506666666667,
+                      49.723666666666674,
+                      49.71893333333334,
+                      49.726400000000005,
+                      49.73393333333333,
+                      49.751999999999995,
+                      49.756600000000006,
+                      49.77760000000001,
+                      49.75900000000001,
+                      49.769800000000004,
+                      49.7832,
+                      49.78653333333333,
+                      49.77906666666667,
+                      49.800666666666665,
+                      49.785533333333326,
+                      49.798399999999994,
+                      49.80086666666666,
+                      49.80473333333334,
+                      49.80993333333333,
+                      49.797399999999996,
+                      49.81353333333333,
+                      49.8324,
+                      49.85,
+                      49.85653333333334,
+                      49.861200000000004,
+                      49.8712,
+                      49.90213333333333,
+                      49.922,
+                      49.92233333333333,
+                      49.92946666666667,
+                      49.91353333333334,
+                      49.91513333333333,
+                      49.92166666666666,
+                      49.90599999999999,
+                      49.93926666666666,
+                      49.94346666666665,
+                      49.937999999999995,
+                      49.93606666666667,
+                      49.94233333333334,
+                      49.953733333333346,
+                      49.951800000000006,
+                      49.947333333333326,
+                      49.95706666666667,
+                      49.971266666666665,
+                      49.97013333333334,
+                      49.9936,
+                      49.98773333333334,
+                      49.977999999999994,
+                      49.99926666666667,
+                      49.98406666666666,
+                      49.98186666666667,
+                      50.00413333333333,
+                      49.99626666666667,
+                      50.0244,
+                      50.01166666666666,
+                      50.019466666666666,
+                      50.006,
+                      50.013000000000005,
+                      49.99286666666667,
+                      49.99073333333334,
+                      49.97473333333333,
+                      50.00013333333333,
+                      50.0286,
+                      50.035066666666665,
+                      50.052400000000006,
+                      50.05453333333334,
+                      50.04486666666667,
+                      50.04480000000001,
+                      50.03880000000001,
+                      50.0512,
+                      50.04646666666667,
+                      50.04106666666667,
+                      50.03473333333334,
+                      50.03800000000001,
+                      50.06773333333334,
+                      50.0612,
+                      50.0322,
+                      50.030200000000015,
+                      50.0104,
+                      49.98673333333333,
+                      49.97693333333334,
+                      49.988800000000005,
+                      49.98479999999999,
+                      49.969399999999986,
+                      49.97326666666666,
+                      49.993199999999995,
+                      50.00673333333334,
+                      49.98666666666667,
+                      49.97839999999999,
+                      49.95486666666667,
+                      49.95126666666667,
+                      49.9698,
+                      49.94613333333334,
+                      49.957866666666675,
+                      49.975,
+                      49.974399999999996,
+                      49.95193333333334,
+                      49.9722,
+                      49.98573333333333,
+                      49.9844,
+                      49.9564,
+                      49.943866666666665,
+                      49.97,
+                      49.982800000000005,
+                      49.98513333333334,
+                      49.997,
+                      49.99646666666668,
+                      50.02426666666667,
+                      50.016933333333334,
+                      50.0246,
+                      50.00599999999999,
+                      50.01786666666667,
+                      50.0122,
+                      49.99186666666667,
+                      49.97193333333335,
+                      49.98153333333334,
+                      50.0096,
+                      49.99853333333333,
+                      50.016400000000004,
+                      50.0332,
+                      50.03253333333334,
+                      50.03660000000001,
+                      50.00533333333335,
+                      49.99946666666667,
+                      49.99633333333333
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "label": "相对偏差",
+              "html": "<div class='note'><strong>相对偏差:<\/strong>以零线为基准，直接观察高于或低于均值的区间。<\/div>",
+              "chartTitle": "问题二：附件数据交互图 · 相对均值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>相对均值<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": -21.02500780082987,
+                "yMax": 4.7803521991701325,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q2Cursor",
+                "series": [
+                  {
+                    "name": "相对均值",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "d": [
+                      -19.24532780082987,
+                      -18.71732780082987,
+                      -18.05332780082987,
+                      -17.56132780082987,
+                      -17.20832780082987,
+                      -16.41132780082987,
+                      -15.95232780082987,
+                      -15.42532780082987,
+                      -15.124327800829867,
+                      -14.515327800829873,
+                      -14.043327800829871,
+                      -13.366327800829872,
+                      -12.977327800829869,
+                      -12.439327800829872,
+                      -12.103327800829867,
+                      -11.721327800829869,
+                      -11.154327800829869,
+                      -10.89132780082987,
+                      -10.17832780082987,
+                      -9.826327800829873,
+                      -9.363327800829872,
+                      -9.11132780082987,
+                      -8.478327800829867,
+                      -8.12032780082987,
+                      -7.787327800829871,
+                      -7.650327800829871,
+                      -7.18432780082987,
+                      -7.00732780082987,
+                      -6.624327800829867,
+                      -6.079327800829873,
+                      -5.7323278008298715,
+                      -5.32732780082987,
+                      -5.293327800829871,
+                      -4.9823278008298715,
+                      -4.656327800829871,
+                      -4.500327800829872,
+                      -4.26032780082987,
+                      -3.852327800829869,
+                      -3.7113278008298707,
+                      -3.2753278008298707,
+                      -3.143327800829873,
+                      -2.7423278008298695,
+                      -2.582327800829873,
+                      -2.544327800829869,
+                      -2.1073278008298715,
+                      -1.9223278008298692,
+                      -1.9213278008298715,
+                      -1.7833278008298663,
+                      -1.4273278008298718,
+                      -1.5063278008298724,
+                      -1.3153278008298699,
+                      -1.2463278008298673,
+                      -0.7333278008298691,
+                      -0.6433278008298728,
+                      -0.4843278008298668,
+                      -0.3123278008298698,
+                      -0.33332780082987057,
+                      -0.15632780082987097,
+                      -0.23732780082986693,
+                      -0.1343278008298725,
+                      0.23967219917012983,
+                      0.25267219917012795,
+                      0.4006721991701312,
+                      0.5946721991701338,
+                      0.627672199170128,
+                      0.6806721991701323,
+                      0.7706721991701286,
+                      0.7316721991701272,
+                      0.6806721991701323,
+                      0.9536721991701285,
+                      0.9206721991701272,
+                      1.0856721991701335,
+                      1.3696721991701324,
+                      1.134672199170133,
+                      1.1116721991701297,
+                      1.2806721991701338,
+                      1.3446721991701338,
+                      1.5796721991701332,
+                      1.5816721991701286,
+                      1.74267219917013,
+                      1.7336721991701296,
+                      1.654672199170129,
+                      1.8986721991701287,
+                      1.6246721991701278,
+                      1.5946721991701338,
+                      1.667672199170127,
+                      2.015672199170133,
+                      1.9236721991701273,
+                      1.8106721991701278,
+                      2.0116721991701283,
+                      1.87067219917013,
+                      2.1696721991701295,
+                      2.0756721991701284,
+                      2.0716721991701306,
+                      2.0586721991701324,
+                      2.2466721991701277,
+                      2.1386721991701307,
+                      2.026672199170129,
+                      2.0646721991701327,
+                      2.5036721991701327,
+                      2.4976721991701325,
+                      2.414672199170127,
+                      2.2176721991701314,
+                      2.5846721991701287,
+                      2.5076721991701305,
+                      2.4936721991701276,
+                      2.3766721991701303,
+                      2.3046721991701276,
+                      2.231672199170127,
+                      2.6456721991701286,
+                      2.4376721991701302,
+                      2.323672199170133,
+                      2.387672199170133,
+                      2.535672199170129,
+                      2.346672199170129,
+                      2.695672199170133,
+                      2.6566721991701314,
+                      2.6466721991701334,
+                      2.5136721991701307,
+                      2.6196721991701324,
+                      2.606672199170127,
+                      2.647672199170131,
+                      2.37367219917013,
+                      2.546672199170132,
+                      2.3666721991701323,
+                      2.5996721991701293,
+                      2.5246721991701335,
+                      2.4376721991701302,
+                      2.4236721991701273,
+                      2.670672199170127,
+                      2.468672199170129,
+                      2.8496721991701293,
+                      2.6836721991701324,
+                      2.5716721991701306,
+                      2.6976721991701282,
+                      2.418672199170132,
+                      2.8896721991701284,
+                      2.6566721991701314,
+                      2.810672199170128,
+                      2.4646721991701313,
+                      2.6696721991701295,
+                      2.674672199170132,
+                      2.901672199170129,
+                      2.721672199170129,
+                      2.6756721991701298,
+                      2.5756721991701284,
+                      2.610672199170132,
+                      2.7076721991701334,
+                      2.6696721991701295,
+                      2.462672199170129,
+                      2.917672199170127,
+                      2.952672199170131,
+                      2.5746721991701307,
+                      2.7816721991701314,
+                      2.5586721991701324,
+                      2.840672199170129,
+                      2.6456721991701286,
+                      2.8346721991701287,
+                      2.86767219917013,
+                      2.8886721991701307,
+                      2.5586721991701324,
+                      2.962672199170129,
+                      2.6196721991701324,
+                      2.5236721991701287,
+                      2.7816721991701314,
+                      2.6896721991701327,
+                      2.9196721991701295,
+                      2.908672199170134,
+                      2.6636721991701293,
+                      2.9806721991701295,
+                      2.6496721991701335,
+                      2.762672199170133,
+                      2.6326721991701305,
+                      2.972672199170134,
+                      2.586672199170131,
+                      2.526672199170129,
+                      2.722672199170134,
+                      3.0006721991701326,
+                      2.9506721991701284,
+                      2.8786721991701327,
+                      2.9496721991701307,
+                      2.951672199170133,
+                      2.7636721991701307,
+                      2.6626721991701316,
+                      2.890672199170133,
+                      2.8356721991701335,
+                      2.691672199170128,
+                      2.5516721991701274,
+                      2.877672199170128,
+                      2.6356721991701306,
+                      2.972672199170134,
+                      2.624672199170128,
+                      2.5656721991701303,
+                      2.920672199170127,
+                      2.5816721991701286,
+                      2.594672199170134,
+                      2.8046721991701276,
+                      2.941672199170128,
+                      2.6026721991701294,
+                      2.6596721991701315,
+                      2.8936721991701333,
+                      2.9906721991701275,
+                      2.7546721991701304,
+                      2.576672199170133,
+                      2.5116721991701283,
+                      2.6196721991701324,
+                      2.570672199170133,
+                      2.843672199170129,
+                      2.5656721991701303,
+                      2.7576721991701305,
+                      2.8516721991701317,
+                      2.795672199170127,
+                      2.604672199170132,
+                      2.9066721991701314,
+                      2.8626721991701274,
+                      2.87367219917013,
+                      2.570672199170133,
+                      2.566672199170128,
+                      2.968672199170129,
+                      2.7036721991701285,
+                      2.654672199170129,
+                      2.74867219917013,
+                      2.8356721991701335,
+                      2.982672199170132,
+                      2.647672199170131,
+                      2.9666721991701337,
+                      2.516672199170131,
+                      2.782672199170129,
+                      2.8216721991701306,
+                      2.5576721991701277,
+                      2.5746721991701307,
+                      2.7146721991701313,
+                      2.9876721991701274,
+                      2.802672199170132,
+                      2.971672199170129,
+                      2.9066721991701314,
+                      2.738672199170132,
+                      2.8966721991701334,
+                      2.5136721991701307,
+                      2.55967219917013,
+                      2.9196721991701295
+                    ]
+                  }
+                ],
+                "hlines": [
+                  {
+                    "v": 0,
+                    "c": "#8aa3aa",
+                    "label": "均值基线"
+                  }
+                ]
+              }
+            }
+          ],
+          "note": "<span class='badge q'>图表切换<\/span>点击不同按钮可在同一 canvas 中切换可视化视图。"
+        },
+        {
+          "type": "chart",
+          "id": "q2Chart",
+          "title": "问题二：附件数据交互图",
+          "em": "悬停读值  图上拖动",
+          "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/温度:series<\/span>",
+          "spec": {
+            "type": "line",
+            "n": 241,
+            "h": 260,
+            "yMin": 0.0,
+            "yMax": 54.26568,
+            "yFmt": "x",
+            "xTicks": [
+              {
+                "i": 0,
+                "t": "0:00"
+              },
+              {
+                "i": 60,
+                "t": "1:00"
+              },
+              {
+                "i": 120,
+                "t": "2:00"
+              },
+              {
+                "i": 180,
+                "t": "3:00"
+              },
+              {
+                "i": 240,
+                "t": "4:00"
+              }
+            ],
+            "xName": "第 %i 个观测点",
+            "cursor": {
+              "i": 0
+            },
+            "drag": "q2Cursor",
+            "series": [
+              {
+                "name": "附件1/温度:series",
+                "c": "#146c87",
+                "w": 2.2,
+                "fill": "rgba(20,108,135,.10)",
+                "d": [
+                  28.0,
+                  28.528,
+                  29.192,
+                  29.684,
+                  30.037,
+                  30.834,
+                  31.293,
+                  31.82,
+                  32.121,
+                  32.73,
+                  33.202,
+                  33.879,
+                  34.268,
+                  34.806,
+                  35.142,
+                  35.524,
+                  36.091,
+                  36.354,
+                  37.067,
+                  37.419,
+                  37.882,
+                  38.134,
+                  38.767,
+                  39.125,
+                  39.458,
+                  39.595,
+                  40.061,
+                  40.238,
+                  40.621,
+                  41.166,
+                  41.513,
+                  41.918,
+                  41.952,
+                  42.263,
+                  42.589,
+                  42.745,
+                  42.985,
+                  43.393,
+                  43.534,
+                  43.97,
+                  44.102,
+                  44.503,
+                  44.663,
+                  44.701,
+                  45.138,
+                  45.323,
+                  45.324,
+                  45.462,
+                  45.818,
+                  45.739,
+                  45.93,
+                  45.999,
+                  46.512,
+                  46.602,
+                  46.761,
+                  46.933,
+                  46.912,
+                  47.089,
+                  47.008,
+                  47.111,
+                  47.485,
+                  47.498,
+                  47.646,
+                  47.84,
+                  47.873,
+                  47.926,
+                  48.016,
+                  47.977,
+                  47.926,
+                  48.199,
+                  48.166,
+                  48.331,
+                  48.615,
+                  48.38,
+                  48.357,
+                  48.526,
+                  48.59,
+                  48.825,
+                  48.827,
+                  48.988,
+                  48.979,
+                  48.9,
+                  49.144,
+                  48.87,
+                  48.84,
+                  48.913,
+                  49.261,
+                  49.169,
+                  49.056,
+                  49.257,
+                  49.116,
+                  49.415,
+                  49.321,
+                  49.317,
+                  49.304,
+                  49.492,
+                  49.384,
+                  49.272,
+                  49.31,
+                  49.749,
+                  49.743,
+                  49.66,
+                  49.463,
+                  49.83,
+                  49.753,
+                  49.739,
+                  49.622,
+                  49.55,
+                  49.477,
+                  49.891,
+                  49.683,
+                  49.569,
+                  49.633,
+                  49.781,
+                  49.592,
+                  49.941,
+                  49.902,
+                  49.892,
+                  49.759,
+                  49.865,
+                  49.852,
+                  49.893,
+                  49.619,
+                  49.792,
+                  49.612,
+                  49.845,
+                  49.77,
+                  49.683,
+                  49.669,
+                  49.916,
+                  49.714,
+                  50.095,
+                  49.929,
+                  49.817,
+                  49.943,
+                  49.664,
+                  50.135,
+                  49.902,
+                  50.056,
+                  49.71,
+                  49.915,
+                  49.92,
+                  50.147,
+                  49.967,
+                  49.921,
+                  49.821,
+                  49.856,
+                  49.953,
+                  49.915,
+                  49.708,
+                  50.163,
+                  50.198,
+                  49.82,
+                  50.027,
+                  49.804,
+                  50.086,
+                  49.891,
+                  50.08,
+                  50.113,
+                  50.134,
+                  49.804,
+                  50.208,
+                  49.865,
+                  49.769,
+                  50.027,
+                  49.935,
+                  50.165,
+                  50.154,
+                  49.909,
+                  50.226,
+                  49.895,
+                  50.008,
+                  49.878,
+                  50.218,
+                  49.832,
+                  49.772,
+                  49.968,
+                  50.246,
+                  50.196,
+                  50.124,
+                  50.195,
+                  50.197,
+                  50.009,
+                  49.908,
+                  50.136,
+                  50.081,
+                  49.937,
+                  49.797,
+                  50.123,
+                  49.881,
+                  50.218,
+                  49.87,
+                  49.811,
+                  50.166,
+                  49.827,
+                  49.84,
+                  50.05,
+                  50.187,
+                  49.848,
+                  49.905,
+                  50.139,
+                  50.236,
+                  50.0,
+                  49.822,
+                  49.757,
+                  49.865,
+                  49.816,
+                  50.089,
+                  49.811,
+                  50.003,
+                  50.097,
+                  50.041,
+                  49.85,
+                  50.152,
+                  50.108,
+                  50.119,
+                  49.816,
+                  49.812,
+                  50.214,
+                  49.949,
+                  49.9,
+                  49.994,
+                  50.081,
+                  50.228,
+                  49.893,
+                  50.212,
+                  49.762,
+                  50.028,
+                  50.067,
+                  49.803,
+                  49.82,
+                  49.96,
+                  50.233,
+                  50.048,
+                  50.217,
+                  50.152,
+                  49.984,
+                  50.142,
+                  49.759,
+                  49.805,
+                  50.165
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "html",
+          "html": "<div class='note'><strong>交付判断：<\/strong>本问必须做到输入可追溯、约束可核验、结果字段与题面逐项对应。<\/div>"
+        }
+      ]
+    }
+  ]
+}</script>
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var D=JSON.parse($('#DATA').textContent);
+var SCENES=[], TITLES=[], CHARTS={}, CHART_SPECS={}, CHART_META={}, SLIDERS={};
+var cur=-1, reduce=false, auto=false, TOKEN=0, tlT=[];
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return esc(s).replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
+function raw(s){return String(s==null?'':s);}
+function cloneJSON(v){try{return JSON.parse(JSON.stringify(v||{}));}catch(e){return {};}}
+function kpiHTML(v,k,cls){return '<div class="kpi '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';}
+
+/* ================= 图表引擎（移植自参考例子 + 悬停/拖动） ================= */
+var tooltipEl=null;
+function ensureTooltip(){ if(tooltipEl) return tooltipEl;
+  tooltipEl=document.createElement('div'); tooltipEl.className='tooltip';
+  document.body.appendChild(tooltipEl); return tooltipEl; }
+function fmt(v,f){
+  if(typeof f==='function') return f(v);
+  if(f==='pct') return v.toFixed(0)+'%';
+  if(f==='sci') return v===0?'0':v.toExponential(1);
+  if(f==='x') return v.toFixed(2);
+  if(f==='k') return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);
+  if(f===0) return v.toFixed(0);
+  if(typeof f==='number') return v.toFixed(f);
+  return String(Math.round(v));
+}
+function note(g,text,px,py,o){
+  o=o||{};
+  var dy=o.up===undefined?24:o.up, dx=o.dx===undefined?8:o.dx;
+  g.font='600 12px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var mt=g.measureText?g.measureText(text):null;
+  var tw=(mt&&mt.width)?mt.width:text.length*12;
+  var x=px+dx, y=py-dy;
+  if(o.right!==undefined && x+tw+14>o.right && o.left!==undefined) x=px-dx-tw-12;
+  if(o.left!==undefined && x<o.left) x=o.left;
+  if(o.top!==undefined && y<o.top) y=py+12;
+  g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(x,y,tw+12,18);
+  g.strokeStyle=o.line||'#cfe4e4'; g.lineWidth=1; g.strokeRect(x+.5,y+.5,tw+11,17);
+  g.fillStyle=o.tc||'#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,x+6,y+9);
+}
+function plot(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), h=cfg.h||220;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var T=cfg.T||18, B=cfg.B||26, n=cfg.n;
+  var ymin=cfg.yMin, ymax=cfg.yMax;
+  /* 左右留白必须放得下最长的一位刻度文字：画布会把超出部分直接裁掉，
+     15552.00 被裁成 552.00 会被当成数据错误。量完文字宽度再定边距。 */
+  var YFONT='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  function textW(text,font){ g.font=font||YFONT; var m=g.measureText?g.measureText(String(text)):null;
+    return (m&&m.width)?m.width:String(text).length*6.6; }
+  function maxTickW(min,max,fmtStr,steps){ var mw=0;
+    if(!isFinite(min)||!isFinite(max)) return 0;
+    for(var q=0;q<=steps;q++){ mw=Math.max(mw,textW(fmt(min+(max-min)*q/steps,fmtStr))); }
+    return mw; }
+  var L=Math.max(cfg.L||44, Math.ceil(maxTickW(ymin,ymax,cfg.yFmt,4))+10);
+  var R=cfg.R||(cfg.y2?54:16);
+  if(cfg.y2){ R=Math.max(R,Math.ceil(maxTickW(cfg.y2.min,cfg.y2.max,cfg.y2.fmt,4))+10); }
+  var PW=w-L-R, PH=h-T-B;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  var Y2=cfg.y2?function(v){ return T+PH*(1-(v-cfg.y2.min)/(cfg.y2.max-cfg.y2.min)); }:null;
+  if(cfg.band){ g.fillStyle=cfg.band.c; g.fillRect(L,Y(cfg.band.hi),PW,Math.max(0,Y(cfg.band.lo)-Y(cfg.band.hi))); }
+  g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var k;
+  for(k=0;k<=4;k++){ var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(v,cfg.yFmt),L-7,yy); }
+  (cfg.hlines||[]).forEach(function(hl){ var yy=Y(hl.v);
+    g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#b8543a'; g.lineWidth=hl.w||1.3;
+    g.beginPath(); g.moveTo(L,yy); g.lineTo(L+PW,yy); g.stroke(); g.restore();
+    if(hl.label){ g.font='600 11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='alphabetic';
+      var mt=g.measureText?g.measureText(hl.label):null; var tw=(mt&&mt.width)?mt.width:hl.label.length*12;
+      g.fillStyle='rgba(255,255,255,.95)'; g.fillRect(L+3,yy-19,tw+12,16);
+      g.strokeStyle='rgba(217,233,233,.95)'; g.lineWidth=1; g.strokeRect(L+3.5,yy-18.5,tw+11,15);
+      g.fillStyle=hl.c||'#b8543a'; g.fillText(hl.label,L+9,yy-7); } });
+  if(cfg.y2){ for(k=0;k<=4;k++){ var v2=cfg.y2.min+(cfg.y2.max-cfg.y2.min)*k/4;
+    g.fillStyle=cfg.y2.c||'#146c87'; g.textAlign='left'; g.textBaseline='middle'; g.fillText(fmt(v2,cfg.y2.fmt),L+PW+7,Y2(v2)); } }
+  (cfg.vlines||[]).forEach(function(vl){ var vx=X(vl.i);
+    g.save(); g.setLineDash([4,4]); g.strokeStyle=vl.c||'#c6dbe4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(vx,T); g.lineTo(vx,T+PH); g.stroke(); g.restore(); });
+  (cfg.xTicks||[]).forEach(function(t){ var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    /* 首尾刻度文字改成贴边对齐，避免被画布左右边缘截断。 */
+    var label=String(t.t), tw=textW(label), lx=xx, align='center';
+    if(xx-tw/2<2){ align='left'; lx=2; } else if(xx+tw/2>w-2){ align='right'; lx=w-2; }
+    g.fillStyle='#8aa3aa'; g.textAlign=align; g.textBaseline='alphabetic'; g.fillText(label,lx,T+PH+16); });
+  (cfg.series||[]).forEach(function(s){ if(!s.d) return; var yy=s.ax==='y2'?Y2:Y, pv=null;
+    g.beginPath();
+    for(var i=0;i<s.d.length;i++){ var px=X(i), py=yy(s.d[i]);
+      if(!i) g.moveTo(px,py); else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); } else g.lineTo(px,py); pv=py; }
+    if(s.fill){ g.save(); g.lineTo(X(s.d.length-1),T+PH); g.lineTo(X(0),T+PH); g.closePath();
+      g.fillStyle=s.fill; g.fill(); g.restore(); }
+    g.strokeStyle=s.c; g.lineWidth=s.w||1.8;
+    g.setLineDash(s.dash||[]); g.lineJoin='round'; g.stroke(); g.setLineDash([]); });
+  if(cfg.mark){ var mx=X(cfg.mark.i), my=Y(cfg.mark.v);
+    g.beginPath(); g.arc(mx,my,4.2,0,6.2832); g.fillStyle=cfg.mark.c||'#0b6e68'; g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke(); }
+  if(cfg.cursor){ var cx=X(cfg.cursor.i);
+    g.save(); g.setLineDash([3,3]); g.strokeStyle='#8fb6bd'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx,T); g.lineTo(cx,T+PH); g.stroke(); g.restore(); }
+  (cfg.tags||[]).forEach(function(t){ note(g,t.text,X(t.i),(t.ax==='y2'?Y2:Y)(t.v),
+      {right:L+PW,left:L+2,top:T+2,line:t.line,tc:t.tc,up:t.up}); });
+  cv._chartInfo={L:L,R:R,T:T,B:B,PW:PW,PH:PH,n:n,X:X,series:cfg.series||[],Y:Y,
+    xName:cfg.xName||'index %i',yFmt:cfg.yFmt,stack:false,panels:[]};
+  cv._chartCfg=cfg;
+  if(cfg.hover!==false) bindHover(cv);
+  if(cfg.drag) bindDrag(cv);
+}
+function plotStack(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), PS=cfg.panels||[];
+  var gap=cfg.gap||20, TOP=cfg.T||8, BOT=cfg.B||24, n=cfg.n;
+  var lay=[], y=TOP;
+  PS.forEach(function(p,i){ var cap=p.cap?20:0, ph=p.h||104; lay.push({p:p,y0:y+cap,y1:y+cap+ph}); y+=cap+ph+(i<PS.length-1?gap:0); });
+  var h=y+BOT, top0=lay[0].y0, bot0=lay[lay.length-1].y1;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  /* 子图的刻度文字也要量宽度再定左右留白，否则大数会被画布边缘裁掉。 */
+  var SFONT='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  function stextW(text){ g.font=SFONT; var m=g.measureText?g.measureText(String(text)):null;
+    return (m&&m.width)?m.width:String(text).length*6.6; }
+  function spanTickW(min,max,fmtStr,steps){ var mw=0;
+    if(!isFinite(min)||!isFinite(max)) return 0;
+    for(var q=0;q<=steps;q++){ mw=Math.max(mw,stextW(fmt(min+(max-min)*q/steps,fmtStr))); }
+    return mw; }
+  var L=cfg.L||52, R=cfg.R||58;
+  PS.forEach(function(p){
+    L=Math.max(L,Math.ceil(spanTickW(p.yMin,p.yMax,p.fmt,p.grid||3))+10);
+    if(p.y2){ R=Math.max(R,Math.ceil(spanTickW(p.y2.min,p.y2.max,p.y2.fmt,p.grid||3))+10); } });
+  var PW=w-L-R;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  (cfg.xTicks||[]).forEach(function(t){ var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.lineWidth=1; g.beginPath(); g.moveTo(xx,top0); g.lineTo(xx,bot0); g.stroke(); });
+  lay.forEach(function(it){ var p=it.p, y0=it.y0, ph=it.y1-it.y0, ymin=p.yMin, ymax=p.yMax, grid=p.grid||3;
+    if(p.cap){ g.font='600 12.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='middle';
+      g.fillStyle=p.capc||'#0b6e68'; g.fillText(p.cap,L,y0-10); }
+    function Y(v){ return y0+ph*(1-(v-ymin)/(ymax-ymin)); }
+    var Y2=p.y2?function(v){ return y0+ph*(1-(v-p.y2.min)/(p.y2.max-p.y2.min)); }:null;
+    if(p.band){ g.fillStyle=p.band.c; g.fillRect(L,Y(p.band.hi),PW,Math.max(0,Y(p.band.lo)-Y(p.band.hi))); }
+    var q; g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+    for(q=0;q<=grid;q++){ var v=ymin+(ymax-ymin)*q/grid, gy=Y(v);
+      g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,gy+.5); g.lineTo(L+PW,gy+.5); g.stroke();
+      g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(v,p.fmt),L-7,gy); }
+    if(Y2) for(q=0;q<=grid;q++){ var v2=p.y2.min+(p.y2.max-p.y2.min)*q/grid;
+      g.fillStyle=p.y2.c||'#146c87'; g.textAlign='left'; g.textBaseline='middle'; g.fillText(fmt(v2,p.y2.fmt),L+PW+7,Y2(v2)); }
+    (p.hlines||[]).forEach(function(hl){ var hy=Y(hl.v);
+      g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#8aa3aa'; g.lineWidth=hl.w||1.2;
+      g.beginPath(); g.moveTo(L,hy); g.lineTo(L+PW,hy); g.stroke(); g.restore(); });
+    (p.series||[]).forEach(function(s){ if(!s.d) return; var sy=(s.ax==='y2'&&Y2)?Y2:Y, pv=null;
+      g.beginPath();
+      for(var i=0;i<s.d.length;i++){ var px=X(i), py=sy(s.d[i]);
+        if(!i) g.moveTo(px,py); else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); } else g.lineTo(px,py); pv=py; }
+      if(s.fill){ g.save(); g.lineTo(X(s.d.length-1),y0+ph); g.lineTo(X(0),y0+ph); g.closePath();
+        g.fillStyle=s.fill; g.fill(); g.restore(); }
+      g.strokeStyle=s.c; g.lineWidth=s.w||1.8; g.setLineDash(s.dash||[]); g.lineJoin='round'; g.stroke(); g.setLineDash([]); });
+    (p.tags||[]).forEach(function(t){ note(g,t.text,X(t.i),Y(t.v),{right:L+PW,left:L+2,top:y0+2,line:t.line,tc:t.tc,up:t.up}); });
+  });
+  if(cfg.cursor){ var cx=X(cfg.cursor.i);
+    g.save(); g.setLineDash([3,3]); g.strokeStyle='#8fb6bd'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx,top0); g.lineTo(cx,bot0); g.stroke(); g.restore(); }
+  (cfg.xTicks||[]).forEach(function(t){ g.fillStyle='#8aa3aa'; g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+    var label=String(t.t), xx=X(t.i), tw=stextW(label), lx=xx, align='center';
+    if(xx-tw/2<2){ align='left'; lx=2; } else if(xx+tw/2>w-2){ align='right'; lx=w-2; }
+    g.textAlign=align; g.textBaseline='alphabetic'; g.fillText(label,lx,bot0+16); });
+  cv._chartInfo={L:L,R:R,T:top0,B:bot0,PW:PW,PH:bot0-top0,n:n,X:X,series:cfg.series||[],
+    xName:cfg.xName||'index %i',yFmt:null,stack:true,panels:PS};
+  cv._chartCfg=cfg;
+  if(cfg.hover!==false) bindHover(cv);
+  if(cfg.drag) bindDrag(cv);
+}
+function bindHover(cv){
+  if(cv._hoverBound) return;
+  cv._hoverBound=true;
+  var box=ensureTooltip();
+  cv.addEventListener('mousemove',function(e){
+    var info=cv._chartInfo||{};
+    if(!info.n||!info.PW){box.style.display='none';return;}
+    var r=cv.getBoundingClientRect(), px=e.clientX-r.left;
+    var i=Math.round((px-info.L)/info.PW*(info.n-1));
+    if(i<0||i>=info.n||!isFinite(i)){box.style.display='none';return;}
+    var xLabel=String(info.xName||'index %i').replace('%i',(i+1));
+    var rows='<b>'+esc(xLabel)+'</b>';
+    if(info.stack){
+      (info.panels||[]).forEach(function(panel){(panel.series||[]).forEach(function(series){
+        if(series.d&&series.d[i]!=null){
+          rows+='<div class="ttr"><i style="background:'+escAttr(series.c||'#888')+'"></i>'+esc(series.name||panel.cap||'')+' '+esc(fmt(+series.d[i],panel.fmt||0))+'</div>';
+        }
+      });});
+    }else{
+      (info.series||[]).forEach(function(series){
+        if(series.d&&series.d[i]!=null){
+          rows+='<div class="ttr"><i style="background:'+escAttr(series.c||'#888')+'"></i>'+esc(series.name||'')+' '+esc(fmt(+series.d[i],info.yFmt))+'</div>';
+        }
+      });
+    }
+    box.innerHTML=rows; box.style.display='block';
+    var bx=e.clientX+14, by=e.clientY+12, rw=box.offsetWidth, rh=box.offsetHeight;
+    if(bx+rw>window.innerWidth-8) bx=e.clientX-rw-14;
+    if(by+rh>window.innerHeight-8) by=e.clientY-rh-12;
+    box.style.left=bx+'px'; box.style.top=by+'px';
+  });
+  cv.addEventListener('mouseleave',function(){box.style.display='none';});
+}
+function bindDrag(cv){
+  if(cv._dragBound) return;
+  cv._dragBound=true;
+  var down=false;
+  function sliderId(cfg){return typeof cfg.drag==='string'?cfg.drag:(cfg.drag&&(cfg.drag.sliderId||cfg.drag.slider));}
+  function update(e){
+    var cfg=cv._chartCfg||{}, info=cv._chartInfo||{};
+    if(!info.n||!info.PW) return;
+    var rect=cv.getBoundingClientRect();
+    var px=(e.clientX!=null?e.clientX-rect.left:e.offsetX);
+    var i=Math.round((px-info.L)/info.PW*(info.n-1));
+    i=Math.max(0,Math.min(info.n-1,i));
+    var id=sliderId(cfg), sl=id&&document.getElementById(id);
+    if(sl){
+      var min=isFinite(+sl.min)?+sl.min:0, max=isFinite(+sl.max)?+sl.max:info.n-1;
+      var step=isFinite(+sl.step)&&+sl.step>0?+sl.step:1;
+      var v=info.n<=1?min:min+(max-min)*i/(info.n-1);
+      v=Math.round(v/step)*step;
+      sl.value=Math.max(min,Math.min(max,v));
+      sl.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  }
+  cv.addEventListener('pointerdown',function(e){down=true;update(e);
+    if(cv.setPointerCapture){try{cv.setPointerCapture(e.pointerId);}catch(err){}}
+    e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){if(!down)return;update(e);e.preventDefault();});
+  cv.addEventListener('pointerup',function(){down=false;});
+  cv.addEventListener('pointercancel',function(){down=false;});
+  cv.style.cursor='ew-resize'; cv.style.touchAction='none';
+}
+
+/* ================= blocks 渲染 ================= */
+function blockHead(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var h='';
+  if(b.kicker) h+='<div class="kicker">'+esc(b.kicker)+'</div>';
+  if(b.h1) h+='<h1>'+esc(b.h1)+(b.small?'<small>'+esc(b.small)+'</small>':'')+'</h1>';
+  if(b.lead) h+='<p class="lead">'+esc(b.lead)+'</p>';
+  d.innerHTML=h; wrap.appendChild(d);
+}
+function blockHtml(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  d.innerHTML=raw(b.html); wrap.appendChild(d);
+}
+function blockPills(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var opts=b.options||[], zid='zp'+Math.random().toString(36).slice(2,8);
+  var h='<div class="pills" role="tablist">';
+  opts.forEach(function(o,i){h+='<button type="button" role="tab" class="pill'+(i===(b.defaultIndex||0)?' on':'')+'" data-i="'+i+'" aria-selected="'+(i===(b.defaultIndex||0)?'true':'false')+'">'+esc(o.label)+'</button>';});
+  h+='</div><div class="pill-zone" id="'+zid+'"></div>';
+  if(b.note) h+='<div class="note">'+raw(b.note)+'</div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  function applyChartOption(option){
+    if(!b.chartId||!option||!option.spec) return;
+    var id=String(b.chartId);
+    CHART_SPECS[id]=resolveSpec(cloneJSON(option.spec));
+    CHART_META[id]={title:option.chartTitle||'',legend:option.legend||''};
+    var cv=document.getElementById(id), box=cv&&cv.closest('.canvasbox');
+    if(box){
+      var title=$('.ct',box), legend=$('.legend',box);
+      if(title&&option.chartTitle) title.textContent=option.chartTitle;
+      if(legend&&option.legend!==undefined) legend.innerHTML=raw(option.legend||'');
+    }
+    var spec=CHART_SPECS[id], drag=spec&&spec.drag;
+    var sliderKey=typeof drag==='string'?drag:(drag&&(drag.sliderId||drag.slider));
+    var sl=sliderKey&&document.getElementById(sliderKey);
+    if(sl&&spec){spec.cursor=spec.cursor||{};spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,Math.round(+sl.value-1)));}
+    if(cv&&CHARTS[id]) CHARTS[id](cv);
+  }
+  function show(i){
+    $$('.pill',d).forEach(function(p,k){var on=k===i;p.classList.toggle('on',on);p.setAttribute('aria-selected',on?'true':'false');});
+    var option=opts[i]||{};
+    $('#'+zid).innerHTML=raw(option.html||'');
+    applyChartOption(option);
+  }
+  $$('.pill',d).forEach(function(p){p.onclick=function(){show(+p.dataset.i);};});
+  show(Math.max(0,Math.min(opts.length-1,b.defaultIndex||0)));
+}
+function blockMatrix(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var cols=b.cols||[], rows=b.rows||[], ncol=Math.max(1,cols.length);
+  var h='<div class="card">';
+  if(b.title) h+='<h3>'+esc(b.title)+(b.em?' <em>'+esc(b.em)+'</em>':'')+'</h3>';
+  h+='<div class="mx" style="'+(b.style||'')+'"><div></div>';
+  cols.forEach(function(c){ h+='<div class="mh">'+esc(c)+'</div>'; });
+  rows.forEach(function(r){ h+='<div class="mr">'+esc(r.label)+'</div>';
+    (r.cells||[]).forEach(function(c){ var cell=c==null?'':String(c);
+      h+='<div class="mc'+(cell==='不用'||cell===''?' dim':'')+'">'+raw(cell)+'</div>'; });
+  });
+  h+='</div><div class="note" style="margin-top:10px"></div></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  var noteEl=$('.note',d);
+  if(b.note) noteEl.innerHTML=raw(b.note);
+  $$('.mc',d).forEach(function(c,index){
+    c.addEventListener('click',function(){
+      if(c.classList.contains('dim')) return;
+      var ci=index%ncol;
+      $$('.mc',d).forEach(function(mc,j){ var cj=j%ncol;
+        mc.classList.toggle('on', cj===ci && !mc.classList.contains('dim')); });
+      if(b.noteFor&&b.noteFor[ci]!==undefined) noteEl.innerHTML=raw(b.noteFor[ci]);
+      else if(b.cellNote) noteEl.innerHTML=raw(b.cellNote.replace('%col',cols[ci]||'').replace('%cell',c.textContent.trim()));
+    });
+  });
+}
+function blockSvgClick(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var h='<div class="flexrow"><div class="canvasbox grow">'+raw(b.svg)+'</div>';
+  if(b.side!==false){ h+='<div class="card grow" style="min-width:300px">'
+    +'<h3 class="svp-t">'+esc(b.sideTitle||'')+'</h3>'
+    +'<p class="svp-p">'+esc(b.sideP||'')+'</p>'
+    +'<div class="quote svp-q"></div>'
+    +'<p class="small svp-s"></p></div>'; }
+  h+='</div>'; d.innerHTML=h; wrap.appendChild(d);
+  var byKey={};
+  (b.nodes||[]).forEach(function(o){ byKey[o.key]=o; });
+  function show(key){ var o=byKey[key]; if(!o) return;
+    var t=$('.svp-t',d); if(t) t.textContent=o.title||'';
+    var p=$('.svp-p',d); if(p) p.textContent=o.p||'';
+    var q=$('.svp-q',d); if(q) q.textContent=o.q||'';
+    var s=$('.svp-s',d); if(s) s.innerHTML='<span class="badge'+(o.lv==='推断'?' w':'')+'">'+(o.lv||'题面原话')+'</span>'+esc(o.src||'');
+    $$('.nd',d).forEach(function(nd){ var on=nd.dataset.k===key, r=nd.querySelector('rect');
+      if(r){ r.setAttribute('stroke-width',on?3:1.6); r.setAttribute('filter',on?'drop-shadow(0 3px 8px rgba(11,46,74,.18))':''); } });
+    $$('path[id]',d).forEach(function(pth){
+      var on=(o.links||[]).indexOf(pth.id)>=0;
+      if(pth.getAttribute('data-base')==null) pth.setAttribute('data-base',pth.getAttribute('stroke-width')||'2');
+      pth.setAttribute('stroke-width', on?3.2:(pth.getAttribute('data-base')||2));
+      pth.setAttribute('opacity', on?1:((o.links&&o.links.length)?0.18:1));
+    });
+  }
+  $$('.nd',d).forEach(function(nd){ nd.style.cursor='pointer';
+    nd.addEventListener('click',function(){ show(nd.dataset.k); }); });
+  $$('[data-nodekey]',d).forEach(function(el){ el.style.cursor='pointer';
+    el.addEventListener('click',function(){ show(el.dataset.nodekey); }); });
+  var first=(b.nodes&&b.nodes[0])&&b.nodes[0].key; if(first) show(first);
+}
+function formatTemplate(template,value){return String(template==null?'%v':template).split('%v').join(String(value));}
+function redrawChart(id){var cv=document.getElementById(id);if(cv&&CHARTS[id])CHARTS[id](cv);}
+function blockSlider(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var id=String(b.id||('slider'+Object.keys(SLIDERS).length));
+  var min=b.min!=null?b.min:0, max=b.max!=null?b.max:100, step=b.step!=null?b.step:1;
+  var value=b.value!=null?b.value:min;
+  var h='<div class="slider"><span class="small sl-label" style="min-width:'+(b.labelW||130)+'px"></span>'
+    +'<input id="'+escAttr(id)+'" type="range" min="'+escAttr(min)+'" max="'+escAttr(max)+'" step="'+escAttr(step)+'" value="'+escAttr(value)+'" aria-label="'+escAttr(b.label||id)+'">'
+    +'<input id="'+escAttr(id+'Number')+'" class="sl-number" type="number" min="'+escAttr(min)+'" max="'+escAttr(max)+'" step="'+escAttr(step)+'" value="'+escAttr(value)+'" aria-label="Direct value input">'
+    +'<span class="sv" aria-live="polite"></span></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  var input=$('input[type=range]',d), number=$('input[type=number]',d), sv=$('.sv',d), label=$('.sl-label',d);
+  function paint(redraw){
+    var current=input.value;
+    number.value=current;
+    label.textContent=formatTemplate(b.label||'',current);
+    sv.textContent=formatTemplate(b.valueFmt||'%v',current)+(b.unit||'');
+    (b.chartIds||[]).forEach(function(chartId){
+      var spec=CHART_SPECS[chartId];
+      if(spec){
+        spec.cursor=spec.cursor||{};
+        var index=Math.round(+current+(+b.cursorOffset||0));
+        spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,index));
+      }
+      if(redraw) redrawChart(chartId);
+    });
+  }
+  input.addEventListener('input',function(){paint(true);});
+  number.addEventListener('input',function(){
+    var v=+number.value;
+    if(!isFinite(v)) return;
+    v=Math.max(+input.min,Math.min(+input.max,v));
+    input.value=v; input.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  SLIDERS[id]={input:input,number:number,block:b,paint:paint};
+  paint(false);
+}
+function blockChart(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var id=String(b.id||('chart'+Object.keys(CHARTS).length));
+  var pending=CHART_META[id]||{};
+  var title=pending.title||b.title||'', legend=pending.legend!==undefined?pending.legend:(b.legend||'');
+  var h='<div class="canvasbox"><div class="cvtop">';
+  h+='<div class="ct">'+esc(title)+(b.em?' <span class="small">'+esc(b.em)+'</span>':'')+'</div>';
+  h+='<div class="legend">'+raw(legend)+'</div>';
+  h+='</div><canvas id="'+escAttr(id)+'" role="img" tabindex="0" aria-label="'+escAttr(title||'Interactive data chart')+'">Interactive data chart</canvas></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  if(!CHART_SPECS[id]) CHART_SPECS[id]=resolveSpec(cloneJSON(b.spec||{}));
+  CHARTS[id]=function(cv){var spec=CHART_SPECS[id]||{};if(spec.type==='stack')plotStack(cv,spec);else plot(cv,spec);};
+  var spec=CHART_SPECS[id]||{}, drag=spec.drag;
+  var sliderId=typeof drag==='string'?drag:(drag&&(drag.sliderId||drag.slider));
+  var linked=sliderId&&SLIDERS[sliderId];
+  if(linked){
+    spec.cursor=spec.cursor||{};
+    spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,Math.round(+linked.input.value+(+linked.block.cursorOffset||0))));
+  }
+}
+function resolveSpec(spec){
+  spec=spec&&typeof spec==='object'?spec:{};
+  (spec.series||[]).forEach(function(series){if(series.d&&typeof series.d==='object'&&!Array.isArray(series.d))series.d=[];});
+  (spec.panels||[]).forEach(function(panel){(panel.series||[]).forEach(function(series){if(series.d&&typeof series.d==='object'&&!Array.isArray(series.d))series.d=[];});});
+  return spec;
+}
+
+/* ================= scene 构建 ================= */
+function newScene(title){
+  var sec=document.createElement('section'); sec.className='scene';
+  var wrap=document.createElement('div'); wrap.className='wrap';
+  sec.appendChild(wrap); $('#stage').appendChild(sec);
+  SCENES.push(sec); TITLES.push(title); return wrap;
+}
+function buildScene(sc){
+  var wrap=newScene(sc.title||('第 '+(SCENES.length+1)+' 幕'));
+  if(sc.kicker||sc.h1||sc.lead) blockHead({kicker:sc.kicker,h1:sc.h1,small:sc.small,lead:sc.lead},wrap);
+  (sc.blocks||[]).forEach(function(b){ b=b||{};  switch(b.type){
+      case 'head': blockHead(b,wrap); break;
+      case 'pills': blockPills(b,wrap); break;
+      case 'matrix': blockMatrix(b,wrap); break;
+      case 'svgclick': blockSvgClick(b,wrap); break;
+      case 'slider': blockSlider(b,wrap); break;
+      case 'chart': blockChart(b,wrap); break;
+      case 'html': default: blockHtml(b,wrap); break; } });
+}
+
+/* ================= 分档切换 ================= */
+(function(){ var dk=D.deck||{}, nav=$('#splitnav');
+  if(!dk.names||!dk.names.length){ nav.style.display='none'; return; }
+  (dk.names||[]).forEach(function(n,i){ var a=document.createElement('a');
+    a.textContent=(dk.labels&&dk.labels[i])||n;
+    a.href=(dk.files&&dk.files[i])||'#'; a.title=n;
+    if(i===dk.idx) a.classList.add('on'); nav.appendChild(a); });
+})();
+
+/* ================= 导航 / 逐拍 ================= */
+function buildDots(){ var N=SCENES.length, h='';
+  for(var i=0;i<N;i++) h+='<button class="dot" data-i="'+i+'" title="'+esc(TITLES[i])+'"></button>';
+  $('#dots').innerHTML=h; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null;
+    if(t) goTo(+t.dataset.i); });
+}
+function resetScene(sc){ $$('canvas',sc).forEach(function(cv){ cv.removeAttribute('data-done'); });
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+function drawCanvas(el){ $$('canvas',el).forEach(function(cv){
+  if(cv.dataset.done==='1') return; cv.dataset.done='1';
+  if(CHARTS[cv.id]) CHARTS[cv.id](cv); }); }
+function tlRun(i){ tlT.forEach(clearTimeout); tlT=[];
+  var sc=SCENES[i], bs=$$('.wrap > *',sc), tk=TOKEN, gap=430;
+  if(reduce){ bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); }); drawCanvas(sc); return; }
+  bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+  var pos=0;
+  bs.forEach(function(b,k){ var t=260+k*gap;
+    tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); drawCanvas(b); },t)); pos=t; });
+  tlT.push(setTimeout(function(){ if(tk!==TOKEN) return;
+    bs.forEach(function(b){ b.classList.remove('stg'); }); auto=false; syncAuto(); },pos+820));
+}
+function goTo(i){ i=Math.max(0,Math.min(SCENES.length-1,i)); if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++; var sc=SCENES[i]; resetScene(sc); sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=TITLES[i];
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(SCENES.length<=1?100:(i/(SCENES.length-1))*100)+'%';
+  $('#btnPrev').disabled=(i===0); $('#btnNext').disabled=(i===SCENES.length-1);
+  if(auto) tlRun(i); else { $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); }); drawCanvas(sc); }
+}
+function syncAuto(){ $('#btnAuto').classList.toggle('on',auto); $('#btnAuto').textContent=auto?'自动讲解 · 开':'自动讲解'; }
+function setReduce(v){ reduce=v; document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开'; }
+
+/* ================= 初始化 ================= */
+(function(){
+  (D.scenes||[]).forEach(buildScene);
+  buildDots();
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnAuto').onclick=function(){ auto=!auto; syncAuto(); if(auto) tlRun(cur); else { tlT.forEach(clearTimeout); tlT=[]; } };
+  $('#btnReplay').onclick=function(){ tlT.forEach(clearTimeout); resetScene(SCENES[cur]); tlRun(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!reduce); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(SCENES.length-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=SCENES.length){ e.preventDefault(); goTo(+k-1); }
+  });
+  var st={last:0,armed:false,fired:0};
+  window.addEventListener('wheel',function(e){ var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight, want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&sc.scrollTop>=max-1)||(want<0&&sc.scrollTop<=1);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault(); var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){ st.fired=now; st.armed=false; goTo(cur+want); }
+    st.last=now; },{passive:false});
+  var tx=null;
+  $('#stage').addEventListener('touchstart',function(e){ tx=e.touches[0].clientX; },{passive:true});
+  $('#stage').addEventListener('touchend',function(e){ if(tx===null) return;
+    var dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50) dx<0?goTo(cur+1):goTo(cur-1); tx=null; },{passive:true});
+  /* Split reference pages show all content immediately; auto narration is opt-in. */
+  setReduce(false); auto=false; syncAuto(); goTo(0);
+  window.addEventListener('resize',function(){ $$('canvas').forEach(function(cv){ cv.removeAttribute('data-done'); });
+    if(cur>=0) drawCanvas(SCENES[cur]); });
+  window.__deck={plot:plot,plotStack:plotStack,fmt:fmt,kpi:kpiHTML,$:$,$$:$$,DATA:D,CHARTS:CHARTS,CHART_SPECS:CHART_SPECS,SLIDERS:SLIDERS};
+})();
+})();
+</script>
+</body>
+</html>

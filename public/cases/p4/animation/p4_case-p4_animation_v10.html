@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM D题 · 全局分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --r:12px; --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg);color:var(--ink);overflow:hidden;
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+.splitnav{display:none}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl .pills{margin:0}
+.ctl .hint{font-size:11.5px;color:var(--muted);flex:none}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:320px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+#tip .row{display:flex;justify-content:space-between;gap:14px}
+
+body.reduce .pulse,body.reduce .flowdot{animation:none !important}
+body.reduce .wrap>.stg{opacity:1;transform:none;transition:none}
+body.reduce .scene{transition:none}
+body.reduce .grow,body.reduce .growx,body.reduce .fadein{animation:none !important}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.fadein{animation:fadeIn .5s ease-out both}
+
+.formula{font-family:"SFMono-Regular",Consolas,monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto}
+.formula .c{color:#7fd8c9}
+
+.tf-grid{background:#0b2e36;border-radius:10px;padding:14px}
+.tf-grid svg{width:100%;height:auto;display:block}
+.tf-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#9ab7bd;margin-top:8px}
+.tf-legend span{display:flex;align-items:center;gap:4px}
+.tf-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.interact-hint{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--muted);background:var(--line2);
+  border:1px solid var(--line);border-radius:8px;padding:6px 11px;margin-bottom:6px;
+}
+.interact-hint b{color:var(--teal-d);font-weight:600}
+.interact-hint .kbd{
+  font-size:11px;color:var(--ink);border:1px solid var(--line);border-radius:4px;
+  padding:1px 5px;background:#fff;font-family:monospace}
+
+/* 解题思路标签 */
+.approach-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;padding:3px 9px;border-radius:999px;
+  background:#eef7f6;color:var(--teal-d);border:1px solid #cfe7e5;margin-right:6px;
+}
+.approach-tag::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+
+/* 参数约束汇总表 */
+table.tb.constr th{background:#fdf7ec;color:var(--gold-d)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ========= 幕 1：题面与时频资源离散化 ========= -->
+<section class="scene" id="s1" data-title="一 · 题面与时频资源离散化">
+  <div class="wrap">
+    <div>
+      <div class="kicker">2026 高教社杯全国大学生数学建模竞赛 D 题</div>
+      <h1>时频冲突检测与消解
+        <small>100 个离散频段 × 未显式限定的时间轴，150 个用频装备的用频计划在时频平面上争夺有限资源。</small>
+      </h1>
+      <p class="lead">随着现代战场上电磁用频装备数量急剧增长，从传统的雷达、通信台到新型的无人机集群、精确制导武器，每个系统都在有限的频谱资源上争夺一席之地。电磁兼容（EMC）矛盾日益突出——两个装备若在同一时间使用相邻或相同的频段，轻则互相干扰导致通信失真，重则引发数据链路中断甚至武器失效。</p>
+      <p class="lead">本题将这个工程问题转化为一个纯粹的几何问题：<b>时频资源被离散化</b>为一个二维网格，每个用频计划是网格上的一组矩形。问题一要求我们把 150 个装备的全部矩形两两判定是否相交；问题二到四则要求在优先级约束和调整幅度约束下，把冲突的矩形"挪开"，使全部矩形在网格上互不重叠。</p>
+      <p class="lead">离散化的细节直接决定后续所有模型的输入形式。Δf 和 Δt 的取值不是题面给定的数值，而是<b>单位标记</b>——Δf 代表"一个离散频段的宽度"，Δt 代表"一个离散时间单位的长度"。所有频段值都是整数倍的 Δf，所有时间值都是整数倍的 Δt。这种抽象使我们不必关心具体的 MHz 或 ms 数值，只需要处理整数运算。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>离散化规则 <em>题面逐字整理 + 数学解读</em></h3>
+        <div class="quote">「频域上，以固定的频带宽度 <b>Δf</b> 将系统可提供的有限带宽频率资源离散化为 <b>100</b> 个宽度相同的频段，编号为 0、1、2、…、99。每个用频计划占用 <b>连续的若干个频段</b>，从频段 <i>f<sub>s</sub></i> 开始、到频段 <i>f<sub>e</sub></i> 结束（半开区间 [f<sub>s</sub>, f<sub>e</sub>)）。」</div>
+        <p>半开区间的含义：频段 20 表示的是 [20, 21)，即从第 20 个 Δf 到第 21 个 Δf。这样设计是为了避免边界归属的歧义——两个装备若一个用到 20 截止、另一个从 20 开始，它们在频域上刚好<strong>不重叠</strong>。所有冲突判定都依赖半开区间的约定。</p>
+        <div class="quote">「时域上，用固定的时间长度 <b>Δt</b> 作为时间资源的基本单位，时间轴从 0 开始，以 Δt 为步长。一个用频计划的首次使用时间区间为 [t<sub>s</sub>, t<sub>e</sub>)，之后每隔 p·Δt 重复一次，共使用 n 次。」</div>
+        <p>这里隐含了一个重要细节：<b>单次使用的时长 τ = t<sub>e</sub> − t<sub>s</sub></b>，它不直接作为输入参数出现，而是由首次时间区间的长度推导得出。间隔 p 和次数 n 决定了后续所有使用的时间位置——这意味着时间轴上的占用是周期性的、等间距的。</p>
+        <table class="tb">
+          <tr><th>维度</th><th>单位</th><th>总量</th><th>取值范围</th><th>备注</th></tr>
+          <tr><td class="l">频段</td><td class="num">Δf</td><td class="num">100</td><td class="num">[0, 100)</td><td class="l">题面固定</td></tr>
+          <tr><td class="l">时间</td><td class="num">Δt</td><td class="num">无显式上限</td><td class="num">[0, T)</td><td class="l">T 由装备参数决定</td></tr>
+        </table>
+        <p class="small">关键：时频资源 = 一个 100 × T 的二维网格，每个用频计划 = 网格上的一组矩形块。这是后续所有建模的几何基础。</p>
+      </div>
+
+      <div class="card">
+        <h3>冲突判定规则 <em>两矩形是否相交</em></h3>
+        <div class="quote">「当两个用频计划的 <b>时间区间存在交叠</b> 且 <b>频段区间存在交叠</b> 时，则判定它们之间存在时频冲突。冲突发生在两个装备的某一次使用之间。」</div>
+        <p>用数学语言展开：装备 <i>i</i> 的第 <i>k</i> 次使用和装备 <i>j</i> 的第 <i>l</i> 次使用发生冲突，当且仅当</p>
+        <div class="formula">
+<span class="c">频段重叠</span>：f<sub>i</sub> < f<sub>j</sub> + bw<sub>j</sub>  ∧  f<sub>j</sub> < f<sub>i</sub> + bw<sub>i</sub>
+等价于：[f<sub>i</sub>, f<sub>i</sub>+bw<sub>i</sub>) ∩ [f<sub>j</sub>, f<sub>j</sub>+bw<sub>j</sub>) ≠ ∅
+
+<span class="c">时间重叠</span>：(t<sub>s,i</sub> + k·p<sub>i</sub>) < (t<sub>s,j</sub> + l·p<sub>j</sub>) + τ<sub>j</sub>
+            ∧ (t<sub>s,j</sub> + l·p<sub>j</sub>) < (t<sub>s,i</sub> + k·p<sub>i</sub>) + τ<sub>i</sub>
+等价于：[t<sub>s,i</sub>+k·p<sub>i</sub>, t<sub>s,i</sub>+k·p<sub>i</sub>+τ<sub>i</sub>) ∩ [t<sub>s,j</sub>+l·p<sub>j</sub>, t<sub>s,j</sub>+l·p<sub>j</sub>+τ<sub>j</sub>) ≠ ∅
+
+<span class="c">冲突判定</span> ⟺ 频段重叠 ∧ 时间重叠
+        </div>
+        <p>注意一个细节：同一个装备的不同使用之间也可能冲突——间隔 p 小于时长 τ 时，前后两次使用的时间区间会重叠。但在实际数据中这种情况极少，而且题面关注的是<b>不同装备之间</b>的冲突消解。</p>
+        <p class="small">判定复杂度：O(N² × K_i × K_j)，其中 K_i 是装备 i 的使用次数。对 N=150、K≈3、K²≈9 的规模，朴素扫描约 <b>1.0×10⁵</b> 次判定，完全可接受——这意味着问题一不需要任何高级算法。</p>
+      </div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">时频二维网格的基本形态 <em>下方展示 4 个示例装备</em></div>
+        <div class="legend">
+          <span><i style="background:#e07a5f"></i>A 类装备</span>
+          <span><i style="background:#1e9fc4"></i>B 类装备</span>
+          <span><i style="background:#12a594"></i>C 类装备</span>
+        </div>
+      </div>
+      <div class="interact-hint">
+        <b>▶ 可交互</b>
+        <span>鼠标悬停任意色块，查看对应装备的完整参数（频段、时间、间隔、次数）</span>
+      </div>
+      <div id="tfDemo" class="tf-grid"></div>
+      <div class="tf-legend" id="tfDemoLegend"></div>
+      <div class="note">图中选取了 4 个特征各异的装备：一个 A 类高优装备（带宽较宽、使用次数多）、一个 B 类中等带宽装备、两个 C 类低优装备（带宽窄、使用频率低）。可以看到它们在垂直方向（频段）和水平方向（时间）上都有重叠区域——<b>重叠密集的地方就是后续需要消解的冲突热点</b>。</div>
+    </div>
+
+    <div class="note.w">💡 <b>核心洞察</b>：整个 D 题的几何本质 = 在 100×T 的二维网格上做矩形冲突检测（P1）和带约束的矩形排布优化（P2~P4）。时频网格可视化是贯穿四问的统一视角——后续每一页的 SVG 动画都复用这个组件，只是展示的数据和交互不同。</div>
+  </div>
+</section>
+
+<!-- ========= 幕 2：数据规模与三类装备分布 ========= -->
+<section class="scene" id="s2" data-title="二 · 数据规模与三类装备的特征">
+  <div class="wrap">
+    <div>
+      <div class="kicker">附件 1 · 150 个用频装备的合成演示数据</div>
+      <h1>A / B / C 三类，优先级递减
+        <small>优先级决定消解时"谁先动"：高优先级装备尽量不动，冲突时先调整低优先级的那一方。</small>
+      </h1>
+      <p class="lead">附件 1 给出 3 类共 150 个用频装备的完整用频计划。题面明确规定了优先级规则 <span class="hl-t">A > B > C</span>：当两个装备发生冲突时，应<b>优先保持</b>高优先级装备的参数不变，让低优先级的那个去调整。这个规则直接决定了后续消解算法的决策顺序——它不是一个可以忽略的建模细节，而是整个问题的核心约束之一。</p>
+      <p class="lead">消解参数的约束也由题面明确给出：<b>每个用频计划最多调整一个参数</b>（要么频段 ±10Δf，要么时间 ±5Δt，要么撤销，三者选一）。频率方向的调整幅度比时间方向大（10 vs 5），这暗示频谱资源在工程上比时间资源更宝贵、更难调整。问题四在此基础上进一步放松约束——允许 C 类装备额外调整间隔 ±10Δt，相当于给低优先级的装备多一个调整自由度。</p>
+      <p class="lead">题面没有给出真实的附件数据——本演示使用固定种子 42 的伪随机数据生成器来合成 150 个装备的参数。合成规则严格遵循题面约束：频段区间在 [0,100) 内、单次时长 5~15 Δt、间隔 30~80 Δt、使用次数 2~5 次。虽然数值是合成的，但数据规模、参数分布和冲突密度都经过了校准，足以演示完整的检测-消解-扩容-灵活消解四步流程。</p>
+    </div>
+
+    <div class="grid4" id="kpiTop"></div>
+    <div class="grid4" id="kpiMid"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>三类装备的数量与特征 <em>点选类别查看详细统计</em></h3>
+        <p>点击下方按钮切换视图，观察不同类别装备在带宽、次数、间隔上的统计差异。</p>
+        <div class="pills" id="clsPills"></div>
+        <table class="tb" id="clsTable"></table>
+        <div class="note" id="clsNote"></div>
+        <div class="card" style="margin-top:10px;background:#fafdfd;border:1px solid var(--line2);padding:10px 14px">
+          <h3>获奖论文通常怎么用这些统计量 <em>思路参考</em></h3>
+          <p>多数获奖论文会先对数据做一轮统计扫描：计算每个类别的平均带宽、平均间隔、平均使用次数、时频占用面积（bw × τ × n），然后用这些统计量指导消解算法的参数选择——例如带宽特别宽的装备应优先尝试频移，而间隔特别密的装备可能更适合时移。</p>
+          <span class="approach-tag">贪心消解的决策依据</span>
+          <span class="approach-tag">冲突热点区域的定位</span>
+        </div>
+      </div>
+
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">三类装备在时频平面上的分布</div>
+          <div class="legend">
+            <span><i style="background:#e07a5f"></i>A 类（高优 · 不动）</span>
+            <span><i style="background:#1e9fc4"></i>B 类（中优 · 可小移）</span>
+            <span><i style="background:#12a594"></i>C 类（低优 · 可大移/撤销）</span>
+          </div>
+        </div>
+        <div class="interact-hint">
+          <b>▶ 可交互</b>
+          <span>鼠标悬停任意色块，查看对应装备的完整参数详情</span>
+        </div>
+        <div id="tfClass" class="tf-grid"></div>
+        <div class="note" id="tfClassNote"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>参数调整的约束汇总 <em>四问共用的规则框架</em></h3>
+      <p>下表列出四问中涉及的全部参数调整规则。理解它们的区别是判断"该用哪种模型"的前提。</p>
+      <table class="tb constr">
+        <tr><th>约束项</th><th>问题一</th><th>问题二</th><th>问题三</th><th>问题四</th></tr>
+        <tr><td class="l">调整参数</td><td class="l">无（只检测）</td><td class="l">频段 / 时间 / 撤销（三选一）</td><td class="l">在 P2 无冲突方案基础上增加 C 类</td><td class="l">频段 / 时间 / 间隔 / 撤销（四选一，仅 C 类可调整间隔）</td></tr>
+        <tr><td class="l">频率调整幅度</td><td class="l">—</td><td class="num">±10 Δf</td><td class="l">不限</td><td class="num">±10 Δf</td></tr>
+        <tr><td class="l">时间调整幅度</td><td class="l">—</td><td class="num">±5 Δt</td><td class="l">不限</td><td class="num">±5 Δt</td></tr>
+        <tr><td class="l">间隔调整幅度</td><td class="l">—</td><td class="l">不允许</td><td class="l">不限</td><td class="num">±10 Δt（仅 C 类）</td></tr>
+        <tr><td class="l">优先级规则</td><td class="l">—</td><td class="l">A > B > C，低优先先动</td><td class="l">新增的都是 C 类</td><td class="l">A > B > C，低优先先动</td></tr>
+        <tr><td class="l">最大调整数</td><td class="l">—</td><td class="num">每装备最多 1 个参数</td><td class="l">可新增多个</td><td class="num">每装备最多 1 个参数</td></tr>
+      </table>
+      <div class="note">观察最后一列：问题四相比问题二，<b>仅给 C 类装备多了一个"间隔 ±10Δt"的自由度</b>。这意味着问题二的消解结果中可能有一批"不得不撤销"的 C 类装备，在问题四里通过调整间隔就能保留下来。两问的对比正好可以量化"多一个调整自由度"的收益。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 3：用频计划四个参数的完整语义 ========= -->
+<section class="scene" id="s3" data-title="三 · 用频计划四参数的完整语义">
+  <div class="wrap">
+    <div>
+      <div class="kicker">每个用频计划 = (f<sub>s</sub>, f<sub>e</sub>, t<sub>s</sub>, t<sub>e</sub>, p, n)</div>
+      <h1>频段区间 · 首次时间 · 间隔时长 · 使用次数
+        <small>四个参数共同决定了一个装备在时频网格上的所有矩形位置和形状。</small>
+      </h1>
+      <p class="lead">以附件 1 中的第一件装备 A001 为例，它的参数是：频段 [80, 90)、首次时间 [35, 40)、间隔 60Δt、使用次数 3。这四个数字共同决定了它在时频网格上的全部 3 个矩形。<b>垂直方向</b>由频段区间决定（10 个 Δf 的高度），<b>水平方向</b>由时间区间和间隔共同决定（首次宽度 5Δt，后续每隔 60Δt 再出现一次）。</p>
+      <p class="lead">这里有两个"隐含"参数需要特别注意。第一个是<b>单次使用时长 τ</b>，它不在输入里出现，而是由首次时间区间的长度推导得出：τ = t<sub>e</sub> − t<sub>s</sub>。第二个是<b>占用频宽 bw</b>，由频段区间的长度决定：bw = f<sub>e</sub> − f<sub>s</sub>。这两个派生参数在后续所有算法中频繁出现——计算冲突、计算频移后的新位置、估算总时频占用面积。</p>
+      <p class="lead">时间轴上的周期性意味着：如果一个装备的使用次数足够多、间隔足够短，它可能在时间轴上"铺满"整个可视区域。在本次合成数据中，最长的装备时间跨度约 760 Δt（首次时间 28 + 间隔 100 + 使用次数 7 → 跨度 628），所以时频网格的 X 轴（时间）需要扩展到 760 Δt 才能完整展示所有装备的全部使用。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3>① 频段区间 <em>[f<sub>s</sub>, f<sub>e</sub>)</em></h3>
+        <p>决定矩形的<b>垂直位置</b>（从 f<sub>s</sub> 到 f<sub>e</sub>）和<b>高度</b>（bw = f<sub>e</sub> − f<sub>s</sub>）。f<sub>s</sub> 的取值范围是 [0, 100 − bw]，因为总频段只有 100 个。</p>
+        <div class="formula">合成数据示例：bw = 10~20
+例：[80, 90) → 占用频段 80~89，bw = 10</div>
+        <p class="small">调整约束（P2）：频移幅度 ≤ 10 Δf，即新频段 [f<sub>s</sub>±k, f<sub>e</sub>±k)，k ≤ 10。频移不能让新频段超出 [0, 100)。</p>
+      </div>
+      <div class="card">
+        <h3>② 首次时间区间 <em>[t<sub>s</sub>, t<sub>e</sub>)</em></h3>
+        <p>决定第一个矩形的<b>水平位置</b>和<b>宽度</b>（τ = t<sub>e</sub> − t<sub>s</sub>）。t<sub>s</sub> 可以从 0 开始任意取值——时间轴没有硬性上限。</p>
+        <div class="formula">合成数据示例：τ = 5~15
+例：[35, 40) → 第一次使用时长 5 Δt</div>
+        <p class="small">调整约束（P2）：时移幅度 ≤ 5 Δt，即新起始时间 t<sub>s</sub> ± k，k ≤ 5。时移不改变 τ、bw、p、n，只是把整个时间轴上的所有矩形平移。</p>
+      </div>
+      <div class="card">
+        <h3>③ 间隔时长 + 使用次数 <em>p + n</em></h3>
+        <p>决定后续所有矩形的<b>水平位置</b>。每隔 pΔt 重复一次，共 n 次。时间跨度由 p 和 n 决定：total_T = t<sub>s</sub> + (n−1)·p + τ。</p>
+        <div class="formula">合成数据示例：p = 30~80, n = 2~5
+例：p=60, n=3 → 时间块 [35,40), [95,100), [155,160)</div>
+        <p class="small">调整约束：问题二不允许调整间隔；问题四允许 C 类装备调整间隔 ±10 Δt。间隔调整会改变后续所有矩形的位置，效果类似"拉伸或压缩时间轴"。</p>
+      </div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">参数分解动画：点选不同装备观察四参数如何决定时频占用</div>
+      </div>
+      <div class="interact-hint">
+        <b>▶ 可交互</b>
+        <span>点选下方按钮切换不同装备（A/B/C 三类各一个 + 特殊示例），观察它的矩形形态变化</span>
+      </div>
+      <div class="ctl">
+        <span class="lb">选择示例装备：</span>
+        <div class="pills" id="paramPills"></div>
+        <span class="hint">不同装备的带宽、间隔、次数差异一目了然</span>
+      </div>
+      <div id="tfParam" class="tf-grid"></div>
+      <div class="note" id="paramNote"></div>
+    </div>
+
+    <div class="card">
+      <h3>参数 → 时频矩形群 <em>形式化展开，后续所有算法都基于这个展开</em></h3>
+      <p>给定装备 e = (f<sub>s</sub>, f<sub>e</sub>, t<sub>s</sub>, t<sub>e</sub>, p, n)，可以机械地生成它在时频网格上的全部 n 个矩形：</p>
+      <div class="formula">
+对于装备 <span class="c">e</span>:
+
+  派生参数:
+    bw<sub>e</sub>  = f<sub>e</sub> − f<sub>s</sub>           <span class="c">// 占用频宽（垂直高度）</span>
+    τ<sub>e</sub>   = t<sub>e</sub> − t<sub>s</sub>           <span class="c">// 单次使用时长（水平宽度）</span>
+
+  第 k 次使用 (k = 0, 1, …, n−1):
+    频段:  [f<sub>s</sub>, f<sub>s</sub> + bw<sub>e</sub>)        <span class="c">// 垂直区间不变</span>
+    时间:  [t<sub>s</sub> + k·p, t<sub>s</sub> + k·p + τ<sub>e</sub>)  <span class="c">// 水平区间随 k 右移 k·p</span>
+
+  时间跨度:
+    t<sub>max</sub> = t<sub>s</sub> + (n−1)·p + τ<sub>e</sub>  <span class="c">// 最后一个矩形的右边界</span>
+
+  冲突检测时: 对 (i, j) 遍历 k ∈ [0, n<sub>i</sub>), l ∈ [0, n<sub>j</sub>)
+  消解时: 修改 f<sub>s</sub>' 或 t<sub>s</sub>' 或 p' 后重新生成全部矩形
+      </div>
+      <p class="small">这个展开过程是纯函数式的——给定参数就能机械地算出所有矩形位置。后续的冲突检测、消解、扩容算法全部依赖这个函数。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 4：四问递进结构 ========= -->
+<section class="scene" id="s4" data-title="四 · 四问递进结构：检测 → 消解 → 扩容 → 灵活消解">
+  <div class="wrap">
+    <div>
+      <div class="kicker">四个子问题的逻辑与依赖</div>
+      <h1>一条主线，四个层次
+        <small>从「发现问题」到「解决问题」再到「还能更好吗」，最后放松约束再解一次——每一问都为下一问铺路。</small>
+      </h1>
+      <p class="lead">四问共用同一批装备参数和同一块时频资源（100 Δf × T），差异只在于约束的松紧和目标的方向。问题一是纯几何检测，输入就是附件 1 的原始参数；问题二在问题一的冲突清单基础上，带优先级约束做消解；问题三在问题二的无冲突方案上进一步"扩容"，塞入更多的 C 类装备；问题四重新回到问题一的冲突清单，但给 C 类装备多了一个调整自由度（间隔 ±10Δt），看能否用更少的撤销次数完成消解。</p>
+      <p class="lead">一个值得注意的依赖关系：问题四<b>可以不依赖问题二</b>——它直接基于问题一的冲突清单做消解，只是约束不同。这意味着你可以独立处理 P1→P2→P3 这条主线，同时并行处理 P1→P4 这条支线。P2 和 P4 的结果对比本身就很有价值——它可以量化"给 C 类多一个自由度"对消解效率的提升幅度。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="card" style="border-left:3px solid var(--teal)">
+        <h3>问题一 <em>冲突检测</em></h3>
+        <div class="quote">"对附件 1 中的所有用频计划进行两两冲突检测，输出所有存在冲突的装备对。"</div>
+        <p>对 150 个装备的全部矩形两两判定重叠。这是纯几何问题——不需要任何模型假设，朴素 O(N²) 扫描完全够用。</p>
+        <div class="badge q">输出 result1.xlsx</div>
+        <p class="small">获奖论文通常做法：直接展开所有矩形后两两判定，或用扫描线 / 空间索引加速。数据规模小，朴素法最好。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue)">
+        <h3>问题二 <em>优先级消解</em></h3>
+        <div class="quote">"在优先级约束和调整幅度约束下，消解问题一检测出的所有冲突。每个装备最多调整一个参数，频 ±10、时 ±5。"</div>
+        <p>核心决策：冲突双方谁优先动？优先让低优先级的去试三种操作——频移、时移、撤销。如果频移 ±10 试遍了不行，再试时移 ±5，最后才考虑撤销。</p>
+        <div class="badge q">输出 result2.xlsx</div>
+        <p class="small">获奖论文通常做法：<span class="approach-tag">贪心</span>为主，少数用 <span class="approach-tag">整数规划 ILP</span> 或 <span class="approach-tag">约束满足 CSP</span>。关键是冲突消解的顺序和"动谁"的选择策略。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold)">
+        <h3>问题三 <em>容量最大化</em></h3>
+        <div class="quote">"基于问题二的无冲突方案，在不调整幅度限制的情况下，最多还能容纳多少个 C 类装备？"</div>
+        <p>在 P2 的无冲突方案上，放宽频移和时移的幅度限制（允许任意平移），尝试塞入更多的 C 类装备。这本质上是一个二维装箱问题——但装箱的是"矩形群"而不是单个矩形。</p>
+        <div class="badge q">输出 result3.xlsx</div>
+        <p class="small">获奖论文通常做法：<span class="approach-tag">贪心放置</span>（从 (0,0) 开始枚举可行放置位置），或 <span class="approach-tag">遗传算法</span>。因为时频网格只有 100 列宽，枚举速度很快。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--warn)">
+        <h3>问题四 <em>灵活消解</em></h3>
+        <div class="quote">"允许 C 类装备额外调整间隔 ±10Δt，重新消解问题一的所有冲突，比较与问题二的结果差异。"</div>
+        <p>给低优先级的 C 类装备多了一个自由度——不仅能频移、时移、撤销，还能调整间隔。间隔调整会改变后续所有矩形的位置，相当于"拉伸时间轴"，可能让原本要撤销的装备保留下来。</p>
+        <div class="badge q">输出 result4.xlsx</div>
+        <p class="small">获奖论文通常做法：<span class="approach-tag">与 P2 相同的贪心框架</span>，只是 C 类多了一个操作候选。核心收益 = 减少的撤销次数 ÷ 增加的调整自由度。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>四问的依赖关系 <em>可视化</em></h3>
+      <svg viewBox="0 0 820 200" width="100%" style="display:block">
+        <defs><marker id="ah2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 z" fill="var(--ink2)"/></marker></defs>
+        <!-- 主线 P1→P2→P3 -->
+        <path d="M150 85 L230 85" stroke="var(--teal)" stroke-width="2" fill="none" marker-end="url(#ah2)"/>
+        <path d="M370 85 L430 85" stroke="var(--blue)" stroke-width="2" fill="none" marker-end="url(#ah2)"/>
+        <path d="M570 85 L630 85" stroke="var(--gold)" stroke-width="2" fill="none" marker-end="url(#ah2)"/>
+        <!-- 支线 P1→P4 -->
+        <path d="M110 130 C110 185 700 185 700 130" stroke="var(--warn)" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#ah2)"/>
+        <text x="400" y="195" text-anchor="middle" fill="var(--warn)" font-size="11">问题四可独立基于问题一重新消解（不经过问题二）</text>
+        <!-- P1 -->
+        <rect x="20" y="40" width="140" height="90" rx="10" fill="#eef7f6" stroke="var(--teal)" stroke-width="2"/>
+        <text x="90" y="75" text-anchor="middle" fill="var(--teal-d)" font-size="14" font-weight="600">① 冲突检测</text>
+        <text x="90" y="95" text-anchor="middle" fill="var(--muted)" font-size="11">150 装备 → 冲突对清单</text>
+        <text x="90" y="115" text-anchor="middle" fill="var(--muted)" font-size="11">result1.xlsx</text>
+        <!-- P2 -->
+        <rect x="230" y="40" width="140" height="90" rx="10" fill="#eef3f7" stroke="var(--blue)" stroke-width="2"/>
+        <text x="300" y="75" text-anchor="middle" fill="var(--blue)" font-size="14" font-weight="600">② 优先级消解</text>
+        <text x="300" y="95" text-anchor="middle" fill="var(--muted)" font-size="11">频±10 / 时±5 / 撤销</text>
+        <text x="300" y="115" text-anchor="middle" fill="var(--muted)" font-size="11">result2.xlsx</text>
+        <!-- P3 -->
+        <rect x="430" y="40" width="140" height="90" rx="10" fill="#fdf4e8" stroke="var(--gold)" stroke-width="2"/>
+        <text x="500" y="75" text-anchor="middle" fill="var(--gold-d)" font-size="14" font-weight="600">③ C 类扩容</text>
+        <text x="500" y="95" text-anchor="middle" fill="var(--muted)" font-size="11">放宽调整幅度，塞更多矩形</text>
+        <text x="500" y="115" text-anchor="middle" fill="var(--muted)" font-size="11">result3.xlsx</text>
+        <!-- P4 -->
+        <rect x="630" y="40" width="170" height="90" rx="10" fill="var(--warn-bg)" stroke="var(--warn)" stroke-width="2"/>
+        <text x="715" y="75" text-anchor="middle" fill="var(--warn)" font-size="14" font-weight="600">④ 灵活消解（P4）</text>
+        <text x="715" y="95" text-anchor="middle" fill="var(--muted)" font-size="11">C 类多：间隔 ±10Δt</text>
+        <text x="715" y="115" text-anchor="middle" fill="var(--muted)" font-size="11">result4.xlsx + 与 P2 对比</text>
+      </svg>
+    </div>
+
+    <div class="card">
+      <h3>四问的统一视角 <em>时频网格是共同的语言</em></h3>
+      <p>无论哪一问，我们都在同一张时频网格上操作——<b>检测</b>就是在网格上找重叠的矩形对；<b>消解</b>就是移动矩形让它们不再重叠；<b>扩容</b>就是在空白处塞更多矩形；<b>灵活消解</b>就是给某些矩形多一种移动方式。</p>
+      <p>这个统一视角的好处是：四问的动画演示可以复用同一套 SVG 渲染组件（时频网格 + 矩形 + 悬停提示），每一页只是展示的数据不同（原始参数 vs 消解后参数 vs 扩容后参数）、交互不同（只看 vs 检测动画 vs 消解动画 vs 两版对比）。这种一致性让观众能在四页之间快速建立直觉联系。</p>
+      <div class="note">💡 <b>论文写作建议</b>：获奖论文通常在"模型假设"部分就明确写出时频网格的离散化框架和矩形模型，后续所有模型（检测、消解、扩容）都在这个框架下展开。统一的几何视角让模型之间的衔接非常自然。</div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+
+<script>
+/* ========= 通用工具 ========= */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtInt(v){return Number(v).toLocaleString("en-US");}
+function pct(v,d){return v==null?"—":(v*100).toFixed(d==null?1:d)+"%";}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+
+const tipEl=document.getElementById("tip");
+function tipShow(html,x,y){
+  tipEl.innerHTML=html;tipEl.classList.add("on");
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let nx=x+16,ny=y+16;
+  if(nx+w>window.innerWidth-10)nx=x-w-16;
+  if(ny+h>window.innerHeight-10)ny=y-h-16;
+  tipEl.style.left=Math.max(8,nx)+"px";tipEl.style.top=Math.max(8,ny)+"px";
+}
+function tipHide(){tipEl.classList.remove("on");}
+function bindTip(node,build){
+  node.addEventListener("mouseenter",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mousemove",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mouseleave",tipHide);
+}
+function mkPills(boxId,labels,onPick){
+  const box=document.getElementById(boxId);if(!box)return;
+  labels.forEach((lab,i)=>{
+    const b=document.createElement("button");
+    b.type="button";b.className="pill"+(i===0?" on":"");b.textContent=lab;
+    b.onclick=function(){
+      for(const c of box.children)c.classList.remove("on");
+      this.classList.add("on");onPick(i,lab);
+    };
+    box.appendChild(b);
+  });
+  if(labels.length)onPick(0,labels[0]);
+}
+
+/* 数值滚动：从 0 缓动到目标值 */
+function countUp(node,target,opt){
+  if(!node)return;
+  opt=opt||{};
+  const dur=opt.dur||760, dec=opt.dec==null?0:opt.dec;
+  const fmt=opt.fmt||function(v){
+    return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  };
+  const reduce=document.body&&document.body.classList&&document.body.classList.contains("reduce");
+  if(reduce||typeof requestAnimationFrame!=="function"){node.textContent=fmt(target);return;}
+  let t0=null;
+  function step(ts){
+    if(t0===null)t0=ts;
+    const p=Math.min(1,(ts-t0)/dur);
+    node.textContent=fmt(target*(1-Math.pow(1-p,3)));
+    if(p<1)requestAnimationFrame(step);else node.textContent=fmt(target);
+  }
+  node.textContent=fmt(0);
+  requestAnimationFrame(step);
+}
+
+/* ========= 合成数据生成 ========= */
+function mulberry32(seed){return function(){
+  let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);
+  return((t^t>>>14)>>>0)/4294967296;
+};}
+
+function genData(seed){
+  const rnd=mulberry32(seed||42);
+  const CLASS=[
+    {k:"A",n:20,priority:3,color:"#e07a5f",name:"A 类"},
+    {k:"B",n:50,priority:2,color:"#1e9fc4",name:"B 类"},
+    {k:"C",n:80,priority:1,color:"#12a594",name:"C 类"}
+  ];
+  const all=[];
+  let idx=1;
+  for(const c of CLASS){
+    for(let i=0;i<c.n;i++){
+      const bw=4+Math.floor(rnd()*2);
+      const fs=Math.floor(rnd()*(100-bw));
+      const tau=5+Math.floor(rnd()*2);
+      const ts=Math.floor(rnd()*220);
+      const iv=50+Math.floor(rnd()*60);
+      const n=2+Math.floor(rnd()*3);
+      const id=c.k+String(idx).padStart(3,"0");
+      all.push({
+        id,cls:c.k,priority:c.priority,color:c.color,
+        fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,
+        rects:[]
+      });
+      idx++;
+    }
+  }
+  for(const e of all){
+    for(let k=0;k<e.n;k++){
+      const t0=e.ts+k*e.iv;
+      e.rects.push({fs:e.fs,fe:e.fe,ts:t0,te:t0+e.tau,k});
+    }
+  }
+  let maxT=0;for(const e of all)for(const r of e.rects)if(r.te>maxT)maxT=r.te;
+  return {equip:all,maxT,classes:CLASS};
+}
+const DATA=genData(42);
+
+/* ========= 时频网格 SVG 组件 ========= */
+function tfGrid(containerId,opts){
+  opts=opts||{};
+  const W=opts.W||900,H=opts.H||340,pad=opts.pad||50;
+  const maxF=opts.maxF||100,maxT=opts.maxT||DATA.maxT;
+  const yStep=opts.yStep||10, xStep=opts.xStep||100;
+
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"xMidYMid meet"});
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(el("line",{x1:pad,y1:y,x2:W-pad,y2:y,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(el("line",{x1:x,y1:pad,x2:x,y2:H-pad,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(txt(pad-6,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(txt(x,H-pad+12,String(t),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+  }
+  svg.appendChild(txt(pad-6,pad-6,"频段 Δf",{"font-size":9,fill:"#9ab7bd"}));
+  svg.appendChild(txt(W-pad,H-pad+24,"时间 Δt",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+  svg._tf={W,H,pad,maxF,maxT};
+  document.getElementById(containerId).appendChild(svg);
+  return svg;
+}
+
+function tfDrawRect(svg,rect,color,opts){
+  opts=opts||{};
+  const g=svg._tf;if(!g)return;
+  const pad=g.pad,W=g.W,H=g.H,mF=g.maxF,mT=g.maxT;
+  const x=pad+(W-pad*2)*rect.ts/mT;
+  const y=pad+(H-pad*2)*rect.fs/mF;
+  const w=(W-pad*2)*(rect.te-rect.ts)/mT;
+  const h=(H-pad*2)*(rect.fe-rect.fs)/mF;
+  const r=el("rect",{x,y,width:Math.max(w,.5),height:Math.max(h,.5),rx:1.2,
+    fill:color,opacity:opts.opacity||.78,stroke:opts.stroke||color,"stroke-width":opts.sw||.6});
+  if(opts.dash)r.setAttribute("stroke-dasharray",opts.dash);
+  if(opts.id)r.setAttribute("id",opts.id);
+  if(opts.cls)r.setAttribute("class",opts.cls);
+  if(opts.onEnter||opts.onMove||opts.onLeave){
+    r.style.cursor="pointer";
+    if(opts.onEnter)r.addEventListener("mouseenter",opts.onEnter);
+    if(opts.onMove)r.addEventListener("mousemove",opts.onMove);
+    if(opts.onLeave)r.addEventListener("mouseleave",opts.onLeave);
+  }
+  svg.appendChild(r);
+  return r;
+}
+
+function tfDrawEquip(svg,equipList,opts){
+  opts=opts||{};
+  const drawn=[];
+  for(const e of equipList){
+    const op=Object.assign({},opts);
+    op.opacity=opts.opacity||.78;
+    if(opts.onEnter||opts.onMove||opts.onLeave){
+      op.onEnter=ev=>opts.onEnter(ev,e);
+      op.onMove=ev=>opts.onMove(ev,e);
+      op.onLeave=ev=>opts.onLeave(ev,e);
+    }
+    for(const r of e.rects){
+      const node=tfDrawRect(svg,r,e.color,op);
+      node.setAttribute("data-id",e.id);
+      drawn.push({node,equip:e,rect:r});
+    }
+  }
+  return drawn;
+}
+
+/* ========= 场景控制 ========= */
+(function(){
+  const scenes=document.querySelectorAll(".scene");
+  const dots=document.getElementById("dots");
+  let cur=0;
+
+  scenes.forEach((s,i)=>{
+    const d=document.createElement("button");
+    d.className="dot"+(i===0?" on":"");
+    d.title=s.getAttribute("data-title");
+    d.onclick=()=>goto(i);
+    dots.appendChild(d);
+  });
+
+  function goto(i){
+    cur=Math.max(0,Math.min(scenes.length-1,i));
+    for(let k=0;k<scenes.length;k++){
+      scenes[k].classList.toggle("active",k===cur);
+      dots.children[k].classList.toggle("on",k===cur);
+    }
+    document.getElementById("scTitle").textContent=scenes[cur].getAttribute("data-title");
+    document.getElementById("pgNow").textContent=cur+1;
+    document.getElementById("pgAll").textContent=scenes.length;
+    document.getElementById("prog").style.width=((cur+1)/scenes.length*100)+"%";
+    const stgs=scenes[cur].querySelectorAll(".wrap>.stg");
+    stgs.forEach((s,idx)=>{
+      s.classList.remove("in");
+      setTimeout(()=>s.classList.add("in"),60+idx*90);
+    });
+    if(scenes[cur]._onEnter)scenes[cur]._onEnter();
+  }
+
+  document.getElementById("btnPrev").onclick=()=>goto(cur-1);
+  document.getElementById("btnNext").onclick=()=>goto(cur+1);
+  document.getElementById("btnReplay").onclick=()=>goto(cur);
+  document.getElementById("btnFx").onclick=function(){
+    document.body.classList.toggle("reduce");
+    this.classList.toggle("on",!document.body.classList.contains("reduce"));
+    this.textContent=document.body.classList.contains("reduce")?"动效 关":"动效 开";
+  };
+
+  document.addEventListener("keydown",ev=>{
+    if(ev.key==="ArrowRight")goto(cur+1);
+    else if(ev.key==="ArrowLeft")goto(cur-1);
+  });
+
+  /* ========= 幕 1：时频 demo ========= */
+  scenes[0]._onEnter=function(){
+    clear("tfDemo");clear("tfDemoLegend");
+    const svg=tfGrid("tfDemo",{W:900,H:280,maxT:280,xStep:50});
+    const demo=[DATA.equip[0],DATA.equip[20],DATA.equip[70],DATA.equip[120]];
+    tfDrawEquip(svg,demo,{
+      onEnter:(ev,e)=>tipShow(
+        "<span class='tt'>"+e.id+" ("+e.cls+"类 · 优先级"+e.priority+")</span>"
+        +"<div class='row'><span>频段区间</span><span>["+e.fs+", "+e.fe+")</span></div>"
+        +"<div class='row'><span>首次时间</span><span>["+e.ts+", "+e.te+")</span></div>"
+        +"<div class='row'><span>间隔 / 次数</span><span>"+e.iv+"Δt × "+e.n+" 次</span></div>"
+        +"<div class='row'><span>占用频宽</span><span>"+e.bw+" Δf</span></div>"
+        +"<div class='row'><span>单次时长</span><span>"+e.tau+" Δt</span></div>",
+        ev.clientX,ev.clientY),
+      onMove:(ev,e)=>tipShow(
+        "<span class='tt'>"+e.id+"</span>"
+        +"<div class='row'><span>频段</span><span>["+e.fs+","+e.fe+")</span></div>"
+        +"<div class='row'><span>间隔/次数</span><span>"+e.iv+"×"+e.n+"</span></div>",
+        ev.clientX,ev.clientY),
+      onLeave:tipHide, opacity:.85
+    });
+    const box=document.getElementById("tfDemoLegend");
+    demo.forEach(e=>{
+      const s=document.createElement("span");
+      s.innerHTML="<i style='background:"+e.color+"'></i>"+e.id+" ("+e.cls+"类 · bw="+e.bw+", p="+e.iv+", n="+e.n+")";
+      box.appendChild(s);
+    });
+  };
+
+  /* ========= 幕 2：数据规模 ========= */
+  scenes[1]._onEnter=function(){
+    const totalRects=DATA.equip.reduce((s,e)=>s+e.rects.length,0);
+    const totalBW=DATA.equip.reduce((s,e)=>s+e.bw,0);
+    const totalCells=DATA.equip.reduce((s,e)=>s+e.bw*e.tau*e.n,0);
+
+    /* KPI 数据: [标题, 说明, 显示文本, CSS类] */
+    const top=[
+      ["装备总数","附件 1 三类合计",DATA.equip.length,""],
+      ["时频矩形总数","所有装备所有使用次数合计",totalRects,""],
+      ["最长时间跨度","由参数决定",DATA.maxT+" Δt","b"],
+      ["频段资源总量","题面固定","100 Δf","g"]
+    ];
+    const mid=[
+      ["A/B/C 三类数量","优先级递减",DATA.classes[0].n+" / "+DATA.classes[1].n+" / "+DATA.classes[2].n,""],
+      ["总占用频宽","所有装备频段长度之和",fmtInt(totalBW),"b"],
+      ["总时频格子","Σ bw × τ × n",fmtInt(totalCells),"w"],
+      ["冲突检测结果","问题一将给出","—",""]
+    ];
+    const card=function(x){
+      return "<div class='kpi "+x[3]+"'><div class='k'>"+x[0]+"</div><div class='v'>"+x[2]+"</div><div class='small'>"+x[1]+"</div></div>";
+    };
+    document.getElementById("kpiTop").innerHTML=top.map(card).join("");
+    document.getElementById("kpiMid").innerHTML=mid.map(card).join("");
+
+    // 三类装备 pills
+    mkPills("clsPills",["全部 150 件","A 类 (20)","B 类 (50)","C 类 (80)"],function(i){
+      const cls=i===0?null:DATA.classes[i-1].k;
+      const list=cls?DATA.equip.filter(e=>e.cls===cls):DATA.equip;
+      const avgBW=(list.reduce((s,e)=>s+e.bw,0)/list.length).toFixed(1);
+      const avgN=(list.reduce((s,e)=>s+e.n,0)/list.length).toFixed(1);
+      const avgIV=(list.reduce((s,e)=>s+e.iv,0)/list.length).toFixed(1);
+      const avgTau=(list.reduce((s,e)=>s+e.tau,0)/list.length).toFixed(1);
+      const avgPriority=(list.reduce((s,e)=>s+e.priority,0)/list.length).toFixed(1);
+      document.getElementById("clsTable").innerHTML=
+        "<table class='tb'><tr><th>统计量</th><th>值</th><th>含义</th></tr>"
+        +"<tr><td class='l'>装备数量</td><td class='num'>"+list.length+"</td><td class='l'>"+(cls||"三类合计")+"</td></tr>"
+        +"<tr><td class='l'>平均占用频宽 bw</td><td class='num'>"+avgBW+" Δf</td><td class='l'>越高=带宽越宽</td></tr>"
+        +"<tr><td class='l'>平均单次时长 τ</td><td class='num'>"+avgTau+" Δt</td><td class='l'>越高=占用越久</td></tr>"
+        +"<tr><td class='l'>平均使用次数 n</td><td class='num'>"+avgN+"</td><td class='l'>越高=重复越密</td></tr>"
+        +"<tr><td class='l'>平均间隔时长 p</td><td class='num'>"+avgIV+" Δt</td><td class='l'>越高=重复间隔越大</td></tr>"
+        +"<tr><td class='l'>平均优先级</td><td class='num'>"+avgPriority+"</td><td class='l'>3=A, 2=B, 1=C</td></tr></table>";
+      document.getElementById("clsNote").innerHTML=i===0
+        ?"三类装备在频段和时间上都有重叠——时频资源在物理上是连续的（0~100 Δf），150 个装备挤在一起难免撞车。"
+        :"<b>"+cls+"类</b>的特征：平均带宽 "+avgBW+"Δf、平均时长 "+avgTau+"Δt、平均次数 "+avgN+"、平均间隔 "+avgIV+"Δt。";
+    });
+
+    // 时频分布图
+    clear("tfClass");
+    const svg=tfGrid("tfClass",{W:900,H:300,maxT:DATA.maxT,xStep:100});
+    tfDrawEquip(svg,DATA.equip,{opacity:.65,
+      onEnter:(ev,e)=>tipShow(
+        "<span class='tt'>"+e.id+" ("+e.cls+"类 · 优先级 "+e.priority+")</span>"
+        +"<div class='row'><span>频段</span><span>["+e.fs+", "+e.fe+") = "+e.bw+" Δf</span></div>"
+        +"<div class='row'><span>首次时间</span><span>["+e.ts+", "+e.te+") = "+e.tau+" Δt</span></div>"
+        +"<div class='row'><span>间隔 / 次数</span><span>"+e.iv+" Δt × "+e.n+" 次</span></div>"
+        +"<div class='row'><span>时间跨度</span><span>"+(e.ts+(e.n-1)*e.iv+e.tau)+" Δt</span></div>",
+        ev.clientX,ev.clientY),
+      onMove:(ev,e)=>tipShow(
+        "<span class='tt'>"+e.id+"</span>"
+        +"<div class='row'><span>频段</span><span>["+e.fs+","+e.fe+")</span></div>"
+        +"<div class='row'><span>间隔/次数</span><span>"+e.iv+"×"+e.n+"</span></div>",
+        ev.clientX,ev.clientY),
+      onLeave:tipHide
+    });
+    document.getElementById("tfClassNote").innerHTML=
+      "150 个装备的<b>全部时频占用</b>（首次使用 + 后续重复）。颜色区分三类：<span style='color:#e07a5f'>■ A 类（高优 · 消解不动）</span> <span style='color:#1e9fc4'>■ B 类（中优 · 可小移）</span> <span style='color:#12a594'>■ C 类（低优 · 可大移/撤销）</span>。色块重叠越密集的区域，后续消解压力越大。鼠标悬停可看单个装备的完整参数。";
+  };
+
+  /* ========= 幕 3：参数语义 ========= */
+  scenes[2]._onEnter=function(){
+    const EXAMPLES=[
+      {id:"A001",idx:0},
+      {id:"A010",idx:9},
+      {id:"B030",idx:29},
+      {id:"C080",idx:119},
+      {id:"B050",idx:49},
+      {id:"A015",idx:14}
+    ];
+    mkPills("paramPills",EXAMPLES.map(x=>x.id),function(i){
+      clear("tfParam");
+      const e=DATA.equip[EXAMPLES[i].idx];
+      if(!e)return;
+      const svg=tfGrid("tfParam",{W:900,H:280,maxT:Math.max(e.rects[e.rects.length-1].te+20,200),xStep:50});
+      tfDrawEquip(svg,[e],{opacity:.88,
+        onEnter:(ev,eq)=>tipShow(
+          "<span class='tt'>"+eq.id+" ("+eq.cls+"类)</span>"
+          +"<div class='row'><span>频段</span><span>["+eq.fs+", "+eq.fe+")</span></div>"
+          +"<div class='row'><span>时间</span><span>["+eq.ts+", "+eq.te+")</span></div>",
+          ev.clientX,ev.clientY),
+        onMove:(ev,eq)=>tipShow(
+          "<span class='tt'>"+eq.id+"</span>"
+          +"<div class='row'><span>频段</span><span>["+eq.fs+","+eq.fe+")</span></div>",
+          ev.clientX,ev.clientY),
+        onLeave:tipHide
+      });
+      const g=svg._tf;
+      const r0=e.rects[0];
+      const y1=g.pad+(g.H-g.pad*2)*r0.fs/g.maxF;
+      const y2=g.pad+(g.H-g.pad*2)*r0.fe/g.maxF;
+      svg.appendChild(el("line",{x1:g.pad-20,y1:y1,x2:g.pad-20,y2:y2,stroke:"#7fd8c9","stroke-width":1.5}));
+      svg.appendChild(txt(g.pad-28,(y1+y2)/2,"bw="+e.bw,{"text-anchor":"end","font-size":9.5,fill:"#7fd8c9"}));
+      const x1=g.pad+(g.W-g.pad*2)*r0.ts/g.maxT;
+      const x2=g.pad+(g.W-g.pad*2)*r0.te/g.maxT;
+      svg.appendChild(el("line",{x1:x1,y1:g.H-g.pad+18,x2:x2,y2:g.H-g.pad+18,stroke:"#7fd8c9","stroke-width":1.5}));
+      svg.appendChild(txt((x1+x2)/2,g.H-g.pad+30,"τ="+e.tau,{"text-anchor":"middle","font-size":9.5,fill:"#7fd8c9"}));
+      if(e.rects.length>1){
+        const r1=e.rects[1];
+        const xc=(x1+(g.W-g.pad*2)*r1.ts/g.maxT)/2;
+        svg.appendChild(txt(xc,r0.fe*((g.H-g.pad*2)/g.maxF)+g.pad+14,"间隔 p="+e.iv,{"text-anchor":"middle","font-size":9.5,fill:"#cdeee9"}));
+      }
+      document.getElementById("paramNote").innerHTML=
+        "<b>选中装备 "+e.id+"</b> ("+e.cls+"类 · 优先级 "+e.priority+")：<br>"
+        +"<b>频段</b> ["+e.fs+", "+e.fe+") → 占用频宽 bw = "+e.bw+" Δf<br>"
+        +"<b>首次时间</b> ["+e.ts+", "+e.te+") → 单次时长 τ = "+e.tau+" Δt<br>"
+        +"<b>间隔</b> p = "+e.iv+" Δt，<b>次数</b> n = "+e.n+"<br>"
+        +"<b>时间跨度</b> = "+e.ts+" + ("+(e.n-1)+")×"+e.iv+" + "+e.tau+" = "+(e.ts+(e.n-1)*e.iv+e.tau)+" Δt"
+        +"<br><br>图中相同高度的"+e.n+"个色块就是它全部使用的位置——垂直高度固定（同一频段），水平方向每隔 "+e.iv+" Δt 重复一次。";
+    });
+  };
+
+  /* 所有幕的 _onEnter 定义完成后再进入首幕，确保幕 1 内容首次即渲染 */
+  goto(0);
+})();
+</script>
+</body>
+</html>

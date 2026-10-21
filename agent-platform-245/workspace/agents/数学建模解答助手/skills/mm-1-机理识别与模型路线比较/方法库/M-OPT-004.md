@@ -1,0 +1,14 @@
+### M-OPT-004 多目标优化
+- **task_types**：成本-收益、效率-公平、风险-回报、环境-经济、时间-质量权衡。
+- **problem_signature**：目标至少两个且天然冲突；题目要求权衡或 Pareto 前沿。
+- **core_idea**：求 Pareto 最优解集，而非强行给出唯一目标。
+- **mathematical_form**：`min (f1(x),...,fk(x))`，或加权和、ε-约束、目标规划。
+- **inputs**：各目标、方向、量纲、权重或可接受阈值、约束。
+- **outputs**：Pareto 解集、前沿、膝点、权衡指标。
+- **assumptions**：目标可比较或有明确偏好；尺度处理合理。
+- **hard_constraints**：权重无依据且结论高度依赖权重时不得只报告单点。
+- **validation**：权重敏感性、前沿覆盖、支配关系、膝点稳定性。
+- **selection_tags**：`multiobjective, pareto, tradeoff, fairness`
+- **composable_with**：`M-OPT-001, M-OPT-002, M-OPT-003, M-UNC-002`
+- **fallbacks**：ε-约束替代加权和；报告多个代表性方案。
+- **agent_actions**：统一目标方向和量纲 -> 选择偏好表达 -> 生成前沿 -> 做权重/阈值敏感性。

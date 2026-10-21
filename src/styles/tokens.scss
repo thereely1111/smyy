@@ -1,0 +1,43 @@
+/** 设计令牌 —— 青绿体系（取自项目原型，禁用其他体系配色） */
+:root {
+  color-scheme: light;
+
+  /* 主色：青绿 */
+  --c-primary: #12a594;
+  --c-primary-ink: #0b6e68;
+  --c-primary-soft: #e6f6f3;
+
+  /* 青蓝 */
+  --c-blue: #146c87;
+  --c-blue-light: #1e9fc4;
+
+  /* 暖金（提示/待办） */
+  --c-warn: #e0a04a;
+  --c-warn-ink: #8a6313;
+  /* 暖金底的浅色版：提示条底色与描边（原来在几个页面里写死，统一收编） */
+  --c-warn-soft: #fdf6e9;
+  --c-warn-line: #f0dcc0;
+
+  /* 语义色：错误用红（与 A 股涨色一致，避免用绿表示错误） */
+  --c-error: #c0392b;
+  --c-error-soft: #fdecea;
+
+  /* 墨色文字三级 */
+  --c-ink: #0b2e36;
+  --c-ink-2: #3d6570;
+  --c-muted: #57727c;
+
+  /* 底与线 */
+  --c-bg: #f3fafa;
+  --c-surface: #ffffff;
+  --c-line: #d8e8e5;
+  --c-line-strong: #b8d4cf;
+
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow-sm: 0 1px 3px rgba(11, 46, 54, 0.08);
+  --shadow-md: 0 4px 14px rgba(11, 46, 54, 0.1);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+}

@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.0",
+  "case_id": "20261009_D题_D组",
+  "stage": "S1",
+  "agent_id": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a",
+  "created_at": "2026-10-09",
+  "problem": {
+    "competition": "2026 年高教社杯全国大学生数学建模竞赛",
+    "title": "D 题 时频冲突检测与消解",
+    "pdf_pages": 2,
+    "pdf_text_chars": 2123,
+    "pdf_text_layer": "可用（非纯扫描件，文本层完整可读）",
+    "deliverables": [
+      "论文（含问题1冲突统计结果、问题2/4按表1格式的统计结果）",
+      "result1.xlsx（问题1冲突对）",
+      "result2.xlsx（问题2消解方案）",
+      "result3.xlsx（问题3新增C类用频计划）",
+      "result4.xlsx（问题4消解方案）"
+    ],
+    "source_anchor": "input_digest.md#L1-L60（题面正文）、#L61-L120（附件说明）"
+  },
+  "inputs": {
+    "problem_dir": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题",
+    "files": [
+      {"label": "D题.pdf", "role": "题面", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/D题.pdf", "status": "read"},
+      {"label": "附件1", "role": "输入数据：150 个用频计划", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/附件/附件1.xlsx", "status": "read_structure_and_stats"},
+      {"label": "result1", "role": "问题1结果模板（附件2 的一部分）", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/附件/result1.xlsx", "status": "read_headers"},
+      {"label": "result2", "role": "问题2结果模板", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/附件/result2.xlsx", "status": "read_headers"},
+      {"label": "result3", "role": "问题3结果模板", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/附件/result3.xlsx", "status": "read_headers"},
+      {"label": "result4", "role": "问题4结果模板", "path": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/input/D题/附件/result4.xlsx", "status": "read_headers"}
+    ],
+    "missing_inputs": [
+      "题面引用的『全国大学生数学建模竞赛论文格式规范』未提供（影响论文阶段，不影响建模）",
+      "表1 为论文中的统计结果模板（类别/保留数量/调整数量/撤销数量），无独立文件；其结构已从题面文本读出"
+    ]
+  },
+  "measured_table_structures": {
+    "附件1.xlsx": {
+      "sheet": "Sheet1", "rows_data": 150, "columns": 5,
+      "headers": ["用频装备编号", "频段区间", "时间区间", "间隔时长", "使用次数"],
+      "numeric_column_stats": {
+        "间隔时长": {"min": 8.0, "max": 60.0, "mean": 23.466666666666667, "std": 19.85905894603826, "n": 150, "distinct_observed": [8, 40, 60], "series_grouping": "前20行=60，第21-60行=40，第61-150行=8"},
+        "使用次数": {"min": 3.0, "max": 12.0, "mean": 8.666666666666666, "std": 4.093355048802334, "n": 150, "distinct_observed": [3, 4, 12], "series_grouping": "前20行=3，第21-60行=4，第61-150行=12"}
+      },
+      "sample_rows": ["A001|[80,90)|[35,40)|60|3", "A002|[5,15)|[45,50)|60|3", "A003|[20,30)|[75,80)|60|3", "A004|[35,45)|[95,100)|60|3"],
+      "interval_columns_note": "『频段区间』『时间区间』为半开闭区间字符串（如 [80,90)），probe 未做数值解析；带宽与时间窗长度须由后续代码解析实测",
+      "facts_refs": ["facts:附件1/使用次数:series", "facts:附件1/间隔时长:series", "facts:附件1/使用次数", "facts:附件1/间隔时长"]
+    },
+    "result1.xlsx": {"sheet": "Sheet1", "rows_data": 0, "headers": ["序号", "冲突装备1", "冲突设备2"], "mapping": "问题1", "evidence": "题面附件说明『result1.xlsx 问题1的结果模板文件…每行填写一对用频计划冲突，A列序号，B/C列冲突的两个用频装备编号』+ 实测列头一致", "confidence": "high"},
+    "result2.xlsx": {"sheet": "Sheet1", "rows_data": 0, "headers": ["用频装备编号", "调整后频段区间", "调整后时间区间", "是否撤销用频计划"], "mapping": "问题2", "evidence": "题面附件说明 + 实测列头一致（A编号/B频段/C时间/D撤销填『是』）", "confidence": "high"},
+    "result3.xlsx": {"sheet": "Sheet1", "rows_data": 0, "headers": ["新增用频装备序号", "调整后频段区间", "调整后时间区间"], "mapping": "问题3", "evidence": "题面附件说明 + 实测列头一致（仅登记频段与时间区间，不含间隔时长/使用次数）", "confidence": "high"},
+    "result4.xlsx": {"sheet": "Sheet1", "rows_data": 0, "headers": ["用频装备编号", "调整后频段范围", "调整后时间区间", "调整后间隔时长", "是否撤销用频计划"], "mapping": "问题4", "evidence": "题面附件说明 + 实测列头一致（A编号/B频段/C时间/D间隔/E撤销）", "confidence": "high"}
+  },
+  "global_rules": [
+    {"id": "R1", "rule": "时域以 Δt 为不可拆分最小单位，用频计划占用时间长度必须是 Δt 的整数倍", "source": "题面正文第2段"},
+    {"id": "R2", "rule": "频域以 Δf 把有限带宽离散化为 100 个等宽频段；每个计划占用连续多个频段，且占用的频段数量保持不变", "source": "题面正文第2段"},
+    {"id": "R3", "rule": "每个用频计划含 4 个参数：频段区间、首次使用时间区间、相邻两次使用的间隔时长、使用次数", "source": "题面正文第3段"},
+    {"id": "R4", "rule": "冲突判定：两个用频计划的时间区间和频段区间都存在交叠 ⇒ 存在时频冲突", "source": "题面正文第3段"},
+    {"id": "R5", "rule": "消解=调整某些计划的参数（如平移频段区间或时间区间）甚至撤销某些计划，使消解后不存在时频冲突", "source": "题面正文第3段"},
+    {"id": "R6", "rule": "一个用频计划只能调整其中一个参数，或撤销", "source": "题面正文第4段"},
+    {"id": "R7", "rule": "除非特别说明，一般不调整使用次数与间隔时长", "source": "题面正文第4段"},
+    {"id": "R8", "rule": "应尽可能减少撤销；尽量减少被调整的计划数量", "source": "题面正文第4段"},
+    {"id": "R9", "rule": "优先级 A > B > C，高优先级用频装备的用频计划应尽量保持", "source": "题面正文第4段"},
+    {"id": "R10", "rule": "尽量减少调整幅度：频段、时间调整的最大平移幅度分别为 10Δf、5Δt", "source": "题面正文第4段"},
+    {"id": "R11", "rule": "A 类主要频段为 [0,10)；B、C 类只能使用非主要频段", "source": "题面正文第5段（问题3表述）与问题3条件『不限制…』；注：题面把 A 类主要频段信息置于问题3描述中"},
+    {"id": "R12", "rule": "参数展开规则：间隔时长 60 表示上次用频结束后相隔 60Δt 再次以相同长度占用同频段；示例 A001 第1次 [35,40)、第2次 [100,105)，即第 k 次起始 = S + L + (k-1)(T+L)", "source": "附录『附件1 用频装备的用频计划』示例"}
+  ],
+  "tasks": [
+    {
+      "question_id": "q01",
+      "label": "问题1",
+      "task_verb": "检测（判定+枚举+统计）",
+      "problem_type": "判定/识别 + 组合枚举（非优化）",
+      "objective": "对附件1 的 150 个用频计划逐对判定是否存在时频冲突，枚举全部冲突对并给出冲突统计结果",
+      "inputs": ["附件1.xlsx 全部 150 行（编号/频段区间/时间区间/间隔时长/使用次数）", "全局规则 R1-R4、R12"],
+      "outputs": [
+        "冲突对清单：每行 (序号, 冲突装备1, 冲突装备2)，写入 result1.xlsx（3 列，无冲突次数列）",
+        "论文中的冲突统计结果：建议含冲突对总数、按类别组合（A-A/A-B/A-C/B-B/B-C/C-C）分布、按装备的冲突度分布、（若采用去重填写）时间窗口重叠次数明细"
+      ],
+      "constraints": ["判定必须基于 R4（频段与时间同时交叠）", "时间交叠需覆盖该计划的全部使用次数对应的重复窗口（见 AS1）", "不修改任何输入参数", "输出必须可被 result1.xlsx 的 3 列结构容纳"],
+      "evaluation_criteria": [
+        "完备性：所有满足 R4 的装备对均被列出，无漏检（用第二种独立实现交叉校验）",
+        "无假阳性：随机抽样若干对回代区间验算交叠成立",
+        "对称性与自反性检查：冲突矩阵对称、对角为 0、无序对不重复",
+        "统计口径与填写口径一致（去重对数 vs 窗口重叠次数）"
+      ],
+      "deliverables": ["result1.xlsx（由用户运行代码后生成）", "论文问题1统计小节"],
+      "source_refs": ["题面『问题1』原句", "facts:附件1/间隔时长", "facts:附件1/使用次数", "measured_table_structures.result1"],
+      "completion_bar": "冲突矩阵/清单产出且两套独立算法结论一致，统计口径已明确说明"
+    },
+    {
+      "question_id": "q02",
+      "label": "问题2",
+      "task_verb": "消解（约束优化+决策）",
+      "problem_type": "组合优化（离散决策：平移/撤销）+ 判定可行性",
+      "objective": "在附件1 原始计划集上，对问题1 检测出的冲突进行消解：每个计划至多调整一个参数（频段平移或时间平移）或撤销，使消解后全 plan 集合无任何时频冲突，并使撤销数、被调整计划数与调整幅度尽量小，同时尽量保持高优先级计划",
+      "inputs": ["附件1 原始 150 个计划", "q01 冲突清单", "R5-R12"],
+      "outputs": [
+        "消解方案：每个被改动装备一行（编号 + 调整后频段区间 或 调整后时间区间 或 撤销=是），写入 result2.xlsx",
+        "论文按表1 格式给出各类别 保留数量/调整数量/撤销数量",
+        "消解后计划集合（内部产物，作为 q03 输入）"
+      ],
+      "constraints": [
+        "单参数约束 R6：一个计划只能动频段或时间之一，或撤销",
+        "平移幅度：|Δband| ≤ 10（以 Δf 计，整数个频段）、|Δtime| ≤ 5（以 Δt 计）",
+        "不调整使用次数与间隔时长（R7）",
+        "频段数量保持不变（R2），平移后频段索引仍在 [0,100) 内；B/C 类不得进入主要频段 [0,10)（R11）",
+        "时间平移后各窗口起点仍为 Δt 的整数倍（R1）",
+        "目标方向：撤销数尽量少 → 被调整计划数尽量少 → 调整幅度尽量小；A 类尽量不动（R8、R9）",
+        "硬可行性：消解后冲突数必须为 0（含新引入冲突）"
+      ],
+      "evaluation_criteria": [
+        "零冲突（必须满足，否则方案无效）",
+        "各类别 保留/调整/撤销 计数（表1）自洽：保留+调整+撤销=150 且各类总数与附件1 分组一致",
+        "每个改动计划只动一个参数且幅度合规",
+        "与平凡基线（全部撤销低优先级 / 仅撤销不调整）对比：撤销数与调整数不劣",
+        "目标函数值与（若可求）下界/最优性间隙"
+      ],
+      "deliverables": ["result2.xlsx", "论文问题2小节 + 表1", "无冲突计划集 JSON/CSV（供 q03 使用）"],
+      "source_refs": ["题面『问题2』原句", "表1 结构", "measured_table_structures.result2", "R6-R11"],
+      "completion_bar": "给定可行方案且静态校验（无冲突、幅度、单参数、频段合法）全部通过"
+    },
+    {
+      "question_id": "q03",
+      "label": "问题3",
+      "task_verb": "最大化安排（装箱/填充优化）",
+      "problem_type": "组合优化（最大化新增数量，带几何不重叠约束）",
+      "objective": "以问题2 得到的无冲突计划集为基础，在『不限制频段和时间平移幅度』『不增加时频资源』前提下，求最多还能安排多少 C 类用频装备，并给出相应的用频计划",
+      "inputs": ["q02 输出的无冲突计划集（含各类参数）", "C 类计划的参数模板（需由附件1 C 类实测众数标定，见 UN4）", "资源包络口径（见 UN2、UN3）"],
+      "outputs": [
+        "最大（或带间隙上界的）可新增 C 类装备数量 K",
+        "新增 C 类计划清单：序号 + 频段区间 + 时间区间，写入 result3.xlsx",
+        "论文中新增计划的放置与资源利用率说明"
+      ],
+      "constraints": [
+        "新增计划只能使用非主要频段（C 类受限，R11）",
+        "新增计划之间、以及与既有计划之间均不得产生任何时频冲突（R4）",
+        "每个新增计划占用连续频段、频段数量保持不变、时间为 Δt 整数倍（R1、R2）",
+        "既有计划的平移幅度不再受 10Δf/5Δt 限制（题面『不限制频段和时间的平移幅度』），但是否允许改动既有计划本身属未定口径（UN3）",
+        "『不增加时频资源』口径见 UN2"
+      ],
+      "evaluation_criteria": [
+        "可行性：新增集合与既有集合零冲突（逐对复算）",
+        "最优性：给出资源计数上界（空闲时频格子数 ÷ 单计划格子数）与所得解的差距/最优性间隙",
+        "结构指标：时频资源利用率、各频段占用剖面、时间轴占用剖面",
+        "敏感性：口径 UN2/UN3 两种解读下的新增数量差异"
+      ],
+      "deliverables": ["result3.xlsx", "论文问题3小节"],
+      "source_refs": ["题面『问题3』原句", "measured_table_structures.result3", "UN2", "UN3", "UN4"],
+      "completion_bar": "给出可行放置方案 + 数量上界论证（或明确标注为启发式解，不得称全局最优）"
+    },
+    {
+      "question_id": "q04",
+      "label": "问题4",
+      "task_verb": "消解（扩展动作集的约束优化）",
+      "problem_type": "组合优化（在 q02 动作集上增加『间隔时长』这一可选参数）",
+      "objective": "在附件1 原始计划集与问题1 冲突清单基础上，允许部分 C 类装备调整相邻使用间隔时长（与原间隔差异 ≤ 10Δt），对问题1 检测出的冲突进行消解，使消解后无冲突，并按表1 给出统计结果",
+      "inputs": ["附件1 原始 150 个计划", "q01 冲突清单", "R1-R12 + 问题4 的间隔放宽条件"],
+      "outputs": [
+        "消解方案：编号 + 调整后频段范围 或 调整后时间区间 或 调整后间隔时长 或 撤销=是，写入 result4.xlsx",
+        "论文按表1 格式的 保留/调整/撤销 统计",
+        "与 q02 的对比结论（放宽间隔后调整数/撤销数的变化）"
+      ],
+      "constraints": [
+        "间隔时长调整仅允许施加于 C 类装备（题面『允许部分C类用频装备』）",
+        "|新间隔 − 原间隔| ≤ 10（以 Δt 计），新间隔应保持为正且为 Δt 整数倍",
+        "仍遵守 R6：一个计划只能调整一个参数或撤销",
+        "题面未特别放宽频段/时间平移幅度 ⇒ 建议沿用 R10 的 10Δf/5Δt（见 UN5）",
+        "使用次数仍不调整（R7）；B/C 频段合法性（R11）",
+        "目标方向与 R8、R9 同 q02"
+      ],
+      "evaluation_criteria": [
+        "零冲突（硬条件）",
+        "间隔约束满足：仅 C 类且 |ΔT| ≤ 10",
+        "与 q02 同目标函数口径下的对比：调整数/撤销数是否下降（用于说明放宽的收益）",
+        "表1 计数自洽"
+      ],
+      "deliverables": ["result4.xlsx", "论文问题4小节 + 表1"],
+      "source_refs": ["题面『问题4』原句", "measured_table_structures.result4", "UN5"],
+      "completion_bar": "给出满足全部静态约束的无冲突方案，并量化与 q02 的差异"
+    }
+  ],
+  "dependencies": [
+    {"from_question_id": "q01", "to_question_id": "q02", "dependency_type": "result_dependency", "reason": "题面问题2 明确『对问题1 中检测出的时频冲突进行消解』，冲突清单是消解决策的必需输入", "new_complexity_in_to": "从纯判定升级为带单参数/幅度/优先级约束的离散优化；新增动作变量与零冲突硬约束"},
+    {"from_question_id": "q01", "to_question_id": "q04", "dependency_type": "result_dependency", "reason": "题面问题4 明确『请对问题1 中检测出的时频冲突进行消解』（而非基于问题2 结果），故 q04 直接以附件1 原始集 + q01 冲突清单为输入", "new_complexity_in_to": "在 q02 动作集上增加『间隔时长』维度（仅 C 类，±10Δt），可行域扩大"},
+    {"from_question_id": "q02", "to_question_id": "q03", "dependency_type": "result_dependency", "reason": "题面问题3 明确『基于问题2 求解得到的无冲突用频计划』", "new_complexity_in_to": "新增对象集合（新增 C 类计划）与最大化为目标；平移幅度限制取消；新增资源包络约束"},
+    {"from_question_id": "q02", "to_question_id": "q04", "dependency_type": "method_dependency", "reason": "两问的目标、约束结构同源（同一消解模型），q04 是 q02 动作集的松弛变体，用于对比；不要求 q04 复用 q02 的解", "new_complexity_in_to": "候选动作数量增多（每 C 类计划多出 21 个间隔动作），规模与对称性破缺需求上升"},
+    {"from_question_id": "q03", "to_question_id": "q04", "dependency_type": "none", "reason": "题面未要求 q04 基于 q03 结果；两者互不依赖（拓扑上 q04 与 q03 均可在 q02 之后并行）", "new_complexity_in_to": null}
+  ],
+  "topological_order": ["q01", "q02", "q04", "q03"],
+  "cycle_check": "无循环依赖：q01→{q02,q04}，q02→q03，q04 与 q03 之间无题面依赖。q04 建议排在 q03 之前执行，因为 q04 只依赖 q01/q02 的模型，不需等待 q03 结果。",
+  "shared_state": [
+    "附件1 解析后的计划结构（编号 i、类别 p_i、频段左端 l_i、带宽 w_i、首次窗口 [S_i,E_i)、窗长 L_i、间隔 T_i、次数 n_i）",
+    "时频占用格子集合 O_i ⊆ {0..99}×N（由 R12 展开）",
+    "冲突判定谓记 conflict(i,j) = (频段集合相交) ∧ (时间窗口集合相交)",
+    "符号表与单位（见 symbols）；所有区间一律用左闭右开整数索引表示"
+  ],
+  "assumptions": [
+    {"id": "AS1", "statement": "R4 中的『时间区间』指该计划按间隔时长与使用次数展开后的全部使用时间窗口的并集，而非仅首次使用的时间区间", "type": "candidate_assumption", "reason": "题面给出间隔时长与使用次数两个参数；若只比较首次窗口，则这两个参数对检测完全无用，与题意不符。附录示例明确了重复占用窗口的生成规则", "scope": "q01-q04 全部", "potential_impact": "若改为仅首次窗口判冲突，冲突对数量级将显著下降，q02/q04 的消解方案随之改变", "status": "待用户确认（UN1）"},
+    {"id": "AS2", "statement": "第 k 次占用窗口为 [S_i + L_i + (k-1)(T_i+L_i), S_i + L_i + k(T_i+L_i)) 形式，即间隔时长是『上次结束到下次开始』的空档（与附录示例 [35,40)→[100,105) 一致）", "type": "fact_derived_interpretation", "reason": "附录示例逐字给出：第二次区间为 [40Δt+60Δt, 45Δt+60Δt)", "scope": "全部", "potential_impact": "若按『上次开始 + 间隔』理解，周期由 T+L 变为 T，冲突结果全变", "status": "已由题面示例支撑；建议下游实现时以示例行为单位测试"},
+    {"id": "AS3", "statement": "附件1 每行对应一个用频装备且一个装备只提报一个用频计划，因此『计划』与『装备』一一对应，冲突对即装备对", "type": "candidate_assumption", "reason": "题面『附件1 给出了3 类共150 个用频装备提报的用频计划』，实测 150 数据行、列头含用频装备编号", "scope": "全部", "potential_impact": "若存在一装备多计划，则 result1 的『装备编号』列需按计划行区分", "status": "待用代码核验编号唯一性"},
+    {"id": "AS4", "statement": "附件1 的 150 行按类别分块排列：第 1-20 行为 A 类（间隔 60、次数 3），第 21-60 行为 B 类（间隔 40、次数 4），第 61-150 行为 C 类（间隔 8、次数 12）", "type": "inference_from_measured_stats", "reason": "facts:附件1/间隔时长:series 与 使用次数:series 的分组结构与题面『3 类』一致；样例前 4 行编号为 A001-A004 且 T=60、n=3", "scope": "全部", "potential_impact": "类别规模决定 q03 的 C 类基数与 q04 可放宽动作数（90 个）", "status": "待代码核验编号前缀与分组一致性"},
+    {"id": "AS5", "statement": "A 类样例的带宽为 10 个频段、时间窗长 L=5 个 Δt（由 A001-A004 的 [80,90)、[35,40) 等实测样例推断）", "type": "inference_from_sample_rows", "reason": "probe 抽样的 4 行 A 类样例带宽均为 10、窗长均为 5", "scope": "q01 展开、q03 资源计数", "potential_impact": "带宽/窗长的实际分布影响单计划格子数与上界估算", "status": "待实测（仅 4 行样例证据）"},
+    {"id": "AS6", "statement": "平移量必须取整数（整数个 Δf 频段、整数个 Δt 时间单位），平移不改变带宽与窗长", "type": "candidate_assumption", "reason": "R1/R2 的离散化与『占用的频段数量保持不变』；R10 给出的幅度上限以 Δf、Δt 为单位", "scope": "q02、q04", "potential_impact": "若允许非整数平移，动作空间由有限变无限，模型需重新定义", "status": "合理默认，待确认"},
+    {"id": "AS7", "statement": "同一装备的两条不同时间窗口之间的自重叠不构成冲突；冲突只在两个不同装备的计划之间判定", "type": "candidate_assumption", "reason": "题面『两个用频计划…之间存在时频冲突』，且每装备一个计划（AS3）", "scope": "全部", "potential_impact": "影响冲突矩阵对角线与非对称项的处理", "status": "待确认（低风险）"},
+    {"id": "AS8", "statement": "『不增加时频资源』理解为频率资源仍为 100 个频段、时间轴不向后延长，新增计划只能使用既有资源包络内的空闲时频格子", "type": "candidate_assumption", "reason": "题面 R2 固定 100 频段；『不增加时频资源』最自然读法是不扩充资源总量", "scope": "q03", "potential_impact": "若理解为『既有计划占用的格子总数不得增加』（允许腾挪），q03 变为可重排的大规模装箱问题，结果显著不同", "status": "待用户确认（UN2）"},
+    {"id": "AS9", "statement": "q03 的『不限制频段和时间的平移幅度』指取消 R10 的幅度上限，但不意味着必须重排问题2 的既有计划（既有计划原则上保持不动，只在其余量中填充）", "type": "candidate_assumption", "reason": "题面『基于问题2 求解得到的无冲突用频计划』暗示以该结果为固定背景", "scope": "q03", "potential_impact": "若允许重排既有计划，填充自由度大增，模型需引入既有计划的绝对位置变量", "status": "待用户确认（UN3）"},
+    {"id": "AS10", "statement": "q04 沿用 q02 的其余全部规则（单参数约束 R6、幅度上限 R10、不调整次数 R7），仅额外允许 C 类调整间隔时长且 |ΔT| ≤ 10Δt", "type": "candidate_assumption", "reason": "题面用『除非特别说明』表述通用规则，问题4 只对间隔时长作特别说明，未放宽平移幅度", "scope": "q04", "potential_impact": "若同时放宽平移幅度，可行域与最优解不同", "status": "待用户确认（UN5）"},
+    {"id": "AS11", "statement": "result2/result4 只需登记被改动（调整或撤销）的装备，未改动的装备不出现在表中；表1 的『保留数量』= 该类总数 − 调整 − 撤销", "type": "candidate_assumption", "reason": "附件说明『将需要调整的各用频装备逐一填写到表格中』", "scope": "q02、q04", "potential_impact": "若要求全 150 行均登记，输出行数与统计口径需调整", "status": "已由附件说明文本支撑；建议保留完整方案内部表以便复核"}
+  ],
+  "symbols": [
+    {"symbol_id": "SY01", "symbol": "Δt", "name": "基本时间单位", "definition": "时间资源不可拆分的最小长度", "role": "parameter", "unit": "时间（题面未给物理量纲）", "belongs_to": ["q01","q02","q03","q04"], "source": "题面正文 R1", "status": "confirmed_text"},
+    {"symbol_id": "SY02", "symbol": "Δf", "name": "基本频带宽度", "definition": "频率离散化后每个频段的宽度", "role": "parameter", "unit": "频率（未给数值）", "belongs_to": ["全部"], "source": "R2", "status": "confirmed_text"},
+    {"symbol_id": "SY03", "symbol": "f0", "name": "频段资源下限", "definition": "有限带宽频率资源的下边界，频段 b 覆盖 [f0+bΔf, f0+(b+1)Δf)", "role": "parameter", "unit": "频率", "belongs_to": ["全部"], "source": "附录示例", "status": "confirmed_text"},
+    {"symbol_id": "SY04", "symbol": "N_B = 100", "name": "频段总数", "definition": "可用频段索引集合 {0,1,…,99}", "role": "parameter", "unit": "个频段", "belongs_to": ["全部"], "source": "R2", "status": "confirmed_text"},
+    {"symbol_id": "SY05", "symbol": "i ∈ I, |I| = 150", "name": "用频装备/计划索引", "definition": "附件1 的行索引", "role": "input", "unit": "-", "belongs_to": ["全部"], "source": "实测 rows_data=150", "status": "confirmed_measured"},
+    {"symbol_id": "SY06", "symbol": "p_i ∈ {A,B,C}", "name": "优先级类别", "definition": "装备所属类别，A>B>C", "role": "input", "unit": "-", "belongs_to": ["全部"], "source": "R9 + AS4", "status": "待代码核验"},
+    {"symbol_id": "SY07", "symbol": "[l_i, r_i)", "name": "频段区间", "definition": "占用频段索引集合 {l_i,…,r_i-1}", "role": "input", "unit": "个频段（索引）", "belongs_to": ["全部"], "source": "附件1 列『频段区间』", "status": "confirmed_measured(字符串待解析)"},
+    {"symbol_id": "SY08", "symbol": "w_i = r_i − l_i", "name": "占用频段数（带宽）", "definition": "连续频段个数，调整后保持不变", "role": "parameter", "unit": "个频段", "belongs_to": ["全部"], "source": "R2 + AS5", "status": "待实测分布"},
+    {"symbol_id": "SY09", "symbol": "[S_i, E_i)", "name": "首次使用时间区间", "definition": "第 1 次占用窗口的起止（含端点左闭右开）", "role": "input", "unit": "个 Δt（索引）", "belongs_to": ["全部"], "source": "附件1 列『时间区间』", "status": "confirmed_measured(字符串待解析)"},
+    {"symbol_id": "SY10", "symbol": "L_i = E_i − S_i", "name": "单次用频时长", "definition": "窗口长度，必须是 Δt 整数倍", "role": "parameter", "unit": "个 Δt", "belongs_to": ["全部"], "source": "R1 + AS5", "status": "待实测分布"},
+    {"symbol_id": "SY11", "symbol": "T_i", "name": "相邻两次使用的间隔时长", "definition": "上次窗口结束到下次窗口开始的空档", "role": "input/decision(q04)", "unit": "个 Δt", "belongs_to": ["q01","q02","q03","q04"], "source": "附录示例 + 实测 {8,40,60}", "status": "confirmed_measured"},
+    {"symbol_id": "SY12", "symbol": "n_i", "name": "使用次数", "definition": "该频段被重复占用的次数", "role": "input", "unit": "次", "belongs_to": ["全部"], "source": "实测 {3,4,12}", "status": "confirmed_measured"},
+    {"symbol_id": "SY13", "symbol": "P_i = T_i + L_i", "name": "重复周期", "definition": "相邻两次占用窗口起点之差（AS2）", "role": "derived", "unit": "个 Δt", "belongs_to": ["全部"], "source": "AS2", "status": "candidate"},
+    {"symbol_id": "SY14", "symbol": "W_i(k)", "name": "第 k 次占用窗口", "definition": "[E_i + (k−1)P_i, E_i + (k−1)P_i + L_i)，k=1..n_i（等价于 S_i+L_i+(k−1)P_i 起）", "role": "derived", "unit": "个 Δt", "belongs_to": ["全部"], "source": "AS2", "status": "candidate"},
+    {"symbol_id": "SY15", "symbol": "O_i ⊆ B × Z_{≥0}", "name": "时频占用格子集合", "definition": "O_i = {[b, t] : b ∈ 频段集合_i, t ∈ 某次占用窗口}", "role": "state", "unit": "格子（1 频段 × 1 Δt）", "belongs_to": ["全部"], "source": "由 R1/R2/R12 构造", "status": "derived"},
+    {"symbol_id": "SY16", "symbol": "X_ij ∈ {0,1}", "name": "冲突指示", "definition": "X_ij = 1 ⟺ 频段集合相交 ∧ 时间窗口集合相交（i ≠ j）", "role": "metric", "unit": "-", "belongs_to": ["q01"], "source": "R4", "status": "definition"},
+    {"symbol_id": "SY17", "symbol": "m_ij", "name": "时间窗口重叠次数", "definition": "计划 i 与 j 的窗口两两相交的对数（论文统计建议量）", "role": "metric", "unit": "次", "belongs_to": ["q01"], "source": "建议定义（模板无此列）", "status": "proposed"},
+    {"symbol_id": "SY18", "symbol": "δ^f_i ∈ {−10,…,10}", "name": "频段平移量", "definition": "调整后 l_i' = l_i + δ^f_i（带宽不变）", "role": "decision", "unit": "个 Δf（整数频段）", "belongs_to": ["q02","q04"], "source": "R10 + AS6", "status": "definition"},
+    {"symbol_id": "SY19", "symbol": "δ^t_i ∈ {−5,…,5}", "name": "时间平移量", "definition": "调整后 S_i' = S_i + δ^t_i（窗长不变）", "role": "decision", "unit": "个 Δt", "belongs_to": ["q02","q04"], "source": "R10 + AS6", "status": "definition"},
+    {"symbol_id": "SY20", "symbol": "δ^T_i", "name": "间隔时长调整量", "definition": "仅 p_i = C 时可用，T_i' = T_i + δ^T_i，|δ^T_i| ≤ 10，T_i' > 0", "role": "decision", "unit": "个 Δt", "belongs_to": ["q04"], "source": "题面问题4", "status": "definition"},
+    {"symbol_id": "SY21", "symbol": "a_i, c_i, v_i ∈ {0,1}", "name": "动作标志", "definition": "分别表示计划 i 被调整频段/调整时间/被撤销；q04 另加 g_i（调整间隔）。约束 a_i + c_i + v_i ≤ 1（R6）", "role": "decision", "unit": "-", "belongs_to": ["q02","q04"], "source": "R6 形式化", "status": "definition"},
+    {"symbol_id": "SY22", "symbol": "y_ij ∈ {0,1}", "name": "调整后是否仍冲突", "definition": "辅助变量，用于把『零冲突』写成约束：y_ij = 0 ∀ i<j", "role": "state", "unit": "-", "belongs_to": ["q02","q04"], "source": "R5", "status": "definition"},
+    {"symbol_id": "SY23", "symbol": "K", "name": "可新增 C 类装备数量", "definition": "q03 的目标：max K", "role": "decision/metric", "unit": "个装备", "belongs_to": ["q03"], "source": "题面问题3", "status": "definition"},
+    {"symbol_id": "SY24", "symbol": "z_j ∈ {0,1}", "name": "候选新增计划选中变量", "definition": "候选池第 j 个 (频段区间, 时间区间) 放置方案是否被采用", "role": "decision", "unit": "-", "belongs_to": ["q03"], "source": "建模定义", "status": "definition"},
+    {"symbol_id": "SY25", "symbol": "F", "name": "空闲时频格子集合", "definition": "全部资源包络内不被既有计划占用的格子集合；|F| 决定 q03 上界", "role": "state", "unit": "格子", "belongs_to": ["q03"], "source": "AS8", "status": "definition"},
+    {"symbol_id": "SY26", "symbol": "n_adj, n_rev", "name": "调整数 / 撤销数", "definition": "按类别统计的 Σ(a_i+c_i(+g_i)) 与 Σ v_i（表1 内容）", "role": "metric", "unit": "个", "belongs_to": ["q02","q04"], "source": "表1", "status": "definition"},
+    {"symbol_id": "SY27", "symbol": "U", "name": "资源利用率", "definition": "被占用格子数 ÷ 资源包络格子数", "role": "metric", "unit": "%", "belongs_to": ["q03"], "source": "建议定义", "status": "proposed"},
+    {"symbol_id": "SY28", "symbol": "T_ceil", "name": "时间轴上界", "definition": "max_i (E_i + (n_i−1)P_i)，q03 资源包络的时间维度（口径待 UN2 确认）", "role": "derived", "unit": "个 Δt", "belongs_to": ["q01","q03"], "source": "由数据导出", "status": "待实测"}
+  ],
+  "unknowns_to_confirm": [
+    {"id": "UN1", "topic": "冲突判定中的时间范围", "question": "两个计划的『时间区间』交叠是否指按使用次数展开后的全部重复窗口（AS1），还是仅指首次使用的时间区间？", "default": "全部重复窗口", "impact": "决定 q01 冲突对数量级与 q02/q04 消解工作量"},
+    {"id": "UN2", "topic": "q03『不增加时频资源』口径", "options": ["(a) 100 频段 × 原时间包络 [0,T_ceil) 固定，只填空闲格子", "(b) 既有计划占用的格子总数（时频资源总量）不变，可腾挪重排", "(c) 以频段占用数（不新增被使用频段个数）为口径"], "default": "(a)", "impact": "三者给出完全不同的可行域与最大新增数"},
+    {"id": "UN3", "topic": "q03 是否允许改动问题2 的既有计划", "options": ["(a) 既有计划一律不动，只在余量中新增", "(b) 允许在取消幅度限制后重排既有计划以腾出空间"], "default": "(a)", "impact": "决定 q03 是否需要既有计划位置变量（规模大幅上升）"},
+    {"id": "UN4", "topic": "新增 C 类计划的参数", "question": "result3 只有频段区间与时间区间两列，新增 C 类计划的带宽 w、窗长 L、间隔 T、次数 n 取何值？", "options": ["(a) 全部沿用附件1 C 类实测众数（待测：疑似 w=10、L=5、T=8、n=12）", "(b) 带宽/窗长可自选（进一步放大可行域）"], "default": "(a) 沿用 C 类众数，需实测确认", "impact": "单计划格子数 = n·L·w 直接决定最大新增数量的量级"},
+    {"id": "UN5", "topic": "q04 是否沿用 10Δf/5Δt 平移上限与『只调一个参数』规则", "default": "沿用（AS10）", "impact": "影响 q04 可行域及与 q02 的可比性"},
+    {"id": "UN6", "topic": "result1 是否需对同一装备对的多窗口冲突去重", "question": "同一对装备在多个时间窗口重复冲突时，result1 是填一行（3 列结构只能表达一对）还是每个重叠窗口一行？", "default": "无序对去重填一行；论文统计同时给出窗口重叠次数", "impact": "影响 result1 行数与论文统计口径一致性"},
+    {"id": "UN7", "topic": "B/C 类频段合法性核验", "question": "附件1 中是否存在 B 或 C 类计划的频段区间落入 [0,10)（与 R11 冲突的原始数据）？", "default": "假设不存在，但需代码逐行校验", "impact": "若存在，需在 q01 前定义数据处理口径（视为越界/需修正/按数据为准）"},
+    {"id": "UN8", "topic": "撤销/调整的代价权重与优先级硬软性", "question": "R8/R9 是分层（字典序：先保 A 不动 → 再少撤销 → 再少调整 → 再小幅度）还是加权和？", "default": "建议字典序分层目标（更符合『尽量』的措辞），备选加权和", "impact": "决定目标函数形式与解的唯一性说明"}
+  ],
+  "traceability_note": "本契约所有 facts 来源于 probe_inputs.py 实测输出 artifacts/20261009_D题_D组/analysis/facts.json 与 input_digest.md（题面文本层）；所有未执行计算均标注为『建议/待执行』。"
+}

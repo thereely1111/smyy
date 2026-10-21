@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时频冲突检测与消解 · 实训指导书</title>
+<style>
+  :root{
+    --ink:#0B2E36; --sub:#4A6572; --line:#E2EAEE; --bg:#F4F8FA;
+    --brand:#1E6FA8; --brand2:#12A594; --note:#FFF8E6; --note-b:#F0C36D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.75;font-size:15px}
+  .wrap{max-width:880px;margin:0 auto;padding:32px 22px 72px}
+  header.top{background:linear-gradient(120deg,#0B2E36,#1E6FA8);color:#fff;
+    border-radius:16px;padding:30px 30px 26px;box-shadow:0 10px 30px rgba(11,46,54,.18)}
+  header.top h1{margin:0 0 8px;font-size:26px;letter-spacing:.5px}
+  header.top .sub{opacity:.9;font-size:13.5px}
+  header.top .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  header.top .tags span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+    padding:4px 11px;border-radius:999px;font-size:12px}
+  nav.toc{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px 20px;margin:20px 0 26px}
+  nav.toc h2{margin:0 0 10px;font-size:14px;color:var(--sub);font-weight:600;letter-spacing:1px}
+  nav.toc ol{margin:0;padding-left:20px}
+  nav.toc li{margin:4px 0}
+  nav.toc a{color:var(--brand);text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+  section.ch{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:24px 26px;margin-bottom:20px;box-shadow:0 2px 10px rgba(11,46,54,.04)}
+  h3{font-size:19px;margin:0 0 12px;color:var(--ink);
+    border-left:4px solid var(--brand2);padding-left:12px}
+  p{margin:10px 0;color:#22323A}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  b{color:var(--ink)}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:6px 10px;text-align:center}
+  th{background:#F0F7FA;color:#0B4A5C;font-weight:600}
+  .mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+    background:#EEF4F7;border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:13px;color:#0B5E70}
+  .formula{background:#F0F7FA;border:1px dashed #9CC7D8;border-radius:10px;
+    padding:12px 16px;margin:12px 0;font-family:"SFMono-Regular",Consolas,monospace;
+    font-size:14px;color:#0B4A5C;text-align:center;overflow-x:auto}
+  .note{background:var(--note);border-left:4px solid var(--note-b);border-radius:8px;
+    padding:12px 16px;margin:14px 0;font-size:13.5px;color:#6B5320}
+  footer{margin-top:28px;text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>时频冲突检测与消解 · 实训指导书</h1>
+    <div class="sub">2026 全国大学生数学建模竞赛 · D 题 · 电磁频谱用频计划冲突检测与消解</div>
+    <div class="tags">
+      <span>6 章实训要点</span><span>时频离散化 · 矩形化</span>
+      <span>冲突图与冲突判定</span><span>受限消解 · 词典序目标</span>
+      <span>容量上界 · 装箱视角</span><span>参数扩展（间隔调整）</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>目录</h2>
+    <ol>
+      <li><a href="#c1">题目重述与信息结构</a></li>
+      <li><a href="#c2">数据预处理与探索性分析</a></li>
+      <li><a href="#c3">时频冲突的形式化与检测模型</a></li>
+      <li><a href="#c4">从问题一到问题四的升级路径</a></li>
+      <li><a href="#c5">结果、灵敏度与稳健性</a></li>
+      <li><a href="#c6">模型评价与论文写作</a></li>
+    </ol>
+  </nav>
+
+  <section class="ch" id="c1">
+    <h3>一、题目重述与信息结构</h3>
+    <p>大量用频装备在一段时间内对一段有限带宽提出使用需求。为便于计算，题目对时频资源做<b>离散化</b>：时域上以 <span class="mono">Δt</span> 为最小不可分单位，占用时长必须是 Δt 的整数倍；频域上以 <span class="mono">Δf</span> 把带宽切分为 <b>100 个等宽频段</b>，一个计划占用连续若干频段且占用频段数不变。</p>
+    <p>每个用频计划由四个参数描述，展开后等价于时间—频率平面上的 <b>n 个矩形</b>：</p>
+    <ul>
+      <li><b>频段区间</b> <span class="mono">[a,b)</span>：表示占用 <span class="mono">[f₀+aΔf, f₀+bΔf)</span>，宽度即频宽；</li>
+      <li><b>首次使用时间区间</b> <span class="mono">[t₀,t₀+τ)</span>：第 1 次使用的时间窗，τ 为单次时长；</li>
+      <li><b>间隔时长</b> <span class="mono">iv</span>：相邻两次使用在时间上相距 iv 个 Δt；</li>
+      <li><b>使用次数</b> <span class="mono">n</span>：共使用 n 次。</li>
+    </ul>
+    <div class="formula">第 k 次使用的时间区间　T_k = [ t₀ + (k−1)·iv , t₀ + (k−1)·iv + τ )　,　k = 1,2,…,n</div>
+    <p><b>冲突定义</b>：两个用频计划在<b>频段区间</b>与<b>时间区间</b>上<b>同时</b>存在交叠，即判定为时频冲突。消解则是通过平移频段 / 时间区间、调整间隔时长，甚至撤销计划，使消解后不再存在冲突。</p>
+    <p>四个问题的递进，本质是<b>约束强度</b>与<b>决策空间</b>不同：</p>
+    <ul>
+      <li><b>问题一</b>：纯检测，把潜在冲突对全部找出并落表 → 描述性统计；</li>
+      <li><b>问题二</b>：幅度受限下的消解（频移 ≤10Δf、时移 ≤5Δt，且一个计划只能动一个参数）→ 受约束决策；</li>
+      <li><b>问题三</b>：在问题二的无冲突计划上，<b>不增加时频资源</b>的前提下最多再安排多少 C 类装备 → 容量最大化；</li>
+      <li><b>问题四</b>：允许 C 类调整间隔时长（|Δiv| ≤ 10Δt）后的消解 → 决策空间扩展。</li>
+    </ul>
+    <p><b>规模核对</b>：附件 1 共 <b>150 件</b>装备（A 类 20、B 类 40、C 类 90）。三类参数高度规律：</p>
+    <table>
+      <tr><th>类别</th><th>数量</th><th>频宽 (Δf)</th><th>单次时长 (Δt)</th><th>间隔 iv (Δt)</th><th>使用次数 n</th><th>单件矩形数</th></tr>
+      <tr><td>A 类</td><td>20</td><td>10</td><td>5</td><td>60</td><td>3</td><td>3</td></tr>
+      <tr><td>B 类</td><td>40</td><td>15</td><td>3</td><td>40</td><td>4</td><td>4</td></tr>
+      <tr><td>C 类</td><td>90</td><td>3</td><td>2</td><td>8</td><td>12</td><td>12</td></tr>
+    </table>
+    <div class="note">写这一步的关键是画出「<b>四参数 × 四问</b>」对应矩阵：哪一问动哪个参数、哪一问不许动、约束写在哪。再补一张「同类装备参数完全一致」的核对表——C 类 90 件的四参数完全相同，这一点直接决定了问题三的容量模板，评委一眼就能看出你是否读懂了数据。</div>
+  </section>
+
+  <section class="ch" id="c2">
+    <h3>二、数据预处理与探索性分析</h3>
+    <p>预处理的核心是<b>把四参数展开为矩形集合</b>，并在展开时统一量纲：</p>
+    <ul>
+      <li><b>区间解析</b>：频段区间、时间区间在附件中以 <span class="mono">"[80,90)"</span> 这类字符串给出，需用正则取出左右端点，并注意<b>半开区间</b>约定；</li>
+      <li><b>矩形展开</b>：按上式把每件装备展开为 n 个矩形 <span class="mono">(fs,fe,ts,te)</span>，150 件合计的矩形数即冲突检测的规模基数；</li>
+      <li><b>量纲统一</b>：频段一律用 Δf 为单位、时间一律用 Δt 为单位，避免后续平移幅度（10Δf / 5Δt）与坐标混用；</li>
+      <li><b>基线统计</b>：逐类统计频宽 / 时长 / 间隔 / 次数的取值分布，确认同类参数是否一致（本例完全一致）；</li>
+      <li><b>占用刻画</b>：把 100 个频段 × 时间轴铺成格网，统计每个频段的占用计数与时间占用率，为问题三的剩余空间估计打底。</li>
+    </ul>
+    <div class="formula">频段占用率 = Σ(各计划占用频段数 × 频段使用时间) / (100 × 时间跨度)</div>
+    <p>探索阶段至少产出三张图：<b>时频占用热力图</b>（横轴时间、纵轴频段，深色即拥挤区）、<b>各频段占用计数条形图</b>（找最拥挤频段）、<b>三类装备参数分布图</b>（说明参数规律性）。</p>
+    <div class="note">红线：<b>端点相接不算冲突</b>。 <span class="mono">[35,40)</span> 与 <span class="mono">[40,45)</span> 在时间上首尾相接但不交叠；若误用闭区间或「≤」比较，会把大量无冲突计划对误判为冲突，问题一的统计结果将整体偏大。半开区间的比较式务必写成<b>严格小于</b>。</div>
+  </section>
+
+  <section class="ch" id="c3">
+    <h3>三、时频冲突的形式化与检测模型</h3>
+    <p>把每件装备 <span class="mono">i</span> 展开为矩形集合 <span class="mono">R_i</span>，则两件装备的冲突判定为「<b>频段相交 且 存在一对矩形在时间上相交</b>」：</p>
+    <div class="formula">
+      频段相交：max(fs_i, fs_j) &lt; min(fe_i, fe_j)<br>
+      时间相交：∃ k,l　max(t<sub>i,k</sub>, t<sub>j,l</sub>) &lt; min(t<sub>i,k</sub>+τ_i, t<sub>j,l</sub>+τ_j)
+    </div>
+    <p>以装备为顶点、冲突关系为边，可构造<b>冲突图</b> <span class="mono">G = (V, E)</span>。问题一即「求出全部边」；问题二即「通过移动顶点与删除顶点，把图变成空图」，这为后续两问提供了统一语言。</p>
+    <p>检测算法与复杂度：</p>
+    <ul>
+      <li><b>朴素两两</b>：枚举 <span class="mono">C(150,2) = 11175</span> 对装备，每对至多 <span class="mono">n_i × n_j</span> 次矩形比较。本例 n ≤ 12，直接枚举完全可行；</li>
+      <li><b>剪枝</b>：先判频段区间是否相交，不相交直接跳过——这一条能砍掉绝大多数比较；</li>
+      <li><b>规模化</b>：若装备数上万，可按频段分桶 + 时间扫描线（区间相交的经典 O(m log m) 做法），把两两比较降为局部比较。</li>
+    </ul>
+    <p>问题一应给出的统计口径：<b>冲突计划对总数</b>、<b>涉及冲突的装备数量与占比</b>、<b>冲突对按类别（A-A / A-B / …）的分布</b>，以及<b>冲突在频段维度的聚集情况</b>（哪几个频段最拥挤）。</p>
+    <div class="note">这一章最容易出的错是「把装备级判断和矩形级判断混在一起」：频段是否相交是<b>装备级</b>属性（所有次使用共用同一频段区间），时间是否相交必须逐对<b>矩形级</b>比较——因为第 i 件的第 3 次使用可能只和第 j 件的第 1 次使用撞上。</div>
+  </section>
+
+  <section class="ch" id="c4">
+    <h3>四、从问题一到问题四的模型升级路径</h3>
+
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题一：时频冲突检测</h3>
+    <p>按上式枚举所有冲突对，逐行写入 result1（序号 / 冲突装备1 / 冲突装备2），并统计冲突对数、涉及装备数、类别分布。无需建模优化，考的是<b>定义理解与实现严谨</b>。</p>
+
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题二：幅度受限下的冲突消解</h3>
+    <p>决策变量为每件装备的动作：<b>频段平移 Δf_i</b>、<b>时间平移 Δt_i</b>、或<b>撤销</b>，且</p>
+    <div class="formula">
+      每件装备至多执行一个动作　；　|Δf_i| ≤ 10Δf　；　|Δt_i| ≤ 5Δt　；　不调整 n 与 iv
+    </div>
+    <p>目标不是单一标量，而是<b>词典序（lexicographic）</b>多目标：先最小化撤销数量，再最小化被调整的计划数量，再最小化调整幅度，同时要求高优先级（A &gt; B &gt; C）装备尽量不动。</p>
+    <p>可用的求解思路：</p>
+    <ul>
+      <li><b>冲突定向让路（贪心）</b>：反复取一个冲突对，让<b>低优先级</b>一方让路；幅度 δ 从小到大试探，先试频移、再试时移；两方都动不了才撤销。实现简单、结果稳定，能保证结束时无冲突；</li>
+      <li><b>精确方法</b>：把「是否调整 / 如何调整」建模为 0-1 整数规划（每件装备一个动作变量），用 CP-SAT / Gurobi 求精确最优，适合小规模或作为贪心的对照；</li>
+      <li><b>改进方向</b>：贪心对「先处理哪个冲突对」敏感，可按<b>冲突度（度数）从大到小</b>排序、或做多次随机重启取最优，作为灵敏度对照。</li>
+    </ul>
+
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题三：无冲突计划上的 C 类容量最大化</h3>
+    <p>基准是问题二得到的无冲突计划，<b>不再限制平移幅度</b>，但<b>不增加时频资源</b>——即只能在 100 个频段 × 现有时间跨度内「见缝插针」。C 类装备参数完全一致，故可定义一个<b>容量模板</b> <span class="mono">(bw_C, τ_C, iv_C, n_C)</span>，单件占用的时频面积为常数。</p>
+    <div class="formula">容量上界　U = ⌊ (100 × T − Σ 已占用面积) / (bw_C · τ_C · n_C) ⌋</div>
+    <p>这一问本质是<b>带周期结构的二维装箱</b>：每个模板在频段方向占 bw_C 宽、在时间方向以 iv_C 为周期、每次占 τ_C，占空比为 τ_C / iv_C，因此同一频段内可容纳的件数受占空比限制（最多约 iv_C / τ_C 件）。求解可用「按频段分带 + 按相位排布」的贪心：逐条候选频带、逐个起始时刻试放，能放则放。</p>
+
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">问题四：允许 C 类调整间隔时长</h3>
+    <p>把决策空间从「频移 / 时移 / 撤销」扩展为「频移 / 时移 / <b>间隔调整</b> / 撤销」，其中仅 C 类可调整间隔且 <span class="mono">|Δiv| ≤ 10Δt</span>。间隔一变，该装备后续所有次使用的时间窗整体伸缩，冲突格局随之变化。工程上可直接<b>复用问题二的消解引擎</b>，只在「频移 → 时移」之后插入一段「间隔调整」试探：</p>
+    <div class="formula">for δ = 1…10:　iv ← iv ± δ　→　重新做冲突判定　→　无冲突则接受，否则回滚</div>
+    <div class="note">问题四是问题二的「<b>参数扩展</b>」而非新模型——同一套冲突判定、同一套让路策略，只是让 C 类多了一种动作。把这一点写清楚，四个问题就串成了一条主线：<b>检测 → 受限消解 → 容量最大化 → 放宽参数再消解</b>。</div>
+  </section>
+
+  <section class="ch" id="c5">
+    <h3>五、结果、灵敏度与稳健性</h3>
+    <p>问题二与问题四都要按表 1 的格式汇报统计结果，这是论文里最重要的两张表：</p>
+    <table>
+      <tr><th>类别</th><th>保留数量</th><th>调整数量</th><th>撤销数量</th></tr>
+      <tr><td>A 类</td><td></td><td></td><td></td></tr>
+      <tr><td>B 类</td><td></td><td></td><td></td></tr>
+      <tr><td>C 类</td><td></td><td></td><td></td></tr>
+    </table>
+    <p>建议做的灵敏度分析：</p>
+    <ul>
+      <li><b>平移幅度上限</b>：把 10Δf / 5Δt 分别放宽到 5 / 10 / 20Δf，看撤销数量的变化曲线——若继续放宽几乎不再减少撤销，说明瓶颈是<b>局部频段极度拥挤</b>而非幅度不够；</li>
+      <li><b>让路顺序</b>：按装备编号顺序 vs 按冲突度从大到小排序，对比撤销数与调整数，检验贪心策略的稳健性；</li>
+      <li><b>间隔调整上限</b>：问题四中把 |Δiv| ≤ 10Δt 收紧到 5Δt，量化「间隔自由度」对撤销量的贡献，这是问题四最有说服力的结论；</li>
+      <li><b>优先级权重</b>：若把优先级改为「撤销代价」权重，观察 A 类是否始终零撤销——检验约束是否真正生效。</li>
+    </ul>
+    <div class="note">一个能写进论文的好结论：<b>问题四相比问题二的撤销量下降，全部来自 C 类</b>，且下降幅度与间隔调整上限近似单调——它把「间隔自由度」的价值量化了，而不是笼统地说「参数放宽了，结果变好了」。</div>
+  </section>
+
+  <section class="ch" id="c6">
+    <h3>六、模型评价与论文写作</h3>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">优点</h3>
+    <ul>
+      <li>用「<b>时频矩形 + 冲突图</b>」统一刻画四问，几何含义直观，检测与消解共用一套判定函数；</li>
+      <li>问题二把多目标写成<b>词典序</b>，既贴合题面「减少撤销 → 减少调整 → 减小幅度」的措辞，又便于算法实现；</li>
+      <li>问题三给出<b>面积上界</b>作为理论标尺，可行解与上界的差距即装填效率，结论有量化依据；</li>
+      <li>问题四以「参数扩展」的方式复用引擎，代码改动小、逻辑链条完整。</li>
+    </ul>
+    <h3 style="font-size:14.5px;border:none;padding-left:0;color:var(--brand)">局限与改进</h3>
+    <ul>
+      <li>消解采用<b>贪心</b>，不保证全局最优；可用整数规划 / CP-SAT 求精确解并给出最优性间隙；</li>
+      <li>问题三的排布为启发式，与面积上界之间可能仍有空隙，可尝试按频段分区的周期排布或列生成法逼近上界；</li>
+      <li>未考虑「一件装备的多参数联合微调」，可引入局部搜索（邻域移动 + 模拟退火）进一步压缩撤销量。</li>
+    </ul>
+    <div class="note">论文结构建议：摘要（<b>务必写清四问的核心结论：冲突对数、表 1 的撤销/调整数、问题三容量与上界、问题四相对问题二的变化</b>）→ 问题重述 → 假设与符号说明（<b>补「单位」列：Δf 与 Δt</b>）→ 时频离散化与冲突定义 → 问题一～四模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（<span class="mono">main.py</span> 与 result1.xlsx ～ result4.xlsx 说明）。</div>
+    <div class="note">配套《可视化演示》共 6 个页面（全局分析 + 问题一~四），可用来联动讲解检测与消解的全过程；其中演示页为便于课堂讲解使用了同规模的示意数据集，<b>正式求解结果请以附件 1 与 <span class="mono">main.py</span> 输出的 result1~4.xlsx 为准</b>。</div>
+  </section>
+
+  <footer>2026 CUMCM D 题 · 时频冲突检测与消解 · 实训指导书</footer>
+</div>
+</body>
+</html>

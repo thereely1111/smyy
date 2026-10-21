@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A题 · 数模演易</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:12px;padding:0 16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:7px;flex-shrink:0}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;white-space:nowrap;}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:flex;gap:5px;align-items:center;margin-left:auto;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.splitnav::-webkit-scrollbar{display:none}
+.splitnav a{font-size:11.5px;font-weight:700;color:var(--ink2);padding:4px 8px;border-radius:7px;
+  border:1px solid var(--line);text-decoration:none;white-space:nowrap;transition:.18s;}
+.splitnav a:hover{background:#f0fbfa;color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:18px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.math-display{display:block;max-width:100%;overflow-x:auto;overflow-y:hidden;margin:8px 0;padding:5px 2px;
+  text-align:center;scrollbar-width:thin;scrollbar-color:#cfe4e4 transparent}
+.math-display math{display:inline-block;min-width:max-content;margin:0;font-size:1.06em;
+  font-family:"Cambria Math","STIX Two Math","Noto Sans Math",serif;color:var(--ink)}
+.math-inline{display:inline-block;vertical-align:-.12em;white-space:nowrap}
+.math-inline math{font-family:"Cambria Math","STIX Two Math","Noto Sans Math",serif;color:inherit}
+.math-fallback{display:inline-block;max-width:100%;overflow-x:auto;padding:3px 7px;border:1px solid var(--line);
+  border-radius:6px;background:#fbfefe;color:var(--warn);font:13px/1.65 Consolas,monospace;white-space:pre}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.pill b{font-weight:600}
+.pill:disabled{cursor:default;opacity:.5}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh);position:relative}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.tooltip{position:fixed;pointer-events:none;z-index:60;display:none;
+  background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:8px;
+  box-shadow:var(--sh);padding:7px 10px;font-size:12px;line-height:1.7;color:var(--ink2);min-width:96px;}
+.tooltip b{color:var(--teal-d)}
+.tooltip .ttr{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tooltip .ttr i{flex:none;width:10px;height:10px;border-radius:3px;display:inline-block}
+
+.slider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.slider input[type=range]{flex:1;height:22px;background:transparent;cursor:pointer;
+  appearance:none;-webkit-appearance:none;accent-color:var(--teal);}
+.slider input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:0 1px 4px rgba(11,46,54,.28);}
+.slider input[type=range]:focus{outline:none}
+.slider input[type=range]:focus::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(18,165,148,.22)}
+.slider input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid #fff;}
+.slider .sv{min-width:104px;text-align:right;font-size:14px;font-weight:600;color:var(--teal-d);
+  font-variant-numeric:tabular-nums}
+.slider input[type=number]{width:82px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;
+  color:var(--teal-d);background:#fff;font:600 13px inherit;font-variant-numeric:tabular-nums}
+.slider input[type=number]:focus{outline:2px solid rgba(18,165,148,.22);border-color:var(--teal)}
+
+.mx{display:grid;gap:6px}
+.mx .mh{font-size:11.5px;color:var(--muted);text-align:center;padding:2px 4px}
+.mx .mr{font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+.mx .mc{border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:.16s;
+  padding:7px 6px;font-size:12px;text-align:center;color:var(--muted);line-height:1.45;}
+.mx .mc:hover{border-color:var(--teal)}
+.mx .mc.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.mx .mc.dim{opacity:.55;cursor:default}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+.navbar button.nb:disabled{opacity:.35;cursor:not-allowed}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+@media (max-width:860px){.scene-title{display:none}.brand{display:none}.splitnav{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnAuto">自动讲解</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <nav class="splitnav" id="splitnav"></nav>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage"></main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕（←）">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕（→）">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script type="application/json" id="DATA">{
+  "title": "A题",
+  "summary": "Audited deterministic deck built from the problem statement and parsed attachment facts.",
+  "deck": {
+    "name": "问题三分析",
+    "idx": 3,
+    "names": [
+      "全局问题分析",
+      "问题一分析",
+      "问题二分析",
+      "问题三分析",
+      "问题四分析"
+    ],
+    "files": [
+      "01_全局问题分析.html",
+      "02_问题一分析.html",
+      "03_问题二分析.html",
+      "04_问题三分析.html",
+      "05_问题四分析.html"
+    ],
+    "labels": [
+      "全局",
+      "问题一",
+      "问题二",
+      "问题三",
+      "问题四"
+    ]
+  },
+  "scenes": [
+    {
+      "title": "问题三  建模分析",
+      "kicker": "QUESTION 3",
+      "h1": "问题三：从新增条件到可交付策略",
+      "small": "同一幕完成数据、模型、交互图表与结果口径",
+      "lead": "只讲相对前一问新增的条件，并把决策变量、约束、费用和输出文件逐项对齐。",
+      "blocks": [
+        {
+          "type": "pills",
+          "defaultIndex": 0,
+          "options": [
+            {
+              "label": "新增条件",
+              "html": "<div class='card'><h3>本问边界<\/h3><p>问题3 按照烘干要求，药材各处的水分浓度应低于0.15 kg/kg，请确定药材烘干所需 要的时间（单位：h）。在论文中按表5 的格式给出每隔6 h、到药材中心距离每隔0.5 cm 的水分浓度，并将药材内部水分浓度每隔60 s、到药材中心距离每隔0.1 cm 的完整结果保 存到文件result3.xlsx 中（模板文件见附件3）。 表5 药材烘干过程的水分浓度 时间/h 到药材中心的距离/cm 0 0.5 1 1.5 2 6 12 18 <\/p><\/div>"
+            },
+            {
+              "label": "模型与变量",
+              "html": "<div class='card'><h3>建模闭环<\/h3><p>把输入映射为决策变量、状态变量、约束与目标函数；所有单位和时间粒度保持一致。<\/p><\/div>"
+            },
+            {
+              "label": "输出核验",
+              "html": "<div class='card'><h3>交付检查<\/h3><p>结果字段与题目要求逐项对应，并通过边界、守恒、量纲和敏感性检查。<\/p><\/div>"
+            }
+          ],
+          "note": "<span class='badge q'>交互<\/span>切换查看本问的条件、模型与交付。"
+        },
+        {
+          "type": "slider",
+          "id": "q3Cursor",
+          "label": "当前观测：第 %v 点",
+          "min": 1,
+          "max": 241,
+          "step": 1,
+          "value": 1,
+          "unit": "",
+          "valueFmt": "%v",
+          "chartIds": [
+            "q3Chart"
+          ],
+          "cursorOffset": -1,
+          "labelW": 190
+        },
+        {
+          "type": "pills",
+          "chartId": "q3Chart",
+          "defaultIndex": 0,
+          "options": [
+            {
+              "label": "原始曲线",
+              "html": "<div class='note'><strong>原始曲线:<\/strong>保留附件中每个观测点，用于精确悬停读值。<\/div>",
+              "chartTitle": "问题三：附件数据交互图 · 原始值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/水分浓度:series<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": 0.0,
+                "yMax": 0.13025,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q3Cursor",
+                "series": [
+                  {
+                    "name": "附件1/水分浓度:series",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "fill": "rgba(20,108,135,.10)",
+                    "d": [
+                      0.01963,
+                      0.02002,
+                      0.02053,
+                      0.021,
+                      0.02151,
+                      0.02191,
+                      0.02233,
+                      0.02278,
+                      0.02325,
+                      0.02377,
+                      0.02428,
+                      0.02465,
+                      0.02506,
+                      0.02552,
+                      0.02612,
+                      0.0266,
+                      0.02687,
+                      0.02732,
+                      0.02793,
+                      0.02826,
+                      0.02891,
+                      0.02921,
+                      0.02961,
+                      0.03029,
+                      0.03051,
+                      0.03098,
+                      0.03137,
+                      0.03179,
+                      0.03219,
+                      0.03262,
+                      0.03307,
+                      0.03345,
+                      0.03403,
+                      0.03447,
+                      0.03476,
+                      0.03513,
+                      0.03558,
+                      0.03609,
+                      0.03646,
+                      0.03653,
+                      0.03694,
+                      0.03731,
+                      0.03766,
+                      0.03812,
+                      0.0384,
+                      0.03858,
+                      0.03903,
+                      0.0394,
+                      0.03954,
+                      0.04013,
+                      0.04011,
+                      0.04076,
+                      0.0407,
+                      0.04128,
+                      0.04157,
+                      0.04187,
+                      0.04205,
+                      0.04229,
+                      0.04247,
+                      0.04277,
+                      0.04272,
+                      0.04312,
+                      0.04333,
+                      0.04369,
+                      0.04373,
+                      0.04389,
+                      0.0442,
+                      0.04422,
+                      0.04435,
+                      0.04468,
+                      0.04483,
+                      0.04491,
+                      0.04514,
+                      0.0453,
+                      0.04543,
+                      0.04561,
+                      0.04589,
+                      0.04585,
+                      0.04629,
+                      0.04641,
+                      0.04633,
+                      0.04639,
+                      0.0466,
+                      0.04687,
+                      0.04689,
+                      0.04707,
+                      0.04705,
+                      0.0472,
+                      0.04713,
+                      0.04744,
+                      0.04728,
+                      0.0476,
+                      0.04777,
+                      0.04751,
+                      0.04782,
+                      0.04765,
+                      0.04802,
+                      0.04779,
+                      0.04827,
+                      0.04795,
+                      0.04841,
+                      0.0484,
+                      0.04836,
+                      0.04851,
+                      0.04858,
+                      0.04871,
+                      0.04842,
+                      0.04864,
+                      0.04845,
+                      0.04875,
+                      0.04858,
+                      0.04882,
+                      0.04886,
+                      0.04885,
+                      0.04892,
+                      0.04908,
+                      0.04913,
+                      0.04902,
+                      0.04911,
+                      0.0493,
+                      0.04894,
+                      0.04897,
+                      0.04898,
+                      0.04929,
+                      0.0492,
+                      0.04941,
+                      0.04938,
+                      0.04924,
+                      0.04954,
+                      0.0495,
+                      0.04928,
+                      0.04935,
+                      0.04934,
+                      0.04929,
+                      0.0493,
+                      0.04971,
+                      0.04948,
+                      0.04947,
+                      0.04966,
+                      0.04959,
+                      0.0498,
+                      0.04973,
+                      0.0496,
+                      0.04956,
+                      0.04988,
+                      0.04976,
+                      0.04989,
+                      0.04949,
+                      0.04986,
+                      0.04977,
+                      0.04981,
+                      0.05004,
+                      0.05009,
+                      0.04976,
+                      0.04998,
+                      0.05016,
+                      0.0499,
+                      0.04998,
+                      0.04997,
+                      0.0499,
+                      0.05021,
+                      0.05014,
+                      0.04981,
+                      0.05025,
+                      0.05019,
+                      0.04989,
+                      0.05017,
+                      0.0498,
+                      0.05025,
+                      0.05008,
+                      0.05008,
+                      0.0498,
+                      0.0502,
+                      0.04976,
+                      0.04987,
+                      0.04982,
+                      0.05014,
+                      0.04985,
+                      0.05021,
+                      0.05008,
+                      0.04977,
+                      0.04975,
+                      0.04978,
+                      0.05005,
+                      0.05015,
+                      0.04987,
+                      0.05017,
+                      0.04978,
+                      0.05015,
+                      0.05021,
+                      0.05014,
+                      0.0501,
+                      0.05017,
+                      0.04977,
+                      0.04985,
+                      0.04981,
+                      0.05,
+                      0.05012,
+                      0.05007,
+                      0.05018,
+                      0.04983,
+                      0.05012,
+                      0.04985,
+                      0.04989,
+                      0.0501,
+                      0.05024,
+                      0.05006,
+                      0.04978,
+                      0.05006,
+                      0.04977,
+                      0.05019,
+                      0.0501,
+                      0.04984,
+                      0.0498,
+                      0.04984,
+                      0.05024,
+                      0.04998,
+                      0.05014,
+                      0.05007,
+                      0.05004,
+                      0.04982,
+                      0.05022,
+                      0.0499,
+                      0.05004,
+                      0.0501,
+                      0.05007,
+                      0.05022,
+                      0.04982,
+                      0.05,
+                      0.04995,
+                      0.04999,
+                      0.04981,
+                      0.04982,
+                      0.04989,
+                      0.0499,
+                      0.04996,
+                      0.05006,
+                      0.05007,
+                      0.04996,
+                      0.04995,
+                      0.04986
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "label": "平滑趋势",
+              "html": "<div class='note'><strong>平滑趋势:<\/strong>压低高频波动，更清楚地看趋势与转折。<\/div>",
+              "chartTitle": "问题三：附件数据交互图 · 15 点滑动均值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/水分浓度:series 滑动均值<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": 0.0,
+                "yMax": 0.13025,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q3Cursor",
+                "series": [
+                  {
+                    "name": "附件1/水分浓度:series 滑动均值",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "d": [
+                      0.01963,
+                      0.019825000000000002,
+                      0.02006,
+                      0.020295,
+                      0.020538,
+                      0.020766666666666666,
+                      0.02099,
+                      0.02121375,
+                      0.02144,
+                      0.021672999999999998,
+                      0.02191,
+                      0.02213833333333333,
+                      0.022363076923076923,
+                      0.022588571428571427,
+                      0.022823999999999997,
+                      0.023288666666666666,
+                      0.023745333333333334,
+                      0.024198,
+                      0.02466,
+                      0.025110000000000004,
+                      0.025576666666666668,
+                      0.026035333333333337,
+                      0.02649066666666667,
+                      0.02696,
+                      0.027409333333333334,
+                      0.027856000000000002,
+                      0.028304000000000003,
+                      0.028752666666666666,
+                      0.029197333333333336,
+                      0.029630666666666663,
+                      0.030061999999999995,
+                      0.030500666666666666,
+                      0.030947999999999996,
+                      0.031383999999999995,
+                      0.03181733333333333,
+                      0.032232,
+                      0.03265666666666667,
+                      0.03308866666666667,
+                      0.0335,
+                      0.03390133333333333,
+                      0.03429866666666667,
+                      0.034694666666666665,
+                      0.035086,
+                      0.03548133333333334,
+                      0.03586666666666667,
+                      0.036233999999999995,
+                      0.036606,
+                      0.036964,
+                      0.037301999999999995,
+                      0.03766,
+                      0.037992000000000005,
+                      0.038337333333333334,
+                      0.03864466666666666,
+                      0.038965999999999994,
+                      0.039302,
+                      0.03963066666666667,
+                      0.03994666666666667,
+                      0.04025533333333334,
+                      0.040545333333333336,
+                      0.04083666666666667,
+                      0.04111266666666666,
+                      0.041385333333333336,
+                      0.041647333333333335,
+                      0.041923999999999996,
+                      0.042164,
+                      0.042416,
+                      0.04264533333333333,
+                      0.04288,
+                      0.04308466666666667,
+                      0.043292000000000004,
+                      0.04348933333333334,
+                      0.04368000000000001,
+                      0.04386999999999999,
+                      0.04405866666666667,
+                      0.04423599999999999,
+                      0.044428666666666665,
+                      0.04461333333333333,
+                      0.04478133333333334,
+                      0.04495466666666667,
+                      0.04513333333333333,
+                      0.045295999999999996,
+                      0.045441999999999996,
+                      0.045600666666666664,
+                      0.045768666666666666,
+                      0.045916,
+                      0.046065333333333326,
+                      0.046208,
+                      0.046345333333333336,
+                      0.04646733333333334,
+                      0.04660133333333334,
+                      0.04671266666666667,
+                      0.04682666666666667,
+                      0.046954666666666665,
+                      0.047036,
+                      0.04713,
+                      0.047217999999999996,
+                      0.04732666666666665,
+                      0.04740599999999998,
+                      0.04749933333333333,
+                      0.04757,
+                      0.04765933333333334,
+                      0.04774933333333333,
+                      0.04782666666666666,
+                      0.047918666666666665,
+                      0.04799466666666665,
+                      0.04809,
+                      0.04814466666666666,
+                      0.048202666666666664,
+                      0.04826533333333334,
+                      0.04832733333333334,
+                      0.048389333333333326,
+                      0.04844266666666666,
+                      0.048513999999999995,
+                      0.04855266666666666,
+                      0.04861733333333333,
+                      0.048662,
+                      0.048710666666666666,
+                      0.048754666666666654,
+                      0.04879466666666667,
+                      0.04884266666666667,
+                      0.048858,
+                      0.04889466666666666,
+                      0.04891733333333334,
+                      0.04897333333333333,
+                      0.049003333333333336,
+                      0.04905866666666667,
+                      0.049095999999999994,
+                      0.04912133333333333,
+                      0.049167333333333334,
+                      0.049206,
+                      0.04921933333333333,
+                      0.049234,
+                      0.04925533333333334,
+                      0.04926733333333333,
+                      0.04926733333333334,
+                      0.04931866666666667,
+                      0.04935266666666668,
+                      0.04938533333333333,
+                      0.04941,
+                      0.04943600000000001,
+                      0.049462,
+                      0.04948533333333334,
+                      0.049509333333333336,
+                      0.04951066666666667,
+                      0.04953600000000001,
+                      0.049568000000000015,
+                      0.04960400000000001,
+                      0.049614000000000005,
+                      0.049652,
+                      0.04968333333333333,
+                      0.04969,
+                      0.04972733333333333,
+                      0.04976866666666666,
+                      0.04977533333333333,
+                      0.04980133333333333,
+                      0.04982533333333334,
+                      0.04983666666666666,
+                      0.049862000000000004,
+                      0.049889333333333334,
+                      0.04989066666666667,
+                      0.049920666666666676,
+                      0.04993733333333332,
+                      0.04995866666666666,
+                      0.04998466666666666,
+                      0.050012666666666664,
+                      0.05001799999999999,
+                      0.050026666666666664,
+                      0.05000733333333333,
+                      0.050039999999999994,
+                      0.05004666666666667,
+                      0.05004133333333334,
+                      0.050034666666666665,
+                      0.05004933333333333,
+                      0.050035333333333334,
+                      0.05003333333333333,
+                      0.05000733333333333,
+                      0.05000733333333333,
+                      0.05000999999999999,
+                      0.05000733333333333,
+                      0.049999999999999996,
+                      0.049991999999999995,
+                      0.049963999999999995,
+                      0.04996266666666667,
+                      0.04994933333333333,
+                      0.049954000000000005,
+                      0.049940000000000005,
+                      0.04996466666666667,
+                      0.04993666666666667,
+                      0.049962666666666676,
+                      0.04998533333333333,
+                      0.050006666666666665,
+                      0.050004,
+                      0.05002533333333333,
+                      0.049996,
+                      0.04998066666666666,
+                      0.04998333333333333,
+                      0.05,
+                      0.05002266666666667,
+                      0.050024000000000006,
+                      0.050026,
+                      0.05002333333333334,
+                      0.050020000000000016,
+                      0.05002466666666667,
+                      0.050007333333333334,
+                      0.05,
+                      0.05000666666666666,
+                      0.050004,
+                      0.049978,
+                      0.04999733333333333,
+                      0.049992,
+                      0.05001733333333333,
+                      0.050024,
+                      0.05000533333333333,
+                      0.04998733333333332,
+                      0.04996466666666666,
+                      0.049991999999999995,
+                      0.04998266666666666,
+                      0.05000199999999999,
+                      0.050014,
+                      0.05001,
+                      0.04998199999999999,
+                      0.049992666666666664,
+                      0.05000066666666667,
+                      0.04999933333333333,
+                      0.050021333333333334,
+                      0.05001333333333333,
+                      0.050021333333333334,
+                      0.05002,
+                      0.05003333333333334,
+                      0.050040666666666664,
+                      0.050024,
+                      0.05001266666666668,
+                      0.04999133333333334,
+                      0.04997933333333334,
+                      0.049969999999999994,
+                      0.049979333333333334,
+                      0.04996866666666667,
+                      0.049980000000000004,
+                      0.04997466666666668,
+                      0.049964666666666664,
+                      0.04995066666666668
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "label": "相对偏差",
+              "html": "<div class='note'><strong>相对偏差:<\/strong>以零线为基准，直接观察高于或低于均值的区间。<\/div>",
+              "chartTitle": "问题三：附件数据交互图 · 相对均值",
+              "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>相对均值<\/span>",
+              "spec": {
+                "type": "line",
+                "n": 241,
+                "h": 260,
+                "yMin": -0.10512593360995853,
+                "yMax": 0.08549406639004148,
+                "yFmt": "x",
+                "xTicks": [
+                  {
+                    "i": 0,
+                    "t": "0:00"
+                  },
+                  {
+                    "i": 60,
+                    "t": "1:00"
+                  },
+                  {
+                    "i": 120,
+                    "t": "2:00"
+                  },
+                  {
+                    "i": 180,
+                    "t": "3:00"
+                  },
+                  {
+                    "i": 240,
+                    "t": "4:00"
+                  }
+                ],
+                "xName": "第 %i 个观测点",
+                "cursor": {
+                  "i": 0
+                },
+                "drag": "q3Cursor",
+                "series": [
+                  {
+                    "name": "相对均值",
+                    "c": "#146c87",
+                    "w": 2.2,
+                    "d": [
+                      -0.02512593360995853,
+                      -0.024735933609958533,
+                      -0.024225933609958533,
+                      -0.02375593360995853,
+                      -0.02324593360995853,
+                      -0.022845933609958534,
+                      -0.022425933609958534,
+                      -0.02197593360995853,
+                      -0.021505933609958533,
+                      -0.020985933609958533,
+                      -0.020475933609958533,
+                      -0.020105933609958535,
+                      -0.019695933609958534,
+                      -0.019235933609958532,
+                      -0.018635933609958532,
+                      -0.018155933609958534,
+                      -0.01788593360995853,
+                      -0.017435933609958532,
+                      -0.016825933609958533,
+                      -0.016495933609958532,
+                      -0.01584593360995853,
+                      -0.015545933609958533,
+                      -0.015145933609958532,
+                      -0.014465933609958532,
+                      -0.014245933609958534,
+                      -0.013775933609958532,
+                      -0.01338593360995853,
+                      -0.012965933609958534,
+                      -0.01256593360995853,
+                      -0.01213593360995853,
+                      -0.01168593360995853,
+                      -0.011305933609958532,
+                      -0.010725933609958535,
+                      -0.010285933609958532,
+                      -0.009995933609958534,
+                      -0.009625933609958531,
+                      -0.009175933609958532,
+                      -0.008665933609958536,
+                      -0.008295933609958533,
+                      -0.008225933609958533,
+                      -0.007815933609958532,
+                      -0.00744593360995853,
+                      -0.007095933609958534,
+                      -0.006635933609958532,
+                      -0.006355933609958536,
+                      -0.00617593360995853,
+                      -0.005725933609958531,
+                      -0.005355933609958535,
+                      -0.005215933609958534,
+                      -0.004625933609958534,
+                      -0.004645933609958533,
+                      -0.003995933609958535,
+                      -0.004055933609958533,
+                      -0.0034759336099585356,
+                      -0.00318593360995853,
+                      -0.0028859336099585353,
+                      -0.0027059336099585357,
+                      -0.0024659336099585316,
+                      -0.002285933609958532,
+                      -0.0019859336099585304,
+                      -0.002035933609958532,
+                      -0.0016359336099585342,
+                      -0.0014259336099585324,
+                      -0.0010659336099585331,
+                      -0.0010259336099585348,
+                      -0.0008659336099585344,
+                      -0.0005559336099585296,
+                      -0.0005359336099585305,
+                      -0.0004059336099585323,
+                      -7.593360995853532e-05,
+                      7.406639004146898e-05,
+                      0.00015406639004146572,
+                      0.00038406639004146675,
+                      0.0005440663900414672,
+                      0.0006740663900414653,
+                      0.000854066390041465,
+                      0.0011340663900414674,
+                      0.001094066390041469,
+                      0.001534066390041465,
+                      0.001654066390041467,
+                      0.0015740663900414703,
+                      0.0016340663900414679,
+                      0.0018440663900414697,
+                      0.002114066390041469,
+                      0.0021340663900414683,
+                      0.002314066390041468,
+                      0.0022940663900414687,
+                      0.002444066390041466,
+                      0.0023740663900414655,
+                      0.00268406639004147,
+                      0.0025240663900414698,
+                      0.0028440663900414706,
+                      0.003014066390041467,
+                      0.002754066390041464,
+                      0.0030640663900414686,
+                      0.002894066390041465,
+                      0.0032640663900414674,
+                      0.0030340663900414663,
+                      0.0035140663900414676,
+                      0.0031940663900414668,
+                      0.003654066390041469,
+                      0.0036440663900414658,
+                      0.0036040663900414674,
+                      0.0037540663900414648,
+                      0.0038240663900414654,
+                      0.0039540663900414705,
+                      0.003664066390041465,
+                      0.00388406639004147,
+                      0.003694066390041467,
+                      0.003994066390041469,
+                      0.0038240663900414654,
+                      0.0040640663900414695,
+                      0.004104066390041468,
+                      0.004094066390041465,
+                      0.004164066390041465,
+                      0.004324066390041466,
+                      0.004374066390041467,
+                      0.004264066390041468,
+                      0.004354066390041468,
+                      0.004544066390041464,
+                      0.004184066390041465,
+                      0.004214066390041467,
+                      0.00422406639004147,
+                      0.004534066390041468,
+                      0.004444066390041468,
+                      0.00465406639004147,
+                      0.0046240663900414675,
+                      0.004484066390041466,
+                      0.004784066390041468,
+                      0.0047440663900414695,
+                      0.004524066390041465,
+                      0.004594066390041465,
+                      0.004584066390041469,
+                      0.004534066390041468,
+                      0.004544066390041464,
+                      0.004954066390041464,
+                      0.00472406639004147,
+                      0.004714066390041467,
+                      0.00490406639004147,
+                      0.004834066390041469,
+                      0.005044066390041464,
+                      0.0049740663900414706,
+                      0.0048440663900414654,
+                      0.004804066390041467,
+                      0.005124066390041468,
+                      0.005004066390041466,
+                      0.005134066390041464,
+                      0.0047340663900414665,
+                      0.005104066390041469,
+                      0.005014066390041469,
+                      0.005054066390041467,
+                      0.005284066390041468,
+                      0.00533406639004147,
+                      0.005004066390041466,
+                      0.005224066390041464,
+                      0.00540406639004147,
+                      0.005144066390041467,
+                      0.005224066390041464,
+                      0.005214066390041468,
+                      0.005144066390041467,
+                      0.005454066390041465,
+                      0.005384066390041464,
+                      0.005054066390041467,
+                      0.00549406639004147,
+                      0.005434066390041466,
+                      0.005134066390041464,
+                      0.0054140663900414665,
+                      0.005044066390041464,
+                      0.00549406639004147,
+                      0.005324066390041467,
+                      0.005324066390041467,
+                      0.005044066390041464,
+                      0.005444066390041469,
+                      0.005004066390041466,
+                      0.005114066390041465,
+                      0.00506406639004147,
+                      0.005384066390041464,
+                      0.005094066390041466,
+                      0.005454066390041465,
+                      0.005324066390041467,
+                      0.005014066390041469,
+                      0.00499406639004147,
+                      0.005024066390041465,
+                      0.0052940663900414645,
+                      0.005394066390041467,
+                      0.005114066390041465,
+                      0.0054140663900414665,
+                      0.005024066390041465,
+                      0.005394066390041467,
+                      0.005454066390041465,
+                      0.005384066390041464,
+                      0.005344066390041466,
+                      0.0054140663900414665,
+                      0.005014066390041469,
+                      0.005094066390041466,
+                      0.005054066390041467,
+                      0.00524406639004147,
+                      0.005364066390041465,
+                      0.005314066390041471,
+                      0.0054240663900414696,
+                      0.0050740663900414665,
+                      0.005364066390041465,
+                      0.005094066390041466,
+                      0.005134066390041464,
+                      0.005344066390041466,
+                      0.005484066390041467,
+                      0.0053040663900414675,
+                      0.005024066390041465,
+                      0.0053040663900414675,
+                      0.005014066390041469,
+                      0.005434066390041466,
+                      0.005344066390041466,
+                      0.0050840663900414695,
+                      0.005044066390041464,
+                      0.0050840663900414695,
+                      0.005484066390041467,
+                      0.005224066390041464,
+                      0.005384066390041464,
+                      0.005314066390041471,
+                      0.005284066390041468,
+                      0.00506406639004147,
+                      0.005464066390041468,
+                      0.005144066390041467,
+                      0.005284066390041468,
+                      0.005344066390041466,
+                      0.005314066390041471,
+                      0.005464066390041468,
+                      0.00506406639004147,
+                      0.00524406639004147,
+                      0.0051940663900414685,
+                      0.005234066390041467,
+                      0.005054066390041467,
+                      0.00506406639004147,
+                      0.005134066390041464,
+                      0.005144066390041467,
+                      0.005204066390041465,
+                      0.0053040663900414675,
+                      0.005314066390041471,
+                      0.005204066390041465,
+                      0.0051940663900414685,
+                      0.005104066390041469
+                    ]
+                  }
+                ],
+                "hlines": [
+                  {
+                    "v": 0,
+                    "c": "#8aa3aa",
+                    "label": "均值基线"
+                  }
+                ]
+              }
+            }
+          ],
+          "note": "<span class='badge q'>图表切换<\/span>点击不同按钮可在同一 canvas 中切换可视化视图。"
+        },
+        {
+          "type": "chart",
+          "id": "q3Chart",
+          "title": "问题三：附件数据交互图",
+          "em": "悬停读值  图上拖动",
+          "legend": "<span><i class=\"ln\" style=\"background:#146c87\"><\/i>附件1/水分浓度:series<\/span>",
+          "spec": {
+            "type": "line",
+            "n": 241,
+            "h": 260,
+            "yMin": 0.0,
+            "yMax": 0.13025,
+            "yFmt": "x",
+            "xTicks": [
+              {
+                "i": 0,
+                "t": "0:00"
+              },
+              {
+                "i": 60,
+                "t": "1:00"
+              },
+              {
+                "i": 120,
+                "t": "2:00"
+              },
+              {
+                "i": 180,
+                "t": "3:00"
+              },
+              {
+                "i": 240,
+                "t": "4:00"
+              }
+            ],
+            "xName": "第 %i 个观测点",
+            "cursor": {
+              "i": 0
+            },
+            "drag": "q3Cursor",
+            "series": [
+              {
+                "name": "附件1/水分浓度:series",
+                "c": "#146c87",
+                "w": 2.2,
+                "fill": "rgba(20,108,135,.10)",
+                "d": [
+                  0.01963,
+                  0.02002,
+                  0.02053,
+                  0.021,
+                  0.02151,
+                  0.02191,
+                  0.02233,
+                  0.02278,
+                  0.02325,
+                  0.02377,
+                  0.02428,
+                  0.02465,
+                  0.02506,
+                  0.02552,
+                  0.02612,
+                  0.0266,
+                  0.02687,
+                  0.02732,
+                  0.02793,
+                  0.02826,
+                  0.02891,
+                  0.02921,
+                  0.02961,
+                  0.03029,
+                  0.03051,
+                  0.03098,
+                  0.03137,
+                  0.03179,
+                  0.03219,
+                  0.03262,
+                  0.03307,
+                  0.03345,
+                  0.03403,
+                  0.03447,
+                  0.03476,
+                  0.03513,
+                  0.03558,
+                  0.03609,
+                  0.03646,
+                  0.03653,
+                  0.03694,
+                  0.03731,
+                  0.03766,
+                  0.03812,
+                  0.0384,
+                  0.03858,
+                  0.03903,
+                  0.0394,
+                  0.03954,
+                  0.04013,
+                  0.04011,
+                  0.04076,
+                  0.0407,
+                  0.04128,
+                  0.04157,
+                  0.04187,
+                  0.04205,
+                  0.04229,
+                  0.04247,
+                  0.04277,
+                  0.04272,
+                  0.04312,
+                  0.04333,
+                  0.04369,
+                  0.04373,
+                  0.04389,
+                  0.0442,
+                  0.04422,
+                  0.04435,
+                  0.04468,
+                  0.04483,
+                  0.04491,
+                  0.04514,
+                  0.0453,
+                  0.04543,
+                  0.04561,
+                  0.04589,
+                  0.04585,
+                  0.04629,
+                  0.04641,
+                  0.04633,
+                  0.04639,
+                  0.0466,
+                  0.04687,
+                  0.04689,
+                  0.04707,
+                  0.04705,
+                  0.0472,
+                  0.04713,
+                  0.04744,
+                  0.04728,
+                  0.0476,
+                  0.04777,
+                  0.04751,
+                  0.04782,
+                  0.04765,
+                  0.04802,
+                  0.04779,
+                  0.04827,
+                  0.04795,
+                  0.04841,
+                  0.0484,
+                  0.04836,
+                  0.04851,
+                  0.04858,
+                  0.04871,
+                  0.04842,
+                  0.04864,
+                  0.04845,
+                  0.04875,
+                  0.04858,
+                  0.04882,
+                  0.04886,
+                  0.04885,
+                  0.04892,
+                  0.04908,
+                  0.04913,
+                  0.04902,
+                  0.04911,
+                  0.0493,
+                  0.04894,
+                  0.04897,
+                  0.04898,
+                  0.04929,
+                  0.0492,
+                  0.04941,
+                  0.04938,
+                  0.04924,
+                  0.04954,
+                  0.0495,
+                  0.04928,
+                  0.04935,
+                  0.04934,
+                  0.04929,
+                  0.0493,
+                  0.04971,
+                  0.04948,
+                  0.04947,
+                  0.04966,
+                  0.04959,
+                  0.0498,
+                  0.04973,
+                  0.0496,
+                  0.04956,
+                  0.04988,
+                  0.04976,
+                  0.04989,
+                  0.04949,
+                  0.04986,
+                  0.04977,
+                  0.04981,
+                  0.05004,
+                  0.05009,
+                  0.04976,
+                  0.04998,
+                  0.05016,
+                  0.0499,
+                  0.04998,
+                  0.04997,
+                  0.0499,
+                  0.05021,
+                  0.05014,
+                  0.04981,
+                  0.05025,
+                  0.05019,
+                  0.04989,
+                  0.05017,
+                  0.0498,
+                  0.05025,
+                  0.05008,
+                  0.05008,
+                  0.0498,
+                  0.0502,
+                  0.04976,
+                  0.04987,
+                  0.04982,
+                  0.05014,
+                  0.04985,
+                  0.05021,
+                  0.05008,
+                  0.04977,
+                  0.04975,
+                  0.04978,
+                  0.05005,
+                  0.05015,
+                  0.04987,
+                  0.05017,
+                  0.04978,
+                  0.05015,
+                  0.05021,
+                  0.05014,
+                  0.0501,
+                  0.05017,
+                  0.04977,
+                  0.04985,
+                  0.04981,
+                  0.05,
+                  0.05012,
+                  0.05007,
+                  0.05018,
+                  0.04983,
+                  0.05012,
+                  0.04985,
+                  0.04989,
+                  0.0501,
+                  0.05024,
+                  0.05006,
+                  0.04978,
+                  0.05006,
+                  0.04977,
+                  0.05019,
+                  0.0501,
+                  0.04984,
+                  0.0498,
+                  0.04984,
+                  0.05024,
+                  0.04998,
+                  0.05014,
+                  0.05007,
+                  0.05004,
+                  0.04982,
+                  0.05022,
+                  0.0499,
+                  0.05004,
+                  0.0501,
+                  0.05007,
+                  0.05022,
+                  0.04982,
+                  0.05,
+                  0.04995,
+                  0.04999,
+                  0.04981,
+                  0.04982,
+                  0.04989,
+                  0.0499,
+                  0.04996,
+                  0.05006,
+                  0.05007,
+                  0.04996,
+                  0.04995,
+                  0.04986
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "html",
+          "html": "<div class='note'><strong>交付判断：<\/strong>本问必须做到输入可追溯、约束可核验、结果字段与题面逐项对应。<\/div>"
+        }
+      ]
+    }
+  ]
+}</script>
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var D=JSON.parse($('#DATA').textContent);
+var SCENES=[], TITLES=[], CHARTS={}, CHART_SPECS={}, CHART_META={}, SLIDERS={};
+var cur=-1, reduce=false, auto=false, TOKEN=0, tlT=[];
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return esc(s).replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
+function raw(s){return String(s==null?'':s);}
+function cloneJSON(v){try{return JSON.parse(JSON.stringify(v||{}));}catch(e){return {};}}
+function kpiHTML(v,k,cls){return '<div class="kpi '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';}
+
+/* ================= 图表引擎（移植自参考例子 + 悬停/拖动） ================= */
+var tooltipEl=null;
+function ensureTooltip(){ if(tooltipEl) return tooltipEl;
+  tooltipEl=document.createElement('div'); tooltipEl.className='tooltip';
+  document.body.appendChild(tooltipEl); return tooltipEl; }
+function fmt(v,f){
+  if(typeof f==='function') return f(v);
+  if(f==='pct') return v.toFixed(0)+'%';
+  if(f==='sci') return v===0?'0':v.toExponential(1);
+  if(f==='x') return v.toFixed(2);
+  if(f==='k') return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);
+  if(f===0) return v.toFixed(0);
+  if(typeof f==='number') return v.toFixed(f);
+  return String(Math.round(v));
+}
+function note(g,text,px,py,o){
+  o=o||{};
+  var dy=o.up===undefined?24:o.up, dx=o.dx===undefined?8:o.dx;
+  g.font='600 12px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var mt=g.measureText?g.measureText(text):null;
+  var tw=(mt&&mt.width)?mt.width:text.length*12;
+  var x=px+dx, y=py-dy;
+  if(o.right!==undefined && x+tw+14>o.right && o.left!==undefined) x=px-dx-tw-12;
+  if(o.left!==undefined && x<o.left) x=o.left;
+  if(o.top!==undefined && y<o.top) y=py+12;
+  g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(x,y,tw+12,18);
+  g.strokeStyle=o.line||'#cfe4e4'; g.lineWidth=1; g.strokeRect(x+.5,y+.5,tw+11,17);
+  g.fillStyle=o.tc||'#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,x+6,y+9);
+}
+function plot(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), h=cfg.h||220;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var T=cfg.T||18, B=cfg.B||26, n=cfg.n;
+  var ymin=cfg.yMin, ymax=cfg.yMax;
+  /* 左右留白必须放得下最长的一位刻度文字：画布会把超出部分直接裁掉，
+     15552.00 被裁成 552.00 会被当成数据错误。量完文字宽度再定边距。 */
+  var YFONT='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  function textW(text,font){ g.font=font||YFONT; var m=g.measureText?g.measureText(String(text)):null;
+    return (m&&m.width)?m.width:String(text).length*6.6; }
+  function maxTickW(min,max,fmtStr,steps){ var mw=0;
+    if(!isFinite(min)||!isFinite(max)) return 0;
+    for(var q=0;q<=steps;q++){ mw=Math.max(mw,textW(fmt(min+(max-min)*q/steps,fmtStr))); }
+    return mw; }
+  var L=Math.max(cfg.L||44, Math.ceil(maxTickW(ymin,ymax,cfg.yFmt,4))+10);
+  var R=cfg.R||(cfg.y2?54:16);
+  if(cfg.y2){ R=Math.max(R,Math.ceil(maxTickW(cfg.y2.min,cfg.y2.max,cfg.y2.fmt,4))+10); }
+  var PW=w-L-R, PH=h-T-B;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  var Y2=cfg.y2?function(v){ return T+PH*(1-(v-cfg.y2.min)/(cfg.y2.max-cfg.y2.min)); }:null;
+  if(cfg.band){ g.fillStyle=cfg.band.c; g.fillRect(L,Y(cfg.band.hi),PW,Math.max(0,Y(cfg.band.lo)-Y(cfg.band.hi))); }
+  g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var k;
+  for(k=0;k<=4;k++){ var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(v,cfg.yFmt),L-7,yy); }
+  (cfg.hlines||[]).forEach(function(hl){ var yy=Y(hl.v);
+    g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#b8543a'; g.lineWidth=hl.w||1.3;
+    g.beginPath(); g.moveTo(L,yy); g.lineTo(L+PW,yy); g.stroke(); g.restore();
+    if(hl.label){ g.font='600 11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='alphabetic';
+      var mt=g.measureText?g.measureText(hl.label):null; var tw=(mt&&mt.width)?mt.width:hl.label.length*12;
+      g.fillStyle='rgba(255,255,255,.95)'; g.fillRect(L+3,yy-19,tw+12,16);
+      g.strokeStyle='rgba(217,233,233,.95)'; g.lineWidth=1; g.strokeRect(L+3.5,yy-18.5,tw+11,15);
+      g.fillStyle=hl.c||'#b8543a'; g.fillText(hl.label,L+9,yy-7); } });
+  if(cfg.y2){ for(k=0;k<=4;k++){ var v2=cfg.y2.min+(cfg.y2.max-cfg.y2.min)*k/4;
+    g.fillStyle=cfg.y2.c||'#146c87'; g.textAlign='left'; g.textBaseline='middle'; g.fillText(fmt(v2,cfg.y2.fmt),L+PW+7,Y2(v2)); } }
+  (cfg.vlines||[]).forEach(function(vl){ var vx=X(vl.i);
+    g.save(); g.setLineDash([4,4]); g.strokeStyle=vl.c||'#c6dbe4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(vx,T); g.lineTo(vx,T+PH); g.stroke(); g.restore(); });
+  (cfg.xTicks||[]).forEach(function(t){ var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    /* 首尾刻度文字改成贴边对齐，避免被画布左右边缘截断。 */
+    var label=String(t.t), tw=textW(label), lx=xx, align='center';
+    if(xx-tw/2<2){ align='left'; lx=2; } else if(xx+tw/2>w-2){ align='right'; lx=w-2; }
+    g.fillStyle='#8aa3aa'; g.textAlign=align; g.textBaseline='alphabetic'; g.fillText(label,lx,T+PH+16); });
+  (cfg.series||[]).forEach(function(s){ if(!s.d) return; var yy=s.ax==='y2'?Y2:Y, pv=null;
+    g.beginPath();
+    for(var i=0;i<s.d.length;i++){ var px=X(i), py=yy(s.d[i]);
+      if(!i) g.moveTo(px,py); else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); } else g.lineTo(px,py); pv=py; }
+    if(s.fill){ g.save(); g.lineTo(X(s.d.length-1),T+PH); g.lineTo(X(0),T+PH); g.closePath();
+      g.fillStyle=s.fill; g.fill(); g.restore(); }
+    g.strokeStyle=s.c; g.lineWidth=s.w||1.8;
+    g.setLineDash(s.dash||[]); g.lineJoin='round'; g.stroke(); g.setLineDash([]); });
+  if(cfg.mark){ var mx=X(cfg.mark.i), my=Y(cfg.mark.v);
+    g.beginPath(); g.arc(mx,my,4.2,0,6.2832); g.fillStyle=cfg.mark.c||'#0b6e68'; g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke(); }
+  if(cfg.cursor){ var cx=X(cfg.cursor.i);
+    g.save(); g.setLineDash([3,3]); g.strokeStyle='#8fb6bd'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx,T); g.lineTo(cx,T+PH); g.stroke(); g.restore(); }
+  (cfg.tags||[]).forEach(function(t){ note(g,t.text,X(t.i),(t.ax==='y2'?Y2:Y)(t.v),
+      {right:L+PW,left:L+2,top:T+2,line:t.line,tc:t.tc,up:t.up}); });
+  cv._chartInfo={L:L,R:R,T:T,B:B,PW:PW,PH:PH,n:n,X:X,series:cfg.series||[],Y:Y,
+    xName:cfg.xName||'index %i',yFmt:cfg.yFmt,stack:false,panels:[]};
+  cv._chartCfg=cfg;
+  if(cfg.hover!==false) bindHover(cv);
+  if(cfg.drag) bindDrag(cv);
+}
+function plotStack(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), PS=cfg.panels||[];
+  var gap=cfg.gap||20, TOP=cfg.T||8, BOT=cfg.B||24, n=cfg.n;
+  var lay=[], y=TOP;
+  PS.forEach(function(p,i){ var cap=p.cap?20:0, ph=p.h||104; lay.push({p:p,y0:y+cap,y1:y+cap+ph}); y+=cap+ph+(i<PS.length-1?gap:0); });
+  var h=y+BOT, top0=lay[0].y0, bot0=lay[lay.length-1].y1;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  /* 子图的刻度文字也要量宽度再定左右留白，否则大数会被画布边缘裁掉。 */
+  var SFONT='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  function stextW(text){ g.font=SFONT; var m=g.measureText?g.measureText(String(text)):null;
+    return (m&&m.width)?m.width:String(text).length*6.6; }
+  function spanTickW(min,max,fmtStr,steps){ var mw=0;
+    if(!isFinite(min)||!isFinite(max)) return 0;
+    for(var q=0;q<=steps;q++){ mw=Math.max(mw,stextW(fmt(min+(max-min)*q/steps,fmtStr))); }
+    return mw; }
+  var L=cfg.L||52, R=cfg.R||58;
+  PS.forEach(function(p){
+    L=Math.max(L,Math.ceil(spanTickW(p.yMin,p.yMax,p.fmt,p.grid||3))+10);
+    if(p.y2){ R=Math.max(R,Math.ceil(spanTickW(p.y2.min,p.y2.max,p.y2.fmt,p.grid||3))+10); } });
+  var PW=w-L-R;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  (cfg.xTicks||[]).forEach(function(t){ var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.lineWidth=1; g.beginPath(); g.moveTo(xx,top0); g.lineTo(xx,bot0); g.stroke(); });
+  lay.forEach(function(it){ var p=it.p, y0=it.y0, ph=it.y1-it.y0, ymin=p.yMin, ymax=p.yMax, grid=p.grid||3;
+    if(p.cap){ g.font='600 12.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='middle';
+      g.fillStyle=p.capc||'#0b6e68'; g.fillText(p.cap,L,y0-10); }
+    function Y(v){ return y0+ph*(1-(v-ymin)/(ymax-ymin)); }
+    var Y2=p.y2?function(v){ return y0+ph*(1-(v-p.y2.min)/(p.y2.max-p.y2.min)); }:null;
+    if(p.band){ g.fillStyle=p.band.c; g.fillRect(L,Y(p.band.hi),PW,Math.max(0,Y(p.band.lo)-Y(p.band.hi))); }
+    var q; g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+    for(q=0;q<=grid;q++){ var v=ymin+(ymax-ymin)*q/grid, gy=Y(v);
+      g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.beginPath(); g.moveTo(L,gy+.5); g.lineTo(L+PW,gy+.5); g.stroke();
+      g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(v,p.fmt),L-7,gy); }
+    if(Y2) for(q=0;q<=grid;q++){ var v2=p.y2.min+(p.y2.max-p.y2.min)*q/grid;
+      g.fillStyle=p.y2.c||'#146c87'; g.textAlign='left'; g.textBaseline='middle'; g.fillText(fmt(v2,p.y2.fmt),L+PW+7,Y2(v2)); }
+    (p.hlines||[]).forEach(function(hl){ var hy=Y(hl.v);
+      g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#8aa3aa'; g.lineWidth=hl.w||1.2;
+      g.beginPath(); g.moveTo(L,hy); g.lineTo(L+PW,hy); g.stroke(); g.restore(); });
+    (p.series||[]).forEach(function(s){ if(!s.d) return; var sy=(s.ax==='y2'&&Y2)?Y2:Y, pv=null;
+      g.beginPath();
+      for(var i=0;i<s.d.length;i++){ var px=X(i), py=sy(s.d[i]);
+        if(!i) g.moveTo(px,py); else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); } else g.lineTo(px,py); pv=py; }
+      if(s.fill){ g.save(); g.lineTo(X(s.d.length-1),y0+ph); g.lineTo(X(0),y0+ph); g.closePath();
+        g.fillStyle=s.fill; g.fill(); g.restore(); }
+      g.strokeStyle=s.c; g.lineWidth=s.w||1.8; g.setLineDash(s.dash||[]); g.lineJoin='round'; g.stroke(); g.setLineDash([]); });
+    (p.tags||[]).forEach(function(t){ note(g,t.text,X(t.i),Y(t.v),{right:L+PW,left:L+2,top:y0+2,line:t.line,tc:t.tc,up:t.up}); });
+  });
+  if(cfg.cursor){ var cx=X(cfg.cursor.i);
+    g.save(); g.setLineDash([3,3]); g.strokeStyle='#8fb6bd'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx,top0); g.lineTo(cx,bot0); g.stroke(); g.restore(); }
+  (cfg.xTicks||[]).forEach(function(t){ g.fillStyle='#8aa3aa'; g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+    var label=String(t.t), xx=X(t.i), tw=stextW(label), lx=xx, align='center';
+    if(xx-tw/2<2){ align='left'; lx=2; } else if(xx+tw/2>w-2){ align='right'; lx=w-2; }
+    g.textAlign=align; g.textBaseline='alphabetic'; g.fillText(label,lx,bot0+16); });
+  cv._chartInfo={L:L,R:R,T:top0,B:bot0,PW:PW,PH:bot0-top0,n:n,X:X,series:cfg.series||[],
+    xName:cfg.xName||'index %i',yFmt:null,stack:true,panels:PS};
+  cv._chartCfg=cfg;
+  if(cfg.hover!==false) bindHover(cv);
+  if(cfg.drag) bindDrag(cv);
+}
+function bindHover(cv){
+  if(cv._hoverBound) return;
+  cv._hoverBound=true;
+  var box=ensureTooltip();
+  cv.addEventListener('mousemove',function(e){
+    var info=cv._chartInfo||{};
+    if(!info.n||!info.PW){box.style.display='none';return;}
+    var r=cv.getBoundingClientRect(), px=e.clientX-r.left;
+    var i=Math.round((px-info.L)/info.PW*(info.n-1));
+    if(i<0||i>=info.n||!isFinite(i)){box.style.display='none';return;}
+    var xLabel=String(info.xName||'index %i').replace('%i',(i+1));
+    var rows='<b>'+esc(xLabel)+'</b>';
+    if(info.stack){
+      (info.panels||[]).forEach(function(panel){(panel.series||[]).forEach(function(series){
+        if(series.d&&series.d[i]!=null){
+          rows+='<div class="ttr"><i style="background:'+escAttr(series.c||'#888')+'"></i>'+esc(series.name||panel.cap||'')+' '+esc(fmt(+series.d[i],panel.fmt||0))+'</div>';
+        }
+      });});
+    }else{
+      (info.series||[]).forEach(function(series){
+        if(series.d&&series.d[i]!=null){
+          rows+='<div class="ttr"><i style="background:'+escAttr(series.c||'#888')+'"></i>'+esc(series.name||'')+' '+esc(fmt(+series.d[i],info.yFmt))+'</div>';
+        }
+      });
+    }
+    box.innerHTML=rows; box.style.display='block';
+    var bx=e.clientX+14, by=e.clientY+12, rw=box.offsetWidth, rh=box.offsetHeight;
+    if(bx+rw>window.innerWidth-8) bx=e.clientX-rw-14;
+    if(by+rh>window.innerHeight-8) by=e.clientY-rh-12;
+    box.style.left=bx+'px'; box.style.top=by+'px';
+  });
+  cv.addEventListener('mouseleave',function(){box.style.display='none';});
+}
+function bindDrag(cv){
+  if(cv._dragBound) return;
+  cv._dragBound=true;
+  var down=false;
+  function sliderId(cfg){return typeof cfg.drag==='string'?cfg.drag:(cfg.drag&&(cfg.drag.sliderId||cfg.drag.slider));}
+  function update(e){
+    var cfg=cv._chartCfg||{}, info=cv._chartInfo||{};
+    if(!info.n||!info.PW) return;
+    var rect=cv.getBoundingClientRect();
+    var px=(e.clientX!=null?e.clientX-rect.left:e.offsetX);
+    var i=Math.round((px-info.L)/info.PW*(info.n-1));
+    i=Math.max(0,Math.min(info.n-1,i));
+    var id=sliderId(cfg), sl=id&&document.getElementById(id);
+    if(sl){
+      var min=isFinite(+sl.min)?+sl.min:0, max=isFinite(+sl.max)?+sl.max:info.n-1;
+      var step=isFinite(+sl.step)&&+sl.step>0?+sl.step:1;
+      var v=info.n<=1?min:min+(max-min)*i/(info.n-1);
+      v=Math.round(v/step)*step;
+      sl.value=Math.max(min,Math.min(max,v));
+      sl.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  }
+  cv.addEventListener('pointerdown',function(e){down=true;update(e);
+    if(cv.setPointerCapture){try{cv.setPointerCapture(e.pointerId);}catch(err){}}
+    e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){if(!down)return;update(e);e.preventDefault();});
+  cv.addEventListener('pointerup',function(){down=false;});
+  cv.addEventListener('pointercancel',function(){down=false;});
+  cv.style.cursor='ew-resize'; cv.style.touchAction='none';
+}
+
+/* ================= blocks 渲染 ================= */
+function blockHead(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var h='';
+  if(b.kicker) h+='<div class="kicker">'+esc(b.kicker)+'</div>';
+  if(b.h1) h+='<h1>'+esc(b.h1)+(b.small?'<small>'+esc(b.small)+'</small>':'')+'</h1>';
+  if(b.lead) h+='<p class="lead">'+esc(b.lead)+'</p>';
+  d.innerHTML=h; wrap.appendChild(d);
+}
+function blockHtml(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  d.innerHTML=raw(b.html); wrap.appendChild(d);
+}
+function blockPills(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var opts=b.options||[], zid='zp'+Math.random().toString(36).slice(2,8);
+  var h='<div class="pills" role="tablist">';
+  opts.forEach(function(o,i){h+='<button type="button" role="tab" class="pill'+(i===(b.defaultIndex||0)?' on':'')+'" data-i="'+i+'" aria-selected="'+(i===(b.defaultIndex||0)?'true':'false')+'">'+esc(o.label)+'</button>';});
+  h+='</div><div class="pill-zone" id="'+zid+'"></div>';
+  if(b.note) h+='<div class="note">'+raw(b.note)+'</div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  function applyChartOption(option){
+    if(!b.chartId||!option||!option.spec) return;
+    var id=String(b.chartId);
+    CHART_SPECS[id]=resolveSpec(cloneJSON(option.spec));
+    CHART_META[id]={title:option.chartTitle||'',legend:option.legend||''};
+    var cv=document.getElementById(id), box=cv&&cv.closest('.canvasbox');
+    if(box){
+      var title=$('.ct',box), legend=$('.legend',box);
+      if(title&&option.chartTitle) title.textContent=option.chartTitle;
+      if(legend&&option.legend!==undefined) legend.innerHTML=raw(option.legend||'');
+    }
+    var spec=CHART_SPECS[id], drag=spec&&spec.drag;
+    var sliderKey=typeof drag==='string'?drag:(drag&&(drag.sliderId||drag.slider));
+    var sl=sliderKey&&document.getElementById(sliderKey);
+    if(sl&&spec){spec.cursor=spec.cursor||{};spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,Math.round(+sl.value-1)));}
+    if(cv&&CHARTS[id]) CHARTS[id](cv);
+  }
+  function show(i){
+    $$('.pill',d).forEach(function(p,k){var on=k===i;p.classList.toggle('on',on);p.setAttribute('aria-selected',on?'true':'false');});
+    var option=opts[i]||{};
+    $('#'+zid).innerHTML=raw(option.html||'');
+    applyChartOption(option);
+  }
+  $$('.pill',d).forEach(function(p){p.onclick=function(){show(+p.dataset.i);};});
+  show(Math.max(0,Math.min(opts.length-1,b.defaultIndex||0)));
+}
+function blockMatrix(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var cols=b.cols||[], rows=b.rows||[], ncol=Math.max(1,cols.length);
+  var h='<div class="card">';
+  if(b.title) h+='<h3>'+esc(b.title)+(b.em?' <em>'+esc(b.em)+'</em>':'')+'</h3>';
+  h+='<div class="mx" style="'+(b.style||'')+'"><div></div>';
+  cols.forEach(function(c){ h+='<div class="mh">'+esc(c)+'</div>'; });
+  rows.forEach(function(r){ h+='<div class="mr">'+esc(r.label)+'</div>';
+    (r.cells||[]).forEach(function(c){ var cell=c==null?'':String(c);
+      h+='<div class="mc'+(cell==='不用'||cell===''?' dim':'')+'">'+raw(cell)+'</div>'; });
+  });
+  h+='</div><div class="note" style="margin-top:10px"></div></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  var noteEl=$('.note',d);
+  if(b.note) noteEl.innerHTML=raw(b.note);
+  $$('.mc',d).forEach(function(c,index){
+    c.addEventListener('click',function(){
+      if(c.classList.contains('dim')) return;
+      var ci=index%ncol;
+      $$('.mc',d).forEach(function(mc,j){ var cj=j%ncol;
+        mc.classList.toggle('on', cj===ci && !mc.classList.contains('dim')); });
+      if(b.noteFor&&b.noteFor[ci]!==undefined) noteEl.innerHTML=raw(b.noteFor[ci]);
+      else if(b.cellNote) noteEl.innerHTML=raw(b.cellNote.replace('%col',cols[ci]||'').replace('%cell',c.textContent.trim()));
+    });
+  });
+}
+function blockSvgClick(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var h='<div class="flexrow"><div class="canvasbox grow">'+raw(b.svg)+'</div>';
+  if(b.side!==false){ h+='<div class="card grow" style="min-width:300px">'
+    +'<h3 class="svp-t">'+esc(b.sideTitle||'')+'</h3>'
+    +'<p class="svp-p">'+esc(b.sideP||'')+'</p>'
+    +'<div class="quote svp-q"></div>'
+    +'<p class="small svp-s"></p></div>'; }
+  h+='</div>'; d.innerHTML=h; wrap.appendChild(d);
+  var byKey={};
+  (b.nodes||[]).forEach(function(o){ byKey[o.key]=o; });
+  function show(key){ var o=byKey[key]; if(!o) return;
+    var t=$('.svp-t',d); if(t) t.textContent=o.title||'';
+    var p=$('.svp-p',d); if(p) p.textContent=o.p||'';
+    var q=$('.svp-q',d); if(q) q.textContent=o.q||'';
+    var s=$('.svp-s',d); if(s) s.innerHTML='<span class="badge'+(o.lv==='推断'?' w':'')+'">'+(o.lv||'题面原话')+'</span>'+esc(o.src||'');
+    $$('.nd',d).forEach(function(nd){ var on=nd.dataset.k===key, r=nd.querySelector('rect');
+      if(r){ r.setAttribute('stroke-width',on?3:1.6); r.setAttribute('filter',on?'drop-shadow(0 3px 8px rgba(11,46,74,.18))':''); } });
+    $$('path[id]',d).forEach(function(pth){
+      var on=(o.links||[]).indexOf(pth.id)>=0;
+      if(pth.getAttribute('data-base')==null) pth.setAttribute('data-base',pth.getAttribute('stroke-width')||'2');
+      pth.setAttribute('stroke-width', on?3.2:(pth.getAttribute('data-base')||2));
+      pth.setAttribute('opacity', on?1:((o.links&&o.links.length)?0.18:1));
+    });
+  }
+  $$('.nd',d).forEach(function(nd){ nd.style.cursor='pointer';
+    nd.addEventListener('click',function(){ show(nd.dataset.k); }); });
+  $$('[data-nodekey]',d).forEach(function(el){ el.style.cursor='pointer';
+    el.addEventListener('click',function(){ show(el.dataset.nodekey); }); });
+  var first=(b.nodes&&b.nodes[0])&&b.nodes[0].key; if(first) show(first);
+}
+function formatTemplate(template,value){return String(template==null?'%v':template).split('%v').join(String(value));}
+function redrawChart(id){var cv=document.getElementById(id);if(cv&&CHARTS[id])CHARTS[id](cv);}
+function blockSlider(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var id=String(b.id||('slider'+Object.keys(SLIDERS).length));
+  var min=b.min!=null?b.min:0, max=b.max!=null?b.max:100, step=b.step!=null?b.step:1;
+  var value=b.value!=null?b.value:min;
+  var h='<div class="slider"><span class="small sl-label" style="min-width:'+(b.labelW||130)+'px"></span>'
+    +'<input id="'+escAttr(id)+'" type="range" min="'+escAttr(min)+'" max="'+escAttr(max)+'" step="'+escAttr(step)+'" value="'+escAttr(value)+'" aria-label="'+escAttr(b.label||id)+'">'
+    +'<input id="'+escAttr(id+'Number')+'" class="sl-number" type="number" min="'+escAttr(min)+'" max="'+escAttr(max)+'" step="'+escAttr(step)+'" value="'+escAttr(value)+'" aria-label="Direct value input">'
+    +'<span class="sv" aria-live="polite"></span></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  var input=$('input[type=range]',d), number=$('input[type=number]',d), sv=$('.sv',d), label=$('.sl-label',d);
+  function paint(redraw){
+    var current=input.value;
+    number.value=current;
+    label.textContent=formatTemplate(b.label||'',current);
+    sv.textContent=formatTemplate(b.valueFmt||'%v',current)+(b.unit||'');
+    (b.chartIds||[]).forEach(function(chartId){
+      var spec=CHART_SPECS[chartId];
+      if(spec){
+        spec.cursor=spec.cursor||{};
+        var index=Math.round(+current+(+b.cursorOffset||0));
+        spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,index));
+      }
+      if(redraw) redrawChart(chartId);
+    });
+  }
+  input.addEventListener('input',function(){paint(true);});
+  number.addEventListener('input',function(){
+    var v=+number.value;
+    if(!isFinite(v)) return;
+    v=Math.max(+input.min,Math.min(+input.max,v));
+    input.value=v; input.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  SLIDERS[id]={input:input,number:number,block:b,paint:paint};
+  paint(false);
+}
+function blockChart(b,wrap){
+  var d=document.createElement('div'); d.className='stg';
+  var id=String(b.id||('chart'+Object.keys(CHARTS).length));
+  var pending=CHART_META[id]||{};
+  var title=pending.title||b.title||'', legend=pending.legend!==undefined?pending.legend:(b.legend||'');
+  var h='<div class="canvasbox"><div class="cvtop">';
+  h+='<div class="ct">'+esc(title)+(b.em?' <span class="small">'+esc(b.em)+'</span>':'')+'</div>';
+  h+='<div class="legend">'+raw(legend)+'</div>';
+  h+='</div><canvas id="'+escAttr(id)+'" role="img" tabindex="0" aria-label="'+escAttr(title||'Interactive data chart')+'">Interactive data chart</canvas></div>';
+  d.innerHTML=h; wrap.appendChild(d);
+  if(!CHART_SPECS[id]) CHART_SPECS[id]=resolveSpec(cloneJSON(b.spec||{}));
+  CHARTS[id]=function(cv){var spec=CHART_SPECS[id]||{};if(spec.type==='stack')plotStack(cv,spec);else plot(cv,spec);};
+  var spec=CHART_SPECS[id]||{}, drag=spec.drag;
+  var sliderId=typeof drag==='string'?drag:(drag&&(drag.sliderId||drag.slider));
+  var linked=sliderId&&SLIDERS[sliderId];
+  if(linked){
+    spec.cursor=spec.cursor||{};
+    spec.cursor.i=Math.max(0,Math.min((spec.n||1)-1,Math.round(+linked.input.value+(+linked.block.cursorOffset||0))));
+  }
+}
+function resolveSpec(spec){
+  spec=spec&&typeof spec==='object'?spec:{};
+  (spec.series||[]).forEach(function(series){if(series.d&&typeof series.d==='object'&&!Array.isArray(series.d))series.d=[];});
+  (spec.panels||[]).forEach(function(panel){(panel.series||[]).forEach(function(series){if(series.d&&typeof series.d==='object'&&!Array.isArray(series.d))series.d=[];});});
+  return spec;
+}
+
+/* ================= scene 构建 ================= */
+function newScene(title){
+  var sec=document.createElement('section'); sec.className='scene';
+  var wrap=document.createElement('div'); wrap.className='wrap';
+  sec.appendChild(wrap); $('#stage').appendChild(sec);
+  SCENES.push(sec); TITLES.push(title); return wrap;
+}
+function buildScene(sc){
+  var wrap=newScene(sc.title||('第 '+(SCENES.length+1)+' 幕'));
+  if(sc.kicker||sc.h1||sc.lead) blockHead({kicker:sc.kicker,h1:sc.h1,small:sc.small,lead:sc.lead},wrap);
+  (sc.blocks||[]).forEach(function(b){ b=b||{};  switch(b.type){
+      case 'head': blockHead(b,wrap); break;
+      case 'pills': blockPills(b,wrap); break;
+      case 'matrix': blockMatrix(b,wrap); break;
+      case 'svgclick': blockSvgClick(b,wrap); break;
+      case 'slider': blockSlider(b,wrap); break;
+      case 'chart': blockChart(b,wrap); break;
+      case 'html': default: blockHtml(b,wrap); break; } });
+}
+
+/* ================= 分档切换 ================= */
+(function(){ var dk=D.deck||{}, nav=$('#splitnav');
+  if(!dk.names||!dk.names.length){ nav.style.display='none'; return; }
+  (dk.names||[]).forEach(function(n,i){ var a=document.createElement('a');
+    a.textContent=(dk.labels&&dk.labels[i])||n;
+    a.href=(dk.files&&dk.files[i])||'#'; a.title=n;
+    if(i===dk.idx) a.classList.add('on'); nav.appendChild(a); });
+})();
+
+/* ================= 导航 / 逐拍 ================= */
+function buildDots(){ var N=SCENES.length, h='';
+  for(var i=0;i<N;i++) h+='<button class="dot" data-i="'+i+'" title="'+esc(TITLES[i])+'"></button>';
+  $('#dots').innerHTML=h; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null;
+    if(t) goTo(+t.dataset.i); });
+}
+function resetScene(sc){ $$('canvas',sc).forEach(function(cv){ cv.removeAttribute('data-done'); });
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+function drawCanvas(el){ $$('canvas',el).forEach(function(cv){
+  if(cv.dataset.done==='1') return; cv.dataset.done='1';
+  if(CHARTS[cv.id]) CHARTS[cv.id](cv); }); }
+function tlRun(i){ tlT.forEach(clearTimeout); tlT=[];
+  var sc=SCENES[i], bs=$$('.wrap > *',sc), tk=TOKEN, gap=430;
+  if(reduce){ bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); }); drawCanvas(sc); return; }
+  bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+  var pos=0;
+  bs.forEach(function(b,k){ var t=260+k*gap;
+    tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); drawCanvas(b); },t)); pos=t; });
+  tlT.push(setTimeout(function(){ if(tk!==TOKEN) return;
+    bs.forEach(function(b){ b.classList.remove('stg'); }); auto=false; syncAuto(); },pos+820));
+}
+function goTo(i){ i=Math.max(0,Math.min(SCENES.length-1,i)); if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++; var sc=SCENES[i]; resetScene(sc); sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=TITLES[i];
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(SCENES.length<=1?100:(i/(SCENES.length-1))*100)+'%';
+  $('#btnPrev').disabled=(i===0); $('#btnNext').disabled=(i===SCENES.length-1);
+  if(auto) tlRun(i); else { $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); }); drawCanvas(sc); }
+}
+function syncAuto(){ $('#btnAuto').classList.toggle('on',auto); $('#btnAuto').textContent=auto?'自动讲解 · 开':'自动讲解'; }
+function setReduce(v){ reduce=v; document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开'; }
+
+/* ================= 初始化 ================= */
+(function(){
+  (D.scenes||[]).forEach(buildScene);
+  buildDots();
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnAuto').onclick=function(){ auto=!auto; syncAuto(); if(auto) tlRun(cur); else { tlT.forEach(clearTimeout); tlT=[]; } };
+  $('#btnReplay').onclick=function(){ tlT.forEach(clearTimeout); resetScene(SCENES[cur]); tlRun(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!reduce); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(SCENES.length-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=SCENES.length){ e.preventDefault(); goTo(+k-1); }
+  });
+  var st={last:0,armed:false,fired:0};
+  window.addEventListener('wheel',function(e){ var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight, want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&sc.scrollTop>=max-1)||(want<0&&sc.scrollTop<=1);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault(); var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){ st.fired=now; st.armed=false; goTo(cur+want); }
+    st.last=now; },{passive:false});
+  var tx=null;
+  $('#stage').addEventListener('touchstart',function(e){ tx=e.touches[0].clientX; },{passive:true});
+  $('#stage').addEventListener('touchend',function(e){ if(tx===null) return;
+    var dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50) dx<0?goTo(cur+1):goTo(cur-1); tx=null; },{passive:true});
+  /* Split reference pages show all content immediately; auto narration is opt-in. */
+  setReduce(false); auto=false; syncAuto(); goTo(0);
+  window.addEventListener('resize',function(){ $$('canvas').forEach(function(cv){ cv.removeAttribute('data-done'); });
+    if(cur>=0) drawCanvas(SCENES[cur]); });
+  window.__deck={plot:plot,plotStack:plotStack,fmt:fmt,kpi:kpiHTML,$:$,$$:$$,DATA:D,CHARTS:CHARTS,CHART_SPECS:CHART_SPECS,SLIDERS:SLIDERS};
+})();
+})();
+</script>
+</body>
+</html>

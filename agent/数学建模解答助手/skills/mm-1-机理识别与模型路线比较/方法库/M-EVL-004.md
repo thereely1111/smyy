@@ -1,0 +1,13 @@
+### M-EVL-004 主成分分析 / 因子分析
+- **task_types**：降维、综合指数、潜变量提取、多重共线性处理。
+- **problem_signature**：指标多且相关；希望用少数综合维度解释大部分变异。
+- **core_idea**：寻找最大方差方向或潜在因子。
+- **inputs**：数值矩阵、标准化方案、相关矩阵、因子数判据。
+- **outputs**：载荷、得分、解释方差、综合指标。
+- **assumptions**：线性相关结构；样本量足够；变量尺度已处理。
+- **validation**：KMO、Bartlett、碎石图、平行分析、载荷稳定性。
+- **hard_constraints**：混合量纲未标准化或样本极少时禁止直接解释。
+- **selection_tags**：`dimension-reduction, latent-factor, collinearity`
+- **composable_with**：`M-EVL-002, M-PRE-002, M-PRE-003`
+- **fallbacks**：因子分析、独立成分分析、正则化降维。
+- **agent_actions**：标准化 -> 检查相关性和适用性 -> 选维数 -> 解释载荷 -> 稳定性验证。

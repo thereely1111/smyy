@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 美赛A题 · 全局分析 · 智能手机电池耗电建模</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--teal);opacity:.6}
+.kpi.g::before{background:var(--gold)}
+.kpi.w::before{background:var(--warn)}
+.kpi.b::before{background:var(--blue)}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.legend i.dn{height:11px;width:11px;border-radius:50%;border:2px solid;background:transparent}
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+body.reduce .pulse,body.reduce .blink,body.reduce .floaty,body.reduce .shimmer{animation:none !important}
+body.reduce .wrap>.stg{transition:none;opacity:1;transform:none}
+body.reduce .scene{transition:none}
+.formula{
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  background:#0b2e36;color:#cdeee9;border-radius:10px;padding:14px 16px;
+  font-size:13.5px;line-height:1.85;overflow:auto;white-space:pre-wrap;
+  box-shadow:inset 0 0 0 1px rgba(127,216,201,.15),0 6px 18px rgba(11,46,54,.12);
+}
+.formula .c{color:#7fd8c9}
+.formula .y{color:#e0a04a}
+.formula .w{color:#ffb59d}
+.formula .dim{opacity:.5}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:stretch}
+@media(max-width:960px){.hero{grid-template-columns:1fr}}
+.heroleft{display:flex;flex-direction:column;gap:14px}
+.heroright{
+  position:relative;background:#0b2e36;border-radius:var(--r);overflow:hidden;
+  box-shadow:0 8px 26px rgba(11,46,54,.18);min-height:360px;
+}
+.heroright canvas{position:absolute;inset:0;width:100%;height:100%}
+.herolabel{position:absolute;left:14px;top:12px;color:#cdeee9;font-size:12px;letter-spacing:.06em;
+  font-weight:600;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.herosublabel{position:absolute;right:14px;bottom:12px;color:rgba(205,238,233,.7);font-size:11.5px;z-index:2;
+  text-align:right;line-height:1.6;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.bigkpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;box-shadow:var(--sh)}
+.bigkpi .bk-k{font-size:12px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+.bigkpi .bk-v{font-size:32px;font-weight:700;color:var(--teal-d);line-height:1.2;margin-top:4px;font-variant-numeric:tabular-nums}
+.bigkpi.g .bk-v{color:var(--gold-d)}
+.bigkpi .bk-u{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.bigkpi .bk-sub{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.6}
+.flowrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flownode{font-size:12px;padding:6px 11px;border-radius:8px;background:#fff;border:1px solid var(--line);
+  color:var(--ink2);font-weight:600;position:relative}
+.flownode.on{background:var(--teal-d);color:#fff;border-color:var(--teal-d)}
+.flowarrow{color:var(--cyan);font-size:14px;font-weight:700}
+.decochips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.decochip{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--line2);color:var(--ink2)}
+.decochip.t{background:#eef7f6;color:var(--teal-d)}
+.decochip.g{background:#fdf4e8;color:var(--gold-d)}
+.decochip.w{background:var(--warn-bg);color:var(--warn)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.floaty{animation:floaty 3s ease-in-out infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p6-0.html" class="on">全局</a>
+    <a href="./mod-p6-1.html">问题一</a>
+    <a href="./mod-p6-2.html">问题二</a>
+    <a href="./mod-p6-3.html">问题三</a>
+    <a href="./mod-p6-4.html">总结</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===== 第一幕 · 题目结构 ===== -->
+<section class="scene" id="s1" data-title="全局分析 · 一 · 题目结构图">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">2026 美赛 MCM A 题 · 全局分析</div>
+    <h1>智能手机电池耗电建模：<span class="hl-t">四因素 → 功率 → SOC → 续航</span>
+      <small>屏幕亮度 L、处理器负载 u、网络活动 n 共同决定基础功耗，环境温度 T 通过温度修正因子 φ(T) 放大或缩小整机功率；功率再决定 SOC 随时间下降的快慢，最终决定从满电到自动关机的可用时长。</small>
+    </h1>
+    <div class="decochips">
+      <span class="decochip t">机理建模</span>
+      <span class="decochip t">能量视角</span>
+      <span class="decochip g">最小二乘辨识</span>
+      <span class="decochip w">中等难度 · 3 人</span>
+    </div>
+  </div>
+
+  <div class="hero stg">
+    <div class="heroleft">
+      <div class="card">
+        <h3>题目定位 <em>protoId · p6</em></h3>
+        <p><b class="hl-t">对象</b>：一款典型旗舰机型锂电池（标称容量 4000 mAh / 3.85 V，即 <b>15.4 Wh</b>；额定工作温度 25 ℃）。</p>
+        <p><b class="hl-t">任务</b>：建立 SOC 连续时间模型并辨识参数 → 预测四类典型场景续航 → 给出可落地的续航优化建议。</p>
+        <p class="small">标签：2026美赛A题 · 美赛MCM · 2026 · 本科 · 机理建模 · 中等难度 · 3 人</p>
+      </div>
+      <div class="card">
+        <h3>两组实测数据 <em>附件 1 / 附件 2</em></h3>
+        <p><b class="hl-t">附件 1 · 受控实验</b>：25 ℃ 恒温箱固定单一变量，扫描亮度 L、负载 u、网络强度 n（均归一化 0～1），逐秒记录放电电流与电压；另在 −10 ℃、0 ℃、25 ℃、40 ℃ 四个温度点重复基准工况。</p>
+        <p><b class="hl-t">附件 2 · 真实日志</b>：20 名志愿者两周的亮屏时长、负载曲线、网络状态与温度序列，以及每次充电起止 SOC 与时刻。</p>
+      </div>
+    </div>
+    <div class="heroright">
+      <div class="herolabel">四因素 → P_total → SOC → 续航 · 数据流</div>
+      <div class="herosublabel">C = 15.4 Wh<br>P_total 决定 dSOC/dt</div>
+      <canvas id="cvFlow"></canvas>
+    </div>
+  </div>
+
+  <div class="grid4 stg">
+    <div class="kpi"><div class="k">电池额定能量 C</div><div class="v">15.4 <u>Wh</u></div><div class="sub">4000 mAh × 3.85 V</div></div>
+    <div class="kpi b"><div class="k">耗电因素</div><div class="v">4 <u>项</u></div><div class="sub">L / u / n / T</div></div>
+    <div class="kpi g"><div class="k">建模问题</div><div class="v">3 <u>问</u></div><div class="sub">模型 · 续航 · 优化</div></div>
+    <div class="kpi w"><div class="k">演示幕次</div><div class="v">5 <u>幕</u></div><div class="sub">全局 → 总结</div></div>
+  </div>
+
+  <div class="quote stg">全题主线：用<b class="hl-t">附件 1</b> 辨识四耗电项参数，用<b class="hl-t">附件 2</b> 检验精度；再以同一模型回答四场景续航预测（问题二）与三条优化建议（问题三）。核心参数：P_base = 0.15 W、a_s = 1.35 W、a_c = 1.80 W、a_n = 1.10 W、C = 15.4 Wh。</div>
+</div>
+</section>
+
+<!-- ===== 第二幕 · 问题关系 ===== -->
+<section class="scene" id="s2" data-title="全局分析 · 二 · 三个问题与总结的关系">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题关系 · 一条主线层层递进</div>
+    <h1>问题一 <span class="hl-t">建模型</span> → 问题二 <span class="hl-t">做预测</span> → 问题三 <span class="hl-t">提建议</span> → 总结复盘
+      <small>问题一给出模型与被辨识的参数；问题二在模型上做四场景外推并给 95% 置信区间；问题三再对模型做参数约束，量化优化收益；总结幕做灵敏度分析与结论清单。</small>
+    </h1>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">问题链路：模型 → 预测 → 优化 → 总结</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>已建立</span>
+        <span><i style="background:#e0a04a"></i>输出结论</span>
+        <span><i class="ln" style="background:#1e9fc4"></i>数据流</span>
+      </div>
+    </div>
+    <canvas id="cvChain"></canvas>
+    <p class="note" style="margin-top:8px">四环节共享<b class="hl-t">同一套参数</b>：问题一辨识的 P_base / a_s / a_c / a_n / C 被问题二、三、总结逐层复用，形成「一次辨识、多问复用」的闭环。</p>
+  </div>
+
+  <div class="grid3 stg">
+    <div class="card">
+      <h3>问题一 <em>辨识</em></h3>
+      <p>建立 SOC 连续时间模型，显式含 L、u、n、T 四项；用附件 1 全量拟合辨识参数，用附件 2 检验精度。</p>
+      <p class="small">输出：RMSE = 0.021 SOC、R² = 0.988；日志 MAPE = 4.6%。</p>
+    </div>
+    <div class="card">
+      <h3>问题二 <em>预测</em></h3>
+      <p>预测 A 轻度 / B 中度 / C 重度 / D 极端四场景从满电到自动关机的剩余可用时间，并给 95% 置信区间。</p>
+      <p class="small">输出：23.51 / 7.85 / 3.98 / 5.30 h。</p>
+    </div>
+    <div class="card">
+      <h3>问题三 <em>优化</em></h3>
+      <p>给出亮度阈值、后台网络限制、温控散热三条建议，定量说明每条延长的续航与代价。</p>
+      <p class="small">输出：以 B 场景 7.85 h 为基线，亮度 + 网络联合后 +31.3% → 10.30 h。</p>
+    </div>
+  </div>
+
+  <div class="quote stg">四问关系：<b class="hl-t">模型是地基</b>。问题二把模型外推到边界工况（含 φ(35)=1.095 的高温修正），问题三把模型当作约束优化的目标函数，总结幕再从参数灵敏度回看「哪个因素最值得约束」。</div>
+</div>
+</section>
+
+<!-- ===== 第三幕 · 参数总览 ===== -->
+<section class="scene" id="s3" data-title="全局分析 · 三 · 参数总览">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">参数总览 · 最小二乘辨识结果</div>
+    <h1>一套参数撑起全部结论
+      <small>五个参数 + 一个温度修正因子构成本题全部数值结论的基础。</small>
+    </h1>
+  </div>
+
+  <div class="grid2 stg">
+    <div class="card">
+      <h3>模型表达式 <em>问题一采用的定式</em></h3>
+      <div class="formula">dSOC/dt = −P_total(t,L,u,n,T) / C × 100%
+
+P_total = φ(T) · [ P_base + a_s·L + a_c·u + a_n·n ]
+
+φ(T) = 1 + 0.006·|T−25| + 0.00035·(T−25)^2</div>
+      <p class="small" style="margin-top:8px">L、u、n 均为归一化 0～1；φ(T) 刻画高温/低温下可用容量衰减与内阻上升，T = 25 ℃ 时 φ = 1.000。</p>
+    </div>
+    <div class="card">
+      <h3>辨识参数 <em>附件 1 全量拟合</em></h3>
+      <table class="tb">
+        <tr><th>参数</th><th>含义</th><th class="num">取值</th></tr>
+        <tr><td>P_base</td><td>待机基础功耗</td><td class="num">0.15 W</td></tr>
+        <tr><td>a_s</td><td>屏幕项系数（满亮度）</td><td class="num">1.35 W</td></tr>
+        <tr><td>a_c</td><td>处理器项系数（满载）</td><td class="num">1.80 W</td></tr>
+        <tr><td>a_n</td><td>网络项系数（满强度）</td><td class="num">1.10 W</td></tr>
+        <tr class="on"><td>C</td><td>电池额定能量</td><td class="num">15.4 Wh</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="canvasbox stg">
+    <div class="cvtop">
+      <div class="ct">各耗电项在满量程下的功率贡献（W）</div>
+      <div class="legend">
+        <span><i style="background:#12a594"></i>基础/屏幕</span>
+        <span><i style="background:#e0a04a"></i>处理器/网络</span>
+        <span><i style="background:#146c87"></i>额定能量 C</span>
+      </div>
+    </div>
+    <canvas id="cvParam"></canvas>
+    <p class="note" style="margin-top:8px">满量程下各项贡献：<b class="hl-t">a_s = 1.35 W</b>、<b class="hl-g">a_c = 1.80 W</b>、a_n = 1.10 W、P_base = 0.15 W；四项叠加后最大瞬时功率约 4.4 W，对应续航约 3.5 h —— 说明「全开」是续航最差工况。</p>
+  </div>
+</div>
+</section>
+
+</main>
+
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(v,dec){ if(dec===undefined)dec=0;
+  return Number(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function setupCanvas(cv){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  var h=parseFloat(cv.style.height)||cv._h||260;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g:g,w:w,h:h,dpr:dpr};
+}
+function tag(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-10):(x-2);
+  g.fillStyle='rgba(255,255,255,.95)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(bx+.5,y-8.5,tw+9,17);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function tagDark(g,x,y,text,col,align){
+  g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  var tw=g.measureText(text).width;
+  var bx=(align==='right')?(x-tw-8):(x-4);
+  g.fillStyle='rgba(11,46,54,.82)';
+  g.fillRect(bx,y-9,tw+10,18);
+  g.fillStyle=col; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,bx+5,y);
+}
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+  g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+  g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+}
+
+/* ===== 动画引擎 ===== */
+var activeAnims=[];
+function stopAllAnims(){
+  activeAnims.forEach(function(a){ if(a._raf) cancelAnimationFrame(a._raf); a._raf=null; });
+  activeAnims=[];
+}
+function runAnim(fn){
+  var handle={_raf:null,_alive:true};
+  activeAnims.push(handle);
+  function loop(t){ if(!handle._alive) return; fn(t); handle._raf=requestAnimationFrame(loop); }
+  handle._raf=requestAnimationFrame(loop);
+  return handle;
+}
+
+/* ===== 第一幕 · 数据流 hero ===== */
+var flowT0=null;
+function drawFlow(t){
+  var cv=$('#cvFlow'); if(!cv)return;
+  if(cv._h===undefined) cv._h=360;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-flowT0)/1000;
+
+  var bg=g.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#0b2e36'); bg.addColorStop(.55,'#0e3a44'); bg.addColorStop(1,'#0b2e36');
+  g.fillStyle=bg; g.fillRect(0,0,w,h);
+  for(var i=0;i<44;i++){
+    var sx=((i*97.13)%w), sy=((i*53.7)%(h-20))+10;
+    var tw=0.5+0.5*Math.sin(tN*1.1+i*0.6);
+    g.fillStyle='rgba(205,238,233,'+(0.05+0.16*tw)+')';
+    g.fillRect(sx,sy,1.5,1.5);
+  }
+
+  var inX=10, inW=Math.max(76,w*0.21), inH=26;
+  var rows=[['屏幕亮度 L','rgba(255,181,157,.95)'],['处理器负载 u','rgba(224,160,74,.95)'],
+            ['网络活动 n','rgba(127,216,201,.95)'],['环境温度 T','rgba(205,238,233,.95)']];
+  var topY=h*0.16, gap=(h*0.62-inH)/3;
+  var inMid=[];
+  rows.forEach(function(rw,i){
+    var y=topY+i*gap, mid=y+inH/2; inMid.push(mid);
+    g.fillStyle='rgba(255,255,255,.06)'; rr(g,inX,y,inW,inH,7); g.fill();
+    g.strokeStyle='rgba(127,216,201,.35)'; g.lineWidth=1; rr(g,inX+.5,y+.5,inW-1,inH-1,7); g.stroke();
+    g.fillStyle=rw[1]; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(rw[0], inX+9, mid);
+  });
+
+  var pX=inX+inW+ (w-inX-inW)*0.10, pW=Math.max(70,w*0.19), pH=32;
+  var pMid=h*0.46;
+  g.fillStyle='rgba(224,160,74,.16)'; rr(g,pX,pMid-pH/2,pW,pH,8); g.fill();
+  var pp=0.5+0.5*Math.sin(tN*2.2);
+  g.strokeStyle='rgba(224,160,74,'+(0.5+0.4*pp)+')'; g.lineWidth=1.6; rr(g,pX+.5,pMid-pH/2+.5,pW-1,pH-1,8); g.stroke();
+  g.fillStyle='#ffd9a8'; g.font='700 12.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('P_total', pX+pW/2, pMid);
+  g.font='10px "PingFang SC",system-ui,sans-serif'; g.fillStyle='rgba(255,217,168,.75)';
+  g.fillText('φ(T) 修正', pX+pW/2, pMid+pH/2+11);
+
+  var sX=pX+pW+(w-pX-pW)*0.10, sW=Math.max(56,w*0.15), sH=32, sMid=pMid;
+  g.fillStyle='rgba(127,216,201,.14)'; rr(g,sX,sMid-sH/2,sW,sH,8); g.fill();
+  g.strokeStyle='rgba(127,216,201,.55)'; g.lineWidth=1.4; rr(g,sX+.5,sMid-sH/2+.5,sW-1,sH-1,8); g.stroke();
+  g.fillStyle='#cdeee9'; g.font='700 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('SOC(t)', sX+sW/2, sMid);
+
+  var eX=sX+sW+(w-sX-sW)*0.08, eW=Math.max(58,w-eX-8);
+  g.fillStyle='rgba(255,255,255,.10)'; rr(g,eX,sMid-16,eW,32,8); g.fill();
+  g.strokeStyle='rgba(205,238,233,.5)'; g.lineWidth=1.4; rr(g,eX+.5,sMid-15.5,eW-1,31,8); g.stroke();
+  g.fillStyle='#eaf4f4'; g.font='700 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('续航时间', eX+eW/2, sMid);
+
+  function flow(curvePts, phase, col){
+    var seg=curvePts, u=((tN*0.55+phase)%1+1)%1;
+    var idx=Math.max(0, Math.min(seg.length-1, Math.floor(u*(seg.length-1))));
+    var p=seg[idx]; if(!p) return;
+    g.beginPath(); g.arc(p[0],p[1],3.2,0,Math.PI*2);
+    g.fillStyle=col; g.fill();
+    g.beginPath(); g.arc(p[0],p[1],6,0,Math.PI*2);
+    g.fillStyle=col.replace(/[\d.]+\)$/,'0.18)'); g.fill();
+  }
+  function curve(x0,y0,x1,y1,cx,cy,phase,col){
+    g.strokeStyle='rgba(127,216,201,.35)'; g.lineWidth=1.4;
+    g.beginPath(); g.moveTo(x0,y0); g.quadraticCurveTo(cx,cy,x1,y1); g.stroke();
+    var pts=[]; for(var k=0;k<=24;k++){ var u=k/24;
+      var xx=(1-u)*(1-u)*x0+2*(1-u)*u*cx+u*u*x1;
+      var yy=(1-u)*(1-u)*y0+2*(1-u)*u*cy+u*u*y1; pts.push([xx,yy]); }
+    flow(pts,phase,col);
+  }
+  for(var r2=0;r2<4;r2++){
+    var col='rgba(224,160,74,.9)';
+    if(r2===0)col='rgba(255,181,157,.95)';
+    if(r2===2)col='rgba(127,216,201,.95)';
+    if(r2===3)col='rgba(205,238,233,.95)';
+    curve(inX+inW, inMid[r2], pX, pMid-(pH/2)*(1-r2*0.5)+ (r2===3?-12:0), (inX+inW+pX)/2, inMid[r2], r2*0.22, col);
+  }
+  curve(pX+pW, pMid, sX, sMid, (pX+pW+sX)/2, pMid-6, 0.4, 'rgba(224,160,74,.95)');
+  curve(sX+sW, sMid, eX, sMid, (sX+sW+eX)/2, sMid, 0.7, 'rgba(127,216,201,.95)');
+
+  g.fillStyle='rgba(205,238,233,.9)';
+  g.font='10.5px "PingFang SC",system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('P_total = φ(T)·[P_base + a_s·L + a_c·u + a_n·n]', 12, h-40);
+  g.fillText('dSOC/dt = −P_total / C × 100%', 12, h-24);
+  g.fillStyle='rgba(127,216,201,.15)'; g.fillRect(0,h-16,w,16);
+  g.fillStyle='rgba(205,238,233,.85)'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  g.fillText('C = 15.4 Wh · T_ref = 25 ℃', 12, h-8);
+}
+function startFlow(){ flowT0=performance.now(); runAnim(function(t){ drawFlow(t); }); }
+
+/* ===== 第二幕 · 问题链路 ===== */
+var chainT0=null;
+function drawChain(t){
+  var cv=$('#cvChain'); if(!cv)return;
+  if(cv._h===undefined) cv._h=250;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-chainT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.4,0,1));
+
+  var nodes=['问题一 · 建模辨识','问题二 · 四场景预测','问题三 · 优化建议','总结 · 灵敏度+清单'];
+  var n=nodes.length;
+  var pad=14, bw=(w-pad*2-(n-1)*18)/n, bh=54, by=h*0.5-bh/2;
+  for(var i=0;i<n;i++){
+    var x=pad+i*(bw+18);
+    var seg=clamp((rev*n)-i,0,1);
+    var col=(i===0)?'#12a594':(i===3?'#146c87':'#0b6e68');
+    g.save(); g.globalAlpha=seg;
+    g.fillStyle=(i===3)?'#f4fbfa':'#fff'; rr(g,x,by,bw,bh,10); g.fill();
+    g.strokeStyle=col; g.lineWidth=1.6; rr(g,x+.5,by+.5,bw-1,bh-1,10); g.stroke();
+    g.fillStyle=col; g.fillRect(x,by,4,bh);
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    var t1=nodes[i].split(' · ');
+    g.fillText(t1[0], x+bw/2, by+bh/2-8);
+    g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(t1[1], x+bw/2, by+bh/2+10);
+    g.restore();
+    if(i<n-1){
+      var ax=x+bw+3, ay=by+bh/2;
+      g.strokeStyle='rgba(30,159,196,.55)'; g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(ax,ay); g.lineTo(ax+12,ay); g.stroke();
+      g.beginPath(); g.moveTo(ax+12,ay); g.lineTo(ax+7,ay-4); g.lineTo(ax+7,ay+4); g.closePath();
+      g.fillStyle='rgba(30,159,196,.85)'; g.fill();
+    }
+  }
+  var act=Math.floor((tN*0.5)%n);
+  var ax2=pad+act*(bw+18);
+  var pu=0.5+0.5*Math.sin(tN*3);
+  g.strokeStyle='rgba(18,165,148,'+(0.3+0.5*pu)+')'; g.lineWidth=2.4;
+  rr(g,ax2-3,by-3,bw+6,bh+6,12); g.stroke();
+  g.fillStyle='rgba(87,114,124,.9)'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('共享参数：P_base=0.15 · a_s=1.35 · a_c=1.80 · a_n=1.10 · C=15.4 Wh', w/2, h-24);
+}
+function startChain(){ chainT0=performance.now(); runAnim(function(t){ drawChain(t); }); }
+
+/* ===== 第三幕 · 参数贡献 ===== */
+var paramT0=null;
+function drawParam(t){
+  var cv=$('#cvParam'); if(!cv)return;
+  if(cv._h===undefined) cv._h=250;
+  var st=setupCanvas(cv), g=st.g, w=st.w, h=st.h;
+  g.clearRect(0,0,w,h);
+  var tN=(t-paramT0)/1000;
+  var rev=easeOutCubic(clamp(tN/1.3,0,1));
+
+  var items=[{k:'a_s',v:1.35,c:'#12a594'},{k:'a_c',v:1.80,c:'#e0a04a'},
+             {k:'a_n',v:1.10,c:'#1e9fc4'},{k:'P_base',v:0.15,c:'#8aa3aa'}];
+  var L=48,R=16,T=26,B=40, PW=w-L-R, PH=h-T-B;
+  var vmax=2.0;
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=vmax*k/4, yy=T+PH*(1-v/vmax);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(1), L-7, yy);
+  }
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.fillStyle='#57727c'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('功率 (W)',0,0); g.restore();
+
+  var n=items.length, slot=PW/n, bw=Math.min(64,slot*0.5);
+  items.forEach(function(it,i){
+    var cx=L+slot*(i+.5), x=cx-bw/2;
+    var vv=it.v*rev, bh=PH*vv/vmax, y=T+PH-bh;
+    g.fillStyle=it.c; g.globalAlpha=.85; rr(g,x,y,bw,bh,5); g.fill(); g.globalAlpha=1;
+    g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(it.k, cx, T+PH+16);
+    if(rev>0.96) tag(g, cx, y-14, it.v.toFixed(2)+' W', it.c==='#8aa3aa'?'#57727c':'#0b6e68','left');
+  });
+  if(rev>0.9){
+    tag(g, L+PW-6, T+PH*0.35, '满开叠加上限 ≈ 4.4 W', '#b8543a','right');
+  }
+}
+function startParam(){ paramT0=performance.now(); runAnim(function(t){ drawParam(t); }); }
+
+/* ===== KPI count-up ===== */
+var kpiStarted=false;
+function startKPIs(){
+  if(kpiStarted) return; kpiStarted=true;
+  $$('[data-cnt]').forEach(function(el){
+    var target=parseFloat(el.dataset.cnt);
+    var dec=parseInt(el.dataset.dec||'0',10);
+    var uspan=el.querySelector('u');
+    var unitHtml=uspan?uspan.outerHTML:'';
+    var t0=performance.now(), dur=1100;
+    function step(tt){
+      var p=clamp((tt-t0)/dur,0,1);
+      el.innerHTML=fmt(target*easeOutCubic(p),dec)+unitHtml;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ===== 调度 ===== */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1;
+var starters=[startFlow, startChain, startParam];
+var st={last:0,armed:false,fired:0};
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; stopAllAnims();
+  var sc=SCENES[i]; sc.scrollTop=0; sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.add('in'); });
+  if(starters[i]) starters[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  if(v){ $$('.wrap > *').forEach(function(e){ e.classList.add('in'); }); stopAllAnims(); }
+}
+function init(){
+  var dots=''; for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots; $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){ var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i); });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ stopAllAnims(); if(starters[cur]) starters[cur](); };
+  $('#btnFx').onclick=function(){ var nv=!document.body.classList.contains('reduce'); setReduce(nv);
+    if(!nv && cur>=0 && starters[cur]) starters[cur](); };
+  document.addEventListener('keydown',function(e){
+    var tn=(e.target.tagName||'').toLowerCase(); if(tn==='input'||tn==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){ if(cur>=0 && starters[cur] && !document.body.classList.contains('reduce')) starters[cur](); });
+init();
+})();
+</script>
+</body>
+</html>

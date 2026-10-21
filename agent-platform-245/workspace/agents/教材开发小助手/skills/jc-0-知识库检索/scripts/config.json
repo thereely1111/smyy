@@ -1,0 +1,33 @@
+{
+    "app_key": "3a1cb3a2713a11f181b63245fafb02b0",
+    "app_secret": "tBgpWRAtZrczOSGD9MUlZlp800xfvkQtaGAgFU8L",
+    "base_url": "https://lxapi.lexiangla.com",
+    "team_id": "95391450713611f1808d4e824b893ac9",
+    "staff_id": "system-bot",
+    "search": {
+        "ai_first": true,
+        "ai_top_n": 5,
+        "fallback_limit": 10
+    },
+    "spaces": {
+        "knowledge": {
+            "name": "学科知识库",
+            "space_id": "7289846210a24c8e8ab9f84b5512e650",
+            "root_entry_id": "f5317dc18c294595b50ce82dbfe99a52"
+        },
+        "case": {
+            "name": "案例库",
+            "space_id": "745bd5512de9411ab988efc47cd03288",
+            "root_entry_id": "5d7cd88a1923482ea32895b0f016673c"
+        },
+        "dataset": {
+            "name": "数据库",
+            "space_id": "e79f1c0853674870986586f96ee96de0",
+            "root_entry_id": "831abc0cfbad46b0b3b54bd2ff347655"
+        }
+    },
+    "gitee": {
+        "username": "book_case",
+        "token": "6058a57c47bd87f8234cdb759632fdb4"
+    }
+}

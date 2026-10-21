@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无线电干扰源的快速自动定位与清除研究 · 论文初稿</title>
+<style>
+  :root{--ink:#0B2E36;--sub:#4A6572;--line:#E2EAEE;--bg:#F4F8FA;--brand:#1E6FA8;--brand2:#12A594;--note:#FFF8E6;--note-b:#F0C36D}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.8;font-size:15px}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 22px 72px}
+  header.top{background:linear-gradient(120deg,#0B2E36,#1E6FA8);color:#fff;border-radius:16px;padding:30px;box-shadow:0 10px 30px rgba(11,46,54,.18)}
+  header.top h1{margin:0 0 8px;font-size:26px}
+  header.top .dc{opacity:.9;font-size:13.5px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;margin-top:20px;box-shadow:0 2px 10px rgba(11,46,54,.04)}
+  h2{font-size:22px;margin:0 0 6px;text-align:center}
+  .dc2{text-align:center;color:var(--sub);font-size:13px;margin-bottom:22px}
+  h3{font-size:18px;margin:24px 0 10px;color:var(--ink);border-left:4px solid var(--brand2);padding-left:12px}
+  p{margin:10px 0;color:#22323A;text-align:justify}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  .formula{background:#F0F7FA;border:1px dashed #9CC7D8;border-radius:10px;padding:12px 16px;margin:14px 0;font-family:"SFMono-Regular",Consolas,monospace;font-size:14px;color:#0B4A5C;text-align:center;overflow-x:auto}
+  .note{background:var(--note);border-left:4px solid var(--note-b);border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13.5px;color:#6B5320}
+  footer{margin-top:28px;text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>论文初稿 · v1</h1>
+    <div class="dc">18 页 · 图 12 张 · 表 6 张 · 参考文献 10 篇</div>
+  </header>
+
+  <div class="card">
+    <h2>无线电干扰源的快速自动定位与清除研究</h2>
+    <div class="dc2">18 页 · 图 12 张 · 表 6 张 · 参考文献 10 篇</div>
+
+    <h3>摘要</h3>
+    <p>针对机器狗在半径 1800 m 圆形区域内快速定位并清除无线电干扰源的问题，本文以「发现—定位—清除」为主线，构建「示向度交会 — 最优布点 — 全局保证覆盖 — 方向鲁棒覆盖」的统一建模框架。问题一把每次测量视为中心线 ±1° 的扇形，由多条扇形求交得到定位区域 A，并指出「以区域直径 D 为直径作圆」不能覆盖 A，真正的清除判据是最小包围圆半径 R ≤ 20 m；当两测点相距 1000 m 时，R 随交会角呈 U 形，在 60°–120°（理想 90°）区间最小。问题二在第一测点已知的前提下，以「对 A 内任意点均满足有效接收半径」的强保证口径确定候选区，构造目标函数 J(S)=maxR(A|S)+λ·dist(p₁,S)，在 50 m 网格上求得最优第二测点。问题三针对数量未知（10–16 个）的全向源，证明以「中心 1 点 + 圆周 6 点」铺点，取工作半径 ρ ≥ 1800/√3 ≈ 1039 m（实取 1150 m）即可盖住整个区域，保证任何位置的源至少被一个测点听到，随后转入局部交会与清除。问题四混入只朝 ±90° 扇区辐射的定向源，指出圆盘覆盖会被「朝向」击穿，把判据升级为方向鲁棒覆盖：对任意位置 p 与任意朝向 θ，都存在测点 S 同时满足 |Sp| ≤ 1500 m 且 |angle(S−p)−θ| ≤ 90°，最省的构造是成对镜像测点铺成的网格。四问合起来正是从进入区域到退出区域的完整策略。</p>
+
+    <h3>目录</h3>
+    <ul>
+      <li>一、问题重述与信息结构分析</li>
+      <li>二、模型假设与符号说明</li>
+      <li>三、问题一：多示向度交会与清除判定</li>
+      <li>四、问题二：最优第二测点的构造</li>
+      <li>五、问题三：全局保证覆盖与局部清除</li>
+      <li>六、问题四：定向源下的方向鲁棒覆盖</li>
+      <li>七、灵敏度分析与稳健性检验</li>
+      <li>八、结论与改进方向</li>
+      <li>附录：代码与结果文件说明</li>
+    </ul>
+
+    <h3>第三章（节选）</h3>
+    <div class="formula">A = ∩_k Sector(p_k, θ_k ± 1°)　　R = radius(MinEnclosingCircle(A))　　判定：R ≤ 20 m</div>
+    <p>示向度误差被限定在 ±1° 以内，属有界不确定性：源必落在扇形内，不会偶尔跑到外面，因此 A 是一个确定性集合，不含概率。由此可导出两条贯穿全题的结论：其一，定位区域一般不是圆盘，「以 D 为直径作圆」通常盖不全；其二，能否一次清除只取决于最小包围圆半径 R ≤ 20 m，与 D 无直接关系……</p>
+
+    <div class="note">论文可继续在平台上与 AI 交互修改：改摘要、补灵敏度、调排版、加图表说明都可以。</div>
+  </div>
+
+  <footer>2026 CUMCM B 题 · 无线电干扰源的快速自动定位与清除 · 论文初稿</footer>
+</div>
+</body>
+</html>

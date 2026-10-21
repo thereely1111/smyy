@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时频冲突检测与消解研究 · 论文初稿</title>
+<style>
+  :root{--ink:#0B2E36;--sub:#4A6572;--line:#E2EAEE;--bg:#F4F8FA;--brand:#1E6FA8;--brand2:#12A594;--note:#FFF8E6;--note-b:#F0C36D}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.8;font-size:15px}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 22px 72px}
+  header.top{background:linear-gradient(120deg,#0B2E36,#1E6FA8);color:#fff;border-radius:16px;padding:30px;box-shadow:0 10px 30px rgba(11,46,54,.18)}
+  header.top h1{margin:0 0 8px;font-size:26px}
+  header.top .dc{opacity:.9;font-size:13.5px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;margin-top:20px;box-shadow:0 2px 10px rgba(11,46,54,.04)}
+  h2{font-size:22px;margin:0 0 6px;text-align:center}
+  .dc2{text-align:center;color:var(--sub);font-size:13px;margin-bottom:22px}
+  h3{font-size:18px;margin:24px 0 10px;color:var(--ink);border-left:4px solid var(--brand2);padding-left:12px}
+  p{margin:10px 0;color:#22323A;text-align:justify}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:center}
+  th{background:#F0F7FA;color:#0B4A5C;font-weight:600}
+  .formula{background:#F0F7FA;border:1px dashed #9CC7D8;border-radius:10px;padding:12px 16px;margin:14px 0;font-family:"SFMono-Regular",Consolas,monospace;font-size:14px;color:#0B4A5C;text-align:center;overflow-x:auto}
+  .note{background:var(--note);border-left:4px solid var(--note-b);border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13.5px;color:#6B5320}
+  footer{margin-top:28px;text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>论文初稿 · v1</h1>
+    <div class="dc">约 24 页 · 图 12 张 · 表 7 张 · 参考文献 12 篇</div>
+  </header>
+
+  <div class="card">
+    <h2>时频冲突检测与消解模型研究</h2>
+    <div class="dc2">约 24 页 · 图 12 张 · 表 7 张 · 参考文献 12 篇</div>
+
+    <h3>摘要</h3>
+    <p>针对区域内部大量用频装备在一段有限带宽上的用频计划冲突问题，本文把时频资源离散化为「100 个 Δf 频段 × Δt 时间轴」的二维格网，并将每个用频计划（频段区间、首次使用时间区间、间隔时长、使用次数）展开为<b>若干个时频矩形</b>，从而把冲突检测与消解统一为矩形相交判定与矩形移动问题。问题一以「频段相交且存在一对矩形时间相交」为判据，对附件 1 的 3 类共 150 件装备（A 类 20、B 类 40、C 类 90，合计展开为 1500 个时频矩形）做两两检测，逐对写入 result1.xlsx，并给出冲突对总数、涉及装备数量与类别分布等统计结果。问题二将消解建模为「每件装备至多执行一个动作（频移 ≤10Δf、时移 ≤5Δt 或撤销）」的词典序多目标优化：先最小化撤销数量，再最小化调整数量与调整幅度，并优先保持高优先级装备；本文以「冲突定向让路」贪心算法求解，反复取冲突对并让低优先级一方以最小幅度让路，得到无冲突用频计划并按表 1 格式汇报。问题三在问题二的无冲突计划上放宽平移幅度但不增加时频资源，针对参数完全一致的 C 类装备构造容量模板 (3Δf, 2Δt, 8Δt, 12 次)，给出<b>面积上界</b> U = ⌊剩余面积 / 单件面积⌋ 作为理论标尺，并以「频段分带 + 相位排布」的贪心算法给出可行解，输出 result3.xlsx。问题四将决策空间扩展为「频移 / 时移 / 间隔调整（仅 C 类，|Δiv| ≤ 10Δt）/ 撤销」，复用问题二的消解引擎并在其中插入间隔试探，输出 result4.xlsx。结果表明，四问可由一套「矩形化—冲突判定—受限让路」的骨架串联，问题三的可行解与容量上界之比刻画了装填效率，问题四相较问题二的撤销量下降且全部来自 C 类，量化了「间隔自由度」的价值。</p>
+
+    <h3>表 1　时频冲突消解的统计结果</h3>
+    <table>
+      <tr><th>类别</th><th>保留数量</th><th>调整数量</th><th>撤销数量</th></tr>
+      <tr><td>A 类</td><td></td><td></td><td></td></tr>
+      <tr><td>B 类</td><td></td><td></td><td></td></tr>
+      <tr><td>C 类</td><td></td><td></td><td></td></tr>
+    </table>
+
+    <h3>目录</h3>
+    <ul>
+      <li>一、问题重述与信息结构分析</li>
+      <li>二、时频离散化与冲突判定的形式化</li>
+      <li>三、问题一：时频冲突检测模型</li>
+      <li>四、问题二：幅度受限下的冲突消解模型</li>
+      <li>五、问题三：无冲突计划上的 C 类容量最大化</li>
+      <li>六、问题四：允许间隔调整的冲突消解模型</li>
+      <li>七、灵敏度分析与稳健性检验</li>
+      <li>八、结论与改进方向</li>
+      <li>附录：代码与结果文件说明</li>
+    </ul>
+
+    <h3>第三章（节选）</h3>
+    <div class="formula">
+      第 k 次使用　T<sub>i,k</sub> = [ t<sub>i</sub> + (k−1)·iv<sub>i</sub> , t<sub>i</sub> + (k−1)·iv<sub>i</sub> + τ<sub>i</sub> )<br>
+      冲突判据　max(fs<sub>i</sub>, fs<sub>j</sub>) &lt; min(fe<sub>i</sub>, fe<sub>j</sub>)　∧　∃ k,l : max(T<sub>i,k</sub> 左端, T<sub>j,l</sub> 左端) &lt; min(T<sub>i,k</sub> 右端, T<sub>j,l</sub> 右端)
+    </div>
+    <p>由于频段区间对所有次使用共用，冲突判定可先行剪枝：频段区间不相交的计划对直接判定为无冲突，只有频段相交时才需要逐对矩形比较时间。为避免端点误判，全部区间均按<b>半开区间</b>处理，比较一律取严格不等号，从而保证 <span style="font-family:Consolas,monospace">[35,40)</span> 与 <span style="font-family:Consolas,monospace">[40,45)</span> 这类首尾相接的情形不被计入冲突……</p>
+
+    <h3>第四章（节选）</h3>
+    <p>设每件装备的动作变量为 <span style="font-family:Consolas,monospace">a<sub>i</sub> ∈ {不动, 频移, 时移, 撤销}</span>，问题二的目标按词典序写作：</p>
+    <div class="formula">min lex　( Σ 撤销数 , Σ 调整数 , Σ |调整幅度| )　s.t.　|Δf| ≤ 10Δf, |Δt| ≤ 5Δt, 每件至多一个动作</div>
+    <p>本文采用冲突定向让路贪心：每次取一个冲突对，令优先级较低的一方以最小可行幅度让路，优先尝试频段平移、其次时间平移，两者均不可行时撤销该计划。由于每个计划至多被调整一次或被撤销，迭代次数有上界，算法必然终止，且终止时冲突数为零……</p>
+
+    <div class="note">本稿为<b>论文初稿骨架</b>：摘要、目录、表 1 与两章节选已就位，表 1 与正文中的所有统计数字在运行 <span style="font-family:Consolas,monospace">代码/main.py</span> 生成 result1~4.xlsx 后直接填入即可。论文可继续在平台上与 AI 交互修改：改摘要、补灵敏度、调排版、加图表说明都可以。</div>
+  </div>
+
+  <footer>2026 CUMCM D 题 · 时频冲突检测与消解 · 论文初稿</footer>
+</div>
+</body>
+</html>

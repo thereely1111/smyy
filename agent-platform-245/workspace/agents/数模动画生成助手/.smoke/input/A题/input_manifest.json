@@ -1,0 +1,25 @@
+{
+  "prepared_at": "2026-09-28T09:45:21+08:00",
+  "title": "A题",
+  "problem_dir": "E:\\xsyy\\test\\数模动画生成助手\\.smoke\\input\\A题",
+  "pdf": {
+    "original": "E:\\xsyy\\test\\实训书动画生成\\竞赛题目\\A题\\A题.pdf",
+    "stored_as": "A题.pdf",
+    "size": 553320,
+    "sha256": "052d8014bff5727c019b72e44fdffaf5c145ce04050dd938baaf3527db331736"
+  },
+  "attachments": [
+    {
+      "original": "E:\\xsyy\\test\\实训书动画生成\\竞赛题目\\A题\\附件\\附件1.xlsx",
+      "stored_as": "附件/附件1.xlsx",
+      "size": 16586,
+      "sha256": "7ef32870abeef420b89560b2530ff60dfe4255917805151d89988d0311af9dd7"
+    },
+    {
+      "original": "E:\\xsyy\\test\\实训书动画生成\\竞赛题目\\A题\\附件\\附件2.xlsx",
+      "stored_as": "附件/附件2.xlsx",
+      "size": 11485,
+      "sha256": "5563acbfa4b4afb10cc6c03e2207e5369bf39da27576672aff14cc5c32e704af"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "snapshot_date": "2026-10-15",
+  "baseline_commit": "e0a0aff067f3bbf5633ddd0ffd87bc13165c8c5f",
+  "scope": "static source snapshot; not the running backend",
+  "sources": [
+    {
+      "path": "package.json",
+      "sha256": "e2cdaae54e91457f601a0f78397b3238a3ba7fc341589f359322481893de2af9"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "5596ae1e27b431bf0d4bda5429d776226858c4a65f6a35cf281492dbf5e802ec"
+    },
+    {
+      "path": "src/api/aguiEvents.ts",
+      "sha256": "a67594255343dc0bc2d74cf14f48092d3deeabe803da1877ba41f8c2267c98bd"
+    },
+    {
+      "path": "src/api/formInterrupt.ts",
+      "sha256": "4971ed61c74a7773f58bd836f071d4f60b60cbd79acdfb3455b96e7fac067877"
+    },
+    {
+      "path": "src/api/analysisRun.ts",
+      "sha256": "de846ce6feab59a7c92759fbd963403005ef96e3777070ccbc72df22e4e6e8e4"
+    },
+    {
+      "path": "src/types/analysis.ts",
+      "sha256": "fde88f6f4e4179cfb336529f49f968b913c2f4138611bdec218dea6bce7c763f"
+    },
+    {
+      "path": "agent-platform-java/backend/pom.xml",
+      "sha256": "b0d36ff4b861edd816d813383f50196dcec447fbe66c2bf6f909b5cd6bcb1d22"
+    },
+    {
+      "path": "agent-platform-java/backend/src/main/java/com/tipdm/agentplatform/web/AgentManagementController.java",
+      "sha256": "349b97c6b3388d24900c72b55773db8a79027ccf075fd3eb86013e7d205c15a2"
+    },
+    {
+      "path": "agent-platform-java/backend/src/main/java/com/tipdm/agentplatform/service/PendingFormInterruptStore.java",
+      "sha256": "29c538242c32529b27529842d5d541ff358d7907266fbd66ff972ad0a221e84d"
+    },
+    {
+      "path": "agent-platform-java/workspace/agents/数学建模解答助手/AGENTS.md",
+      "sha256": "8282cb8ab7c5e4db5d3ce19a3beda50fca985bd08a4cda4768b9c9e13d71e407"
+    },
+    {
+      "path": "agent-platform-java/workspace/agents/数学建模解答助手/subagents/题目解析智能体.md",
+      "sha256": "09071fa1e0d4bed6ef10af1fb7a0ec02ee60c9ca6ba4dfe27a10140f95febfae"
+    }
+  ],
+  "references": [
+    {
+      "license": "MIT",
+      "sha": "72e8ad1802ce9a0525af1398d0de288d9b496317",
+      "verification": "GitHub API",
+      "reuse": "reference only; no copied source or new dependency",
+      "repository": "https://github.com/ag-ui-protocol/ag-ui"
+    },
+    {
+      "license": "MIT",
+      "sha": "484776c211e4fbbeef03e0ec00d6bbee7362a4f4",
+      "verification": "GitHub API",
+      "reuse": "reference only; no copied source or new dependency",
+      "repository": "https://github.com/microsoft/RD-Agent"
+    },
+    {
+      "status": "UNVERIFIED",
+      "name": "LLM-MM-Agent",
+      "reason": "repository URL not established"
+    }
+  ]
+}

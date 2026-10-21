@@ -1,0 +1,48 @@
+.DS_Store
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Java
+target/
+*.class
+backend/workspace/
+
+# workspace：仅定义资产（agents/** 的 AGENTS.md / subagents / skills）入库，
+# 运行态产物、共享总线、缓存与会话残留一律忽略
+workspace/.agentscope/
+workspace/runtimes/
+workspace/knowledge_bases/
+workspace/templates/
+workspace/agents/**/.skills-cache/
+workspace/agents/**/__pycache__/
+workspace/agents/**/browsers/
+workspace/agents/**/wb-*/
+workspace/agents/**/sub-*/
+workspace/agents/**/d8de74f5-*/
+
+# Node
+node_modules/
+dist/
+.vite/
+.env
+.env.local
+
+# Runtime
+logs/
+tmp/
+
+# pnpm local store
+.pnpm-store/
+
+# WorkBuddy 工作记忆与产物
+.workbuddy/
+frontend/.workbuddy/
+LOCAL_CHANGES.md
+
+# 技能仓库 git 缓存（运行时产物，不入库）
+.skill-repository-cache/
+
+# 部署密钥（本地保留，不入库）：helm upgrade 时 -f deploy/values-secrets.local.yaml
+deploy/values-secrets.local.yaml

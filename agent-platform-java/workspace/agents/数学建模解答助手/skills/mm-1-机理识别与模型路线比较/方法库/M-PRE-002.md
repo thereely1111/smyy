@@ -1,0 +1,12 @@
+### M-PRE-002 岭回归 / Lasso / Elastic Net
+- **task_types**：高维回归、变量筛选、共线性处理。
+- **problem_signature**：特征数多、相关性强、需要收缩或稀疏解。
+- **core_idea**：在损失函数加入 L2、L1 或混合正则项。
+- **mathematical_form**：`loss + λ[(1-α)||β||_2^2/2 + α||β||_1]`。
+- **assumptions**：预测关系可被特征线性表示；标准化和正则强度可合理选择。
+- **outputs**：系数、被选变量、预测值、正则路径。
+- **validation**：嵌套交叉验证、系数稳定性、变量选择重复性、基线比较。
+- **selection_tags**：`regularization, high-dimensional, feature-selection`
+- **composable_with**：`M-PRE-001, M-PRE-003, M-PRE-005`
+- **fallbacks**：降维、树模型、稳定选择。
+- **agent_actions**：划分数据 -> 标准化且防泄漏 -> 交叉验证选 λ -> 报告系数稳定性。

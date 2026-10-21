@@ -1,0 +1,21 @@
+-- V62: 会话「等人工唤醒」封存标记
+--
+-- HITL 审批超时自动取消后置位，置位期间会话的一切自发 run 唤醒源静默，
+-- 只有用户主动发起新 run（AG-UI 请求）才清除。
+--
+-- 背景（2026-10-05 main-3f077bd9 实证）：超时取消摘掉 pending 登记后，会话即
+-- 「解冻」——此前被闸门挡住的唤醒通道恢复驱动能力，叠加 inbox 里积压的子任务
+-- 完成通知，超时取消本身成了「继续跑」的触发器：01:30:07 超时取消，01:35:35 即
+-- 起了新 run srv-972ca3c27ef8 输出 3673 条事件。超时 ≠ 批准，平台不该代替主编
+-- 推进；用户口径为「不允许继续，必须等待人工唤醒」。
+--
+-- 与 V60 stop_requested 是同类闸门但语义不同，不可复用同一列：
+--   stop_requested = 用户主动喊停（interrupt 置位）；
+--   本列          = 平台超时取消后的被动冻结（reaper 置位）。
+-- 两者独立并存，任一置位即禁止自发唤醒。
+--
+-- 拦截点与 stop_requested 对称（AguiWakeupTarget.runWakeup 入口 +
+-- SessionProgressService.shouldWake），inbox hint 原样保留，用户下次说「继续」
+-- 时仍能看到积压内容。
+ALTER TABLE agent_session_progress
+    ADD COLUMN IF NOT EXISTS awaiting_human_gate BOOLEAN NOT NULL DEFAULT FALSE;

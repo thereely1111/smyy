@@ -1,0 +1,14 @@
+### M-OPT-006 鲁棒优化
+- **task_types**：参数不确定下的资源配置、计划、调度、设计。
+- **problem_signature**：参数存在区间或集合不确定性；要求最坏情形仍可行。
+- **core_idea**：在不确定参数集合下优化最坏情形目标或约束。
+- **mathematical_form**：`min_x max_{u∈U} f(x,u)`，并要求 `g(x,u)<=0, ∀u∈U`。
+- **inputs**：不确定参数、集合 U、预算不确定性、可靠性要求。
+- **outputs**：鲁棒解、最坏情形性能、保守度、对名义解的损失。
+- **assumptions**：不确定集合能反映真实扰动；最坏情形具有决策意义。
+- **hard_constraints**：不确定集合过宽或与业务风险不符会导致过度保守。
+- **validation**：历史扰动回放、最坏情形、典型情景、保守度分析。
+- **selection_tags**：`uncertainty, robust, worst-case, feasibility`
+- **composable_with**：`M-OPT-001, M-OPT-002, M-OPT-005, M-UNC-002`
+- **fallbacks**：情景优化、机会约束、分布鲁棒优化。
+- **agent_actions**：定义不确定集 -> 构造鲁棒对应式 -> 求解 -> 比较名义/最坏/历史表现。

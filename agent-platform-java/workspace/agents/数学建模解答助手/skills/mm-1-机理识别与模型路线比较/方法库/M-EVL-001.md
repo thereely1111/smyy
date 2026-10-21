@@ -1,0 +1,13 @@
+### M-EVL-001 层次分析法（AHP）
+- **task_types**：多指标评价、方案排序、主观权重。
+- **problem_signature**：指标层级清晰；专家判断可获得；方案数适中。
+- **core_idea**：两两比较构造判断矩阵，计算权重并检查一致性。
+- **inputs**：目标-准则-指标层级、判断矩阵、尺度、方案指标。
+- **outputs**：权重、总排序、一致性比例、排序结果。
+- **assumptions**：层级结构合理；判断具有相对一致性。
+- **hard_constraints**：指标数量过多导致判断矩阵负担过重时不宜直接使用。
+- **validation**：一致性比率、专家间一致性、权重扰动排序稳定性。
+- **selection_tags**：`evaluation, subjective-weight, hierarchy`
+- **composable_with**：`M-EVL-002, M-EVL-003, M-PRE-006`
+- **fallbacks**：熵权、BWM、组合赋权。
+- **agent_actions**：去除重复指标 -> 建层级 -> 获取判断 -> 检查 CR -> 敏感性分析。

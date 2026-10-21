@@ -1,0 +1,156 @@
+{
+  "purpose": "S1 输入盘点/数据质量画像（只读统计，非求解）",
+  "source": "81200078-d244-4cbf-84d9-db2a0f2bf6f1-1.xlsx",
+  "sheets": [
+    "Sheet1"
+  ],
+  "headers": [
+    "用频装备编号",
+    "频段区间",
+    "时间区间",
+    "间隔时长",
+    "使用次数"
+  ],
+  "n_data_rows": 150,
+  "n_rows_fully_parsed": 150,
+  "ids_first6": [
+    "A001",
+    "A002",
+    "A003",
+    "A004",
+    "A005",
+    "A006"
+  ],
+  "ids_last6": [
+    "C085",
+    "C086",
+    "C087",
+    "C088",
+    "C089",
+    "C090"
+  ],
+  "duplicate_ids": [],
+  "class_prefix_counts": {
+    "A": 20,
+    "B": 40,
+    "C": 90
+  },
+  "unparsed": {
+    "band_interval": {
+      "n": 0,
+      "sample": []
+    },
+    "time_interval": {
+      "n": 0,
+      "sample": []
+    },
+    "gap": {
+      "n": 0,
+      "sample": []
+    },
+    "use_count": {
+      "n": 0,
+      "sample": []
+    }
+  },
+  "band_axis_observed": {
+    "min": 0.0,
+    "max": 100.0
+  },
+  "first_time_axis_observed": {
+    "min": 0.0,
+    "max": 533.0
+  },
+  "derived_max_last_occupancy_end": 643.0,
+  "derived_sum_of_time_freq_cells": 16680.0,
+  "band_width_distribution": {
+    "3.0": 90,
+    "10.0": 20,
+    "15.0": 40
+  },
+  "first_time_duration_distribution": {
+    "2.0": 90,
+    "3.0": 40,
+    "5.0": 20
+  },
+  "gap_distribution": {
+    "8.0": 90,
+    "40.0": 40,
+    "60.0": 20
+  },
+  "use_count_distribution": {
+    "3.0": 20,
+    "4.0": 40,
+    "12.0": 90
+  },
+  "flags": {
+    "band_end_gt_100_or_neg": [],
+    "band_or_time_nonpositive": [],
+    "gap_lt_first_duration": {
+      "n": 0,
+      "sample": []
+    }
+  },
+  "by_class": {
+    "A": {
+      "n": 20,
+      "band_width": {
+        "10.0": 20
+      },
+      "first_duration": {
+        "5.0": 20
+      },
+      "gap": {
+        "60.0": 20
+      },
+      "use_count": {
+        "3.0": 20
+      },
+      "band_min": 2.0,
+      "band_max": 92.0,
+      "first_t_min": 0.0,
+      "first_t_max": 490.0,
+      "max_last_occupancy_end": 620.0
+    },
+    "B": {
+      "n": 40,
+      "band_width": {
+        "15.0": 40
+      },
+      "first_duration": {
+        "3.0": 40
+      },
+      "gap": {
+        "40.0": 40
+      },
+      "use_count": {
+        "4.0": 40
+      },
+      "band_min": 0.0,
+      "band_max": 100.0,
+      "first_t_min": 15.0,
+      "first_t_max": 498.0,
+      "max_last_occupancy_end": 627.0
+    },
+    "C": {
+      "n": 90,
+      "band_width": {
+        "3.0": 90
+      },
+      "first_duration": {
+        "2.0": 90
+      },
+      "gap": {
+        "8.0": 90
+      },
+      "use_count": {
+        "12.0": 90
+      },
+      "band_min": 0.0,
+      "band_max": 99.0,
+      "first_t_min": 2.0,
+      "first_t_max": 533.0,
+      "max_last_occupancy_end": 643.0
+    }
+  }
+}

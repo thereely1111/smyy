@@ -1,0 +1,53 @@
+{
+  "case_id": "20261009_D题_D组",
+  "stage": "S0_INTAKE",
+  "status": "INTAKE_OK_REDISPATCHING",
+  "revision": 3,
+  "session_dir": "main-c9fd55c6-ea9a-4fee-84bd-0b8eb970a5d5",
+  "runtime_root": "E:\\数模演易\\smyy\\workspace\\runtimes\\14ef7e16-06c8-34ff-8845-c19866cb2689",
+  "uploads_dir_abs": "E:\\数模演易\\smyy\\workspace\\runtimes\\14ef7e16-06c8-34ff-8845-c19866cb2689\\main-c9fd55c6-ea9a-4fee-84bd-0b8eb970a5d5\\uploads",
+  "updated_at": "2026-10-09T14:16",
+  "title_hint": "D题 时频冲突检测与消解（题面正文只在 PDF 内，用户未另附文字）",
+  "scope": {
+    "in_scope": ["题目契约", "子问题依赖图", "假设/符号/单位", "数据需求与质量", "逐问模型路线"],
+    "out_of_scope": ["数值求解", "代码实现", "动画/可视化", "论文成稿"]
+  },
+  "uploads_register": [
+    { "role": "problem_statement", "name": "D题.pdf", "file": "uploads/ccdba5df-611c-4fed-bb7d-04a7253d6255-D.pdf", "bytes": 442550, "md5": "93a08ad940ed5cd3f2a9359c3daa3017", "on_disk_now": true },
+    { "role": "data_attachment", "name": "附件1.xlsx", "file": "uploads/81200078-d244-4cbf-84d9-db2a0f2bf6f1-1.xlsx", "bytes": 16067, "md5": "b86e5536ac1586ae8566e6de624eb090", "on_disk_now": true },
+    { "role": "result_template_q1", "name": "result1.xlsx", "file": "uploads/3e5eece8-445d-45fa-8dd7-ded7b9597a50-result1.xlsx", "bytes": 10135, "md5": "7a9925eb2c05d9cd006ffee06e551fd7", "on_disk_now": true },
+    { "role": "result_template_q2", "name": "result2.xlsx", "file": "uploads/7ed640dd-46b2-480b-81ee-5bbe81edbaac-result2.xlsx", "bytes": 9832, "md5": "08c24c534ca41adbec0f82157f1b7f09", "on_disk_now": true },
+    { "role": "result_template_q3", "name": "result3.xlsx", "file": "uploads/1908bb00-c6ab-4dbf-9f0b-33a0b1b44824-result3.xlsx", "bytes": 8362, "md5": "cbe50ed9f5249ce7c832deefae93a903", "on_disk_now": true },
+    { "role": "result_template_q4", "name": "result4.xlsx", "file": "uploads/b689efb7-6f61-4a17-a75b-2cbc43a617a3-result4.xlsx", "bytes": 9854, "md5": "bde099fa4dd3e63aada83301af7e6a2a", "on_disk_now": true }
+  ],
+  "path_note": "file 为相对本会话目录（<runtime_root>\\main-c9fd55c6-ea9a-4fee-84bd-0b8eb970a5d5）的路径；绝对路径 = uploads_dir_abs + 文件名。",
+  "md5_note": "md5 由总控用 certutil -hashfile 于 2026-10-09 14:16 对上述绝对路径实测得到（非引用历史值）。",
+  "input_hashes": {
+    "ccdba5df-611c-4fed-bb7d-04a7253d6255-D.pdf": "93a08ad940ed5cd3f2a9359c3daa3017",
+    "81200078-d244-4cbf-84d9-db2a0f2bf6f1-1.xlsx": "b86e5536ac1586ae8566e6de624eb090",
+    "3e5eece8-445d-45fa-8dd7-ded7b9597a50-result1.xlsx": "7a9925eb2c05d9cd006ffee06e551fd7",
+    "7ed640dd-46b2-480b-81ee-5bbe81edbaac-result2.xlsx": "08c24c534ca41adbec0f82157f1b7f09",
+    "1908bb00-c6ab-4dbf-9f0b-33a0b1b44824-result3.xlsx": "cbe50ed9f5249ce7c832deefae93a903",
+    "b689efb7-6f61-4a17-a75b-2cbc43a617a3-result4.xlsx": "bde099fa4dd3e63aada83301af7e6a2a"
+  },
+  "missing_inputs": [],
+  "prior_incident": {
+    "summary": "2026-10-09 上午至中午平台多次重启，运行态根在 E: / D: / C:\\Users\\吴海燕 三值间漂移，一度导致 uploads 与本 case 产物不可寻址；3 个解析任务（task_4114e679 cancelled、task_b1e0f0a7 failed、task_baeeade2 failed）全部无产物。14:14 后根恢复为 E:，6 个附件全部回到盘上（字节数与首次观测一致，md5 本轮实测）。",
+    "orchestration_fault_acknowledged": "总控曾把迁移前的绝对路径注入子智能体；恢复后必须先实测路径存在再派发（本轮已照此执行）。",
+    "recovery_form_timed_out": "恢复路径表单被平台 30 分钟超时自动关闭，未构成主编决策；因输入件已自行恢复、缺件阻塞解除，无需再就该表单追问主编。"
+  },
+  "kept_facts_from_prior_read": [
+    "题面全文（时频冲突检测与消解；Δt 为最小不可拆时间单位；频域离散 100 个等宽频段；每计划占用连续且数量不变的多个频段；时间与频段同时交叠才判冲突；一个计划只能调一个参数或撤销；默认不调使用次数与间隔时长；优先级：少撤销 → 少调整数量 → A>B>C 保持 → 小幅度（平移上限 10Δf、5Δt）；4 个问题；表1 统计格式；附录含 result1~4 填法与 A001 示例口径）",
+    "附件1：Sheet1 150 行 × 5 列（用频装备编号/频段区间/时间区间/间隔时长/使用次数）；间隔时长仅 60/40/8 三档各 50 行（mean 23.4667）；使用次数仅 3/4/12 三档各 50 行（mean 8.66667）",
+    "result1~4 均为空模板，列头：result1 序号|冲突装备1|冲突设备2；result2 用频装备编号|调整后频段区间|调整后时间区间|是否撤销用频计划；result3 新增用频装备序号|调整后频段区间|调整后时间区间；result4 用频装备编号|调整后频段范围|调整后时间区间|调整后间隔时长|是否撤销用频计划",
+    "待实测项（上一轮未取到，本轮须由脚本实测补齐）：150 行「频段区间」「时间区间」逐行取值、冲突对规模、时间轴跨度、各编号类装备数量分布"
+  ],
+  "artifacts": [
+    "artifacts/20261009_D题_D组/input_manifest.json",
+    "artifacts/20261009_D题_D组/state.json"
+  ],
+  "retry_count": 4,
+  "last_error": null,
+  "next_action": "重新派发题目解析智能体：第一段=快速盘点（输入整备+附件实测），第二段=完整分析（四个交付件先骨架后内容）",
+  "resumable": true
+}

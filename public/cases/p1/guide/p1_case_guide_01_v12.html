@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>实训指导书 · 中药材热风烘干过程的热湿耦合建模</title>
+<style>
+  :root{
+    --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+    --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+    --teal:#12a594; --teal-d:#0b6e68; --gold:#e0a04a; --gold-d:#8a6313;
+    --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.8 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:40px 24px 64px}
+  .hd{border-bottom:2px solid var(--teal);padding-bottom:18px;margin-bottom:28px}
+  .kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+  h1{font-size:27px;line-height:1.35;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .sub{font-size:14px;color:var(--muted);margin:0}
+  .blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;
+    box-shadow:var(--sh);margin-bottom:18px}
+  h3{margin:0 0 12px;font-size:17px;font-weight:600;color:var(--teal-d)}
+  h3 + h3{margin-top:14px}
+  p{margin:0 0 10px;font-size:14.5px;color:var(--ink2);line-height:1.85}
+  p:last-child{margin-bottom:0}
+  b,strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 10px;padding-left:22px}
+  li{font-size:14px;color:var(--ink2);line-height:1.9;margin-bottom:3px}
+  .note{
+    font-size:13px;color:#5a6b78;background:#fafdfd;border:1px dashed var(--line);
+    border-radius:9px;padding:10px 14px;line-height:1.8;margin-top:12px;
+  }
+  .formula{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+    color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.9;
+    overflow:auto;white-space:pre-wrap;margin:4px 0 12px;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 12px}
+  th,td{border-bottom:1px solid var(--line2);padding:7px 10px;text-align:left}
+  th{font-size:12px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+  .foot{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="kicker">2026 国赛 A 题 · 实训指导书</div>
+    <h1>中药材热风烘干过程的热湿耦合建模</h1>
+    <p class="sub">径向一维热湿耦合有限体积统一骨架 · 四问逐级加深</p>
+  </div>
+
+  <section class="blk">
+    <h3>一、题目重述与信息结构</h3>
+    <p>某中药材形状大致呈<b>圆柱形</b>：长 25 cm、半径 2 cm。烘干开始时药材温度 <b>28°C</b>、干基含水率 <b>2.55 kg/kg</b>。热风烘干分<b>预热平衡</b>与<b>恒温干燥</b>两阶段，烘房温度与水分浓度随时间变化（附件1）。四个问题是<b>同一套热湿耦合 PDE 的逐级加深</b>：</p>
+    <ul>
+      <li><b>问题一</b>：预热平衡阶段（0-1800 s），附录2 常物性 → 建立温度与水分浓度模型，填表1/表2；</li>
+      <li><b>问题二</b>：整个烘干过程（2-3 天），附录3 变物性 → 填表3/表4；</li>
+      <li><b>问题三</b>：在问题二基础上求各处水分 &lt;0.15 kg/kg 所需烘干时长（h）→ 填表5；</li>
+      <li><b>问题四</b>：考虑水分流失导致的<b>半径收缩</b>（附件2：2→1.198 cm），附录4 物性 → 动边界模型，填表6。</li>
+    </ul>
+    <p><b>关键简化</b>：长径比 25/2 = 12.5 ≫ 1，轴向梯度可忽略 → <b>径向一维</b>柱坐标模型即可（这是本题第一个得分点）。</p>
+    <div class="note">这一步的关键是画出“烘房环境 → 表面对流 → 内部扩散”的能量/质量双通道结构图，标清四问共用的控制方程与各自不同的物性来源（附录2/3/4）。评委一眼就能看出你是否抓住了“一套 PDE、四套参数”的主线。</div>
+  </section>
+
+  <section class="blk">
+    <h3>二、物理机理与控制方程</h3>
+    <p>药材内部同时发生<b>导热</b>与<b>水分扩散</b>，两者在表面通过对流与烘房环境耦合：</p>
+    <div class="formula">质量：∂C/∂t = (1/r)·∂/∂r( r·D(C,T)·∂C/∂r )
+能量：ρ(C)·cp(C)·∂T/∂t = (1/r)·∂/∂r( r·k(C)·∂T/∂r )</div>
+    <p><b>边界条件（Robin 第三类）</b>：</p>
+    <ul>
+      <li>表面 r=R：&nbsp;-k·∂T/∂r = h·(T|R − Ta(t))，&nbsp;&nbsp;-D·∂C/∂r = km·(C|R − Ca(t))；</li>
+      <li>中心 r=0：轴对称，∂T/∂r = ∂C/∂r = 0。</li>
+    </ul>
+    <p>其中 Ta(t)、Ca(t) 由<b>附件1 线性插值</b>给出（28→50.25°C、0.0196→0.0503 kg/kg，覆盖 0-14400 s 预热段；之后按恒温 50.25°C / 0.0499 处理）。对流换热系数 h = 25 W/(m²·K)，对流传质系数 km = 8×10⁻⁷ m/s。</p>
+    <div class="note">本题最易踩坑：① 把“水分浓度”当体积浓度处理——题给的是干基含水率 kg/kg，扩散方程形式不变但物性公式都按它定义；② 忘记中心胞元体积是 r=0 处的四分之一圆（dr²/8），直接套内部胞元格式会导致中心通量凭空翻倍。</div>
+  </section>
+
+  <section class="blk">
+    <h3>三、数值方法：有限体积法（FV）</h3>
+    <p>沿半径取 <b>21 个节点</b>（r = 0, 0.1, …, 2.0 cm，dr = 0.1 cm），对每个环形胞元做质量/能量守恒：</p>
+    <ul>
+      <li><b>内部胞元</b>（2πr_m·dr）：净通量 = 右面流入 − 左面流出，界面系数取相邻节点算术平均；</li>
+      <li><b>中心胞元</b>（体积 dr²/8）：只有右面 flux[0] 流入 → dC[0] = flux[0]/(dr²/8)；</li>
+      <li><b>表面半胞元</b>：内部扩散补给（−flux[-1]）减去表面对流传质（km·R·(C|R−Ca)）→ 这是<b>符号最容易写反</b>的地方；</li>
+      <li><b>时间推进</b>：显式 Euler，dt = 0.5 s（由 D·dt/dr² &lt; 1/4 限制，全程稳定）。</li>
+    </ul>
+    <div class="formula">dC[-1] = ( −flux[-1] − km·R·(C[-1]−Ca) ) / ( R·dr )</div>
+    <p>问题四引入 <b>Landau（ξ = r/R(t)）坐标</b>把变域问题映射到固定域 [0,1]：扩散项除以 R(t)²，另产生一个指向中心的对流项 (ξ·Ṙ/R)·∂C/∂ξ——收缩“泵送效应”由此显式进入方程。</p>
+    <div class="note">自检三件套：① 干燥中后期 Cmax 单调下降且无振荡；② 预热段内部节点水分几乎不动（D 小 4 个量级）；③ 时间步减半结果不变（收敛性）。三条都过，数值解才算站得住。</div>
+  </section>
+
+  <section class="blk">
+    <h3>四、从问题一到问题四的模型升级路径</h3>
+    <h3 style="font-size:14.5px;margin-top:4px">问题一：预热平衡（附录2 常物性）</h3>
+    <p>ρ=820 kg/m³、cp=2600 J/(kg·K)、k=0.36 W/(m·K) 均为常数，D = 7×10⁻⁹·e^(−0.89C)。结果特征：<b>热快湿慢</b>——1800 s 全场温度 28→33.4~36.6°C，而水分只在表面约 0.1 cm 薄层内下降（表面 2.55→1.312，内部仍 2.55）。</p>
+    <h3 style="font-size:14.5px">问题二：全过程（附录3 变物性）</h3>
+    <p>ρ=650+128C、cp=1450+2736·C/(C+1)、k=0.21+0.38·C/(C+1)、D=2.4×10⁻³·e^(−0.45C)·e^(−3850/T)。D 对温度<b>指数敏感</b>：升温到 50°C 后 D 增大约一个量级，干燥明显加速；3 h 时中心水分 2.19、表面 1.01 kg/kg。</p>
+    <h3 style="font-size:14.5px">问题三：烘干时长判定</h3>
+    <p>沿用问题二模型，监测 Cmax(t) = max_r C(r,t)，首次降到 <b>0.15 kg/kg</b> 的时刻即烘干时长：<b>16.87 h</b>。注意判据是“各处”——中心永远是最后达标点。</p>
+    <h3 style="font-size:14.5px">问题四：动边界收缩（附录4 + 附件2）</h3>
+    <p>ρ=760+90C、cp=1850+2150·C/(C+1)、k=0.12+0.20·C/(C+1)、D=4.2×10⁻⁴·e^(−0.30C)·e^(−3850/T)；半径按附件2 从 2 cm 收缩到 1.198 cm。虽然扩散路径缩短，但附录4 的 D 比附录3 低约 <b>5 倍</b>，烘干时长反而延长至 <b>21.49 h</b>（结束时 R = 1.207 cm）——<b>物性差异主导、几何收缩次要</b>。</p>
+  </section>
+
+  <section class="blk">
+    <h3>五、结果与灵敏度分析</h3>
+    <p>四问的参考结果（有限体积法，21 节点，dt=0.5 s）：</p>
+    <table>
+      <tr><th>问题</th><th>阶段</th><th>关键结果</th></tr>
+      <tr><td>问题一</td><td>1800 s 预热平衡</td><td>中心 33.4188°C / 表面 36.5905°C；表面水分 1.312，内部 2.55</td></tr>
+      <tr><td>问题二</td><td>3 h 全过程</td><td>中心 49.81°C（趋近烘房）；中心水分 2.19 / 表面 1.01</td></tr>
+      <tr><td>问题三</td><td>Cmax&lt;0.15</td><td>烘干时长 <b>16.87 h</b></td></tr>
+      <tr><td>问题四</td><td>动边界收缩</td><td>烘干时长 <b>21.49 h</b>，R 由 2 → 1.207 cm</td></tr>
+    </table>
+    <p>值得写进论文的几个灵敏度结论：</p>
+    <ul>
+      <li>扩散系数前置常数 ×2（其余不变），问题三烘干时长约<b>缩短 35%</b>——干燥后期由内部扩散控制，D 是第一敏感参数；</li>
+      <li>对流换热系数 h ±20%，只影响预热段升温快慢（±0.4°C 量级），对 16.87 h 的烘干时长几乎无影响——因为后期瓶颈在内部扩散而非表面传热；</li>
+      <li>问题四若<b>忽略收缩</b>（固定 R=2 cm + 附录4 物性），烘干时长约 27 h，比动边界模型长 26%——收缩的“路径缩短”效应贡献显著但不足以抵消物性放慢。</li>
+    </ul>
+    <div class="note">最后一条是很好的讨论点：动边界同时带来两种相反效应——路径变短（加快）与对流泵送指向中心（减慢），净效应是加快约 5.5 h。很多论文只算几何效应不写对流项，会被追问。</div>
+  </section>
+
+  <section class="blk">
+    <h3>六、模型评价与论文写作要点</h3>
+    <h3 style="font-size:14.5px;margin-top:4px">优点</h3>
+    <ul>
+      <li>四问共用一套径向一维热湿耦合 FV 骨架，只换物性函数与网格映射（固定域 / Landau 域），论文结构紧凑、代码可复用；</li>
+      <li>有限体积天然守恒，表面通量、中心胞元、动边界对流项都有明确的物理意义，答辩好讲；</li>
+      <li>结果给出“热快湿慢”“物性主导几何”等机理结论，不止于填表。</li>
+    </ul>
+    <h3 style="font-size:14.5px">局限与改进</h3>
+    <ul>
+      <li>忽略轴向梯度与端面效应（长径比 12.5 下端面贡献约 4%，可在论文中用修正因子说明）；</li>
+      <li>未显式考虑蒸发潜热在内部的相变耗热（简化为表面效应），更精细可引入蒸发-冷凝源项；</li>
+      <li>附件2 半径数据只有 145 个点，长时段用线性插值，收缩速率 Ṙ 的估计有锯齿，可用样条平滑改进。</li>
+    </ul>
+    <div class="note">论文结构建议：摘要（务必写关键数字 16.87 h / 21.49 h）→ 问题重述 → 假设与符号说明（<b>记得补“单位”列</b>）→ 机理分析与控制方程 → 问题一～四模型与求解 → 灵敏度与稳健性 → 结论 → 参考文献 → 附录（代码 + result1.xlsx ～ result4.xlsx 文件说明）。</div>
+  </section>
+
+  <div class="foot">数模演易 · 2026 国赛 A 题实训指导书</div>
+</div>
+</body>
+</html>

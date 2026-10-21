@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "smyy normalized solution map - Phase 0 draft",
+  "description": "Target questions[] contract; production routes[] still needs an explicit adapter. ID uniqueness, reference existence and acyclicity require graph checks.",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "questions": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["question_id", "required", "objective", "inputs", "outputs", "depends_on", "initial_routes"],
+        "properties": {
+          "question_id": {"type": "string", "pattern": "\\S"},
+          "required": {"type": "boolean"},
+          "objective": {"type": "string", "pattern": "\\S"},
+          "inputs": {"type": "array"},
+          "outputs": {"type": "array"},
+          "initial_routes": {"type": "array"},
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "object", "required": ["question_id", "kind"],
+              "properties": {
+                "question_id": {"type": "string", "pattern": "\\S"},
+                "kind": {"enum": ["analysis_contract", "numerical_output"]},
+                "required_at": {"type": "string", "pattern": "\\S"}
+              },
+              "allOf": [{"if": {"properties": {"kind": {"const": "numerical_output"}}, "required": ["kind"]}, "then": {"required": ["required_at"]}}]
+            }
+          }
+        },
+        "allOf": [{"if": {"properties": {"required": {"const": true}}, "required": ["required"]}, "then": {"properties": {"outputs": {"minItems": 1}}}}]
+      }
+    }
+  }
+}

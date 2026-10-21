@@ -1,0 +1,24 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agent-platform.fullname" . }}-postgres-init
+  labels:
+    {{- include "agent-platform.labels" . | nindent 4 }}
+data:
+  01-agentscope-sessions.sql: |
+    -- AgentScope 会话状态表：框架 PostgresAgentStateStore（public schema）运行时按
+    -- session_id/state_key 覆盖写入。PostgresSubagentStateReader 启动期会强校验本表
+    -- 存在（createIfNotExist=false），因此全新库首装必须先建表，否则后端启动即失败。
+    -- DDL 与 agentscope-extensions-postgresql PostgresAgentStateStore#createTableIfNotExist 一致。
+    CREATE TABLE IF NOT EXISTS public.agentscope_sessions (
+        session_id VARCHAR(255) NOT NULL,
+        state_key  VARCHAR(255) NOT NULL,
+        item_index INT          NOT NULL DEFAULT 0,
+        state_data TEXT         NOT NULL,
+        version    BIGINT       NOT NULL DEFAULT 0,
+        created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (session_id, state_key, item_index)
+    );
+{{- end }}

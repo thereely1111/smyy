@@ -1,0 +1,13 @@
+### M-NET-003 选址-分配与覆盖模型
+- **task_types**：设施选址、服务点布局、应急站点、配送中心。
+- **problem_signature**：需要选择设施位置并把需求点分配给设施；有距离、容量或覆盖半径。
+- **core_idea**：联合决定开设哪些设施及服务分配。
+- **models**：p-median、设施选址、最大覆盖、容量选址。
+- **inputs**：候选点、需求权重、距离、固定成本、容量、覆盖阈值。
+- **outputs**：设施选择、分配关系、覆盖率、平均距离、成本。
+- **assumptions**：候选位置集合合理；距离可代表服务代价。
+- **validation**：需求权重、候选点、容量、覆盖阈值敏感性。
+- **selection_tags**：`location, coverage, facility, allocation`
+- **composable_with**：`M-OPT-002, M-NET-001, M-OPT-004`
+- **fallbacks**：聚类初始解、贪心覆盖、鲁棒选址。
+- **agent_actions**：生成距离矩阵 -> 明确覆盖定义 -> 建 MILP -> 检查容量/覆盖 -> 做情景比较。

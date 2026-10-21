@@ -1,0 +1,173 @@
+{
+  "checked_at": "2026-09-28T09:45:24+08:00",
+  "animation_dir": ".smoke\\animation",
+  "items": [
+    {
+      "item_id": "F1-分档文件",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "5 份 HTML，体积均 ≥ 1000 字节"
+    },
+    {
+      "item_id": "F2-占位符[01_全局问题分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "占位符已全部替换"
+    },
+    {
+      "item_id": "F3-DATA[01_全局问题分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "内嵌 JSON 可解析"
+    },
+    {
+      "item_id": "F4-分档切换[01_全局问题分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "顶栏分档切换存在"
+    },
+    {
+      "item_id": "F5-结构[01_全局问题分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "3 幕，块类型全部合法，无禁用开场词"
+    },
+    {
+      "item_id": "F2-占位符[02_问题一分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "占位符已全部替换"
+    },
+    {
+      "item_id": "F3-DATA[02_问题一分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "内嵌 JSON 可解析"
+    },
+    {
+      "item_id": "F4-分档切换[02_问题一分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "顶栏分档切换存在"
+    },
+    {
+      "item_id": "F5-结构[02_问题一分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "1 幕，块类型全部合法，无禁用开场词"
+    },
+    {
+      "item_id": "F2-占位符[03_问题二分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "占位符已全部替换"
+    },
+    {
+      "item_id": "F3-DATA[03_问题二分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "内嵌 JSON 可解析"
+    },
+    {
+      "item_id": "F4-分档切换[03_问题二分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "顶栏分档切换存在"
+    },
+    {
+      "item_id": "F5-结构[03_问题二分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "1 幕，块类型全部合法，无禁用开场词"
+    },
+    {
+      "item_id": "F2-占位符[04_问题三分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "占位符已全部替换"
+    },
+    {
+      "item_id": "F3-DATA[04_问题三分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "内嵌 JSON 可解析"
+    },
+    {
+      "item_id": "F4-分档切换[04_问题三分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "顶栏分档切换存在"
+    },
+    {
+      "item_id": "F5-结构[04_问题三分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "1 幕，块类型全部合法，无禁用开场词"
+    },
+    {
+      "item_id": "F2-占位符[05_问题四分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "占位符已全部替换"
+    },
+    {
+      "item_id": "F3-DATA[05_问题四分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "内嵌 JSON 可解析"
+    },
+    {
+      "item_id": "F4-分档切换[05_问题四分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "顶栏分档切换存在"
+    },
+    {
+      "item_id": "F5-结构[05_问题四分析.html]",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "1 幕，块类型全部合法，无禁用开场词"
+    },
+    {
+      "item_id": "F4b-档清单自洽",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "deck 登记 5 档，与目录一致（样本 01_全局问题分析.html）"
+    },
+    {
+      "item_id": "F6-质量阈值",
+      "status": "PASS",
+      "severity": "P0",
+      "detail": "分档/幕/块/图表点数均达标"
+    },
+    {
+      "item_id": "F6b-内容完整性",
+      "status": "NOT_TESTED",
+      "severity": "P1",
+      "detail": "问题一分析 提到 附录2 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$"
+    },
+    {
+      "item_id": "F6b-内容完整性",
+      "status": "NOT_TESTED",
+      "severity": "P1",
+      "detail": "问题二分析 提到 附录3 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$"
+    },
+    {
+      "item_id": "F6b-内容完整性",
+      "status": "NOT_TESTED",
+      "severity": "P1",
+      "detail": "问题四分析 提到 附录4 却没有任何公式，请在 prompt 要求的本档公式重述处补上 $$…$$"
+    },
+    {
+      "item_id": "F7-视觉与交互",
+      "status": "NOT_TESTED",
+      "severity": "P1",
+      "detail": "鼠标/触屏交互、桌面与移动端无裁切、逐幕翻页与自动讲解需人工打开页面确认"
+    }
+  ],
+  "summary": {
+    "pass": 23,
+    "fail": 0,
+    "not_tested": 4
+  }
+}

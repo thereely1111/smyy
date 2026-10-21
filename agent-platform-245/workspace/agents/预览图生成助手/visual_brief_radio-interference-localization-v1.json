@@ -1,0 +1,18 @@
+{
+  "case_id": "p2",
+  "title": "无线电干扰源的快速自动定位与清除",
+  "topic_summary": "机器狗搭载测向机在半径 1800 m 区域内找出 10–16 个干扰源，形成发现、定位、清除的完整策略，并接受模拟器三次正式测试。",
+  "core_objects": ["机器狗巡检平台", "测向设备", "隐蔽无线电干扰源节点", "开阔搜索区域"],
+  "modeling_relations": ["多点测向交会定位", "搜索区域覆盖构型", "发现—定位—清除路径规划", "策略仿真"],
+  "visual_elements": ["稀疏无线电波纹", "汇聚到目标节点的测向线", "机器狗向目标移动的路径"],
+  "composition": {
+    "orientation": "landscape",
+    "safe_zone": "center-horizontal",
+    "edge_policy": "edges-background-only"
+  },
+  "style": "restrained academic editorial illustration",
+  "palette": ["teal", "blue-green", "ink", "small amber accent"],
+  "negative_constraints": ["text", "letters", "numbers", "formula", "coordinate ticks", "logo", "watermark", "border", "people", "weapons", "explosion", "dashboard", "dense grid"],
+  "confidence": "source-backed",
+  "revision": "v1.0"
+}

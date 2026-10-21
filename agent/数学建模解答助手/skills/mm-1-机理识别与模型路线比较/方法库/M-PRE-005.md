@@ -1,0 +1,12 @@
+### M-PRE-005 神经网络与深度学习
+- **task_types**：复杂非线性预测、序列、图像、文本、函数近似。
+- **problem_signature**：样本量较大或有预训练模型；关系高度非线性；预测优先于参数解释。
+- **core_idea**：通过多层可微函数逼近复杂映射。
+- **inputs**：训练样本、网络结构、损失、优化器、正则化、随机种子。
+- **outputs**：预测、概率、嵌入、训练曲线、解释结果。
+- **assumptions**：样本与部署分布相近；数据量支持模型容量；训练过程可复现。
+- **hard_constraints**：小样本、强解释要求或无独立验证集时不应作为首选。
+- **validation**：独立测试集、重复训练、校准、消融、对比简单基线、漂移检测。
+- **selection_tags**：`deep-learning, nonlinear, sequence, high-capacity`
+- **fallbacks**：树模型、线性/正则化模型、降维后模型。
+- **agent_actions**：确认数据规模 -> 建立简单基线 -> 训练 -> 早停 -> 多次重复 -> 解释与误差分层。

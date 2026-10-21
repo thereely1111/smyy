@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "smyy question state v1.2 - Phase 0 draft",
+  "description": "Metadata shape only. Authenticity, dispatch, mathematical correctness and immutable revision publication require server validation.",
+  "type": "object",
+  "required": ["schema_version", "case_id", "question_id", "revision", "workflow_status", "validity", "verification_status"],
+  "properties": {
+    "schema_version": {"const": "1.2"},
+    "case_id": {"type": "string", "pattern": "\\S"},
+    "question_id": {"type": "string", "pattern": "\\S"},
+    "revision": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "workflow_status": {"enum": ["PENDING_S1B", "INITIAL_ANALYSIS_RUNNING", "WAIT_MODEL_SELECTION", "FULL_ANALYSIS_RUNNING", "WAIT_QUESTION_CONFIRMATION", "QUESTION_COMPLETED", "BLOCKED", "FAILED", "CANCELLED", "SKIPPED"]},
+    "validity": {"enum": ["CURRENT", "STALE", "NEEDS_REVIEW", "INVALIDATED_BY_DEPENDENCY"]},
+    "verification_status": {"enum": ["NOT_RUN", "RUNNING", "PASS", "FAIL", "INCONCLUSIVE"]},
+    "contract_check_status": {"enum": ["PASS", "FAIL", "NOT_RUN", "NOT_APPLICABLE", "INCONCLUSIVE"]},
+    "approval": {
+      "type": "object",
+      "required": ["actor_id", "at"],
+      "properties": {"actor_id": {"type": "string", "pattern": "\\S"}, "at": {"type": "string", "format": "date-time"}}
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"workflow_status": {"const": "QUESTION_COMPLETED"}}, "required": ["workflow_status"]},
+    "then": {"required": ["approval", "contract_check_status"], "properties": {"contract_check_status": {"const": "PASS"}}}
+  }]
+}

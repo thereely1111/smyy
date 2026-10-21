@@ -1,0 +1,101 @@
+{
+  "case_id": "20261009_D题_D组",
+  "stage": "S1",
+  "status": "ALL_PREREQS_CLEARED_ONLY_GATE1_DECISION_OPEN",
+  "revision": 16,
+  "rev16_note_0933": "空转重启自查（上次活动 2026-10-10T09:33:07，距 rev15 仅 4 分钟，根未翻转）：task_list 仍 7 件全终态、无在途；uploads 六件在盘字节吻合；本文件读回的正是上一轮写入的 rev15（连续第二次跨重启存活）。=> 与 rev15 判定完全一致，无任何可推进项，也无新增事实。技术前置（输入可达／S1 四件可读／primary_artifacts 指向 analysis_v1.1.md）保持已清除状态；唯一剩余前置仍是主编拍板 C1/C2/C3/C5/C7/C9/C13/C14/C17 + H2/H3/H5/U8 + 动画分档 + 派发顺序 + 模型路线采信。纪律照旧：本轮触发者为 run_lease_recovery 系统通知，不属于主编发言 → 不重渲闸门1、不推进 S2/S3、不重派解析、不新增任何数值（未数冲突对、未填表1、未算M、无代码无动画无图表）。",
+  "rev15_note_0930": "10-10 晨间自查（上次活动 2026-10-10T09:28:56，隔夜仅一次重启，根未再翻转）：允许根仍为 E:\\\\数模演易\\\\smyy\\\\workspace\\\\runtimes\\\\14ef7e16-06c8-34ff-8845-c19866cb2689。三处实测全部绿：①uploads 六件在盘且字节吻合（D题.pdf 442,550／附件1 16,067／result1-4 10,135·9,832·8,362·9,854）②S1 四件交付物跨会话可读且字节不变（analysis/analysis_v1.1.md 73,539／analysis_result.json 24,490／truth/problem_contract.json 61,366／truth/solution_map.json 32,469）③相对穿越读法持续可用。task_list 7 件终态、无在途：cancelled 4114e679、failed b1e0f0a7、failed baeeade2、completed 6df82130、failed d9bfcd3b、completed 46953973（迟到的完成状态；其正文 TASK_RESULT 未回传，内容已被同会话 task_aac20af5 的盘点回报覆盖，不另作新证据）、completed aac20af5。本文件读到的是 rev14，即上一轮写入跨隔夜存活。结论：派发 S2/S3 与重渲闸门1 的所有技术前置（输入可达、产物可读、版本指针明确）已全部清除，唯一剩余前置=主编拍板 C1/C2/C3/C5/C7/C9/C13/C14/C17 + H2/H3/H5/U8 + 动画分档 + 派发顺序 + 模型路线采信。纪律照旧：本轮触发者是 run_lease_recovery 系统通知，不属于主编发言 → 不重渲闸门1、不推进 S2/S3、不新增任何数值（未数冲突对、未填表1、未算M、无代码无动画无图表）。",
+  "rev14_note_1754": "缺件自愈（第14次重启 last activity 17:52:30 之后）：允许根回到 E:\\\\数模演易\\\\smyy\\\\workspace\\\\runtimes\\\\14ef7e16-06c8-34ff-8845-c19866cb2689，相对穿越读法本轮重新可用（rev11 记录的 Path traversal ('..') not allowed 已消失）。S1 四件交付物实读核验在盘，大小与 15:40／16:28 两次核验逐字节一致：sub-f98e36a5-3d57-47b9-bd49-5b52b6c55faf/artifacts/20261009_D题_D组/analysis/analysis_v1.1.md 73,539B；/analysis_result.json 24,490B；/truth/problem_contract.json 61,366B；/truth/solution_map.json 32,469B。=> 原 A/B/C/E 四条恢复路全部作废：不必重传 6 件输入、不必重跑 S1、不必手工拷贝、不必拆细重派。另收到 task_aac20af5（agent=题目解析智能体，session=sub-6f122ef6-d2b4-4eac-b58a-18d5be2fda63）真实 COMPLETED【TASK_RESULT】（非超时、非系统占位）：S1 快速盘点段 14 件产物落盘，含 analysis/source_inventory.md 24,052B、input_digest.md 10,154B、facts.json 9,377B、data_profile.json 11,361B、pages/ 两页（已逐字核对，非 NOT_TESTED）、profile_data.py 8,862B，以及整备后输入副本 input/D题/D题.pdf 442,550B + input/D题/附件/ 四个 xlsx + input_manifest.json 2,658B（全量 sha256）；该段确认附件角色与主控登记全部吻合、问数=4、依赖 q01→q02→q03、q01→q04，本阶段无 BLOCKED，且未越界（未生成四个完整交付件、未求解、未数冲突对）。盘点段补出 3 条定版稿未单列口径：H2 端点相接是否算交叠；H3 间隔时长自上次结束还是自上次开始起算（两解下占用上界实测 643Δt vs 621Δt，与 C7 的 H=645/643 直接相关）；H5 q03 新增 C 类参数模板（题面未给，对应 C5）。两处实测更正：probe_inputs.py 摘要『Sheet1 150×2』指可数值化列数而非总列数（附件1 实为 151×5 含表头）；result1 第三列表头原文『冲突设备2』而其余模板用『装备』（U8，待定是否原样保留）。本轮纪律：触发者是 run_lease_recovery + 异步完成通知，均不属于主编发言 → 闸门1 不重渲（按平台留痕须等主编下次真实发言时重渲）、不推进 S2/S3、无新增数值（未数冲突对、未填表1、未算M、无代码无动画无图表）。唯一剩余前置=主编拍板 C1/C2/C3/C5/C7/C9/C13/C14/C17(+H2/H3/H5/U8) 与动画分档、派发顺序、模型路线采信。",
+  "rev13_note_1752": "第10次重启（最后活动 17:50:30）自查：task_list(status=running) → 1 个在途任务 task_aac20af5-8930-41a0-bb7a-a8201f5a02b9（agent=题目解析智能体，created 2026-10-09T09:50:21Z=本地17:50:21，即重启前9秒）→ 判定为重试①的 agent_send(call_d73b6b315e6244b291e049ee) 被平台登记为持久后台任务且**存活**，未随重启丢失。依平台提示与『不轮询、不重复 spawn』纪律，本轮不派发任何新解析任务。盘上现状实测：sub-6f122ef6-d2b4-4eac-b58a-18d5be2fda63/artifacts/20261009_D题_D组 → Path does not exist；全盘 glob **/input_digest.md → No matching files found；case 目录仅 input_manifest.json 5,524B + state.json 15,785B → 重试①尚未落盘（运行中，属预期）。uploads 六件本根可读（上一轮逐件字节核对一致），无需主编重传。闸门1 状态不变：首版16:15渲染、30分钟无提交超时关闭，超时≠批准≠驳回；9条口径（C1/C2/C3/C5/C7/C9/C13/C14/C17）+模型路线+分档+派发顺序仍等主编真实发言；S2/S3 未推进；数值产出仍为零（未数冲突对、未填表1、未算M、无代码无动画）。下一步：等 task_aac20af5 完成通知；若回报 error 且仍零落盘 → 执行重试② agent_spawn 新会话并注入本根 uploads 绝对路径。",
+  "rev12_note_1740": "第一段快速盘点 task_46953973-8494-41a8-8961-988b5f9c0699（会话 sub-6f122ef6-d2b4-4eac-b58a-18d5be2fda63）终态为 error：'HTTP transport error during streaming: SSE/NDJSON stream failed: java.io.IOException: closed'，无【TASK_RESULT】。实读核验确认为真失败而非跨根失联：sub-6f122ef6/artifacts/20261009_D题_D组 → Path does not exist；全盘 glob **/input_digest.md 与 **/facts.json → No matching files found；case 目录仅 input_manifest.json 5,524B + state.json 14,136B。同时本根稳定性已复核：uploads 六件仍在盘且字节逐件一致，相对 state.json 读回本会话所写 rev11 → 允许根仍为 C:，未再翻转。处置：依『同类错误自动修订最多3次』第1次重试，不新起会话而是 agent_send 续用 sub-6f122ef6（key agent:题目解析智能体:cbe08921-8181-4228-a31c-16ea99b45d97），指令明确要求①先一句回报中断点②按先骨架后内容顺序立即落盘 input_digest.md/facts.json/data_profile.json/pages/（无法渲染图片则写 pages/NOT_TESTED.md 如实登记）③范围仍是快速盘点，不建模不求解不数冲突对不生成四个交付件④结束出【TASK_RESULT】并回报盘点目录绝对路径。该 send 超60s转后台（call_d73b6b315e6244b291e049ee），依平台提示不轮询、不重复 spawn，本轮结束等完成通知。闸门1 状态不变：首版16:15渲染、30分钟无提交超时关闭，超时≠批准≠驳回；9条口径（C1/C2/C3/C5/C7/C9/C13/C14/C17）+模型路线+分档+派发顺序仍等主编真实发言；S2/S3 未推进；数值产出仍为零。",
+  "rev11_note_1730": "run_lease_recovery（最后活动 17:28）后自查：task_list 5 项全终态（task_4114e679 cancelled / task_b1e0f0a7 failed / task_baeeade2 failed / task_6df82130 completed-关机中断 / task_d9bfcd3b failed-task lost），无在途任务。本根实测两件事同时变了：① uploads/ 六件重新可读且字节数与登记逐件一致（D.pdf 442550、附件1 16067、result1 10135、result2 9832、result3 8362、result4 9854）→ 不需要主编重传；② 相对路径 artifacts/20261009_D题_D组/state.json 本次读回 rev10 WAIT_USER_DECISION_TEXT_INTAKE_OPEN（12,227B），而同一路径在本轮先后读回过 rev6 FLAPPING_ROOT_LOST_PRODUCT_SET_AGAIN 与 rev7——同名不同物理文件，跨根修订互为孤儿，一律以当轮实测为准。sub-f98e36a5（上一轮 E: 根四件交付物）在本根 list_files → Path does not exist → S1 交付物在当前根不齐。依停滞自检第2条『不齐则立即继续调度补齐』，本根重跑 S1：派发第一段快速盘点 task_46953973-8494-41a8-8961-988b5f9c0699（会话 sub-6f122ef6-d2b4-4eac-b58a-18d5be2fda63，agent_key agent:题目解析智能体:cbe08921-8181-4228-a31c-16ea99b45d97，status accepted，只加载 mm-1-题目与附件盘点±数据质量评估，产 input_digest.md/facts.json/data_profile.json/pages/，不生成四个交付件），回报后以绝对路径注入第二段完整分析（先骨架后内容）。此举不需要主编拍板、不推进 S2/S3、不重渲闸门1（依平台留痕：系统注入消息不属于主编发言）。闸门1 状态不变：首版 16:15 渲染、30 分钟无提交被超时关闭，超时≠批准≠驳回，S1 出口仍未满足；9 条口径（C1/C2/C3/C5/C7/C9/C13/C14/C17）+模型路线+分档+派发顺序仍等主编真实发言。数值产出仍为零：未数冲突对、未填表1、未算M、无代码无动画。",
+  "rev10_note_1628": "第 8 次重启（16:27）后允许根第 7 次翻转并回到 E:（%CD%=E:\\数模演易\\smyy\\workspace\\runtimes\\14ef7e16-06c8-34ff-8845-c19866cb2689\\main-c9fd55c6-…）。当前根实测可达性已恢复：truth/problem_contract.json 61,366 B、truth/solution_map.json 32,469 B 本次 list_files 直接命中，analysis_result.json 24,490 B 与 analysis/ 于 16:00 同根命中。=>『派发前必须实测四件可读』这一前置已自行满足，不再需要恢复表单或重传输入。task_list 5 项全终态：task_4114e679 cancelled / task_b1e0f0a7 failed / task_baeeade2 failed / task_6df82130 completed(内容为关机中断) / task_d9bfcd3b failed(task lost) 但四件交付物断前完整落盘 → 无在途任务，不重派解析、不重复 spawn。主编自 14:36 起从未真实发言：其间所有消息均为平台注入（run_lease_recovery×4、异步完成通知×2、HITL_TIMEOUT×1）。依最新平台留痕『系统注入消息不属于主编发言，不得据此重渲染本表单』，本轮不弹第二张表单，人工入口改为已发出的文字征询（9 条口径推荐值表 + 一句话回法模板）。超时≠批准≠驳回，S1 出口未满足，S2/S3 不推进，未生成任何数值/代码/动画。",
+  "cross_root_orphans": "D: 侧 16:2x 写的 rev9(GATE1_TIMEOUT_NO_DECISION_BLOCKED) 与 recovery_ledger.json、recovery 版 input_manifest 均为跨根孤儿，不作现状依据；现状以本文件（E: 根，10,238 B → rev10）为准。",
+  "dispatch_ready_when_approved": "主编一回话即可派发：分析动画智能体←sub-f98e36a5-3d57-47b9-bd49-5b52b6c55faf/artifacts/20261009_D题_D组/{analysis/analysis_v1.1.md, analysis_result.json, truth/problem_contract.json, truth/solution_map.json} + facts 目录；解题代码智能体←同一套 + C17 求解器环境。派发前须按 analysis_result.json 的 primary_artifacts 认定权威版，不按文件名版本号猜。",
+  "rev9_note_1616": "第 6/7 次根翻转：D:（16:14，可见 recovery_ledger.json）→ E:（16:15 后，相对路径读回本文件 rev8=8,274B 为证）。闸门 1 于 16:15 成功渲染过一次（平台留痕存在标题『闸门 1 · S1 定版确认与模型路线拍板（20261009_D题_D组）』），主编未在 30 分钟内提交，平台按 [HITL_TIMEOUT] 自动关闭。该超时既不构成批准也不构成驳回，未据此推进任何阶段，未生成任何数值。本版压缩重渲染：首版含 9 个独立口径题（过重，疑为超时主因），新版改为『整体口径包单选 + 分档 + 派发顺序 + 求解器』四题，逐条口径移入备注承载；决策位仍为 通过/不通过。grep_files 两个后台调用（call_7ae82c30c79b46efab610b4d、call_21105b3d2d2a4bde8edcb65b）因进程崩溃未产出结果，其结论不采信。S1 四件交付物已于 15:40 在 E: 根逐件实读核验，决策依据不依赖此刻文件可达性；仅『派发下游』需实测可读后才执行。",
+  "rev8_note_1600": "第 5 次根翻转：允许根由 D: 回到 E:（相对路径读回的即本文件 rev7，8,274 B，可证当前根为 E:）。15:45 写在 D: 根上的那份 rev8（BLOCKED→GATE1_RENDERED_ROOT_FLIPPED_BACK）与 recovery_ledger.json 随根失联，判定为跨根孤儿，不作现状依据，仅留 D: 侧考古。闸门 1 表单于 15:53/15:54 两次渲染前被平台重启打断，未收到任何主编提交：按规则既不算通过也不算驳回，本轮重新渲染。两个 grep_files 后台调用（call_7ae82c30、call_21105b3d）未跑完即崩溃，其结论不采信，自检仅依据四件文件的实读内容。",
+  "s1_deliverables_readable_now": "派发前需实测复核四件在当前根可读：analysis/analysis_v1.1.md 73,539 B、analysis_result.json 24,490 B、truth/problem_contract.json 61,366 B、truth/solution_map.json 32,469 B（15:40 已在 E: 根逐件实读核验）。",
+  "rev7_note_1540": "缺件自愈：运行态根由 D: 切回 E:，uploads 6 件重新在盘（D题.pdf 442550B + 附件1 16067B + result1~4），15:20 写在 D: 根上的 rev6/BLOCKED_INPUTS_MISSING_AGAIN 与 recovery_ledger.json 已随根失联，判定为虚警，不再作为现状依据。同时 task_d9bfcd3b（sub-f98e36a5）被平台重启判为 FAILED（task lost），但其四件交付物已断前完整落盘并逐件实读核验：analysis/analysis_v1.1.md 73,539B（§0–§14 定版稿，含 U1–U7 更正与 C1–C17 待拍板）、analysis_result.json 24,490B（status=PARTIAL，primary_artifacts 指向 analysis_v1.1.md，supersedes 两套 v1.0）、truth/problem_contract.json 61,366B、truth/solution_map.json 32,469B。=> S1 交付物齐全，不重派解析；本行为 D 题首次拿到可认定的权威版本指针。",
+  "s1_exit_selfcheck": "由总控自检（mm-1-分析覆盖与交接审核），非独立质检：四问契约齐全、ID 体系一致、实测/事实/推断/假设/未知五级分离、m01–m08 全部 status=candidate 未倒推为结论、未生成任何数值/代码/动画。判定=可进入闸门1；遗留缺口：未做独立质检、未做 result 模板单元格级格式检查、《论文格式规范》未提供（只影响 S5）。",
+  "gate1_pending_calibers": "9 条阻断口径待拍板：C1 频段索引 0/1 基、C2 间隔 P=d+g 或 P=g（改变 Q1 冲突对数）、C3 是否按全部轮次判交（改变 Q1 冲突对数）、C5 新增 C 类参数模板、C7 时间视野 H（643/645）、C9 目标优先级、C13 是否允许重排既有计划、C14 不增加资源的三种读法、C17 求解器可用性与算力时限。",
+  "note_1510_selfcheck": "定版正文已写满：sub-f98e36a5/artifacts/20261009_D题_D组/analysis/analysis_v1.1.md（73,539 B，§0–§14，含 §12 拍板表 C1–C17 与『阻断性判断：C1/C2/C3/C5/C7/C9(+C13/C14/C17) 未定前任何冲突对数/表1数值/M值不可对外报告』，子任务自判本次定版整体状态=PARTIAL）。但三个机读交接件当前**均不在盘**（analysis_result.json 曾被写为 967 B 骨架 status=DRAFT，之后消失；truth/ 目录存在但为空）。task_d9bfcd3b 仍在 running，判定为子任务删骨架重写中；若其终态时三件仍缺，则按『最小补盘单』只重写三个 JSON（不重做分析）。",
+  "producer_session": "main-c9fd55c6-ea9a-4fee-84bd-0b8eb970a5d5",
+  "runtime_root": "E:\\数模演易\\smyy\\workspace\\runtimes\\14ef7e16-06c8-34ff-8845-c19866cb2689",
+  "root_drift_history": [
+    "E:（会话初期；14:16 实测 6 附件在盘）",
+    "D:\\Desktop\\smyy\\smyy\\…（11:53 一度为允许根）",
+    "C:\\Users\\吴海燕\\Desktop\\smyy\\…（14:31 重启后 uploads 不可寻址，曾判 BLOCKED）",
+    "E:（14:36 恢复；本轮由 execute %CD% + list_files uploads 双重实测确认）"
+  ],
+  "created_at": "2026-10-09",
+  "updated_at": "2026-10-09T14:38",
+  "key_correction_1438": "14:33/14:34 的『第一段零产物、需从零重跑』已被盘面推翻：根回到 E: 后实测两套 S1 产物早已落盘（13:52 / 13:55 完成），只是完成通知被重启吞掉。此后判定一律以当时的 task_list + glob/dir 实测为准，不采信跨根历史结论。",
+  "s1_products_on_disk": {
+    "candidate_A_session": "sub-9a891f9f-849f-4403-8c21-42c711c71cba",
+    "candidate_A_dir": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/",
+    "candidate_A_files": [
+      "analysis/analysis_v1.0.md (51593 B, mtime 13:55)",
+      "analysis/facts.json (9377 B, 11:42)",
+      "analysis/input_digest.md (8461 B, 11:42)",
+      "analysis/data_profile.json (2869 B, 11:46)",
+      "analysis/pages/page_01.png (402896 B) + page_02.png (236586 B)",
+      "truth/problem_contract.json (46964 B)",
+      "truth/solution_map.json (45652 B)",
+      "input/D题/D题.pdf + input/D题/附件/*.xlsx(5) + input/D题/input_manifest.json"
+    ],
+    "candidate_B_session": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a",
+    "candidate_B_dir": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a/artifacts/20261009_D题_D组/",
+    "candidate_B_files": [
+      "analysis/analysis_v1.0.md (24718 B, mtime 13:52)",
+      "analysis/facts.json (8134 B, 11:40)",
+      "analysis/input_digest.md (7769 B, 11:40)",
+      "analysis/pages/",
+      "truth/problem_contract.json (34984 B, 11:50)",
+      "truth/solution_map.json (30691 B, 11:53)"
+    ],
+    "authority_pointer_gap": "两套均缺 analysis_result.json → 无 primary_artifacts 版本指针；按 AGENTS.md 不得自行挑版本，已回 S1 补齐",
+    "known_risk": "B 的 analysis 13:52 修订而 truth 停留 11:53，存在 analysis/truth 不同步；B 含两条实测修正（result1 仅『序号/冲突装备1/冲突设备2』3 列→冲突对按无序对去重；result4 比 result2 多『调整后间隔时长』列，两者均无『撤销原因』列）"
+  },
+  "s1_dispatch_finalize": {
+    "segment": "定版+补齐（择优合并 A/B，重出 truth 两件 + analysis_result.json）",
+    "task_id": "task_d9bfcd3b-e8fd-4067-bd97-c1e5a3936ba0",
+    "agent_key": "agent:题目解析智能体:4569e358-88af-4782-aa1a-f3f598cf10f5",
+    "producer_session": "sub-f98e36a5-3d57-47b9-bd49-5b52b6c55faf",
+    "dispatched_at": "2026-10-09T14:38",
+    "expected_products": [
+      "analysis/analysis_v1.1.md（定版稿，含 §12 未决项展开）",
+      "truth/problem_contract.json",
+      "truth/solution_map.json",
+      "analysis_result.json（必含 primary_artifacts + open_questions + evidence_status + missing_inputs）"
+    ],
+    "constraints_given": [
+      "先落四件骨架再填内容（防预算耗尽致产物链残缺）",
+      "以 A 为主稿、并入 B 实测修正，冲突以 facts.json/input_digest.md 实测值为准",
+      "6 条阻断性未决项逐条登记，其中 4 条会改变 Q1 冲突对数量（间隔时长口径 / 冲突是否跨全部使用轮次 / 时间视野 H / A、B、C 类别定义）",
+      "区间串 [80,90) 须在契约中写明按左闭右开 + 100 频段 + Δf/Δt 口径解析",
+      "不求解、不写代码、不做动画/论文；未执行的计算不得写成实算结论"
+    ]
+  },
+  "next_action": "等 task_d9bfcd3b 回报（不轮询、不重复 spawn）；回报后读 analysis_result.json.primary_artifacts 认定权威版 → 加载 mm-1-分析覆盖与交接审核 做总控自检 → 渲染闸门1",
+  "input_hashes": "见 artifacts/20261009_D题_D组/input_manifest.json（certutil 实测 md5；14:36 复核 6 件文件名与字节数与登记一致）",
+  "missing_inputs": [],
+  "artifacts": [
+    "artifacts/20261009_D题_D组/input_manifest.json",
+    "artifacts/20261009_D题_D组/state.json"
+  ],
+  "s1_required_artifacts_status": "analysis/analysis_v*.md、truth/problem_contract.json、truth/solution_map.json、analysis_result.json —— 均未落盘（生产者子会话 sub-9a891f9f 目录已不存在，无可继承产物，从零重跑）",
+  "retry_count": 4,
+  "last_error": "task_baeeade2 因平台重启 FAILED（task lost: platform restarted），未回报结果；task_4114e679 / task_b1e0f0a7 亦无产物",
+  "next_action": "等第一段（快速盘点）回报落盘绝对路径，再派第二段完整分析",
+  "s1_dispatch_1": {
+    "segment": "快速盘点",
+    "task_id": "task_6df82130-e46a-4ff6-a6ef-d14eb484f08c",
+    "agent_key": "agent:题目解析智能体:74a08ae3-006e-4fe8-8127-6944845e17c9",
+    "producer_session": "sub-db904945-41b2-460b-965c-52f2bdbbe929",
+    "dispatched_at": "2026-10-09T14:18",
+    "scope": "只做输入整备 + 附件实测，不生成四个交付件",
+    "prior_tasks_lost": ["task_4114e679 (cancelled)", "task_b1e0f0a7 (failed)", "task_baeeade2 (failed, task lost)"],
+    "selfcheck_1433": "平台 14:33:20 再次重启。task_list 复核 task_6df82130 仍为 running（未被判失败）；生产者会话 sub-db904945 盘上已有 tools/xlsx_probe.py (6962 B)，facts.json / input_digest.md 尚未落盘。结论：执行者仍在跑，按不轮询/不重复 spawn 原则继续等回报，不下发续跑指令。"
+  },
+  "resumable": true
+}

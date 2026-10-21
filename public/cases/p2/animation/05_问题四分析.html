@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM B题 · 问题四分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+table.tb td:first-child{white-space:nowrap}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.g{background:#eef8f6;border-color:#cfe7e5;color:var(--teal-d)}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+body.reduce .wrap>.stg{opacity:1;transform:none;transition:none}
+body.reduce .scene{transition:none}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.ctl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);min-width:64px;text-align:right;font-size:13.5px}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="splitnav"><a href="./01_全局问题分析.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<section class="scene" id="s1" data-title="一 · 定向源的辐射扇区与盲区">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 加入定向源</div>
+      <h1>定向源只朝一半方向喊，另一半听不到
+        <small>定向源辐射 ±90°，共 180° 扇区；站在它的背后，测向机什么都收不到。</small>
+      </h1>
+      <p class="lead">问题三假设源全向辐射，任何方向都能听到。问题四加入了<b>定向源</b>：它只在一个 180° 的扇区内辐射，背向扇区的方向是「盲区」。这意味着测点不只要「在有效接收半径内」，还必须落在源的辐射扇区里，否则永远测不到。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">定向源的辐射扇区与盲区</div></div>
+        <div class="ctl">
+          <span class="lb">辐射朝向 θ</span>
+          <input type="range" id="dirRange" min="0" max="350" step="10" value="30">
+          <span class="val" id="dirVal">30°</span>
+        </div>
+        <div class="ctl">
+          <span class="lb">候选测点方位 φ</span>
+          <input type="range" id="phiRange" min="0" max="350" step="10" value="120">
+          <span class="val" id="phiVal">120°</span>
+        </div>
+        <div id="sectorChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--teal)"></i>辐射扇区（可测到）</span>
+          <span><i style="background:var(--muted)"></i>盲区（测不到）</span>
+          <span><i style="background:var(--blue)"></i>测点</span>
+          <span><i style="background:var(--gold)"></i>候选测点 S₄</span>
+        </div>
+        <div class="note" id="sectorNote"></div>
+      </div>
+      <div class="card">
+        <h3>方向性带来的两个新约束</h3>
+        <p>全向源只有一条约束——<b>距离</b>；定向源多了一条——<b>方向</b>。这会把问题三的「圆形覆盖」直接击穿：圆盘盖住了区域，却盖不住朝向。</p>
+        <div class="quote">对定向源，一个测点能听到它的条件是<b>距离约束</b>（≤ 有效接收半径）<b>且</b><b>方向约束</b>（测点位于源辐射扇区一侧）。两个条件必须同时满足。</div>
+        <div class="formula"><span class="c"># 测点 S 能否听到定向源 T</span>
+朝向角 θ，辐射扇区 = [θ−90°, θ+90°]
+距离条件： |ST| ≤ 1500 m
+方向条件： |angle(ST) − θ| ≤ 90°
+两者同时成立 → 可测到；否则落入盲区</div>
+        <div class="note w">关键：源的朝向 θ 对机器狗是<b>未知</b>的。因此不能只按距离布点，必须保证不管 θ 取何值，都至少有一个测点落在扇区内。</div>
+      </div>
+    </div>
+    <div class="grid4" id="kpiD"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题四新增的设定——在问题三的基础上混入定向源（只朝 ±90°、共 180° 的扇区辐射），要求给出仍能保证全部发现的策略。</p>
+      <p><b class="hl-t">本幕结论：</b>全向源只有「距离」一条约束，定向源多出「方向」一条：测点要听到源，必须同时满足距离（|ST| ≤ 有效接收半径）与方向（测点落在源辐射扇区 [θ−90°, θ+90°] 内）。由于源朝向 θ 对机器狗未知，仅按距离布点的圆形覆盖会被击穿——圆盘盖住了位置，却盖不住朝向。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s2" data-title="二 · 方向鲁棒网格与镜像测点">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 覆盖朝向，而不只是覆盖位置</div>
+      <h1>为了让「任意朝向」都被盖住，测点必须成对
+        <small>在源的两侧各放一个测点，无论源朝哪边，总有一个在辐射扇区里。</small>
+      </h1>
+      <p class="lead">既然朝向未知，就要做到「方向鲁棒」：让观测点从<b>多个方向</b>包围待测区域。最直接的构造是把测点成对布置——一对测点分居区域两侧，形成镜像；无论源朝向哪一侧，至少有一个测点能看到它。再把这些成对测点铺成网格，就得到方向鲁棒的搜索方案。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">成对（镜像）测点 · 方向鲁棒覆盖</div></div>
+        <div class="ctl">
+          <span class="lb">网格步长</span>
+          <input type="range" id="gridRange" min="600" max="1800" step="100" value="1200">
+          <span class="val" id="gridVal">1200 m</span>
+        </div>
+        <div class="ctl">
+          <span class="lb">镜像不同步 δ</span>
+          <input type="range" id="syncRange" min="0" max="400" step="20" value="0">
+          <span class="val" id="syncVal">0 m</span>
+        </div>
+        <div id="robustChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--blue)"></i>测点 A</span>
+          <span><i style="background:var(--cyan)"></i>镜像测点 B</span>
+          <span><i class="ln" style="background:var(--teal)"></i>朝向覆盖</span>
+          <span><i style="background:var(--warn)"></i>偏离的 B′</span>
+        </div>
+        <div class="note" id="robustNote"></div>
+      </div>
+      <div class="card">
+        <h3>方向鲁棒的判据</h3>
+        <p>对区域内的任意一点（潜在源位置）和任意朝向 θ，都要求至少有一个观测点同时满足距离与方向两个条件。把这个「最坏情况」写成目标：</p>
+        <div class="formula"><span class="c"># 方向鲁棒覆盖的判据</span>
+对 ∀ 源位置 p、∀ 朝向 θ：
+  ∃ 测点 S： |Sp| ≤ 1500 且 |angle(S−p) − θ| ≤ 90°
+等价于：从 p 看出去，测点要能覆盖完整的 360° 方位
+即：从 p 出发的任意方向，都存在一个足够近的测点</div>
+        <div class="quote">一句话：<b>从区域内任何一点望出去，任何方向都应有一个不太远的观测点。</b> 这比问题三的「圆形覆盖」强——圆盘只看距离，这里还要看方位。</div>
+        <div class="note">镜像测点是最省的构造：一对测点分居区域两侧，其方位覆盖互补，恰好补上彼此的盲区；缩小步长会增加测点数量，但把最坏情况下的「最大间距」压得更小。</div>
+      </div>
+    </div>
+    <div class="note g" id="robustVerdict"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题四的核心方法——在朝向未知的前提下如何布置测点，使任意朝向的定向源都不被漏掉。</p>
+      <p><b class="hl-t">本幕结论：</b>判据从「圆形覆盖」升级为「方向鲁棒覆盖」：对区域内任意点 p、任意朝向 θ，都存在一个测点 S 同时满足 |Sp| ≤ 1500 m 且 |angle(S−p) − θ| ≤ 90°，等价于从 p 望出去能覆盖完整的 360° 方位。最省的构造是成对镜像测点，再铺成网格；网格步长越小，朝向覆盖越密，但测点数量与移动耗时也越高。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s3" data-title="三 · 与问题三的对比与总结">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 收束到全题</div>
+      <h1>四个问题，一条主线
+        <small>从「两条线交会」到「盖住位置与朝向」，方法在加约束，骨架没有变。</small>
+      </h1>
+      <p class="lead">问题四新增的只是「方向」这一维约束。回看四问，可以发现它们共用同一套「发现—定位—清除」骨架，区别只在已知信息与源的辐射类型。下面把四问并排对比，并给出问题四的结论。</p>
+    </div>
+    <div class="canvasbox">
+      <div class="cvtop"><div class="ct">四问对比：约束在逐层加码</div></div>
+      <div class="pills" id="qPills"></div>
+      <div id="cmpChart"></div>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>定位（角度/距离）</span>
+        <span><i style="background:var(--cyan)"></i>覆盖（位置/朝向）</span>
+        <span><i style="background:var(--gold)"></i>清除（路径/时序）</span>
+      </div>
+      <div class="note" id="cmpNote"></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>四问的递进关系</h3>
+        <table class="tb">
+          <tr><th>问题</th><th>源的辐射</th><th>核心约束</th><th>关键结论</th></tr>
+          <tr><td>问题一</td><td>全向</td><td>角度（示向度）</td><td>最小包围圆 R ≤ 20 m</td></tr>
+          <tr><td>问题二</td><td>全向</td><td>角度 + 布点</td><td>第二点使最坏 R 最小</td></tr>
+          <tr><td>问题三</td><td>全向</td><td>位置覆盖</td><td>中心 + 正六边形 7 点</td></tr>
+          <tr class="on"><td>问题四</td><td>定向</td><td>位置 + 朝向覆盖</td><td>镜像成对、方向鲁棒网格</td></tr>
+        </table>
+        <div class="note">问题一、二解决「听到之后怎么算出位置」；问题三、四解决「怎么保证一定听得到」。四问合起来正好是完整流程。</div>
+      </div>
+      <div class="card">
+        <h3>问题四结论</h3>
+        <p>把问题三的「圆形覆盖」升级为<b>方向鲁棒覆盖</b>：从区域内任意点朝任意方向看，都存在一个在有效接收半径内的观测点。</p>
+        <div class="quote">实现方式：测点<b>成对镜像</b>布置，并铺成网格；网格步长越小，朝向覆盖越密，但测点数与移动耗时越高。</div>
+        <div class="note g">用一句可检验的话收尾：<b>对区域内每个点、每个朝向，都至少有一个测点「看得见」它。</b> 满足这条，定向源就不会因为朝向而漏掉。</div>
+      </div>
+    </div>
+    <div class="grid3" id="kpiS"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕把四问收束到同一骨架下对比，明确问题四相对问题三的改动仅在于新增「朝向」这一维约束。</p>
+      <p><b class="hl-t">本幕结论：</b>四个问题共用同一套「发现—定位—清除」骨架，约束逐层加码：问题一、二解决「听到之后怎么算出位置」（角度、布点），问题三、四解决「怎么保证一定听得到」（位置覆盖、位置 + 朝向覆盖）。问题四把问题三的圆形覆盖升级为方向鲁棒覆盖——对区域内每个点、每个朝向，都至少有一个测点「看得见」它，满足这条，定向源才不会因朝向而漏掉。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+<script>
+var NS="http://www.w3.org/2000/svg";
+function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){var t=el("text",Object.assign({x:x,y:y},a||{}));t.textContent=s;return t;}
+function anim(node,kind){if(!node)return node;if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))return node;node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);return node;}
+
+/* ---- 幕一：定向源扇区与盲区 ---- */
+(function(){
+  var W=560,H=440,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var cx=W/2, cy=H/2, rad=150;   /* 1500 m -> 150 px */
+  var nt=document.getElementById("sectorNote");
+  var pts=[{x:cx+170,y:cy-40,tag:"S₁"},{x:cx-180,y:cy+50,tag:"S₂"},{x:cx+60,y:cy-190,tag:"S₃"}];
+  function arcPath(cx,cy,r,a0,a1){
+    var x0=cx+Math.cos(a0)*r, y0=cy-Math.sin(a0)*r;
+    var x1=cx+Math.cos(a1)*r, y1=cy-Math.sin(a1)*r;
+    var large=(a1-a0)>Math.PI?1:0;
+    return "M "+cx+" "+cy+" L "+x0+" "+y0+" A "+r+" "+r+" 0 "+large+" 0 "+x1+" "+y1+" Z";
+  }
+  function draw(th, cand){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var t=th*Math.PI/180;
+    /* 盲区（整圆底） */
+    svg.appendChild(el("circle",{cx:cx,cy:cy,r:rad,fill:"rgba(87,114,124,.08)",stroke:"none"}));
+    /* 辐射扇区 */
+    svg.appendChild(el("path",{d:arcPath(cx,cy,rad,t-Math.PI/2,t+Math.PI/2),fill:"rgba(18,165,148,.16)",stroke:"var(--teal)","stroke-width":1.6,"stroke-dasharray":"5 4"}));
+    svg.appendChild(el("circle",{cx:cx,cy:cy,r:rad,fill:"none",stroke:"var(--line)", "stroke-width":1}));
+    /* 朝向箭头 */
+    svg.appendChild(el("line",{x1:cx,y1:cy,x2:cx+Math.cos(t)*(rad+24),y2:cy-Math.sin(t)*(rad+24),stroke:"var(--teal)","stroke-width":2.4}));
+    var ahx=cx+Math.cos(t)*(rad+24), ahy=cy-Math.sin(t)*(rad+24);
+    svg.appendChild(el("circle",{cx:ahx,cy:ahy,r:4,fill:"var(--teal)"}));
+    svg.appendChild(txt(cx+Math.cos(t)*(rad+44),cy-Math.sin(t)*(rad+44)+4,"θ="+th+"°",{"font-size":11.5,fill:"var(--teal-d)","text-anchor":"middle","font-weight":600}));
+    /* 测点 + 是否可测 */
+    var all=pts.slice(); if(cand) all=all.concat([cand]);
+    all.forEach(function(p){
+      var dx=p.x-cx, dy=p.y-cy, r=Math.sqrt(dx*dx+dy*dy);
+      var ang=Math.atan2(-dy,dx);
+      var d=Math.abs(((ang-t+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI);
+      var lit=(d<=Math.PI/2)&&(r<=rad+1);
+      var isCand=p===cand;
+      svg.appendChild(el("line",{x1:cx,y1:cy,x2:p.x,y2:p.y,stroke:lit?"var(--teal)":"var(--muted)","stroke-width":lit?1.6:1,"stroke-dasharray":lit?"5 4":"2 5",opacity:lit?.85:.5}));
+      var cc=el("circle",{cx:p.x,cy:p.y,r:isCand?6.5:6,fill:isCand?(lit?"var(--gold)":"var(--muted)"):(lit?"var(--blue)":"var(--muted)")});
+      if(isCand) anim(cc,"pulse");
+      svg.appendChild(cc);
+      svg.appendChild(txt(p.x,p.y-12,p.tag+(lit?" 可测到":" 在盲区"),{"font-size":10.5,fill:isCand?"var(--gold-d)":(lit?"var(--blue)":"var(--muted)"),"text-anchor":"middle"}));
+    });
+    /* 源 */
+    svg.appendChild(el("circle",{cx:cx,cy:cy,r:7,fill:"var(--gold)"}));
+    svg.appendChild(txt(cx,cy+24,"定向源",{"font-size":11.5,fill:"var(--gold-d)","text-anchor":"middle"}));
+  }
+  var rg=document.getElementById("dirRange"), vv=document.getElementById("dirVal");
+  var pg=document.getElementById("phiRange"), pv=document.getElementById("phiVal");
+  var box=document.getElementById("kpiD");
+  var rad2=200;  /* 候选测点所在圆周半径 */
+  function litOf(p,cx,cy,rad,t){
+    var dx=p.x-cx, dy=p.y-cy, r=Math.sqrt(dx*dx+dy*dy);
+    var ang=Math.atan2(-dy,dx);
+    var d=Math.abs(((ang-t+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI);
+    return (d<=Math.PI/2)&&(r<=rad+1);
+  }
+  function upd(){
+    var th=Number(rg.value), ph=Number(pg.value);
+    vv.textContent=th+"°"; pv.textContent=ph+"°";
+    /* 把候选测点临时插入绘制 */
+    var t=th*Math.PI/180;
+    var cand={x:cx+Math.cos(ph*Math.PI/180)*rad2, y:cy-Math.sin(ph*Math.PI/180)*rad2, tag:"S₄"};
+    var cdx=cand.x-cx, cdy=cand.y-cy, cr=Math.sqrt(cdx*cdx+cdy*cdy);
+    var cang=Math.atan2(-cdy,cdx);
+    var cd=Math.abs(((cang-t+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI);
+    var clit=(cd<=Math.PI/2)&&(cr<=rad+1);
+    draw(th, cand);
+    var n=0; pts.forEach(function(p){ if(litOf(p,cx,cy,rad,t)) n++; });
+    var allLit=n===pts.length && clit;
+    nt.innerHTML="朝向 θ = <b>"+th+"°</b>，辐射扇区为朝 θ 的 180°；候选测点方位 φ = <b>"+ph+"°</b>。"
+      +"固定 3 点中有 <b class='hl-t'>"+n+"</b> / 3 落在扇区内，候选点 S₄ "+(clit?"<b class='hl-t'>在扇区内、可测到</b>":"<span class='hl'>落在盲区、测不到</span>")+"。"
+      +(allLit?"四个测点都能看到该源。":"<span class='hl'>存在盲区测点，说明固定布点无法兼顾所有朝向——需要方向鲁棒的成对布点。</span>");
+    box.innerHTML="";
+    [["辐射范围","±90","°",""],["总辐射角","180","°","b"],["扇区内测点",(n+(clit?1:0))+"/4","",""+(allLit?"g":"w")],["有效半径","1000–1500","m","g"]].forEach(function(k){
+      var d=document.createElement("div"); d.className="kpi "+k[3];
+      d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+      box.appendChild(d);
+    });
+  }
+  rg.oninput=upd; pg.oninput=upd;
+  upd();
+  document.getElementById("sectorChart").appendChild(svg);
+})();
+
+/* ---- 幕二：成对镜像测点 ---- */
+(function(){
+  var W=620,H=430,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var cx=W/2, cy=H/2, Rt=140;   /* 1800 m -> 140 px */
+  var nt=document.getElementById("robustNote"), vd=document.getElementById("robustVerdict");
+  function draw(step, sync){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    /* 目标区域 */
+    svg.appendChild(el("circle",{cx:cx,cy:cy,r:Rt,fill:"rgba(224,160,74,.06)",stroke:"var(--gold)","stroke-width":2}));
+    svg.appendChild(txt(cx,cy+Rt+20,"目标区域 R=1800 m",{"font-size":11,fill:"var(--gold-d)","text-anchor":"middle"}));
+    /* 成对镜像测点：按网格步长在圆周/网格上布置，成对出现在区域两侧 */
+    var sp=step/1800*Rt, sy=sync/1800*Rt;
+    var pairs=[];
+    var rows=[-1,0,1];
+    rows.forEach(function(ry){
+      var Y=cy+ry*sp;
+      if(Math.abs(ry*sp)>Rt) return;
+      var half=Math.sqrt(Math.max(0,Rt*Rt-(ry*sp)*(ry*sp)));
+      pairs.push({x:cx-half-sp*0.5,y:Y,tag:"A"});
+      pairs.push({x:cx+half+sp*0.5,y:Y,tag:"B"});
+    });
+    /* 互补连线：A、B 之间；B 偏移 δ 后画到 B′ */
+    var worstShift=0;
+    for(var i=0;i<pairs.length;i+=2){
+      var A=pairs[i], B=pairs[i+1];
+      if(!B) continue;
+      var Bx=B.x+sy, By=B.y+sy*0.4;
+      var shift=Math.sqrt(sy*sy+(sy*0.4)*(sy*0.4));
+      if(shift>worstShift) worstShift=shift;
+      svg.appendChild(el("line",{x1:A.x,y1:A.y,x2:B.x,y2:B.y,stroke:"var(--teal)","stroke-width":1,"stroke-dasharray":"5 5",opacity:.5}));
+      /* 原始 B 位置（虚影） */
+      if(sync>0){
+        svg.appendChild(el("circle",{cx:B.x,cy:B.y,r:4,fill:"none",stroke:"var(--cyan)","stroke-width":1,"stroke-dasharray":"2 3",opacity:.6}));
+        svg.appendChild(el("line",{x1:A.x,y1:A.y,x2:Bx,y2:By,stroke:"var(--warn)","stroke-width":1.4,"stroke-dasharray":"3 3"}));
+        var bc=el("circle",{cx:Bx,cy:By,r:5.5,fill:"var(--warn)"});
+        anim(bc,"pulse");
+        svg.appendChild(bc);
+        svg.appendChild(txt(Bx,By+(By>cy?18:-10),(i/2+1)+"′",{"font-size":10,fill:"var(--warn)","text-anchor":"middle"}));
+      }
+    }
+    pairs.forEach(function(p,i){
+      var isB=p.tag==="B";
+      var showB=!(isB&&sync>0);
+      if(!showB) return;
+      var col=isB?"var(--cyan)":"var(--blue)";
+      svg.appendChild(el("circle",{cx:p.x,cy:p.y,r:5.5,fill:col}));
+      svg.appendChild(txt(p.x,p.y+(p.y>cy?18:-10),(isB?"B":"A")+(Math.floor(i/2)+1),{"font-size":10,fill:col,"text-anchor":"middle"}));
+    });
+    /* 步长矩形示意 */
+    svg.appendChild(el("rect",{x:cx-sp/2,y:cy-sp/2,width:sp,height:sp,fill:"none",stroke:"var(--teal)","stroke-width":1,"stroke-dasharray":"3 4"}));
+    svg.appendChild(txt(cx+sp/2+6,cy-sp/2+12,"步长 "+step+" m",{"font-size":11,fill:"var(--teal-d)","font-weight":600}));
+    nt.innerHTML="网格步长 <b>"+step+" m</b>：成对测点分居区域两侧。<b class='hl-t'>无论源朝哪个方向，总有一侧测点在其辐射扇区内</b>——这就是方向鲁棒。"
+      +(sync>0?"<span class='hl'> 但 B 侧相对理想镜像偏移了 δ = "+sync+" m，两侧不再对称，朝向覆盖出现缺口。</span>":" 当前 δ = 0，两侧严格镜像，互补覆盖最完整。");
+    var gapOk = worstShift<=sp*0.5;
+    vd.innerHTML = (sync===0)
+      ? "δ = 0（严格镜像）：从区域内任意点出发、朝任意方向，都落在某个测点的有效范围内。<span class='hl-t'>方向覆盖成立。</span>"
+      : (gapOk
+          ? "δ = "+sync+" m 仍在容差内：镜像虽有偏移，最坏朝向缺口尚未出现，<span class='hl-t'>方向覆盖基本成立</span>，但余量在变小。"
+          : "<span class='hl'>δ = "+sync+" m 超出容差：镜像严重失配，出现朝向覆盖缺口，源可能因朝向而漏检——镜像布点必须保证两侧同步。</span>");
+  }
+  var rg=document.getElementById("gridRange"), vv=document.getElementById("gridVal");
+  var sg=document.getElementById("syncRange"), sv=document.getElementById("syncVal");
+  function upd(){ var v=Number(rg.value), s=Number(sg.value); vv.textContent=v+" m"; sv.textContent=s+" m"; draw(v,s); }
+  rg.oninput=upd; sg.oninput=upd;
+  upd();
+  document.getElementById("robustChart").appendChild(svg);
+})();
+
+/* ---- 幕三：四问对比 ---- */
+(function(){
+  var W=1040,H=250,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var qs=[
+    {name:"问题一",loc:3,cov:0,clr:0,detail:"全向源，只有角度（示向度）这一条约束：两条示向度交会，用最小包围圆把定位区域压到 R ≤ 20 m。"},
+    {name:"问题二",loc:2,cov:2,clr:0,detail:"全向源，但可以主动选第二个测点位置：让两条示向度尽量接近 90° 交会，使最坏情况下的定位半径最小。"},
+    {name:"问题三",loc:1,cov:3,clr:1,detail:"全向源、数量未知：先用「中心 + 正六边形 7 点」保证位置全覆盖（一定听得到），再转向局部定位与清除。"},
+    {name:"问题四",loc:1,cov:4,clr:1,detail:"加入定向源：除了距离还要覆盖朝向，用镜像成对测点做到方向鲁棒——从任意点朝任意方向都能看到测点。"}
+  ];
+  var x0=90, y0=60, bw=140, gap=70, maxV=4, bh=110;
+  var nt=document.getElementById("cmpNote");
+  function render(sel){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.appendChild(el("line",{x1:x0-34,y1:y0+bh,x2:x0+qs.length*(bw+gap)-gap+20,y2:y0+bh,stroke:"var(--line)","stroke-width":1.2}));
+    qs.forEach(function(q,i){
+      var gx=x0+i*(bw+gap);
+      var stackY=y0+bh;
+      [["loc","var(--teal)"],["cov","var(--cyan)"],["clr","var(--gold)"]].forEach(function(k){
+        var v=q[k[0]]; if(!v) return;
+        var h=v/maxV*bh;
+        stackY-=h;
+        var r=el("rect",{x:gx,y:stackY,width:bw,height:h,rx:3,fill:k[1],opacity:(sel<0||sel===i)?1:.28});
+        anim(r,"grow");
+        svg.appendChild(r);
+        svg.appendChild(txt(gx+bw/2,stackY+h/2+4,v,{"font-size":12,fill:"#fff","text-anchor":"middle","font-weight":600}));
+      });
+      svg.appendChild(txt(gx+bw/2,y0+bh+20,q.name,{"font-size":12.5,fill:(sel<0||sel===i)?"var(--teal-d)":"var(--muted)","text-anchor":"middle","font-weight":600}));
+    });
+    svg.appendChild(txt(20,y0-16,"约束强度（越大越复杂）",{"font-size":11.5,fill:"var(--muted)"}));
+    nt.innerHTML=sel<0?"点击上方标签，查看每一问的约束构成与关键结论。四问共用同一套「发现—定位—清除」骨架，区别只在已知信息与源的辐射类型。":qs[sel].detail;
+  }
+  document.getElementById("cmpChart").appendChild(svg);
+  var pbox=document.getElementById("qPills"), cur=3;
+  qs.forEach(function(q,i){
+    var b=document.createElement("button");
+    b.className="pill"+(i===cur?" on":""); b.textContent=q.name;
+    b.onclick=function(){
+      cur=(cur===i?-1:i);
+      Array.prototype.forEach.call(pbox.children,function(c,k){ c.classList.toggle("on",k===cur); });
+      render(cur);
+    };
+    pbox.appendChild(b);
+  });
+  render(cur);
+
+  var box=document.getElementById("kpiS");
+  [["同源方法","交会","","b"],["新增维度","朝向","",""],["测点构型","镜像成对","","g"],["核心判据","R ≤ 20","m","w"]].forEach(function(k){
+    var d=document.createElement("div"); d.className="kpi "+k[3];
+    d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+    box.appendChild(d);
+  });
+})();
+
+/* ---- 导航 ---- */
+(function(){
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+  var tlT=[], st={armed:false,last:0,fired:0};
+  function beats(sc){ return $$('.wrap > *',sc); }
+  function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+  function tlRun(i){
+    tlStop();
+    var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+    if(document.body.classList.contains('reduce')){
+      bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+      return;
+    }
+    bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+    bs.forEach(function(b,k){
+      var t=260+k*gap; pos=t;
+      tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+    });
+    tlT.push(setTimeout(function(){
+      if(tk!==TOKEN) return;
+      bs.forEach(function(b){ b.classList.remove('stg'); });
+    },pos+820));
+  }
+  function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+  function goTo(i){
+    i=Math.max(0,Math.min(N-1,i));
+    if(i===cur) return;
+    if(cur>=0) SCENES[cur].classList.remove('active');
+    cur=i; TOKEN++;
+    var sc=SCENES[i];
+    resetScene(sc);
+    sc.scrollTop=0; sc.classList.add('active');
+    $('#scTitle').textContent=sc.dataset.title||'';
+    $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+    $('#pgNow').textContent=i+1;
+    $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+    st.armed=false;
+    tlRun(i);
+  }
+  function boot(){
+    var dots='';
+    for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+    $('#dots').innerHTML=dots;
+    $('#pgAll').textContent=N;
+    $('#dots').addEventListener('click',function(e){
+      var t=e.target.closest?e.target.closest('.dot'):null;
+      if(t) goTo(+t.dataset.i);
+    });
+    $('#btnNext').onclick=function(){ goTo(cur+1); };
+    $('#btnPrev').onclick=function(){ goTo(cur-1); };
+    document.addEventListener('keydown',function(e){
+      var tag=(e.target.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select') return;
+      var k=e.key;
+      if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+      else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='Home'){ e.preventDefault(); goTo(0); }
+      else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+      else if(k==='r'||k==='R'){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); }
+      else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+    });
+    window.addEventListener('wheel',function(e){
+      var sc=SCENES[cur]; if(!sc) return;
+      var max=sc.scrollHeight-sc.clientHeight;
+      var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+      var want=e.deltaY>0?1:-1;
+      var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+      if(!edge){ st.armed=false; st.last=Date.now(); return; }
+      var now=Date.now();
+      if(!st.armed){ st.armed=true; st.last=now; return; }
+      if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+        st.fired=now; st.armed=false; goTo(cur+want);
+      }
+      st.last=now;
+    },{passive:false});
+    goTo(0);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

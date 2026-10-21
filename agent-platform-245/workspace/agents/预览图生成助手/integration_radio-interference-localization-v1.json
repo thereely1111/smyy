@@ -1,0 +1,20 @@
+{
+  "case_id": "p2",
+  "title": "无线电干扰源的快速自动定位与清除",
+  "revision": "v1.0",
+  "asset_file": "public/hero-assets/radio-interference-localization-cover-v1.png",
+  "cover_image_url": "/hero-assets/radio-interference-localization-cover-v1.png",
+  "data_file": "src/legacy/prototype/core.ts",
+  "field": "coverImage",
+  "snippet": "coverImage:'/hero-assets/radio-interference-localization-cover-v1.png'",
+  "integration_status": "READY_FOR_REVIEW",
+  "modified_files": [
+    "src/legacy/prototype/core.ts"
+  ],
+  "browser_check": "http://localhost:5181/",
+  "executed_problem_code": false,
+  "notes": [
+    "The p2 problem entry references the generated asset.",
+    "Human review is still required for object-fit crop and small-card recognition."
+  ]
+}

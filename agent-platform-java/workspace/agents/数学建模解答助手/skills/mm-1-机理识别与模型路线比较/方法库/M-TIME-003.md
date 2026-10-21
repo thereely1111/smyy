@@ -1,0 +1,12 @@
+### M-TIME-003 马尔可夫链 / 隐马尔可夫模型
+- **task_types**：状态转移、用户流失、设备状态、序列分类、隐状态识别。
+- **problem_signature**：系统可抽象成有限状态；下一状态主要依赖当前状态；状态可能不可直接观测。
+- **core_idea**：用转移矩阵描述状态演化；HMM 增加观测发射机制。
+- **mathematical_form**：`P(X_{t+1}=j|X_t=i)=P_ij`。
+- **inputs**：状态定义、转移序列、初始分布、发射分布、时间粒度。
+- **outputs**：转移矩阵、稳态分布、状态序列、转移概率。
+- **assumptions**：马尔可夫性、状态定义稳定、时间粒度一致。
+- **validation**：转移概率和为 1、留出序列预测、稳态一致性、状态可解释性。
+- **selection_tags**：`stochastic-process, state-transition, sequence`
+- **fallbacks**：高阶马尔可夫、半马尔可夫、状态空间模型。
+- **agent_actions**：定义状态 -> 估计转移 -> 检查稀疏性 -> 做序列验证 -> 解释稳态/短期概率。

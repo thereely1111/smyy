@@ -1,0 +1,11 @@
+### M-TIME-004 生存分析与风险模型
+- **task_types**：故障时间、留存、寿命、事件发生风险、删失数据。
+- **problem_signature**：目标是事件发生时间；存在右删失或不同观察时长。
+- **core_idea**：估计生存函数、危险率及协变量影响。
+- **models**：Kaplan-Meier、Cox 比例风险、参数生存模型。
+- **assumptions**：删失机制可接受；Cox 模型需检查比例风险假设。
+- **outputs**：生存曲线、危险率、风险比、预测事件概率。
+- **validation**：时间依赖 C-index、校准、比例风险检验、分层曲线。
+- **selection_tags**：`survival, censoring, reliability, risk`
+- **fallbacks**：离散时间风险模型、加速失效模型。
+- **agent_actions**：标注起点/终点/删失 -> 估计基线 -> 加协变量 -> 检验假设 -> 报告风险比。

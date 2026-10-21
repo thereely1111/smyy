@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM D题 · 问题一 · 时频冲突检测</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --r:12px; --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);overflow:hidden;
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:none}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi.w .v{color:var(--warn)}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr.dim td{opacity:.35}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl .pills{margin:0}
+.ctl .hint{font-size:11.5px;color:var(--muted);flex:none}
+.ctl .stepind{font-size:12.5px;color:var(--teal-d);font-weight:600;font-variant-numeric:tabular-nums}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:320px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+#tip .row{display:flex;justify-content:space-between;gap:14px}
+
+body.reduce .pulse,body.reduce .flowdot{animation:none !important}
+body.reduce .wrap>.stg{opacity:1;transform:none;transition:none}
+body.reduce .scene{transition:none}
+body.reduce .fadein,body.reduce .blink-red{animation:none !important}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes blinkRed{0%,100%{opacity:.9}50%{opacity:.4}}
+.blink-red{animation:blinkRed 1.1s ease-in-out infinite}
+
+.formula{font-family:"SFMono-Regular",Consolas,monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto}
+.formula .c{color:#7fd8c9}
+.formula .k{color:#ffd9a0}
+.tf-grid{background:#0b2e36;border-radius:10px;padding:14px}
+.tf-grid svg{display:block;width:100%;height:auto}
+.tf-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#9ab7bd;margin-top:8px}
+.tf-legend span{display:flex;align-items:center;gap:4px}
+.tf-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.interact-hint{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);background:var(--line2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;margin-bottom:6px}
+.interact-hint b{color:var(--teal-d);font-weight:600}
+.interact-hint .kbd{font-size:11px;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:#fff;font-family:monospace}
+.approach-tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 9px;border-radius:999px;background:#eef7f6;color:var(--teal-d);border:1px solid #cfe7e5;margin-right:6px}
+.approach-tag::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">问题一 · 冲突检测</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ========= 幕 1：冲突的定义与检测思路 ========= -->
+<section class="scene" id="s1" data-title="一 · 冲突的定义与检测思路">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题一 · 冲突检测</div>
+      <h1>对附件 1 做时频冲突检测
+        <small>冲突 = 两装备某次使用在频段和时间上都有重叠。等价于两个矩形在时频网格上相交。</small>
+      </h1>
+      <p class="lead">题面要求将所有检测出的冲突对逐一填入 result1.xlsx。这是整个 D 题四问的起点——冲突没找全，后面的消解就无从谈起。题面的几何模型把电磁兼容这个工程问题抽象成了一个纯粹的矩形相交判定问题，看似简单，但里面藏着两个容易出错的细节：<b>半开区间的边界归属</b>，以及同一装备"周期性使用"导致的多次重叠。</p>
+      <p class="lead">核心问题的几何本质：150 个装备共产生约 500 个时频矩形，两两判定是否相交。朴素 O(N²R²) 扫描对 N=150、R≈500 完全够用——总共约 28 万次矩形相交判定，秒级即可完成。实际上这个规模下，任何"优化过"的空间索引（扫描线、区间树、网格哈希）在常数项上都会比朴素法更慢，因为数据量太小、常数项主导。</p>
+      <p class="lead">获奖论文通常不会在问题一上花太多笔墨，但会用一段话明确自己的检测算法是"朴素两两扫描"，并给出复杂度估算（C(150,2) × ⟨R⟩² ≈ 28 万次判定），作为后续消解算法正确性的前提验证。少数论文会在这一步就做<b>冲突图连通分量分析</b>（把连通的冲突分量找出来），为问题二的消解顺序做准备——这是一个值得加分的预处理。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>算法流程 <em>逐对判定，四行核心</em></h3>
+        <div class="formula">
+<span class="c">输入</span>: equip[0..149]，每个含 rects[]  (共 ~500 个矩形)
+<span class="c">输出</span>: conflicts[] = [{a, b, overlaps[]}]
+
+<span class="k">for</span> i in [0, N):                       <span class="c">// 第一件装备</span>
+  <span class="k">for</span> j in [i+1, N):                   <span class="c">// 第二件装备（避免重复对）</span>
+    overlap ← []
+    <span class="k">for</span> r1 in equip[i].rects:          <span class="c">// i 的每次使用</span>
+      <span class="k">for</span> r2 in equip[j].rects:        <span class="c">// j 的每次使用</span>
+        fs ← max(r1.fs, r2.fs)         <span class="c">// 频段交集下界</span>
+        fe ← min(r1.fe, r2.fe)         <span class="c">// 频段交集上界</span>
+        ts ← max(r1.ts, r2.ts)         <span class="c">// 时间交集下界</span>
+        te ← min(r1.te, r2.te)         <span class="c">// 时间交集上界</span>
+        <span class="k">if</span> fs &lt; fe <span class="k">and</span> ts &lt; te:          <span class="c">// 半开区间：严格小于</span>
+          overlap.append([fs,fe,ts,te])
+    <span class="k">if</span> overlap ≠ ∅: conflicts.append({i, j, overlap})
+        </div>
+        <p class="small">关键在最后一行判定：<b>fs &lt; fe 且 ts &lt; te</b> 才冲突。用严格小于而不是 ≤，是因为频段/时间区间都是半开的——边界刚好相接（fs = fe）不算重叠。</p>
+      </div>
+      <div class="card">
+        <h3>复杂度分析 <em>为什么朴素法就够</em></h3>
+        <table class="tb">
+          <tr><th>维度</th><th>规模</th><th>因子</th></tr>
+          <tr><td class="l">装备对数</td><td class="num">C(150,2) = 11 175</td><td class="num">O(N²)</td></tr>
+          <tr><td class="l">矩形对数（平均）</td><td class="num">≈ 3² = 9</td><td class="num">O(⟨R⟩²)</td></tr>
+          <tr><td class="l">总判定次数</td><td class="num">≈ 10 万</td><td class="num">毫秒级</td></tr>
+          <tr class="on"><td class="l"><b>最坏情况（⟨R⟩=10）</b></td><td class="num"><b>≈ 112 万</b></td><td class="num">仍在秒级</td></tr>
+        </table>
+        <div class="note">复杂度的关键在于"平均每装备约 3 次使用"。即使极端情况下某装备使用 10 次，总判定次数也只有百万量级。所以问题一<b>不需要任何高级数据结构</b>——朴素法最稳、最不容易写错，反而比扫描线更可靠。</div>
+      </div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">冲突检测的最小示例（2 个装备，3 处同时冲突）</div>
+        <div class="legend">
+          <span><i style="background:rgba(224,122,95,.8)"></i>E1（A 类）</span>
+          <span><i style="background:rgba(30,159,196,.8)"></i>E2（B 类）</span>
+          <span><i style="background:#ff4d6d"></i>重叠区域 = 冲突</span>
+        </div>
+      </div>
+      <div class="interact-hint">
+        <b>▶ 可交互</b>
+        <span>鼠标悬停任意色块查看 E1 / E2 的完整参数 · 红色闪烁块 = 两装备在同一时间占用了同一批频段</span>
+      </div>
+      <div id="demo2" class="tf-grid"></div>
+      <div class="note" id="demo2Note"></div>
+    </div>
+
+    <div class="note.w">💡 <b>核心洞察</b>：冲突检测的输出不是"冲突矩形对"，而是"冲突装备对"。因为 result1.xlsx 的模板<b>每行只填一对装备编号</b>——即使这对装备之间有 3 处矩形重叠，也只占一行。理解这个"归并"关系是正确填写交付物的前提。</div>
+  </div>
+</section>
+
+<!-- ========= 幕 2：全量冲突检测动画 ========= -->
+<section class="scene" id="s2" data-title="二 · 全量冲突检测动画">
+  <div class="wrap">
+    <div>
+      <div class="kicker">动画流程 · 交互演示</div>
+      <h1>先画全部装备 → 逐个高亮冲突对
+        <small>点击「下一对」逐步浏览，或点击「自动播放」一键扫完 150 个装备的全部冲突。</small>
+      </h1>
+      <p class="lead">下方网格展示全部 150 个装备的时频占用。初始只显示淡色矩形（表示"已绘制但未检测"），然后逐步用红色框高亮冲突对及其重叠区域。每一对冲突装备都可能有 1 处或多处矩形重叠——比如两个间隔相同、使用次数相同的装备，如果首次时间也接近，就会有多次同时冲突。</p>
+      <p class="lead">红色矩形标记的是<b>重叠区域的几何交集</b>——它的宽和高分别是两装备时间交集和频段交集的长度。如果重叠区域在时间上很短、频段上也很窄，说明这对冲突其实比较"轻微"，后续消解时可能只需要微调其中一方的时间或频段就能绕开。反之，如果重叠区域很大（几乎覆盖其中一个装备的全部矩形），说明这对冲突很棘手，可能需要幅度较大的调整甚至撤销。</p>
+      <p class="lead">建议的观看顺序：先点「自动播放」整体感受冲突的密度和分布，再回到第一对用「下一对」逐对细看。<b>重点关注三类组合</b>——A-A 冲突（两边都是高优，最难办）、C-C 冲突（两边都是低优，最好调）、以及重叠处数特别多的对（说明两装备的周期节奏"撞上了"）。</p>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">时频冲突检测动画 · 逐对扫描</div>
+      </div>
+      <div class="interact-hint">
+        <b>▶ 可交互</b>
+        <span>点【自动播放】逐对扫过 · 点【上一对 / 下一对】手动步进 · 底部面板显示当前冲突对的完整参数与重叠处数</span>
+      </div>
+      <div class="ctl">
+        <span class="lb">播放控制：</span>
+        <button class="tbtn" id="btnAuto">自动播放</button>
+        <button class="tbtn" id="btnPrevP">‹ 上一对</button>
+        <button class="tbtn" id="btnNextP">下一对 ›</button>
+        <span class="stepind" id="pairIdx">0 / 0</span>
+        <span class="hint">冲突对总数 = 下方计数器的分母</span>
+      </div>
+      <div id="tfScan" class="tf-grid"></div>
+      <div class="tf-legend" id="scanLegend">
+        <span><i style="background:rgba(18,165,148,.35)"></i>未检测装备（淡色）</span>
+        <span><i style="background:#e07a5f"></i>冲突装备 A</span>
+        <span><i style="background:#1e9fc4"></i>冲突装备 B</span>
+        <span><i style="background:#ff4d6d"></i>重叠区域（冲突）</span>
+      </div>
+      <div id="pairDetail" class="note"></div>
+    </div>
+
+    <div class="note.w">💡 提示：点击「自动播放」后每 0.7 秒推进一对冲突，全部冲突对会被顺序扫过。红色闪烁的区域就是两个装备在时频上真正交叠的部分——这正是需要消解的核心。</div>
+  </div>
+</section>
+
+<!-- ========= 幕 3：冲突统计 ========= -->
+<section class="scene" id="s3" data-title="三 · 冲突统计与热点定位">
+  <div class="wrap">
+    <div>
+      <div class="kicker">统计视角 · 论文要给的数字</div>
+      <h1>冲突集中在哪里
+        <small>按优先级组合、频段密度、时间窗口三个维度看，热点区域一目了然。</small>
+      </h1>
+      <p class="lead">冲突不是均匀分布的。识别热点频段和时段，对后续消解的策略选择至关重要——如果冲突集中在某几个频段，频移消解就会比时移更困难，因为频移幅度只有 ±10Δf，可操作空间更窄；同样，如果冲突集中在某个时间窗口，时移消解也会受限。这正是"先统计、后消解"的价值所在。</p>
+      <p class="lead">另一个值得关注的维度是<b>优先级组合</b>：A-A 冲突最棘手（两边都不想动），C-C 冲突最灵活（随便怎么调都行）。如果检测结果里 A-A 冲突特别多，问题二的消解难度会显著提升——甚至可能需要撤销少量装备。这一节的三个统计图，正好对应题面要求的"在论文中给出时频冲突的统计结果"。</p>
+    </div>
+
+    <div class="grid4" id="kpiConf"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>按优先级组合统计 <em>决定消解时"动谁"</em></h3>
+        <table class="tb" id="priorTable"></table>
+        <div class="note" id="priorNote"></div>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">频段冲突密度（哪个频段最拥挤）</div>
+          <div class="hint">橙色越深 = 该频段上发生的冲突越多</div>
+        </div>
+        <div class="interact-hint">
+          <b>▶ 可交互</b>
+          <span>鼠标悬停左侧条形区可查看该频段的具体冲突次数 · 条形越长说明该频段越"拥挤"</span>
+        </div>
+        <div id="freqDensity" class="tf-grid"></div>
+        <div class="note" id="freqNote"></div>
+      </div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">时间窗口冲突热力图 <em>按 20Δt 分桶</em></div>
+        <div class="hint">X 轴 = 时间块 · 红色越深 / 柱越高 = 冲突越密集</div>
+      </div>
+      <div class="interact-hint">
+        <b>▶ 可交互</b>
+        <span>鼠标悬停柱状条可查看该时间窗口内的具体冲突数 · 峰值窗口对问题二的消解策略有直接影响</span>
+      </div>
+      <div id="timeHeat" style="background:#0b2e36;border-radius:10px;padding:14px"></div>
+      <div class="note" id="timeNote"></div>
+    </div>
+
+    <div class="card" style="background:#fafdfd;border:1px solid var(--line2)">
+      <h3>获奖论文参考思路 <em>统计阶段可以加分的三个动作</em></h3>
+      <p>冲突统计通常会从三个维度展开：① 按优先级组合统计（A-A / A-B / A-C / B-B / B-C / C-C 各有多少对）；② 频段 / 时间冲突密度热力图，用于识别热点区域；③ 每对冲突的<b>严重程度</b>（重叠面积占两个装备总面积的比例）。第三个维度尤其重要——严重冲突对后续消解策略的选择有直接指导意义：重叠面积比小于 20% 的冲突可能只需微调，大于 80% 的冲突大概率需要撤销其中一方。</p>
+      <span class="approach-tag">三维度统计</span>
+      <span class="approach-tag">重叠面积加权</span>
+      <span class="approach-tag">冲突图连通分量</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 4：result1.xlsx 输出说明 ========= -->
+<section class="scene" id="s4" data-title="四 · 结果输出与小结">
+  <div class="wrap">
+    <div>
+      <div class="kicker">交付物 · result1.xlsx</div>
+      <h1>结果表的格式与填写要点
+        <small>模板非常简单：A 列序号、B/C 列冲突的两个装备编号，每对装备只填一行。</small>
+      </h1>
+      <p class="lead">注意：题面模板的 <b>每一行代表一对冲突装备</b>，即使它们之间存在多个矩形重叠，也只填一行。我们的检测算法已经按「装备对」做了归并——这意味着 result1.xlsx 的行数 = 冲突装备对的数量，而不是冲突矩形对的数量。这是初学者最容易搞混的地方。</p>
+      <p class="lead">result1.xlsx 是后续三问的输入——问题二、三、四都基于这里列出的冲突对进行消解。因此论文写作时要明确说明检测算法的<b>正确性验证</b>：可以用小规模合成数据做交叉检验（手工算几对，与程序输出比对），或用已知无冲突的数据集做反证测试。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>result1.xlsx 模板 <em>每对装备一行</em></h3>
+        <table class="tb">
+          <tr><th style="width:80px">序号</th><th style="width:180px">冲突装备 1</th><th style="width:180px">冲突装备 2</th></tr>
+          <tr><td class="num">1</td><td>A001</td><td>B007</td></tr>
+          <tr><td class="num">2</td><td>A001</td><td>C012</td></tr>
+          <tr><td class="num">3</td><td>B003</td><td>C020</td></tr>
+          <tr><td class="num">…</td><td>…</td><td>…</td></tr>
+        </table>
+        <p class="small">每一对冲突装备占一行。两个装备编号的顺序不影响语义，但建议按编号从小到大排。</p>
+      </div>
+      <div class="card">
+        <h3>关键实现细节 <em>容易踩的坑</em></h3>
+        <ul style="font-size:13.5px;color:var(--ink2);line-height:1.9;padding-left:18px;margin:0">
+          <li>一个冲突装备对可能有 <b>多个矩形重叠</b>（间隔相同时），但模板<b>只写一行</b></li>
+          <li>装备编号按 <b>字母 + 三位数字</b> 格式（A001, A002, …, C080）</li>
+          <li>半开区间判定要用 <b>严格小于</b>：fs &lt; fe 且 ts &lt; te，边界相接不算冲突</li>
+          <li>避免重复：用 i &lt; j 的双循环保证每对只判一次</li>
+          <li>冲突对数量 = 模板行数 − 1（表头行）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quote">「对附件 1 给出的用频计划进行时频冲突检测，将结果保存到文件 result1.xlsx 中，并在论文中给出时频冲突的统计结果。」
+      <div class="small" style="margin-top:6px">→ 论文里要给出的统计，就是幕 3 的那些数字（组合分布、频段热点、时间热点）。</div>
+    </div>
+
+    <div class="grid3">
+      <div class="card"><h3>问题一的定位</h3><p>纯几何检测，不涉及任何优化或约束。做得正确是后三问的前提——如果冲突都没找全，后面消解就没有意义。</p></div>
+      <div class="card"><h3>容易踩的坑</h3><p>① 把半开区间当成闭区间导致边界重复计数；② 模板每对装备多行；③ 忘记排除自冲突（同一装备不同次使用之间）。</p></div>
+      <div class="card"><h3>下一步</h3><p>有了完整的冲突对列表，就可以进入问题二——带优先级约束的冲突消解。点击底部圆点或顶栏「问题二」继续。</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+
+<script>
+/* ========= 数据与工具 ========= */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function fmtInt(v){return Number(v).toLocaleString("en-US");}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+
+const tipEl=document.getElementById("tip");
+function tipShow(html,x,y){
+  tipEl.innerHTML=html;tipEl.classList.add("on");
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let nx=x+16,ny=y+16;
+  if(nx+w>window.innerWidth-10)nx=x-w-16;
+  if(ny+h>window.innerHeight-10)ny=y-h-16;
+  tipEl.style.left=Math.max(8,nx)+"px";tipEl.style.top=Math.max(8,ny)+"px";
+}
+function tipHide(){tipEl.classList.remove("on");}
+function bindTip(node,build){
+  node.addEventListener("mouseenter",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mousemove",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mouseleave",tipHide);
+}
+
+function mulberry32(seed){return function(){
+  let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);
+  return((t^t>>>14)>>>0)/4294967296;
+};}
+function genData(seed){
+  const rnd=mulberry32(seed||42);
+  const CLASS=[
+    {k:"A",n:20,priority:3,color:"#e07a5f",name:"A 类"},
+    {k:"B",n:50,priority:2,color:"#1e9fc4",name:"B 类"},
+    {k:"C",n:80,priority:1,color:"#12a594",name:"C 类"}
+  ];
+  const all=[];let idx=1;
+  for(const c of CLASS){
+    for(let i=0;i<c.n;i++){
+      const bw=4+Math.floor(rnd()*2);
+      const fs=Math.floor(rnd()*(100-bw));
+      const tau=5+Math.floor(rnd()*2);
+      const ts=Math.floor(rnd()*220);
+      const iv=50+Math.floor(rnd()*60);
+      const n=2+Math.floor(rnd()*3);
+      const id=c.k+String(idx).padStart(3,"0");
+      all.push({id,cls:c.k,priority:c.priority,color:c.color,fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,rects:[]});
+      idx++;
+    }
+  }
+  for(const e of all)for(let k=0;k<e.n;k++){
+    const t0=e.ts+k*e.iv;
+    e.rects.push({fs:e.fs,fe:e.fe,ts:t0,te:t0+e.tau,k});
+  }
+  let maxT=0;for(const e of all)for(const r of e.rects)if(r.te>maxT)maxT=r.te;
+  return {equip:all,maxT,classes:CLASS};
+}
+const DATA=genData(42);
+
+/* 冲突检测 */
+function detectConflicts(equip){
+  const conflicts=[];
+  for(let i=0;i<equip.length;i++){
+    for(let j=i+1;j<equip.length;j++){
+      const e1=equip[i],e2=equip[j];
+      const overlaps=[];
+      for(const r1 of e1.rects){
+        for(const r2 of e2.rects){
+          const fs=Math.max(r1.fs,r2.fs),fe=Math.min(r1.fe,r2.fe);
+          const ts=Math.max(r1.ts,r2.ts),te=Math.min(r1.te,r2.te);
+          if(fs<fe&&ts<te)overlaps.push({fs,fe,ts,te,r1k:r1.k,r2k:r2.k});
+        }
+      }
+      if(overlaps.length>0)conflicts.push({a:e1,b:e2,overlaps});
+    }
+  }
+  return conflicts;
+}
+const CONF=detectConflicts(DATA.equip);
+
+/* 时频网格组件 */
+function tfGrid(containerId,opts){
+  opts=opts||{};
+  const W=opts.W||900,H=opts.H||340,pad=opts.pad||50;
+  const maxF=opts.maxF||100,maxT=opts.maxT||DATA.maxT;
+  const yStep=opts.yStep||10, xStep=opts.xStep||100;
+  const showGrid=opts.showGrid!==false, showAxes=opts.showAxes!==false;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"xMidYMid meet"});
+  if(showGrid){
+    for(let f=0;f<=maxF;f+=yStep){
+      const y=pad+(H-pad*2)*f/maxF;
+      svg.appendChild(el("line",{x1:pad,y1:y,x2:W-pad,y2:y,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+    }
+    for(let t=0;t<=maxT;t+=xStep){
+      const x=pad+(W-pad*2)*t/maxT;
+      svg.appendChild(el("line",{x1:x,y1:pad,x2:x,y2:H-pad,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+    }
+  }
+  if(showAxes){
+    svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+    svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+    for(let f=0;f<=maxF;f+=yStep){
+      const y=pad+(H-pad*2)*f/maxF;
+      svg.appendChild(txt(pad-6,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    for(let t=0;t<=maxT;t+=xStep){
+      const x=pad+(W-pad*2)*t/maxT;
+      svg.appendChild(txt(x,H-pad+12,String(t),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    svg.appendChild(txt(pad-6,pad-6,"频段 Δf",{"font-size":9,fill:"#9ab7bd"}));
+    svg.appendChild(txt(W-pad,H-pad+24,"时间 Δt",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+  }
+  svg._tf={W,H,pad,maxF,maxT};
+  document.getElementById(containerId).appendChild(svg);
+  return svg;
+}
+function tfDrawRect(svg,rect,color,opts){
+  opts=opts||{};const g=svg._tf;if(!g)return;
+  const x=g.pad+(g.W-g.pad*2)*rect.ts/g.maxT;
+  const y=g.pad+(g.H-g.pad*2)*rect.fs/g.maxF;
+  const w=(g.W-g.pad*2)*(rect.te-rect.ts)/g.maxT;
+  const h=(g.H-g.pad*2)*(rect.fe-rect.fs)/g.maxF;
+  const r=el("rect",{x,y,width:Math.max(w,.5),height:Math.max(h,.5),rx:1.2,
+    fill:color,opacity:opts.opacity||.78,stroke:opts.stroke||color,"stroke-width":opts.sw||.6});
+  if(opts.cls)r.setAttribute("class",opts.cls);
+  if(opts.id)r.setAttribute("id",opts.id);
+  if(opts.onEnter||opts.onMove||opts.onLeave){
+    r.style.cursor="pointer";
+    if(opts.onEnter)r.addEventListener("mouseenter",opts.onEnter);
+    if(opts.onMove)r.addEventListener("mousemove",opts.onMove);
+    if(opts.onLeave)r.addEventListener("mouseleave",opts.onLeave);
+  }
+  svg.appendChild(r);return r;
+}
+function tfDrawEquip(svg,equipList,opts){
+  opts=opts||{};const drawn=[];
+  for(const e of equipList){
+    const op=Object.assign({},opts);
+    if(opts.onEnter||opts.onMove||opts.onLeave){
+      op.onEnter=ev=>opts.onEnter(ev,e);
+      op.onMove=ev=>opts.onMove(ev,e);
+      op.onLeave=ev=>opts.onLeave(ev,e);
+    }
+    for(const r of e.rects){
+      const node=tfDrawRect(svg,r,e.color,op);
+      node.setAttribute("data-id",e.id);drawn.push({node,equip:e,rect:r});
+    }
+  }
+  return drawn;
+}
+function equipTip(e){
+  return "<span class='tt'>"+e.id+" ("+e.cls+"类 · 优先级"+e.priority+")</span>"
+    +"<div class='row'><span>频段区间</span><span>["+e.fs+", "+e.fe+") = "+e.bw+" Δf</span></div>"
+    +"<div class='row'><span>首次时间</span><span>["+e.ts+", "+e.te+") = "+e.tau+" Δt</span></div>"
+    +"<div class='row'><span>间隔 / 次数</span><span>"+e.iv+"Δt × "+e.n+" 次</span></div>"
+    +"<div class='row'><span>时间跨度</span><span>"+(e.ts+(e.n-1)*e.iv+e.tau)+" Δt</span></div>";
+}
+
+/* ========= 场景控制 ========= */
+(function(){
+  const scenes=document.querySelectorAll(".scene");
+  const dots=document.getElementById("dots");
+  let cur=0;
+  scenes.forEach((s,i)=>{const d=document.createElement("button");d.className="dot"+(i===0?" on":"");
+    d.title=s.getAttribute("data-title");d.onclick=()=>goto(i);dots.appendChild(d);});
+  function goto(i){
+    cur=Math.max(0,Math.min(scenes.length-1,i));
+    for(let k=0;k<scenes.length;k++){
+      scenes[k].classList.toggle("active",k===cur);dots.children[k].classList.toggle("on",k===cur);
+    }
+    document.getElementById("scTitle").textContent=scenes[cur].getAttribute("data-title");
+    document.getElementById("pgNow").textContent=cur+1;document.getElementById("pgAll").textContent=scenes.length;
+    document.getElementById("prog").style.width=((cur+1)/scenes.length*100)+"%";
+    if(scenes[cur]._onEnter)scenes[cur]._onEnter();
+  }
+  document.getElementById("btnPrev").onclick=()=>goto(cur-1);
+  document.getElementById("btnNext").onclick=()=>goto(cur+1);
+  document.getElementById("btnReplay").onclick=()=>goto(cur);
+  document.getElementById("btnFx").onclick=function(){
+    document.body.classList.toggle("reduce");
+    this.classList.toggle("on",!document.body.classList.contains("reduce"));
+    this.textContent=document.body.classList.contains("reduce")?"动效 关":"动效 开";
+  };
+  document.addEventListener("keydown",ev=>{
+    if(ev.key==="ArrowRight")goto(cur+1);else if(ev.key==="ArrowLeft")goto(cur-1);
+  });
+
+  /* ========= 幕 1：最小示例 ========= */
+  scenes[0]._onEnter=function(){
+    clear("demo2");
+    const e1={id:"E1",cls:"A",priority:3,color:"#e07a5f",fs:20,fe:35,ts:10,te:25,iv:40,n:3,bw:15,tau:15,rects:[]};
+    const e2={id:"E2",cls:"B",priority:2,color:"#1e9fc4",fs:28,fe:45,ts:20,te:35,iv:40,n:3,bw:17,tau:15,rects:[]};
+    for(let k=0;k<3;k++){
+      e1.rects.push({fs:e1.fs,fe:e1.fe,ts:e1.ts+k*e1.iv,te:e1.ts+k*e1.iv+15,k});
+      e2.rects.push({fs:e2.fs,fe:e2.fe,ts:e2.ts+k*e2.iv,te:e2.ts+k*e2.iv+15,k});
+    }
+    const svg=tfGrid("demo2",{W:900,H:280,maxT:140,xStep:30});
+    tfDrawEquip(svg,[e1,e2],{
+      opacity:.72,
+      onEnter:(ev,e)=>tipShow(equipTip(e),ev.clientX,ev.clientY),
+      onMove:(ev,e)=>tipShow(equipTip(e),ev.clientX,ev.clientY),
+      onLeave:tipHide
+    });
+    let cnt=0;
+    for(let k=0;k<3;k++){
+      const fs=Math.max(e1.fs,e2.fs),fe=Math.min(e1.fe,e2.fe);
+      const ts=Math.max(e1.ts+k*e1.iv,e2.ts+k*e2.iv),te=Math.min(e1.ts+k*e1.iv+15,e2.ts+k*e2.iv+15);
+      if(fs<fe&&ts<te){
+        const r=tfDrawRect(svg,{fs,fe,ts,te},"#ff4d6d",{opacity:.92,cls:"blink-red",sw:2.2});
+        bindTip(r,()=>"<span class='tt'>重叠区域 #"+(k+1)+"</span>"
+          +"<div class='row'><span>频段交集</span><span>["+fs+", "+fe+")</span></div>"
+          +"<div class='row'><span>时间交集</span><span>["+ts+", "+te+")</span></div>"
+          +"<div class='row'><span>重叠面积</span><span>"+((fe-fs)*(te-ts))+" Δf·Δt</span></div>");
+        cnt++;
+      }
+    }
+    const g=svg._tf;
+    svg.appendChild(txt(g.pad+10,g.pad+13,"E1: 频段[20,35) × 时间块 [10,25) [50,65) [90,105)",{"font-size":9.5,fill:"#e07a5f"}));
+    svg.appendChild(txt(g.pad+10,g.pad+25,"E2: 频段[28,45) × 时间块 [20,35) [60,75) [100,115)",{"font-size":9.5,fill:"#1e9fc4"}));
+    document.getElementById("demo2Note").innerHTML=
+      "本示例故意让 E1 和 E2 有<b>相同间隔（p=40Δt）和相同使用次数（n=3）</b>，所以三次使用的时间块完全对齐，导致 <b>"+cnt+" 处同时冲突</b>。"
+      +"实际数据中间隔各不相同，冲突点会分散得多。注意：result1.xlsx 里这一对装备只占<b>一行</b>，尽管它有 "+cnt+" 处重叠。";
+  };
+
+  /* ========= 幕 2：全量扫描动画 ========= */
+  let pairIdxVal=0, autoTimer=null;
+  function drawPair(i){
+    const svg=document.querySelector("#tfScan svg");if(!svg)return;
+    svg.querySelectorAll(".hl-a,.hl-b,.hl-ov").forEach(n=>n.remove());
+    if(i<0||i>=CONF.length)return;
+    const c=CONF[i];
+    for(const r of c.a.rects)tfDrawRect(svg,r,c.a.color,{opacity:.88,sw:2.2,cls:"hl-a"});
+    for(const r of c.b.rects)tfDrawRect(svg,r,c.b.color,{opacity:.88,sw:2.2,cls:"hl-b"});
+    for(const ov of c.overlaps)tfDrawRect(svg,ov,"#ff4d6d",{opacity:.95,sw:2.5,cls:"blink-red hl-ov"});
+    document.getElementById("pairIdx").textContent=(i+1)+" / "+CONF.length;
+    const sev=(c.overlaps.reduce((s,o)=>s+(o.fe-o.fs)*(o.te-o.ts),0)
+      /Math.max(1,c.a.bw*c.a.tau*c.a.n+c.b.bw*c.b.tau*c.b.n));
+    document.getElementById("pairDetail").innerHTML=
+      "<b>冲突第 "+(i+1)+" 对</b>："+c.a.id+" <span class='badge n'>"+c.a.cls+"类</span> ↔ "
+      +c.b.id+" <span class='badge n'>"+c.b.cls+"类</span>，共 <b>"+c.overlaps.length+"</b> 处时频重叠，"
+      +"重叠严重度 ≈ <b>"+(sev*100).toFixed(1)+"%</b>。"
+      +"<br><span style='color:var(--muted);font-size:12px'>"+c.a.id+": 频段["+c.a.fs+","+c.a.fe+") × 间隔 "+c.a.iv+"Δt × "+c.a.n+" 次"
+      +" ｜ "+c.b.id+": 频段["+c.b.fs+","+c.b.fe+") × 间隔 "+c.b.iv+"Δt × "+c.b.n+" 次</span>";
+  }
+  scenes[1]._onEnter=function(){
+    clear("tfScan");
+    const svgAll=tfGrid("tfScan",{W:900,H:320,maxT:DATA.maxT,xStep:100});
+    for(const e of DATA.equip)for(const r of e.rects)tfDrawRect(svgAll,r,e.color,{opacity:.2,sw:.3});
+    pairIdxVal=0;drawPair(0);
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+    document.getElementById("btnAuto").textContent="自动播放";
+    document.getElementById("btnAuto").classList.remove("on");
+  };
+  document.getElementById("btnNextP").onclick=function(){
+    pairIdxVal=Math.min(CONF.length-1,pairIdxVal+1);drawPair(pairIdxVal);
+  };
+  document.getElementById("btnPrevP").onclick=function(){
+    pairIdxVal=Math.max(0,pairIdxVal-1);drawPair(pairIdxVal);
+  };
+  document.getElementById("btnAuto").onclick=function(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;this.textContent="自动播放";this.classList.remove("on");return;}
+    if(pairIdxVal>=CONF.length-1)pairIdxVal=0;
+    this.textContent="停止";this.classList.add("on");
+    autoTimer=setInterval(()=>{
+      pairIdxVal++;
+      if(pairIdxVal>=CONF.length){clearInterval(autoTimer);autoTimer=null;pairIdxVal=CONF.length-1;drawPair(pairIdxVal);
+        document.getElementById("btnAuto").textContent="自动播放";document.getElementById("btnAuto").classList.remove("on");return;}
+      drawPair(pairIdxVal);
+    },700);
+  };
+
+  /* ========= 幕 3：冲突统计 ========= */
+  scenes[2]._onEnter=function(){
+    const totalOverlap=CONF.reduce((s,c)=>s+c.overlaps.length,0);
+    const uniqueEquip=new Set();
+    for(const c of CONF){uniqueEquip.add(c.a.id);uniqueEquip.add(c.b.id);}
+    const kpis=[
+      [CONF.length,"冲突装备对数","每对占 result1 一行","w"],
+      [totalOverlap,"总重叠矩形数","动画里闪红的块数",""],
+      [uniqueEquip.size,"涉及冲突的装备数","占 150 装备的 "+(uniqueEquip.size/150*100).toFixed(1)+"%","b"],
+      [fmtInt(150*149/2-CONF.length),"无冲突装备对数","C(150,2) − 冲突对","g"]
+    ];
+    document.getElementById("kpiConf").innerHTML=kpis.map(x=>
+      "<div class='kpi "+x[3]+"'><div class='k'>"+x[1]+"</div><div class='v'>"+x[0]+"</div><div class='small'>"+x[2]+"</div></div>").join("");
+
+    const combo={};
+    for(const c of CONF){const k=[c.a.cls,c.b.cls].sort().join("-");combo[k]=(combo[k]||0)+1;}
+    const rows=[
+      ["A-A",combo["A-A"]||0,"两个最高优冲突——最难办"],
+      ["A-B",combo["A-B"]||0,"需保 A，调整 B"],
+      ["A-C",combo["A-C"]||0,"需保 A，优先调 C"],
+      ["B-B",combo["B-B"]||0,"两个中优，看带宽/间隔比"],
+      ["B-C",combo["B-C"]||0,"保 B 调 C"],
+      ["C-C",combo["C-C"]||0,"最灵活，可自由消解"]
+    ];
+    document.getElementById("priorTable").innerHTML=
+      "<table class='tb'><tr><th>类别组合</th><th>冲突对数</th><th>消解提示</th></tr>"
+      +rows.map(r=>"<tr><td><span class='badge n'>"+r[0]+"</span></td><td class='num'>"+r[1]+"</td><td class='l'>"+r[2]+"</td></tr>").join("")
+      +"<tr class='on'><td><b>合计</b></td><td class='num'><b>"+CONF.length+"</b></td><td></td></tr></table>";
+    document.getElementById("priorNote").innerHTML=
+      "优先级组合直接决定了问题二消解时的动作空间：<b>A-A</b> 冲突最棘手——因为 A 类要尽量保持，只能让两边都微调，或其中一方撤销；"
+      +"<b>C-C</b> 最灵活，可以自由调频段 / 时间 / 撤销。观察上表哪一类冲突最多，就能预判问题二的难度。";
+
+    /* 频段冲突密度：横向条形图（Y = 频段 0~100Δf，X = 冲突覆盖次数） */
+    clear("freqDensity");
+    const densities=new Array(100).fill(0);
+    for(const c of CONF)for(const ov of c.overlaps)for(let f=ov.fs;f<ov.fe;f++)densities[f]++;
+    const maxD=Math.max.apply(null,densities)||1;
+    const hotF=densities.indexOf(Math.max.apply(null,densities));
+
+    const Wf=900,Hf=280,pL=58,pR=150,pT=30,pB=36;
+    const plotW=Wf-pL-pR,plotH=Hf-pT-pB,rowH=plotH/100;
+    const svgF=el("svg",{viewBox:"0 0 "+Wf+" "+Hf,preserveAspectRatio:"xMidYMid meet"});
+    document.getElementById("freqDensity").appendChild(svgF);
+    const yTop=f=>pT+plotH*(1-(f+1)/100);
+    const xOf=v=>pL+plotW*(v/maxD);
+
+    /* 无冲突频段的底纹，便于对照读数 */
+    for(let f=0;f<100;f++)if(densities[f]===0)
+      svgF.appendChild(el("rect",{x:pL,y:yTop(f),width:plotW,height:Math.max(rowH-.3,.6),fill:"rgba(255,255,255,.05)"}));
+
+    /* 条形：从 Y 轴向右生长，长度正比于该频段的冲突覆盖次数 */
+    for(let f=0;f<100;f++){
+      if(densities[f]<=0)continue;
+      const ratio=densities[f]/maxD;
+      const rect=el("rect",{x:pL,y:yTop(f),width:Math.max(2,plotW*ratio),height:Math.max(rowH-.3,.6),
+        fill:"#ff4d6d",opacity:.32+.58*ratio,rx:1});
+      rect.style.cursor="pointer";
+      bindTip(rect,()=>"<span class='tt'>频段 "+f+" Δf</span>"
+        +"<div class='row'><span>冲突覆盖次数</span><span>"+densities[f]+"</span></div>"
+        +"<div class='row'><span>相对密集度</span><span>"+(ratio*100).toFixed(0)+"%</span></div>"
+        +"<div class='row'><span>频段区间</span><span>["+f+", "+(f+1)+") Δf</span></div>");
+      svgF.appendChild(rect);
+    }
+
+    /* 坐标轴 */
+    svgF.appendChild(el("line",{x1:pL,y1:pT,x2:pL,y2:Hf-pB,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+    svgF.appendChild(el("line",{x1:pL,y1:Hf-pB,x2:pL+plotW,y2:Hf-pB,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+    for(let f=0;f<=100;f+=10){
+      const y=pT+plotH*(1-f/100);
+      svgF.appendChild(el("line",{x1:pL-4,y1:y,x2:pL,y2:y,stroke:"rgba(255,255,255,.3)","stroke-width":1}));
+      svgF.appendChild(txt(pL-8,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    const vStep=Math.max(1,Math.ceil(maxD/5));
+    for(let v=0;v<=maxD;v+=vStep){
+      const x=xOf(v);
+      svgF.appendChild(el("line",{x1:x,y1:Hf-pB,x2:x,y2:Hf-pB+4,stroke:"rgba(255,255,255,.3)","stroke-width":1}));
+      svgF.appendChild(txt(x,Hf-pB+15,String(v),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    svgF.appendChild(txt(pL-8,pT-12,"频段 Δf",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+    svgF.appendChild(txt(pL+plotW,Hf-pB+30,"冲突覆盖次数",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+
+    /* 标注最拥挤的频段 */
+    const yh=yTop(hotF)+rowH/2;
+    svgF.appendChild(el("line",{x1:pL-4,y1:yh,x2:xOf(densities[hotF])+6,y2:yh,stroke:"#ffd9a0","stroke-width":1,"stroke-dasharray":"3 2"}));
+    svgF.appendChild(txt(xOf(densities[hotF])+10,yh+3.5,"最拥挤 "+hotF+"Δf · "+densities[hotF]+" 次",{"font-size":9.5,fill:"#ffd9a0"}));
+
+    document.getElementById("freqNote").innerHTML=
+      "横向条形 = 每个频段被冲突矩形覆盖的次数，条形越长该频段越拥挤。<b>冲突最密集的频段是 "+hotF+"Δf 附近</b>（覆盖 "+densities[hotF]+" 次）。"
+      +"这意味着该频段的频移消解空间最紧张——±10Δf 的调整幅度在这里可能不够用。";
+
+    /* 时间热力图 */
+    const bucket=20, maxBucket=Math.ceil(DATA.maxT/bucket);
+    const td=new Array(maxBucket).fill(0);
+    for(const c of CONF)for(const ov of c.overlaps){
+      const s=Math.floor(ov.ts/bucket), e=Math.floor((ov.te-1)/bucket);
+      for(let b=s;b<=e;b++)if(b>=0&&b<maxBucket)td[b]++;
+    }
+    const maxTD=Math.max.apply(null,td)||1;
+    const Wt=900,Ht=120,padT=44;
+    clear("timeHeat");
+    const svgT=el("svg",{viewBox:"0 0 "+Wt+" "+Ht,preserveAspectRatio:"xMidYMid meet"});
+    document.getElementById("timeHeat").appendChild(svgT);
+    for(let b=0;b<maxBucket;b++){
+      const bw2=(Wt-padT-16)/maxBucket;
+      const x=padT+bw2*b;
+      const c=0.15+0.8*(td[b]/maxTD);
+      const h=8+70*(td[b]/maxTD);
+      const col=td[b]>0?"rgba(255,77,109,"+c+")":"rgba(255,255,255,.08)";
+      const rect=el("rect",{x,y:Ht-30-h,width:Math.max(bw2-2,1),height:h,fill:col,rx:2});
+      rect.style.cursor="pointer";
+      bindTip(rect,()=>"<span class='tt'>时间窗口 ["+(b*bucket)+", "+Math.min(DATA.maxT,(b+1)*bucket)+") Δt</span>"
+        +"<div class='row'><span>冲突次数</span><span>"+td[b]+"</span></div>");
+      svgT.appendChild(rect);
+      if(td[b]>0)svgT.appendChild(txt(x+bw2/2,Ht-30-h-4,String(td[b]),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+    }
+    for(let t=0;t<=DATA.maxT;t+=100){
+      const x=padT+(Wt-padT-16)*(t/DATA.maxT);
+      svgT.appendChild(txt(x,Ht-10,String(t),{"text-anchor":"middle","font-size":9,fill:"#9ab7bd"}));
+    }
+    svgT.appendChild(txt(Wt-16,Ht-10,"时间 Δt",{"text-anchor":"end","font-size":9,fill:"#9ab7bd"}));
+    const peakB=td.indexOf(Math.max.apply(null,td));
+    document.getElementById("timeNote").innerHTML=
+      "按 20Δt 分桶的时间冲突密度。<b>峰值在 ["+(peakB*bucket)+", "+Math.min(DATA.maxT,(peakB+1)*bucket)+") Δt 窗口</b>（冲突 "+td[peakB]+" 次）。"
+      +"时间窗口的集中度会直接影响问题二的消解效果——如果冲突均匀散布，时移消解会更灵活；如果挤在窗口里，可操作空间就窄。";
+  };
+
+  /* 所有幕的 _onEnter 定义完成后再进入首幕，确保幕 1 内容首次即渲染 */
+  goto(0);
+})();
+</script>
+</body>
+</html>

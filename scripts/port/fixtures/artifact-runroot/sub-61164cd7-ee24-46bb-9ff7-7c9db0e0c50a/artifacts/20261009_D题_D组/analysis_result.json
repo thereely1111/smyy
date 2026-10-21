@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "case_id": "20261009_D题_D组",
+  "agent_id": "sub-61164cd7-ee24-46bb-9ff7-7c9db0e0c50a",
+  "stage": "S1",
+  "status": "PARTIAL",
+  "primary_artifacts": [
+    "artifacts/20261009_D题_D组/analysis/analysis_v1.0.md"
+  ],
+  "supersedes": null,
+  "version": "v1.0",
+  "current_version_pointer": "analysis_v1.0.md 是当前唯一有效分析版本；若后续修订，必须写 analysis_v1.1.md 等新版本号并把本字段与 primary_artifacts 同步更新，旧版保留在盘上但不再是来源。",
+  "problem": {
+    "competition": "2026 年高教社杯全国大学生数学建模竞赛",
+    "title": "D 题 时频冲突检测与消解",
+    "question_count": 4,
+    "question_ids": ["q01", "q02", "q03", "q04"],
+    "pdf_pages": 2,
+    "pdf_text_layer": "available"
+  },
+  "artifacts": [
+    {"role": "分析正文（当前版本）", "path": "artifacts/20261009_D题_D组/analysis/analysis_v1.0.md", "status": "written"},
+    {"role": "逐问契约与依赖图", "path": "artifacts/20261009_D题_D组/truth/problem_contract.json", "status": "written"},
+    {"role": "逐问模型与算法路线", "path": "artifacts/20261009_D题_D组/truth/solution_map.json", "status": "written"},
+    {"role": "本索引文件", "path": "artifacts/20261009_D题_D组/analysis_result.json", "status": "written"},
+    {"role": "附件实测事实（probe 输出）", "path": "artifacts/20261009_D题_D组/analysis/facts.json", "status": "written"},
+    {"role": "题面与附件文本摘要（probe 输出）", "path": "artifacts/20261009_D题_D组/analysis/input_digest.md", "status": "written"},
+    {"role": "PDF 页码图 p1（probe 输出）", "path": "artifacts/20261009_D题_D组/analysis/pages/page_01.png", "status": "written"},
+    {"role": "PDF 页码图 p2（probe 输出）", "path": "artifacts/20261009_D题_D组/analysis/pages/page_02.png", "status": "written"},
+    {"role": "整备后的题目目录", "path": "input/D题", "status": "written"},
+    {"role": "整备清单", "path": "input/D题/input_manifest.json", "status": "written"}
+  ],
+  "inputs_confirmed": {
+    "problem_pdf": "input/D题/D题.pdf",
+    "data_attachment": "input/D题/附件/附件1.xlsx（Sheet1 151 行×5 列，150 数据行）",
+    "result_templates": {
+      "result1.xlsx": "问题1（序号｜冲突装备1｜冲突设备2）",
+      "result2.xlsx": "问题2（用频装备编号｜调整后频段区间｜调整后时间区间｜是否撤销用频计划）",
+      "result3.xlsx": "问题3（新增用频装备序号｜调整后频段区间｜调整后时间区间）",
+      "result4.xlsx": "问题4（用频装备编号｜调整后频段范围｜调整后时间区间｜调整后间隔时长｜是否撤销用频计划）"
+    },
+    "template_mapping_confidence": "high（题面附件说明文字 + 实测列头双重一致）"
+  },
+  "measured_data_facts": {
+    "附件1/间隔时长": {"min": 8, "max": 60, "mean": 23.4667, "std": 19.8591, "n": 150, "distinct": [8, 40, 60], "grouping": "前20行=60，第21-60行=40，第61-150行=8"},
+    "附件1/使用次数": {"min": 3, "max": 12, "mean": 8.6667, "std": 4.0934, "n": 150, "distinct": [3, 4, 12], "grouping": "前20行=3，第21-60行=4，第61-150行=12"},
+    "附件1/样例4行": "A001|[80,90)|[35,40)|60|3；A002|[5,15)|[45,50)|60|3；A003|[20,30)|[75,80)|60|3；A004|[35,45)|[95,100)|60|3",
+    "not_yet_measured": ["频段区间数值解析与带宽 w 分布", "时间区间数值解析与窗长 L 分布", "装备编号唯一性与类别分块核验", "时间轴上界 T_ceil", "result 模板是否有隐藏格式/多工作表"]
+  },
+  "per_question_route_summary": {
+    "q01": {"main": "时频占用集合展开 + 逐对交叠判定（稀疏集合与 0-1 布尔矩阵双实现互校）", "main_method_id": "null（库外：方法库无区间相交/冲突图枚举卡片）", "backup": "扫描线 + 同余闭式的周期区间重叠计数", "backup_method_id": "null（库外）"},
+    "q02": {"main": "候选动作预枚举 + 字典序 0-1 整数规划 + 冲突割平面迭代（兼容性表替代 big-M）", "main_method_id": "M-OPT-002", "backup": "冲突图最大权独立集 + 贪心最小幅度平移 + 局部搜索/模拟退火", "backup_method_id": "M-OPT-007", "extra": "目标口径备选 M-OPT-004（ε-Pareto 前沿）"},
+    "q03": {"main": "逐频段空闲位图 + 候选模板（连续频段×起始时间）集合装载 ILP，FFD 贪心给下界，资源计数给上界", "main_method_id": "M-OPT-002", "backup": "固定频段组合后的一维周期放置 DP + 跨频段退火联合", "backup_method_id": "M-OPT-005"},
+    "q04": {"main": "复用 q01 判定器与 q02 模型骨架，C 类动作集追加间隔调整（±10Δt）后重展开窗口", "main_method_id": "M-OPT-002", "backup": "以 q02 可行解为起点的大邻域搜索（单参数间隔交换）", "backup_method_id": "M-OPT-007"}
+  },
+  "hitl_required": [
+    {"id": "UN1", "问题": "冲突判定中的『时间区间』是否指按间隔时长与使用次数展开后的全部重复窗口", "选项": "(a) 全部窗口 [默认，AS1] / (b) 仅首次使用窗口", "影响": "决定 q01 冲突对数量级，并系统性改变 q02/q04 消解方案"},
+    {"id": "UN2", "问题": "问题3『不增加时频资源』的口径", "选项": "(a) 100 频段×原时间包络固定，只填空闲格 [默认] / (b) 既有占用格子总数不变、允许腾挪 / (c) 不新增被使用的频段个数", "影响": "q03 可行域与最大新增数量完全不同"},
+    {"id": "UN3", "问题": "问题3 是否允许重排问题2 得到的既有计划", "选项": "(a) 既有计划不动 [默认] / (b) 允许任意重排（已取消幅度限制）", "影响": "是否需引入既有计划绝对位置变量，规模与解结构大改"},
+    {"id": "UN4", "问题": "新增 C 类计划的带宽 w／窗长 L／间隔 T／次数 n 取何值（result3 仅两列）", "选项": "(a) 沿用附件1 C 类众数（需实测，疑似 w=10、L=5、T=8、n=12）[默认] / (b) 可自选", "影响": "单计划占用格子数 = n·L·w，直接决定最大新增数量 K 的量级"},
+    {"id": "UN5", "问题": "问题4 是否沿用 10Δf/5Δt 平移上限与『一个计划只调一个参数』规则", "选项": "(a) 沿用 [默认，AS10] / (b) 同时放宽平移幅度", "影响": "q04 可行域及与 q02 结论的可比性"},
+    {"id": "UN6", "问题": "同一对装备在多个时间窗口重复冲突时 result1 如何登记（模板仅 3 列）", "选项": "(a) 无序对去重填一行，窗口重叠次数只在论文统计 [默认] / (b) 每个重叠窗口填一行", "影响": "result1 行数与论文统计口径的一致性"},
+    {"id": "UN7", "问题": "附件1 中是否存在 B/C 类计划频段落入主要频段 [0,10)（与 R11 矛盾）", "选项": "实测后定处理口径（视为数据越界需修正 / 以数据为准 / 仅在调整阶段约束）", "影响": "影响 q01 前置数据清洗规则与 q02/q03 频段合法域"},
+    {"id": "UN8", "问题": "『尽量减少撤销/调整/幅度』与优先级 A>B>C 的目标口径", "选项": "(a) 字典序分层目标 [默认] / (b) 加权和（需给出权重来源）", "影响": "目标函数形式、解的唯一性与论文表述"}
+  ],
+  "blockers": [],
+  "partial_reason": "题面与全部附件结构均已读取、四问契约与模型路线完整；但（1）8 项关键口径需用户确认（UN1-UN8），（2）附件1 的『频段区间』『时间区间』两列是字符串，probe 未做数值解析，带宽/窗长分布与时间轴上界尚未实测。以上不阻断分析交付，故为 PARTIAL 而非 BLOCKED。",
+  "missing_inputs": [
+    "《全国大学生数学建模竞赛论文格式规范》（题面要求先阅读；仅影响 S5 论文阶段）"
+  ],
+  "not_done_in_this_stage": [
+    "未实现任何求解代码，未运行任何数值计算或优化",
+    "未生成 mindmap / HTML / 图像 / 动画 / 图表",
+    "未撰写论文",
+    "§8 全部检验与敏感性均为『建议/待执行』，无任何验证已通过"
+  ],
+  "handoff_notes_for_downstream": [
+    "S2 动画：只可引用本 JSON 的 primary_artifacts 指向的 analysis_v1.0.md 与 truth/*.json；facts 引用键见 measured_data_facts",
+    "S3 代码：前置任务为解析区间字符串并实测 w/L 分布、编号唯一性、类别分块、T_ceil；随后按 solution_map 的 method_id 实现，禁止把候选路线写成已求解结果",
+    "闸门：UN1-UN8 需在闸门 1 中向用户呈现（至少 UN1、UN2/UN3、UN4、UN8）"
+  ],
+  "next_action": "向闸门 1 提交 result1-4 模板归属确认（已双重证据确认）与 UN1-UN8 口径选择；用户拍板后按选定口径固化为 q01-q04 契约 v1.1",
+  "resumable": true
+}

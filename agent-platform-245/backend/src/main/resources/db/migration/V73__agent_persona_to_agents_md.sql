@@ -1,0 +1,25 @@
+-- Agent 人设归位：system_prompt 的真相源是 AGENTS.md，不是这张表
+--
+-- 前置：按 AgentScope 官方工作区约定重新理解 AGENTS.md（java.agentscope.io 工作区文档）
+--   「Persona, behavior rules, system instructions — AGENTS.md」
+--   「Only AGENTS.md is something you actually need to write」
+--   skills/<name>/SKILL.md 由技能中间件每轮渲染 <available_skills>；
+--   subagents/<id>.md 由 AgentSpecLoader 在 build 时扫描；
+--   工具与 MCP 归 tools.json（build 时读一次）。
+--   ⇒ AGENTS.md 是人格与行为约定的唯一载体，不再承担「提示词 + 技能清单 + 工具清单
+--     + 子 Agent 索引」四合一的多重职责。
+--
+-- 为什么现在可以删：
+--   该列的内容与 AGENTS.md 的正文重复，且是双向不同步的——定义侧直接编辑
+--   AGENTS.md 后该列不会更新，之后再从表单保存会用旧值覆盖用户在文件里写的内容。
+--   装配处（AgentAssemblyService）把它一并喂给 builder.sysPrompt()，造成同一段
+--   人设被注入两次（AGENTS.md 走 workspace 上下文注入）。
+--
+-- 落地口径：
+--   新建智能体时表单仍可填「系统提示词」，保存时写入 AGENTS.md 正文后即丢弃；
+--   编辑态不再提供该字段，人设一律在「定义内容」侧改 AGENTS.md。
+--
+-- ⚠️ 不可回滚：列一旦删除，旧版本实例（仍映射该列）会在查询时报
+-- "column ... does not exist"。上线前必须确认没有旧版本 Pod 在跑。
+ALTER TABLE agent_configs
+    DROP COLUMN IF EXISTS system_prompt;

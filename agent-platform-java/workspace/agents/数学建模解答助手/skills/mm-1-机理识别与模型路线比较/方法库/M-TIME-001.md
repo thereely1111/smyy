@@ -1,0 +1,12 @@
+### M-TIME-001 ARIMA / SARIMA
+- **task_types**：单变量时间序列预测、季节性需求、趋势分析。
+- **problem_signature**：时间顺序明确；自身滞后和季节项有解释力；数据量中等。
+- **core_idea**：差分使序列平稳，用 AR、MA 和季节项建模。
+- **inputs**：等间隔序列、频率、缺失处理、季节周期、外生变量（SARIMAX）。
+- **outputs**：点预测、预测区间、残差、参数。
+- **assumptions**：差分后近似平稳；残差近似白噪声；未来机制与历史相近。
+- **validation**：滚动起点评估、残差 ACF/PACF、Ljung-Box、区间覆盖率。
+- **selection_tags**：`time-series, univariate, seasonal, interpretable`
+- **composable_with**：`M-TIME-002, M-UNC-001, M-OPT-001`
+- **fallbacks**：季节朴素法、指数平滑、状态空间模型。
+- **agent_actions**：检查频率和缺失 -> 基线 -> 差分/季节识别 -> 滚动验证 -> 预测区间。

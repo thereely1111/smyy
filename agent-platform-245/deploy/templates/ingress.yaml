@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "agent-platform.fullname" . }}
+  labels:
+    {{- include "agent-platform.labels" . | nindent 4 }}
+  annotations:
+    # 附件上传上限 25MB（application.yml multipart max-request-size）
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.ingress.bodySize | quote }}
+    # AG-UI SSE / 通知 SSE：关闭缓冲 + 长读超时（对齐 run-timeout 2h）
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.ingress.readTimeout | quote }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.ingress.sendTimeout | quote }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          # 全部流量统一走 frontend：其 nginx 内置 /api、/agui 反代（SSE 不缓冲、
+          # 7200s 超时、25m body），不再直连 backend。
+          # 原因：老版 ingress-nginx 控制器对多 path 的 v1 Ingress 支持不完整，
+          # 单路径 `/` 是最兼容的形态。
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "agent-platform.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.service.frontend.port }}
+{{- end }}

@@ -1,0 +1,19 @@
+### M-OPT-001 线性规划（LP）
+- **family**：确定性优化
+- **task_types**：资源分配、生产计划、配比、运输、投资组合、排班基线
+- **problem_signature**：目标和约束均可写成决策变量的一次函数；连续变量；资源容量明确。
+- **core_idea**：在多面体可行域上优化线性目标。
+- **mathematical_form**：`min/max c^T x`，满足 `Ax <= b, Aeq x = beq, lb <= x <= ub`。
+- **inputs**：变量、线性目标系数、约束矩阵、边界、单位和可行性要求。
+- **outputs**：最优解、目标值、约束松弛量、对偶价格、可行性状态。
+- **assumptions**：比例性、可加性、参数确定、变量连续或可接受分数解。
+- **hard_constraints**：存在显著非线性、整数逻辑或不确定性时不能直接使用。
+- **strengths**：可解释、求解稳定、适合大规模、可做敏感性分析。
+- **limitations**：对非线性和离散逻辑表达能力不足；参数误差可能改变解。
+- **validation**：检查原始可行性、目标值、约束余量、替代方案和参数扰动。
+- **sensitivity**：目标系数、资源上限、需求参数、边界变化。
+- **complexity**：通常可由成熟求解器处理大规模问题；矩阵稀疏性重要。
+- **selection_tags**：`continuous, allocation, baseline, interpretable`
+- **composable_with**：`M-OPT-002, M-OPT-005, M-UNC-001, M-SIM-001`
+- **fallbacks**：整数逻辑少则放松为 LP；非线性弱则分段线性化。
+- **agent_actions**：变量定义 -> 单位统一 -> 约束矩阵化 -> 求解 -> 检查可行性 -> 敏感性分析。

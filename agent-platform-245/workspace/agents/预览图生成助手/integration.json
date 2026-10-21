@@ -1,0 +1,14 @@
+{
+  "case_id": "herb-drying",
+  "asset_file": "public/hero-assets/herb-drying-cover-v1.png",
+  "cover_image_url": "/hero-assets/herb-drying-cover-v1.png",
+  "data_file": "src/legacy/prototype/core.ts",
+  "field": "coverImage",
+  "snippet": "coverImage:'/hero-assets/herb-drying-cover-v1.png'",
+  "browser_check": "http://localhost:5181/",
+  "integration_status": "BLOCKED",
+  "front_end_modified": false,
+  "current_cover_image_url": "/hero-assets/Create_a_refined_editorial_her_2026-09-30T02-45-12.png",
+  "blocking_reason": "Candidate asset is a square generation placeholder with visible text and failed image QA; it must not be connected to the homepage.",
+  "next_action": "Generate a real landscape, text-free herb-drying cover using a new revision filename, then rerun image QA before updating coverImage."
+}

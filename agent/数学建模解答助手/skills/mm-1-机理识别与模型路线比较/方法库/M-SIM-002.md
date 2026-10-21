@@ -1,0 +1,13 @@
+### M-SIM-002 蒙特卡洛模拟
+- **task_types**：不确定性传播、风险评估、可靠性、积分、概率约束近似。
+- **problem_signature**：输入参数有分布；输出是复杂函数；需要概率、分位数或尾部风险。
+- **core_idea**：从输入分布抽样并传播到输出分布。
+- **inputs**：随机变量、边际/联合分布、相关结构、样本量、随机种子。
+- **outputs**：均值、方差、分位数、超标概率、置信区间、敏感性。
+- **assumptions**：输入分布和相关结构可信；样本数足够。
+- **hard_constraints**：忽略关键相关性或用无依据分布时结论不可靠。
+- **validation**：收敛曲线、重复种子、方差缩减、分布拟合和相关敏感性。
+- **selection_tags**：`uncertainty-propagation, risk, probability, sampling`
+- **composable_with**：`M-UNC-001, M-UNC-002, M-OPT-006, M-SIM-001`
+- **fallbacks**：拉丁超立方、准蒙特卡洛、区间分析。
+- **agent_actions**：定义随机输入 -> 指定联合分布 -> 抽样 -> 收敛诊断 -> 报告分布而非单点。

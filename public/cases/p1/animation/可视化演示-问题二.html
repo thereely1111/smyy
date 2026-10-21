@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 国赛A题 · 问题二分析 · 全过程热湿耦合演化</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{
+  font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;
+}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>2026 国赛A题</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+  <div class="splitnav">
+    <a href="./mod-p1-0.html">全局分析</a>
+    <a href="./mod-p1-1.html">问题一</a>
+    <a href="./mod-p1-2.html" class="on">问题二</a>
+    <a href="./mod-p1-3.html">问题三</a>
+    <a href="./mod-p1-4.html">问题四</a>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<section class="scene" id="s1" data-title="第一幕 · 问题二概述">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题二分析 · 全过程热湿耦合演化</div>
+    <h1>问题二：0–16.87 h 全过程的热湿耦合演化
+      <small>采用附录3 的变物性参数，追踪圆柱药材从预热升温到整体干燥的完整过程。</small>
+    </h1>
+    <p class="lead">问题一在<b>附录2 常物性</b>下只分析了前 0.5 h 的短时预热；问题二则要求刻画<b class="hl-t">全过程</b>——从室温 28 °C 被热风加热、到中心与表面温度趋同、再到含水率整体下降到目标水位（C=0.15）的 <b class="hl">0–16.87 h</b>。控制方程仍为圆柱一维径向的导热与导湿耦合，但物性改用<b class="hl">附录3 的变物性</b>：扩散系数与导热系数都随温度、含水率变化，其中扩散系数的温度依赖项 <b class="hl">e^(−3850/T)</b> 让干燥速率对温度极其敏感。</p>
+  </div>
+  <div class="stg grid2">
+    <div class="card">
+      <h3><span class="badge q">问题定位</span>问题二研究什么</h3>
+      <p>药材为圆柱体，长 <b class="num">L=25 cm</b>、半径 <b class="num">R=2 cm</b>，初始温度 <b class="num">28 °C</b>、初始干基含水率 <b class="num">C₀=2.55 kg/kg</b>。</p>
+      <p>变量是径向位置 r（0→R）与时间 t（0→16.87 h）上的温度场 <b>T(r,t)</b> 与含水率场 <b>C(r,t)</b>；输出 5 个径向位置（0/0.5/1/1.5/2 cm）随时间的演化。</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge p">关键设定</span>烘房环境与目标</h3>
+      <p>烘房热风温度在前 <b class="num">0–300 s</b> 由室温升到 <b class="num">50.165 °C</b> 后稳定；热风含水率对应值最终降到 <b class="num">0.04986 kg/kg</b>。</p>
+      <p>干燥目标是让整体最大含水率 <b class="num">C<sub>max</sub></b> 降到目标水位 <b class="hl">0.15 kg/kg</b>——全过程实测用时 <b class="hl-t">16.87 h</b>，这也为问题三的工艺时间设定了基准。</p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">圆柱药材截面示意 · 一维径向网格（L=25 cm，R=2 cm，21 节点）</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>热湿耦合体</span>
+          <span><i style="background:#146c87"></i>圆柱轴向</span>
+          <span><i style="background:#e0a04a"></i>热风 / 蒸发边界</span>
+        </div>
+      </div>
+      <canvas id="cvCyl" height="250"></canvas>
+      <p class="note" style="margin-top:8px">左图为横截面（俯视 r 方向）：含水率与温度在径向分层，中心 r=0、表面 r=R=2 cm 是两个极端位置；右图为圆柱轴向（L=25 cm）侧视。热风自上而下掠过表面，表面同时发生对流换热（h=25 W/(m²·K)）与水分蒸发（k<sub>m</sub>=8×10⁻⁷ m/s）。</p>
+    </div>
+  </div>
+  <div class="stg grid4" id="s1KPI"></div>
+</div>
+</section>
+
+<section class="scene" id="s2" data-title="第二幕 · 模型与变物性">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">模型与变物性</div>
+    <h1>常物性 → 变物性：温度因子 e^(−3850/T) 改写干燥全过程
+      <small>附录3 让 D 随温度与含水率双重变化，λ、ρcp 也随含水率漂移——比附录2 的常数更贴近真实。</small>
+    </h1>
+    <p class="lead">问题一用附录2 的常物性：<b class="num">λ=0.36 W/(m·K)</b>、<b class="num">D=7×10⁻⁹·e^(−0.89C)</b>——扩散系数只随含水率变化、<b class="hl">没有温度项</b>。问题二改用附录3 的变物性：D 多了一个 <b class="hl">e^(−3850/T)</b> 因子，温度每变化都强烈改变扩散速率；λ 与 ρcp 也随含水率 C 变化。这正是「全过程」与「短时预热」在机理上的分水岭。</p>
+  </div>
+  <div class="stg grid2">
+    <div class="card">
+      <h3><span class="badge n">附录2</span>常物性 <em>问题一所用</em></h3>
+      <p>导热系数 <b class="num">λ = 0.36 W/(m·K)</b>，为常数，不随温度与含水率变化。</p>
+      <p>扩散系数 <b class="num">D = 7×10⁻⁹ · e^(−0.89C)</b> m²/s，仅随含水率指数衰减，<b class="hl">不含温度项</b>。</p>
+      <p class="small">模型简单，适合短时预热段的快速估算，但无法刻画升温对扩散的加速作用。</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge q">附录3</span>变物性 <em>问题二所用</em></h3>
+      <p>导热系数 <b class="num">λ = 0.21 + 0.38C/(C+1)</b> W/(m·K)，随含水率上升而增大。</p>
+      <p>扩散系数 <b class="num">D = 2.4×10⁻³ · e^(−0.45C) · e^(−3850/T<sub>K</sub>)</b> m²/s，<b class="hl">温度依赖强烈</b>。</p>
+      <p class="small">热容项 <b class="num">ρcp=(650+128C)(1450+2736C/(C+1))</b> 也随含水率漂移，物性更贴近真实湿物料。</p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>控制方程 · 变物性 · 边界与数值方法</h3>
+      <div class="formula">控制方程（圆柱一维径向，热湿耦合）：
+  <span class="c">∂(ρcp·T)/∂t = (1/r)·∂/∂r( r·λ·∂T/∂r )</span>
+  <span class="c">∂C/∂t        = (1/r)·∂/∂r( r·D·∂C/∂r )</span>
+
+变物性（附录3）：
+  D   = 2.4e-3 · e^(−0.45C) · e^(−3850/T_K)      m²/s   ← 强温度依赖
+  λ   = 0.21 + 0.38C/(C+1)                        W/(m·K)
+  ρcp = (650 + 128C)·(1450 + 2736C/(C+1))
+
+边界（r = R）：
+  −λ·∂T/∂r = h·(T − T_air),   h  = 25 W/(m²·K)
+  −D·∂C/∂r = km·(C − C_air),  km = 8e-7 m/s
+
+数值方法：
+  有限体积法 21 节点；中心胞元取 dr²/8；
+  表面通量 = 内部扩散补给 − 表面蒸发；显式欧拉 dt = 0.5 s</div>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">扩散系数 D 随含水率的变化（单位 ×10⁻⁹ m²/s，附录2 常物性 vs 附录3 变物性）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#b8543a"></i>附录3 · 50 °C</span>
+          <span><i class="ln" style="background:#146c87;border-top:1px dashed #146c87"></i>附录3 · 28 °C</span>
+          <span><i class="ln" style="background:#12a594;border-top:1px dashed #12a594"></i>附录2 · 常物性</span>
+        </div>
+      </div>
+      <canvas id="cvDprop" height="280"></canvas>
+      <p class="note" style="margin-top:8px" id="dNote"></p>
+    </div>
+  </div>
+  <div class="stg grid4" id="s2KPI"></div>
+</div>
+</section>
+
+<section class="scene" id="s3" data-title="第三幕 · 温度场">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">温度场 · 全天温度演化</div>
+    <h1>中心温度约 8 h 达到 50 °C 并趋于稳定
+      <small>中心 Tc、表面 Ts、环境 Ta 三条曲线在 50.16 °C 平台汇合——径向温差由 3.17 °C 收敛到 0.13 °C。</small>
+    </h1>
+    <p class="lead">环境热风在 0–300 s 内由 28 °C 升到 <b class="num">50.165 °C</b> 后稳定。表面温度紧跟环境快速上升（对流换热 h=25），中心温度靠径向导热「追赶」：0.5 h 时中心仅 32.03 °C、表面已 35.20 °C；随后温差不断收窄，约 <b class="hl">5.5 h</b> 中心逼近 50 °C，约 <b class="hl">8 h</b> 后稳定在 50.16 °C 平台，与表面、环境完全趋同。</p>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">全过程温度曲线（横轴：时间 h）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#b8543a"></i>中心 Tc</span>
+          <span><i class="ln" style="background:#146c87;border-top:1px dashed #146c87"></i>表面 Ts</span>
+          <span><i class="ln" style="background:#e0a04a;border-top:1px dashed #e0a04a"></i>环境 Ta</span>
+        </div>
+      </div>
+      <canvas id="cvTemp" height="280"></canvas>
+      <p class="note" style="margin-top:8px" id="tempNote"></p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>各时刻 5 个径向位置的温度 <em>r = 0 / 0.5 / 1 / 1.5 / 2 cm（单位：°C）</em></h3>
+      <table class="tb" id="tab3Box"></table>
+      <p class="note" style="margin-top:10px">同一时刻从中心到表面温度依次升高，说明热量由表面向中心传导；随干燥推进，同名行内 5 个数值逐渐接近，表明径向温度梯度持续减小、物料内部趋于热均匀。</p>
+    </div>
+  </div>
+  <div class="stg grid4" id="s3KPI"></div>
+</div>
+</section>
+
+<section class="scene" id="s4" data-title="第四幕 · 水分场">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">水分场 · 含水率演化</div>
+    <h1>先表面失水、后中心跟上：整体含水率单调下降
+      <small>表面含水率 0.5 h 就从 2.55 降到 1.56，中心仍保持 2.55；16.87 h 整体降到目标水位 0.15。</small>
+    </h1>
+    <p class="lead">含水率演化与温度场<b class="hl">强耦合</b>：表面先被热风加热并快速蒸发失水，中心含水率暂时保持不变，形成明显的径向水分梯度；随着水分由中心向表面迁移（导湿系数 D 随温度上升而变大），中心开始「跟进」下降，径向梯度在干燥中后期逐渐减小。全过程 <b class="num">C<sub>max</sub></b>（=中心含水率）由 2.55 单调降到 <b class="hl">0.15</b>，Surface 由 2.55 降到约 <b class="hl">0.11</b>。</p>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">全过程含水率曲线（横轴：时间 h，含目标水位线 C=0.15）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#b8543a"></i>中心 Cc</span>
+          <span><i class="ln" style="background:#146c87;border-top:1px dashed #146c87"></i>表面 Cs</span>
+          <span><i style="background:rgba(18,165,148,.22)"></i>整体 Cmax（上包络）</span>
+        </div>
+      </div>
+      <canvas id="cvMoist" height="290"></canvas>
+      <p class="note" style="margin-top:8px" id="moistNote"></p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>各时刻 5 个径向位置的含水率 <em>r = 0 / 0.5 / 1 / 1.5 / 2 cm（单位：kg/kg）</em></h3>
+      <table class="tb" id="tab4Box"></table>
+      <p class="note" style="margin-top:10px">0.5 h 时只有最外层（r=2 cm）含水率明显下降到 1.56，其余位置仍是 2.55——蒸发先在表面发生；到 2 h 后中心与次外层也开始下降，5 个位置的差值缩小，说明水分由内向外迁移、径向梯度收敛。</p>
+    </div>
+  </div>
+  <div class="stg grid4" id="s4KPI"></div>
+</div>
+</section>
+
+<section class="scene" id="s5" data-title="第五幕 · 结论与KPI">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">结论</div>
+    <h1>温度场与水分场强耦合，变物性刻画全过程干燥
+      <small>中心约 8 h 达 50 °C 趋稳；整体含水率单调降到目标水位 0.15 用时 16.87 h。</small>
+    </h1>
+    <p class="lead">问题二的核心结论：采用附录3 变物性后，全过程呈现出清晰的<b>「先热后湿、表面先行」</b>耦合特征——热量由表面传入、水分由中心向外迁移，两个过程通过随温度变化的扩散系数 D 相互放大。最终中心与表面温度在 <b class="hl-t">50.16 °C</b> 平台趋同，整体含水率 <b class="hl">C<sub>max</sub></b> 单调降到目标水位 <b class="hl">0.15 kg/kg</b>，全过程用时 <b class="hl">16.87 h</b>。</p>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>KPI 汇总 <em>问题二核心指标</em></h3>
+      <div class="grid4" id="finalKPI" style="gap:12px"></div>
+    </div>
+  </div>
+  <div class="stg grid3">
+    <div class="card">
+      <h3><span class="badge w">结论一</span>温度场与水分场强耦合</h3>
+      <p>温度上升使扩散系数 D 增大，反过来加速水分由中心向表面迁移；表面先失水、中心滞后跟上，径向梯度在干燥中后期收敛。</p>
+      <p class="small">温度到达 50 °C 平台后，D 的 e^(−3850/T) 因子达到最大值，中心失水明显提速。</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge q">结论二</span>变物性使干燥更贴近真实</h3>
+      <p>对照问题一的附录2 常物性，附录3 的 D 含温度项、λ 与 ρcp 随含水率变化，能刻画升温对扩散的强放大，避免常物性对中后期干燥速率的高估或低估。</p>
+      <p class="small">同一含水率下，50 °C 的 D 约为 28 °C 的 2.4 倍——温度是全过程干燥的主导因素。</p>
+    </div>
+    <div class="card">
+      <h3><span class="badge p">结论三</span>目标水位线给出问题三的时间答案</h3>
+      <p>以 <b class="num">C<sub>max</sub>=0.15 kg/kg</b> 为目标水位，全过程在此处触线，用时 <b class="hl">16.87 h</b>——这为问题三的工艺参数优化提供了时间基准与约束边界。</p>
+      <p class="small">目标水位线可视作干燥完成的判据，直接决定后续优化问题的终止条件。</p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="quote">
+      全过程干燥的本质是<b>温度场驱动水分场</b>：环境 50.165 °C 的热风先加热表面，表面蒸发失水形成水分梯度，梯度再驱动中心水分外迁；而变物性中 <b class="hl">e^(−3850/T)</b> 把这种耦合放大。最终中心温度与表面、环境在 50.16 °C 平台<b>完全趋同</b>，整体含水率单调下降到 <b>0.15</b>，全过程 <b>16.87 h</b> 完成——这三点共同构成问题二的定量结论。
+    </div>
+  </div>
+</div>
+</section>
+
+</main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script>
+/* ===== 动画数据（数值模拟产出，原样复制） ===== */
+var D23={"t":[0.1667,0.8333,1.5,2.1667,2.8333,3.5,4.1667,4.8333,5.5,6.1667,6.8333,7.5,8.1667,8.8333,9.5,10.1667,10.8333,11.5,12.1667,12.8333,13.5,14.1667,14.8333,15.5,16.1667,16.8333,16.8743],"Tc":[28.25,37.55,45.6,48.77,49.72,49.94,50.03,50.14,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16],"Ts":[29.6,40.57,46.96,49.16,49.84,49.96,50.08,50.15,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16],"Ta":[33.2,45.93,49.12,49.71,49.9,50.1,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16,50.16],"Cc":[2.55,2.55,2.5432,2.4589,2.2531,1.9913,1.7318,1.497,1.2927,1.1179,0.9687,0.8411,0.7319,0.638,0.5573,0.4878,0.4279,0.3763,0.3317,0.2933,0.2601,0.2314,0.2067,0.1853,0.1668,0.1509,0.15],"Cs":[1.9134,1.4175,1.2645,1.1439,1.0357,0.9379,0.8493,0.7679,0.6919,0.6213,0.5563,0.497,0.4434,0.3952,0.3523,0.3142,0.2804,0.2507,0.2247,0.2018,0.1818,0.1644,0.1492,0.1359,0.1244,0.1144,0.1139],"Cmax":[2.55,2.55,2.5432,2.4589,2.2531,1.9913,1.7318,1.497,1.2927,1.1179,0.9687,0.8411,0.7319,0.638,0.5573,0.4878,0.4279,0.3763,0.3317,0.2933,0.2601,0.2314,0.2067,0.1853,0.1668,0.1509,0.15]};
+var TAB3={"1800":[32.0301,32.2185,32.7889,33.7607,35.1955],"3600":[40.1028,40.2747,40.7828,41.608,42.7513],"5400":[45.5953,45.6872,45.9574,46.3916,46.9627],"7200":[48.2873,48.3288,48.4503,48.6431,48.8964],"9000":[49.3838,49.3984,49.4396,49.5013,49.6027],"10800":[49.8123,49.8188,49.8401,49.8791,49.9394]};
+var TAB4={"1800":[2.55,2.55,2.5494,2.4698,1.5563],"3600":[2.5499,2.5485,2.5102,2.1597,1.3717],"5400":[2.5432,2.5206,2.36,1.8861,1.2645],"7200":[2.4924,2.4237,2.1587,1.6868,1.1729],"9000":[2.368,2.2662,1.9635,1.5303,1.0882],"10800":[2.1899,2.0801,1.7855,1.398,1.0104]};
+</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+
+var T=D23.t, TC=D23.Tc, TS=D23.Ts, TA=D23.Ta, CC=D23.Cc, CS=D23.Cs, CM=D23.Cmax;
+
+/* ---- 动画工具：逐帧绘制 ---- */
+function animDraw(cv,drawFn,dur){
+  var start=performance.now();
+  function frame(t){
+    var p=Math.min(1,(t-start)/dur);
+    var eased=1-Math.pow(1-p,3);
+    drawFn(eased);
+    if(p<1) requestAnimationFrame(frame);
+  }
+  if(document.body.classList.contains('reduce')) drawFn(1);
+  else requestAnimationFrame(frame);
+}
+
+/* ---- 通用绘图底座（含网格、轴、序列、渐变填充） ---- */
+function plot(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), h=cfg.h||220;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var L=cfg.L||44, R=cfg.R||(cfg.y2?54:16), Tp=cfg.T||18, B=cfg.B||26;
+  var PW=w-L-R, PH=h-Tp-B, n=cfg.n;
+  var ymin=cfg.yMin, ymax=cfg.yMax;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return Tp+PH*(1-(v-ymin)/(ymax-ymin)); }
+  var Y2=null;
+  if(cfg.y2){ Y2=function(v){ return Tp+PH*(1-(v-cfg.y2.min)/(cfg.y2.max-cfg.y2.min)); }; }
+  var progress=cfg.progress||1;
+  if(cfg.band){
+    g.fillStyle=cfg.band.c;
+    g.fillRect(L,Y(cfg.band.hi),PW,Math.max(0,Y(cfg.band.lo)-Y(cfg.band.hi)));
+  }
+  g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var k;
+  for(k=0;k<=4;k++){
+    var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(fmt(v,cfg.yFmt),L-7,yy);
+  }
+  if(cfg.hlines) cfg.hlines.forEach(function(hl){
+    var yy=Y(hl.v);
+    g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#b8543a'; g.lineWidth=hl.w||1.3;
+    g.beginPath(); g.moveTo(L,yy); g.lineTo(L+PW,yy); g.stroke(); g.restore();
+    if(hl.label){
+      g.font='600 11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+      g.textAlign='left'; g.textBaseline='alphabetic';
+      var mt=g.measureText?g.measureText(hl.label):null;
+      var tw=(mt&&mt.width)?mt.width:hl.label.length*12;
+      g.fillStyle='rgba(255,255,255,.95)';
+      g.fillRect(L+3,yy-19,tw+12,16);
+      g.strokeStyle='rgba(217,233,233,.95)'; g.lineWidth=1;
+      g.strokeRect(L+3.5,yy-18.5,tw+11,15);
+      g.fillStyle=hl.c||'#b8543a';
+      g.fillText(hl.label,L+9,yy-7);
+    }
+  });
+  if(cfg.xTicks) cfg.xTicks.forEach(function(t){
+    var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,Tp); g.lineTo(xx,Tp+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(t.t,xx,Tp+PH+16);
+  });
+  (cfg.series||[]).forEach(function(s){
+    var drawN=Math.max(1,Math.ceil(s.d.length*progress));
+    var yy=s.ax==='y2'?Y2:Y, pv=null;
+    g.beginPath();
+    for(var i=0;i<drawN;i++){
+      var px=X(i),py=yy(s.d[i]);
+      if(!i) g.moveTo(px,py);
+      else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); }
+      else g.lineTo(px,py);
+      pv=py;
+    }
+    if(s.fill){
+      g.save(); g.lineTo(X(drawN-1),Tp+PH); g.lineTo(X(0),Tp+PH); g.closePath();
+      g.fillStyle=s.fill; g.fill(); g.restore();
+    }
+    g.strokeStyle=s.c; g.lineWidth=s.w||1.8;
+    if(s.dash) g.setLineDash(s.dash); else g.setLineDash([]);
+    g.lineJoin='round'; g.stroke(); g.setLineDash([]);
+  });
+  if(cfg.tags) cfg.tags.forEach(function(t){
+    note(g,t.text,X(t.i),Y(t.v),
+         {right:L+PW,left:L+2,top:Tp+2,line:t.line,tc:t.tc,up:t.up});
+  });
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(L,Tp); g.lineTo(L,Tp+PH); g.lineTo(L+PW,Tp+PH); g.stroke();
+  function fmt(v,f){
+    if(f==='pct') return (v*100).toFixed(0)+'%';
+    if(f==='sci') return v===0?'0':v.toExponential(1);
+    if(f==='x') return v.toFixed(2);
+    if(f==='k') return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);
+    if(f===0) return v.toFixed(0);
+    if(typeof f==='number') return v.toFixed(f);
+    return String(Math.round(v));
+  }
+}
+function note(g,text,px,py,o){
+  o=o||{};
+  var dy=o.up===undefined?24:o.up, dx=o.dx===undefined?8:o.dx;
+  g.font='600 12px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var mt=g.measureText?g.measureText(text):null;
+  var tw=(mt&&mt.width)?mt.width:text.length*12;
+  var x=px+dx, y=py-dy;
+  if(o.right!==undefined && x+tw+14>o.right && o.left!==undefined) x=px-dx-tw-12;
+  if(o.left!==undefined && x<o.left) x=o.left;
+  if(o.top!==undefined && y<o.top) y=py+12;
+  g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(x,y,tw+12,18);
+  g.strokeStyle=o.line||'#cfe4e4'; g.lineWidth=1; g.strokeRect(x+.5,y+.5,tw+11,17);
+  g.fillStyle=o.tc||'#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,x+6,y+9);
+}
+
+/* ---- 0. 圆柱截面示意 ---- */
+function drawCyl(cv,progress){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(360,cv.clientWidth||900), h=250;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  g.globalAlpha=Math.max(0,progress);
+
+  /* 标题 */
+  g.fillStyle='#0b6e68'; g.font='600 13px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('横截面（r 方向）',16,22);
+
+  /* 横截面圆 */
+  var cx=Math.min(180,w*0.20)+18, cy=h*0.55, R=Math.min(84,h*0.32);
+  g.beginPath(); g.arc(cx,cy,R,0,6.2832);
+  g.fillStyle='rgba(18,165,148,.07)'; g.fill();
+  g.strokeStyle='#12a594'; g.lineWidth=2; g.stroke();
+  [0.25,0.5,0.75].forEach(function(f){
+    g.beginPath(); g.arc(cx,cy,R*f,0,6.2832);
+    g.setLineDash([4,4]); g.strokeStyle='#cfe4e4'; g.lineWidth=1; g.stroke(); g.setLineDash([]);
+  });
+  /* 半径线 + 节点 */
+  g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+R,cy);
+  g.setLineDash([5,4]); g.strokeStyle='#8aa3aa'; g.lineWidth=1; g.stroke(); g.setLineDash([]);
+  [0,0.5,1,1.5,2].forEach(function(rr){
+    g.beginPath(); g.arc(cx+R*(rr/2),cy,2.8,0,6.2832);
+    g.fillStyle='#0b6e68'; g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1.2; g.stroke();
+  });
+  g.fillStyle='#0b6e68'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('中心 r=0',cx,cy-R-8);
+  g.textAlign='left';
+  g.fillText('表面 r=R=2 cm',cx+R+8,cy-6);
+  g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.fillText('径向观测位置：0 / 0.5 / 1 / 1.5 / 2 cm',cx-R,cy+R+26);
+
+  /* 侧视圆柱 */
+  var xA=Math.max(cx+R+120,w*0.56), xB=w-90, yMid=cy, thick=Math.max(30,Math.min(64,(xB-xA)*4/25));
+  g.fillStyle='rgba(20,108,135,.05)';
+  g.fillRect(xA,yMid-thick/2,xB-xA,thick);
+  g.strokeStyle='#146c87'; g.lineWidth=1.6;
+  g.strokeRect(xA,yMid-thick/2,xB-xA,thick);
+  /* 端口椭圆 */
+  g.beginPath(); g.ellipse(xA,yMid,7,thick/2,0,0,6.2832);
+  g.strokeStyle='#146c87'; g.lineWidth=1.3; g.stroke();
+  /* 内部湿度条 */
+  g.fillStyle='rgba(18,165,148,.16)';
+  g.fillRect(xA,yMid-thick/2+4,xB-xA,thick-8);
+  /* 长度箭头 */
+  var ay=yMid-thick/2-16;
+  g.strokeStyle='#57727c'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(xA,ay); g.lineTo(xB,ay); g.stroke();
+  g.beginPath(); g.moveTo(xA,ay); g.lineTo(xA+7,ay-4); g.lineTo(xA+7,ay+4); g.closePath(); g.fillStyle='#57727c'; g.fill();
+  g.beginPath(); g.moveTo(xB,ay); g.lineTo(xB-7,ay-4); g.lineTo(xB-7,ay+4); g.closePath(); g.fill();
+  g.fillStyle='#3d6570'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.fillText('L = 25 cm',(xA+xB)/2,ay-7);
+  g.textAlign='left'; g.fillText('2R = 4 cm',xB+6,yMid+3);
+
+  /* 热风箭头 */
+  var nA=5;
+  for(var k=0;k<nA;k++){
+    var ax=xA+(k+0.5)*(xB-xA)/nA, ay1=yMid-thick/2-52, ay2=yMid-thick/2-24;
+    g.strokeStyle='#e0a04a'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(ax,ay1); g.lineTo(ax,ay2); g.stroke();
+    g.beginPath(); g.moveTo(ax,ay2); g.lineTo(ax-4,ay2-7); g.lineTo(ax+4,ay2-7); g.closePath();
+    g.fillStyle='#e0a04a'; g.fill();
+  }
+  g.fillStyle='#8a6313'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left';
+  g.fillText('热风  T_air(t) → 50.165 °C（h = 25 W/(m²·K)）',xA,ay1-10);
+  g.fillStyle='#0b6e68';
+  g.fillText('表面蒸发  k_m = 8×10⁻⁷ m/s',xA,yMid+thick/2+22);
+
+  g.globalAlpha=1;
+}
+
+/* ---- 1. 扩散系数 D 随含水率变化（附录2 vs 附录3） ---- */
+function drawDprop(cv,progress){
+  var n=26, Cs=[], k;
+  for(k=0;k<n;k++) Cs.push(2.55*k/(n-1));
+  /* 单位 ×10⁻⁹ m²/s */
+  var dCon=Cs.map(function(c){return 7*Math.exp(-0.89*c);});
+  var d28 =Cs.map(function(c){return 6.702*Math.exp(-0.45*c);});
+  var d50 =Cs.map(function(c){return 16.017*Math.exp(-0.45*c);});
+  var xt=[];
+  for(k=0;k<n;k+=5) xt.push({i:k,t:Cs[k].toFixed(2)});
+  plot(cv,{h:280,n:n,yMin:0,yMax:17,yFmt:1,L:60,R:26,B:30,progress:progress,
+    xTicks:xt,
+    series:[{d:d50,c:'#b8543a',w:2.6,fill:'rgba(184,84,58,.10)'},
+            {d:d28,c:'#146c87',w:2.4,dash:[6,4]},
+            {d:dCon,c:'#12a594',w:2.2,dash:[3,3]}]});
+}
+
+/* ---- 2. 全过程温度曲线 ---- */
+function drawTemp(cv,progress){
+  var n=TC.length, i, xt=[];
+  for(i=0;i<n;i+=4) xt.push({i:i,t:T[i].toFixed(1)});
+  plot(cv,{h:280,n:n,yMin:24,yMax:54,yFmt:1,L:48,R:20,B:30,progress:progress,
+    xTicks:xt,
+    hlines:[{v:50.16,c:'#8aa3aa',w:1.3,label:'环境稳定 50.165 °C'}],
+    series:[{d:TA,c:'#e0a04a',w:1.8,dash:[5,4]},
+            {d:TS,c:'#146c87',w:2.2,dash:[6,4]},
+            {d:TC,c:'#b8543a',w:2.6,fill:'rgba(184,84,58,.07)'}],
+    tags:progress>0.85?
+      [{i:12,v:50.16,text:'中心 ≈ 8 h 趋稳',tc:'#b8543a',line:'#f0d5cd',up:26}]:[]});
+}
+
+/* ---- 3. 全过程含水率曲线 ---- */
+function drawMoist(cv,progress){
+  var n=CC.length, i, xt=[];
+  for(i=0;i<n;i+=4) xt.push({i:i,t:T[i].toFixed(1)});
+  plot(cv,{h:290,n:n,yMin:0,yMax:2.8,yFmt:1,L:48,R:20,B:30,progress:progress,
+    xTicks:xt,
+    hlines:[{v:0.15,c:'#b8543a',w:1.4,label:'目标水位 C = 0.15'}],
+    series:[{d:CM,c:'#12a594',w:1.8,fill:'rgba(18,165,148,.14)'},
+            {d:CS,c:'#146c87',w:2.2,dash:[6,4]},
+            {d:CC,c:'#b8543a',w:2.6}]});
+}
+
+/* ---- 注册绘图函数 ---- */
+var R={};
+R.cvCyl  =function(cv){ animDraw(cv,function(p){drawCyl(cv,p);},700); };
+R.cvDprop=function(cv){ animDraw(cv,function(p){drawDprop(cv,p);},800); };
+R.cvTemp =function(cv){ animDraw(cv,function(p){drawTemp(cv,p);},850); };
+R.cvMoist=function(cv){ animDraw(cv,function(p){drawMoist(cv,p);},850); };
+
+/* ---- KPI / HTML 组装 ---- */
+function kpi(v,k,cls){ return '<div class="kpi '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+function num(x,d){ return x.toFixed(d===undefined?2:d); }
+
+function initS1(){
+  $('#s1KPI').innerHTML=
+    kpi('0–16.87<u>h</u>','全过程时长','')+
+    kpi('R=2<u>cm</u> · L=25<u>cm</u>','圆柱药材尺寸','b')+
+    kpi('2.55<u>kg/kg</u>','初始干基含水率 C₀','')+
+    kpi('e^(−3850/T)','变物性 · 强温度依赖','g');
+}
+function initS2(){
+  $('#dNote').innerHTML='<span class="badge q">变物性</span>横轴为干基含水率 C（0→2.55）。附录2 常物性（虚线绿）只随 C 变化；附录3 变物性在同一条含水率轴上有两条线——28 °C（蓝）与 50 °C（红）。可见温度从 28 °C 升到 50 °C 时扩散系数整体放大约 <b>2.4 倍</b>，且随温度进一步降低而急剧衰减。干燥过程中物料被加热到 50 °C，D 明显增大，正是「升温加速干燥」的机理来源。';
+  $('#s2KPI').innerHTML=
+    kpi('0.36','附录2 · λ W/(m·K)','')+
+    kpi('e^(−3850/T)','附录3 · D 温度项','g')+
+    kpi('21','有限体积节点数','b')+
+    kpi('0.5 s','显式欧拉时间步','');
+}
+function initS3(){
+  var times=['1800','3600','5400','7200','9000','10800'];
+  var tlab={'1800':'0.5 h (1800 s)','3600':'1.0 h (3600 s)','5400':'1.5 h (5400 s)',
+            '7200':'2.0 h (7200 s)','9000':'2.5 h (9000 s)','10800':'3.0 h (10800 s)'};
+  var tr=times.map(function(k){
+    return '<tr><td>'+tlab[k]+'</td>'+
+      TAB3[k].map(function(v){return '<td class="num">'+v.toFixed(2)+'</td>';}).join('')+'</tr>';
+  }).join('');
+  $('#tab3Box').innerHTML='<tr><th>时间</th><th>r=0（中心）</th><th>r=0.5 cm</th><th>r=1.0 cm</th><th>r=1.5 cm</th><th>r=2.0 cm（表面）</th></tr>'+tr;
+  var d05=(TAB3['1800'][4]-TAB3['1800'][0]);
+  var d30=(TAB3['10800'][4]-TAB3['10800'][0]);
+  $('#tempNote').innerHTML='<span class="badge w">温度演化</span>0.5 h 时表面升到 <b>'+TAB3['1800'][4].toFixed(2)+' °C</b>、中心仅 <b>'+TAB3['1800'][0].toFixed(2)+' °C</b>，径向温差 <b>'+d05.toFixed(2)+' °C</b>；到 3 h（10800 s）时表面 '+TAB3['10800'][4].toFixed(2)+' °C、中心 '+TAB3['10800'][0].toFixed(2)+' °C，温差收敛到 <b>'+d30.toFixed(2)+' °C</b>。中心温度约 5.5 h 逼近 50 °C，约 <b>8 h</b> 后稳定在 50.16 °C 平台，与表面、环境（0–300 s 升到 50.165 °C 后稳定）完全趋同。';
+  $('#s3KPI').innerHTML=
+    kpi('50.16 <u>°C</u>','中心 / 表面 / 环境稳态温度','')+
+    kpi('≈ 8 <u>h</u>','中心达 50 °C 并趋稳','w')+
+    kpi(d05.toFixed(2)+' <u>°C</u>','0.5 h 径向温差','b')+
+    kpi(d30.toFixed(2)+' <u>°C</u>','3 h 径向温差','');
+}
+function initS4(){
+  var times=['1800','3600','5400','7200','9000','10800'];
+  var tlab={'1800':'0.5 h (1800 s)','3600':'1.0 h (3600 s)','5400':'1.5 h (5400 s)',
+            '7200':'2.0 h (7200 s)','9000':'2.5 h (9000 s)','10800':'3.0 h (10800 s)'};
+  var tr=times.map(function(k){
+    return '<tr><td>'+tlab[k]+'</td>'+
+      TAB4[k].map(function(v){return '<td class="num">'+v.toFixed(2)+'</td>';}).join('')+'</tr>';
+  }).join('');
+  $('#tab4Box').innerHTML='<tr><th>时间</th><th>r=0（中心）</th><th>r=0.5 cm</th><th>r=1.0 cm</th><th>r=1.5 cm</th><th>r=2.0 cm（表面）</th></tr>'+tr;
+  $('#moistNote').innerHTML='<span class="badge w">耦合特征</span>表面含水率下降最快：0.5 h 已由 2.55 降到 <b>'+TAB4['1800'][4].toFixed(2)+'</b>，而中心仍维持在 <b>'+TAB4['1800'][0].toFixed(2)+'</b>——水分先由表面蒸发出走。随后水分由中心向表面迁移，中心开始跟进：到 3 h（10800 s）中心 '+TAB4['10800'][0].toFixed(2)+'、表面 '+TAB4['10800'][4].toFixed(2)+'。全过程中心含水率由 2.55 单调降到 <b>0.15</b>（16.87 h），表面同步降到约 <b>0.11</b>；整体最大含水率 C<sub>max</sub> 与中心一致（中心最大），先缓后快地下降。';
+  $('#s4KPI').innerHTML=
+    kpi('0.15 <u>kg/kg</u>','中心含水率终值（16.87 h）','')+
+    kpi('≈ 1.01','表面含水率（10800 s）','w')+
+    kpi(TAB4['1800'][4].toFixed(2),'0.5 h 表面含水率','b')+
+    kpi('2.55 <u>kg/kg</u>','初始含水率 C₀','');
+}
+function initS5(){
+  $('#finalKPI').innerHTML=
+    kpi('≈ 8 <u>h</u>','中心达 50 °C 并趋稳','w')+
+    kpi('≈ 1.01','表面含水率（10800 s）','b')+
+    kpi('16.87 <u>h</u>','C<sub>max</sub> 降至 0.15 用时','')+
+    kpi('2.55 <u>kg/kg</u>','初始干基含水率','')+
+    kpi('0.13 <u>°C</u>','3 h 径向温差','')+
+    kpi('e^(−3850/T)','变物性 · 温度依赖项','g');
+}
+
+/* ---- 幕切换框架 ---- */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var st={last:0,armed:false,fired:0};
+function ensure(id){
+  var cv=document.getElementById(id);
+  if(!cv||cv.dataset.done==='1') return;
+  if(!R[id]) return;
+  cv.dataset.done='1'; R[id](cv);
+}
+function ensureScene(i){
+  var sc=SCENES[i];
+  $$('canvas',sc).forEach(function(cv){ ensure(cv.id); });
+}
+function resetScene(sc){
+  $$('canvas',sc).forEach(function(cv){ cv.removeAttribute('data-done'); });
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+}
+function goTo(i,silent){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(H[i]) H[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+var H=[function(){ initS1(); ensureScene(0); }, function(){ initS2(); ensureScene(1); },
+       function(){ initS3(); ensureScene(2); }, function(){ initS4(); ensureScene(3); },
+       function(){ initS5(); ensureScene(4); }];
+
+function init(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ resetScene(SCENES[cur]); ensureScene(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  initS1(); initS2(); initS3(); initS4(); initS5();
+  setReduce(false); goTo(0);
+}
+window.__deck={goTo:goTo,get cur(){return cur;},R:R,D23:D23,TAB3:TAB3,TAB4:TAB4};
+init();
+window.addEventListener('resize',function(){
+  $$('canvas').forEach(function(cv){ cv.removeAttribute('data-done'); });
+  ensureScene(cur);
+});
+})();
+</script>
+</body>
+</html>

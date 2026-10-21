@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM E题 · 问题四分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 标签行 ---------- */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{
+  font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;
+}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.pill b{font-weight:600}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+#cvSoc{cursor:crosshair;touch-action:none}
+.pill:disabled{cursor:default}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 滑块 ---------- */
+.slider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.slider input[type=range]{
+  flex:1;height:22px;background:transparent;cursor:pointer;
+  appearance:none;-webkit-appearance:none;accent-color:var(--teal);
+}
+.slider input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(11,46,54,.28);
+}
+.slider input[type=range]:focus{outline:none}
+.slider input[type=range]:focus::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(18,165,148,.22)}
+.slider input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:#dbeaea}
+.slider input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:var(--teal);border:2px solid #fff;
+}
+.slider .sv{min-width:104px;text-align:right;font-size:14px;font-weight:600;color:var(--teal-d);
+  font-variant-numeric:tabular-nums}
+
+/* ---------- 矩阵 ---------- */
+.mx{display:grid;gap:6px}
+.mx .mh{font-size:11.5px;color:var(--muted);text-align:center;padding:2px 0}
+.mx .mr{font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+.mx .mc{
+  border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:.16s;
+  padding:7px 6px;font-size:12px;text-align:center;color:var(--muted);line-height:1.45;
+}
+.mx .mc:hover{border-color:var(--teal)}
+.mx .mc.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.mx .mc.dim{opacity:.55}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+
+/* 动效总开关（类名驱动，不用媒体查询） */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce.wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+ .splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+
+/* ====== 本演示追加的组件（位置与尺寸沿用原型栅格） ====== */
+.canvasbox svg{display:block;width:100%;height:auto}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;
+  background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl .pills{margin:0}
+.ctl input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.ctl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);
+  min-width:52px;text-align:right;font-size:13.5px}
+.ctl .hint{font-size:11.5px;color:var(--muted);flex:none}
+.legend .lgi{cursor:pointer;user-select:none}
+.legend .lgi.off{opacity:.32;text-decoration:line-through}
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:300px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+#tip .row{display:flex;justify-content:space-between;gap:14px}
+.pcard{cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .16s}
+.pcard:hover{border-color:var(--teal);transform:translateY(-2px)}
+.pcard.on{border-color:var(--teal-d);box-shadow:0 0 0 2px rgba(18,165,148,.16),var(--sh)}
+.pcard h3 em{margin-left:auto}
+table.tb tr.dim td{opacity:.36}
+table.tb tr.on td{background:#eef8f6}
+.cover{text-align:center;max-width:860px;margin:14px auto 0}
+.cover .big{font-size:38px;font-weight:650;letter-spacing:-.01em;line-height:1.25;margin:8px 0}
+.cover .big .ac{color:var(--teal-d)}
+.cover .meta{color:var(--muted);font-size:14.5px;margin:10px 0;line-height:1.8}
+.cover .pills{justify-content:center}
+.srcbox{display:inline-block;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:14px 18px;box-shadow:var(--sh);font-size:13px;color:var(--ink2);margin-top:18px}
+.srcbox b{color:var(--teal-d)}
+.trace{font-size:11.5px;color:var(--muted);line-height:1.8}
+@media(max-width:960px){.cover .big{font-size:28px}}
+
+/* ====== 滑块（拖动即重算，档位全部由数据通道预置） ====== */
+.slwrap{margin:9px 0 2px}
+.sllab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.sllab b{font-size:14px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+input.sl{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;
+  background:var(--line2);outline:none;margin:0;padding:0;display:block}
+input.sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--teal);border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.20);cursor:pointer}
+input.sl::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--teal);
+  border:2px solid #fff;cursor:pointer}
+.slticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.slval{font-variant-numeric:tabular-nums}
+
+/* ====== 入场动画（动效总开关关闭时全部禁用，见 body.reduce） ====== */
+.grow{transform-box:fill-box;transform-origin:50% 100%;
+  animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.growx{transform-box:fill-box;transform-origin:0 50%;
+  animation:growX .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growX{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
+.draw{animation:drawIn .85s ease-out both}
+@keyframes drawIn{from{stroke-dashoffset:var(--len,1200)}to{stroke-dashoffset:0}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+body.reduce .grow,body.reduce .growx,body.reduce .draw,body.reduce .fadein{animation:none !important}
+body.reduce .draw{stroke-dashoffset:0 !important}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./01_全局问题分析.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+<section class="scene" id="s1" data-title="问题四 · 不确定性的量级">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题四 · 不确定性的量级</div>
+        <h1>2026 年预算不增，且关键指标每日波动
+          <small>先量出波动有多大，再决定用期望还是用最坏情形做决策。</small>
+        </h1>
+        <p class="lead">题面设定 2026 年沿用 2025 年的方案与关键词，预算不超过 2025 年；但竞价、展现量、展现位、点击量、浏览量、注册量每日不确定。不确定性本身没有给分布，只能用 2025 年的历史波动刻画其量级。</p>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop"><div class="ct" id="cvT">日波动分布</div></div>
+          <div class="pills" id="cvPills"></div>
+          <div id="barCv"></div>
+          <div id="cvStats"></div>
+          <div class="note">三个核心日指标的变异系数 CV 分别为 <span id="cvList"></span>，单日波动剧烈，按点估计分配预算不成立。切换标签查看各指标的分布形态。</div>
+        </div>
+        <div class="card">
+          <h3>不确定性的来源清单</h3>
+          <table class="tb">
+            <tr><th>不确定量</th><th>2025 是否有观测</th><th>建模处理</th></tr>
+            <tr><td class="l">竞价</td><td class="l">无（附件未给出价）</td><td class="l">以单位成本反推，或设为情景参数</td></tr>
+            <tr><td class="l">展现量</td><td class="l">有（Sheet1 逐日）</td><td class="l">取 2025 日分布作为经验分布</td></tr>
+            <tr><td class="l">展现位</td><td class="l">有（上方位拆分）</td><td class="l">按上方位占比的情景切换</td></tr>
+            <tr><td class="l">点击量</td><td class="l">有（Sheet1 逐日）</td><td class="l">由展现 × CTR 分布抽样</td></tr>
+            <tr><td class="l">浏览量</td><td class="l">有（Sheet3）</td><td class="l">由点击 × 浏览转化率抽样</td></tr>
+            <tr><td class="l">注册量</td><td class="l">有（Sheet2 逐日）</td><td class="l">由浏览 × 注册转化率抽样</td></tr>
+          </table>
+          <div class="note">竞价一项附件没有直接观测，只能间接刻画。这一缺口必须在结论中声明，不能用假设值冒充实测。</div>
+        </div>
+      </div>
+    </div>
+</section><section class="scene" id="s2" data-title="问题四 · 六项指标的期望范围">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题四 · 六项指标的期望范围</div>
+        <h1>能给区间的给区间，不能给的说明原因
+          <small>题面要求估计竞价、展现量、展现位、点击量、浏览量、注册量六项的期望范围。</small>
+        </h1>
+        <p class="lead">以 2025 年 9 月 11–17 日这 7 天为参照窗口，对有逐日观测的四项给出均值与 ±1 个样本标准差的区间；浏览量与竞价在附件中缺少对应观测，只给折算口径，不给日区间。</p>
+      </div>
+      <div class="grid2">
+        <div class="canvasbox">
+          <div class="cvtop"><div class="ct">2025 年 9 月 11–17 日逐日实际值</div></div>
+          <div class="pills" id="bandPills"></div>
+          <div id="bandSlider"></div>
+          <div id="band"></div>
+          <div class="legend"><span><i style="background:var(--gold)"></i>逐日实际</span><span><i class="ln" style="background:var(--teal-d)"></i>窗口均值</span><span><i style="background:rgba(224,160,74,.35)"></i>区间带（宽度可调）</span></div>
+          <div class="note" id="bandCov"></div>
+          <div class="note" id="bandChartNote"></div>
+        </div>
+        <div class="card">
+          <h3>六项指标的期望范围</h3>
+          <table class="tb" id="bandTable"></table>
+          <div class="note" id="bandNote"></div>
+        </div>
+      </div>
+    </div>
+</section><section class="scene" id="s3" data-title="问题四 · 建模路径与交付格式">
+    <div class="wrap">
+      <div>
+        <div class="kicker">问题四 · 建模路径与交付格式</div>
+        <h1>先定规则，再交给求解器
+          <small>逐日策略由预算上限、类别优先级与逐日波动三者共同决定。</small>
+        </h1>
+        <p class="lead">2026 年沿用 2025 年的方案、推广单元与关键词，预算不超过 <span id="plCap"></span> 元。在此约束下，逐日策略的自由度只剩两件事：把钱分给哪些词、每天分多少。</p>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>建模路径 <em>不确定性的三种处理方式</em></h3>
+          <div class="formula"><span class="c"># A · 随机规划（SP）：假定分布已知</span>
+max   E_ξ[ f(x, ξ) ]
+s.t.  P( g(x, ξ) ≤ 0 ) ≥ 1 − α        <span class="c"># 机会约束</span>
+
+<span class="c"># B · 鲁棒优化（RO）：不假定分布，只假定集合</span>
+max   min_{ξ ∈ U}  f(x, ξ)
+s.t.  g(x, ξ) ≤ 0      ∀ ξ ∈ U        <span class="c"># 集合内全部满足</span>
+
+<span class="c"># C · 分布鲁棒（DRO）：介于两者之间</span>
+max   inf_{P ∈ 𝓓}  E_P[ f(x, ξ) ]
+      𝓓 = { P : d(P, P̂) ≤ ε }         <span class="c"># 经验分布邻域</span>
+
+<span class="c"># 求解：样本平均近似（SAA）</span>
+max   (1/N)·Σ_n f(x, ξ_n)              <span class="c"># ξ_n 抽样自 P̂</span></div>
+          <div class="note" id="plSel"></div>
+        </div>
+        <div class="card">
+          <h3>逐日决策规则</h3>
+          <div id="plRules"></div>
+          <div class="note">规则全部来自前四幕已核算的量：类别优先级来自问题2，上限来自题面预算约束，逐日节奏来自问题1 的时间规律。</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>result4.xlsx 的字段（附件2 模板，逐字）</h3>
+        <table class="tb">
+          <tr><th>模板字段</th><th>本演示的对应来源</th></tr>
+          <tr><td class="l">日期</td><td class="l">题面指定的窗口日期：2026 年 9 月 11–17 日</td></tr>
+          <tr><td class="l">方案ID · 推广单元 · 关键词</td><td class="l">沿用 2025 年的方案、单元与关键词（题面设定）</td></tr>
+          <tr><td class="l">投入金额</td><td class="l">决策变量，逐日之和不超过 2025 年投入</td></tr>
+          <tr><td class="l">预期展位</td><td class="l">上方位占比的情景切换，2025 实测 <span id="plTop"></span></td></tr>
+          <tr><td class="l">预期点击量</td><td class="l">展现量 × 年度点击率 <span id="plCtr"></span></td></tr>
+          <tr><td class="l">预期浏览量</td><td class="l">点击量 × 年度浏览/点击比率 <span id="plPv"></span></td></tr>
+          <tr><td class="l">预期注册量</td><td class="l">点击量 × 年度注册/点击比率 <span id="plReg"></span></td></tr>
+        </table>
+        <div class="note">三项预期指标均为 derived 量，由 2025 年年度比率折算；它们给出的是量级，不是对 2026 年真实值的点预测。</div>
+      </div>
+    </div>
+</section><section class="scene" id="s4" data-title="小结 · 数值纪律与溯源">
+    <div class="wrap">
+      <div class="cover">
+        <div class="kicker">小结 · 从抢流量到算效益</div>
+        <h1>三条主线，一个杠杆
+          <small>全文结论均来自附件实算，不含未经核验的推断。</small>
+        </h1>
+        <p class="lead" style="margin:12px auto 0;max-width:760px">
+          ① 预算向首页顶部过度集中：上方位吃掉 <b id="smTopCost"></b> 的消费额，只换回 <b id="smTopImp"></b> 的展现。
+          ② 节假日注册为负效应：<span id="smHol"></span>，应按淡季配置。
+          ③ 关键词消费呈幂律：<span id="smDead"></span> 个无效词全年零投入，<span id="smKey"></span> 承载 <span id="smKeyShare"></span> 的消费额，问题词单位成本 <span id="smBad"></span> 元/有效访问。
+          三条主线共同指向预算在位置与关键词之间的再分配。
+        </p>
+      </div>
+      <div class="grid3">
+        <div class="card"><h3>引文通道</h3><p>题面原文常数与定义，逐字比对后引用。如「5 个方案、12 个推广单元、约 142 余万元」「低成本、高效益」等判定标准。</p><p class="note">来源：E题.pdf</p></div>
+        <div class="card"><h3>数据通道</h3><p>附件表格经脚本计算的结果。总消费额、点击率、各类词数量、月度序列、假日窗口、日波动 CV 全部由附件1 直接算出。</p><p class="note">来源：附件1.xlsx → build_sem_data.py</p></div>
+        <div class="card"><h3>断言通道</h3><p>由前两者推导且可重算的定量表述。如「上方位消费占比 <span id="qTop"></span>」「假日注册为年均 <span id="qHol"></span> 倍」「问题词 <span id="qBad"></span> 元/有效访问」。</p><p class="note">可展开依据，不含无法复核的推断值</p></div>
+      </div>
+      <div class="card">
+        <h3>数据来源清单</h3>
+        <table class="tb">
+          <tr><th>数据集</th><th>字段</th><th>用途</th></tr>
+          <tr><td class="l">附件1 · Sheet1</td><td class="l">方案 / 单元 / 展现 / 点击 / 消费 / 上方位拆分</td><td class="l">规模复核、贵位溢价、月度序列、日波动</td></tr>
+          <tr><td class="l">附件1 · Sheet2</td><td class="l">日期、新注册数</td><td class="l">假日效应、窗口核算、期望区间</td></tr>
+          <tr><td class="l">附件1 · Sheet3</td><td class="l">关键词消费 / 点击 / 浏览 / 跳出率 / 时长</td><td class="l">四象限分类、质量指标、选词依据</td></tr>
+          <tr><td class="l">E题.pdf</td><td class="l">题面与四个子问题的定义、约束</td><td class="l">引文通道、建模约束、判定标准</td></tr>
+        </table>
+        <div class="note">每个页面均为单文件、离线自包含：不引用任何外部 URL、CDN 或字体，所有图表为脚本生成的 SVG，断网可完整播放。五个页面共用同一套实算数据与同一套数值纪律。</div>
+      </div>
+    </div>
+</section>
+</main><div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div><div id="tip"></div>
+<script>
+const DATA = {"overview": {"plans": 5, "units": 12, "kw_distinct": 1884, "kw_active": 1183, "kw_dead": 701, "total_cost": 1425949.79, "total_imp": 22580381, "total_clk": 834815, "ctr": 0.037, "top_imp_share": 0.2711, "top1_share": 0.1039, "top_cost_share": 0.7035, "total_reg": 85313, "reg_per_1000yuan": 59.8, "eff_total": 404901.8, "site_bounce": 0.515, "site_dur": 291.5}, "p4_uncert": {"imp": {"cv": 0.703, "min": 1769, "max": 294615, "mean": 61864}, "clk": {"cv": 0.619, "min": 149, "max": 6942, "mean": 2287}, "reg": {"cv": 0.621, "min": 1, "max": 876, "mean": 234}}, "p4_hist": {"imp": {"edges": [1769, 26173, 50577, 74980, 99384, 123788, 148192, 172596, 197000, 221404, 245807, 270211, 294615], "counts": [75, 85, 92, 59, 30, 11, 5, 1, 2, 2, 2, 1], "n": 365}, "clk": {"edges": [149, 715, 1281, 1847, 2413, 2979, 3546, 4112, 4678, 5244, 5810, 6376, 6942], "counts": [48, 71, 35, 39, 65, 43, 25, 13, 13, 6, 5, 2], "n": 365}, "reg": {"edges": [1, 74, 147, 220, 293, 366, 438, 511, 584, 657, 730, 803, 876], "counts": [50, 68, 51, 73, 87, 16, 6, 2, 4, 3, 3, 2], "n": 365}}, "p4_sep": {"dates": ["09-11", "09-12", "09-13", "09-14", "09-15", "09-16", "09-17"], "imp": [77209, 77575, 76055, 62120, 28473, 27382, 29440], "clk": [3124, 2960, 2724, 2586, 533, 440, 476], "cost": [5898.38, 5616.73, 5338.94, 5245.77, 535.33, 419.68, 433.19], "upimp_share": [0.3881, 0.3825, 0.3661, 0.3863, 0.1286, 0.114, 0.1154], "reg": [348, 317, 309, 282, 279, 252, 265]}, "p4_band": {"imp": {"mean": 54036.3, "sd": 24529.3, "lo": 29507.0, "hi": 78565.6, "min": 27382, "max": 77575, "n": 7, "ks": [{"k": 0.5, "lo": 41771.7, "hi": 66300.9, "cov": 0.189, "norm": 0.3829}, {"k": 0.75, "lo": 35639.3, "hi": 72433.3, "cov": 0.326, "norm": 0.5467}, {"k": 1.0, "lo": 29507.0, "hi": 78565.6, "cov": 0.4822, "norm": 0.6827}, {"k": 1.25, "lo": 23374.7, "hi": 84697.9, "cov": 0.6548, "norm": 0.7887}, {"k": 1.5, "lo": 17242.4, "hi": 90830.2, "cov": 0.7233, "norm": 0.8664}, {"k": 1.75, "lo": 11110.0, "hi": 96962.6, "cov": 0.7726, "norm": 0.9199}, {"k": 2.0, "lo": 4977.7, "hi": 103094.9, "cov": 0.8329, "norm": 0.9545}], "cov": 0.4822}, "clk": {"mean": 1834.7, "sd": 1276.0, "lo": 558.7, "hi": 3110.7, "min": 440, "max": 3124, "n": 7, "ks": [{"k": 0.5, "lo": 1196.7, "hi": 2472.7, "cov": 0.2411, "norm": 0.3829}, {"k": 0.75, "lo": 877.7, "hi": 2791.7, "cov": 0.4493, "norm": 0.5467}, {"k": 1.0, "lo": 558.7, "hi": 3110.7, "cov": 0.6493, "norm": 0.6827}, {"k": 1.25, "lo": 239.7, "hi": 3429.7, "cov": 0.8027, "norm": 0.7887}, {"k": 1.5, "lo": 0.0, "hi": 3748.7, "cov": 0.8493, "norm": 0.8664}, {"k": 1.75, "lo": 0.0, "hi": 4067.7, "cov": 0.8932, "norm": 0.9199}, {"k": 2.0, "lo": 0.0, "hi": 4386.7, "cov": 0.9205, "norm": 0.9545}], "cov": 0.6493}, "cost": {"mean": 3355.4, "sd": 2714.1, "lo": 641.3, "hi": 6069.6, "min": 419.7, "max": 5898.4, "n": 7, "ks": [{"k": 0.5, "lo": 1998.4, "hi": 4712.4, "cov": 0.2959, "norm": 0.3829}, {"k": 0.75, "lo": 1319.8, "hi": 5391.0, "cov": 0.4986, "norm": 0.5467}, {"k": 1.0, "lo": 641.3, "hi": 6069.5, "cov": 0.7726, "norm": 0.6827}, {"k": 1.25, "lo": 0.0, "hi": 6748.0, "cov": 0.8877, "norm": 0.7887}, {"k": 1.5, "lo": 0.0, "hi": 7426.5, "cov": 0.9178, "norm": 0.8664}, {"k": 1.75, "lo": 0.0, "hi": 8105.1, "cov": 0.9288, "norm": 0.9199}, {"k": 2.0, "lo": 0.0, "hi": 8783.6, "cov": 0.9507, "norm": 0.9545}], "cov": 0.7726}, "reg": {"mean": 293.1, "sd": 33.3, "lo": 259.9, "hi": 326.4, "min": 252, "max": 348, "n": 7, "ks": [{"k": 0.5, "lo": 276.5, "hi": 309.8, "cov": 0.1507, "norm": 0.3829}, {"k": 0.75, "lo": 268.1, "hi": 318.1, "cov": 0.2164, "norm": 0.5467}, {"k": 1.0, "lo": 259.8, "hi": 326.4, "cov": 0.2795, "norm": 0.6827}, {"k": 1.25, "lo": 251.5, "hi": 334.7, "cov": 0.3233, "norm": 0.7887}, {"k": 1.5, "lo": 243.2, "hi": 343.1, "cov": 0.3616, "norm": 0.8664}, {"k": 1.75, "lo": 234.8, "hi": 351.4, "cov": 0.3918, "norm": 0.9199}, {"k": 2.0, "lo": 226.5, "hi": 359.7, "cov": 0.411, "norm": 0.9545}], "cov": 0.2795}, "upimp_share": {"mean": 0.2687, "sd": 0.14, "lo": 0.1287, "hi": 0.4087, "min": 0.114, "max": 0.3881, "n": 7, "ks": [{"k": 0.5, "lo": 0.1987, "hi": 0.3387, "cov": 0.4247, "norm": 0.3829}, {"k": 0.75, "lo": 0.1637, "hi": 0.3737, "cov": 0.6356, "norm": 0.5467}, {"k": 1.0, "lo": 0.1287, "hi": 0.4087, "cov": 0.8192, "norm": 0.6827}, {"k": 1.25, "lo": 0.0937, "hi": 0.4437, "cov": 0.926, "norm": 0.7887}, {"k": 1.5, "lo": 0.0587, "hi": 0.4787, "cov": 0.9644, "norm": 0.8664}, {"k": 1.75, "lo": 0.0237, "hi": 0.5137, "cov": 0.9781, "norm": 0.9199}, {"k": 2.0, "lo": 0.0, "hi": 0.5487, "cov": 0.9781, "norm": 0.9545}], "cov": 0.8192}}, "ratio": {"ctr": 0.037, "pv_per_clk": 3.712, "reg_per_clk": 0.1022, "cost_per_clk": 1.708, "cost_per_eff": 3.522, "reg_per_pv": 0.0275}, "realloc": {"budget_cap": 1425949.79, "bad_n": 3, "bad_cost": 45778.3, "bad_eff": 756.6, "bad_cpe": 60.51, "key_cpe": 3.13, "pot_cpe": 6.23, "gold_cpe": 2.12, "to_key_eff": 14625.7, "to_key_gain": 13869.1, "to_pot_eff": 7348.0, "to_pot_gain": 6591.4, "assume": "情景测算：假定释放出的预算可按承接类别当前的单位成本（元/有效访问）投放，不计竞价抬升与流量上限，且不预测 2026 年的实际成交。", "cap_mult": 1.0, "sink_order": ["黄金词", "重点词", "潜力词"], "grid": [{"p": 0.0, "moved": 0.0, "overflow": 0.0, "alloc": [["黄金词", 0.0, 0.0], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 0.0, "eff_new": 0.0, "gain": 0.0}, {"p": 0.05, "moved": 2288.92, "overflow": 0.0, "alloc": [["黄金词", 2288.92, 1079.7], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 37.8, "eff_new": 1079.7, "gain": 1041.9}, {"p": 0.1, "moved": 4577.83, "overflow": 0.0, "alloc": [["黄金词", 4577.83, 2159.4], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 75.7, "eff_new": 2159.4, "gain": 2083.7}, {"p": 0.15, "moved": 6866.75, "overflow": 0.0, "alloc": [["黄金词", 6866.75, 3239.0], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 113.5, "eff_new": 3239.0, "gain": 3125.5}, {"p": 0.2, "moved": 9155.66, "overflow": 0.0, "alloc": [["黄金词", 9155.66, 4318.7], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 151.3, "eff_new": 4318.7, "gain": 4167.4}, {"p": 0.25, "moved": 11444.58, "overflow": 0.0, "alloc": [["黄金词", 11444.58, 5398.4], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 189.2, "eff_new": 5398.4, "gain": 5209.2}, {"p": 0.3, "moved": 13733.49, "overflow": 0.0, "alloc": [["黄金词", 13733.49, 6478.1], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 227.0, "eff_new": 6478.1, "gain": 6251.1}, {"p": 0.35, "moved": 16022.41, "overflow": 0.0, "alloc": [["黄金词", 16022.41, 7557.7], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 264.8, "eff_new": 7557.7, "gain": 7292.9}, {"p": 0.4, "moved": 18311.32, "overflow": 0.0, "alloc": [["黄金词", 18311.32, 8637.4], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 302.6, "eff_new": 8637.4, "gain": 8334.8}, {"p": 0.45, "moved": 20600.24, "overflow": 0.0, "alloc": [["黄金词", 20600.24, 9717.1], ["重点词", 0.0, 0.0], ["潜力词", 0.0, 0.0]], "eff_old": 340.5, "eff_new": 9717.1, "gain": 9376.6}, {"p": 0.5, "moved": 22889.15, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 563.45, 180.0], ["潜力词", 0.0, 0.0]], "eff_old": 378.3, "eff_new": 10711.0, "gain": 10332.7}, {"p": 0.55, "moved": 25178.07, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 2852.37, 911.3], ["潜力词", 0.0, 0.0]], "eff_old": 416.1, "eff_new": 11442.3, "gain": 11026.2}, {"p": 0.6, "moved": 27466.98, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 5141.28, 1642.6], ["潜力词", 0.0, 0.0]], "eff_old": 454.0, "eff_new": 12173.6, "gain": 11719.6}, {"p": 0.65, "moved": 29755.9, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 7430.2, 2373.9], ["潜力词", 0.0, 0.0]], "eff_old": 491.8, "eff_new": 12904.9, "gain": 12413.1}, {"p": 0.7, "moved": 32044.81, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 9719.11, 3105.1], ["潜力词", 0.0, 0.0]], "eff_old": 529.6, "eff_new": 13636.1, "gain": 13106.5}, {"p": 0.75, "moved": 34333.73, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 12008.03, 3836.4], ["潜力词", 0.0, 0.0]], "eff_old": 567.5, "eff_new": 14367.4, "gain": 13799.9}, {"p": 0.8, "moved": 36622.64, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 14296.94, 4567.7], ["潜力词", 0.0, 0.0]], "eff_old": 605.3, "eff_new": 15098.7, "gain": 14493.4}, {"p": 0.85, "moved": 38911.56, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 16585.86, 5299.0], ["潜力词", 0.0, 0.0]], "eff_old": 643.1, "eff_new": 15830.0, "gain": 15186.9}, {"p": 0.9, "moved": 41200.47, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 18874.77, 6030.3], ["潜力词", 0.0, 0.0]], "eff_old": 680.9, "eff_new": 16561.3, "gain": 15880.4}, {"p": 0.95, "moved": 43489.39, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 21163.69, 6761.6], ["潜力词", 0.0, 0.0]], "eff_old": 718.8, "eff_new": 17292.6, "gain": 16573.8}, {"p": 1.0, "moved": 45778.3, "overflow": 0.0, "alloc": [["黄金词", 22325.7, 10531.0], ["重点词", 23452.6, 7492.8], ["潜力词", 0.0, 0.0]], "eff_old": 756.6, "eff_new": 18023.8, "gain": 17267.2}]}, "cpc": {"n": 365, "mean": 1.712, "sd": 0.567, "min": 0.562, "max": 3.58, "p10": 1.004, "p25": 1.223, "p75": 2.08, "p90": 2.583, "cv": 0.331, "sep": [1.131, 1.265, 1.046, 1.37, 2.103, 2.012, 1.963, 2.021, 1.836, 1.874, 1.888, 1.898, 1.96, 2.029, 1.004, 0.954, 0.91, 1.828, 1.935, 1.889, 1.76, 1.873, 2.023, 1.707, 1.636, 1.69, 1.701, 1.625, 1.533, 1.101], "daily": [["01-01", 2.611], ["01-02", 2.773], ["01-03", 2.695], ["01-04", 2.661], ["01-05", 2.634], ["01-06", 2.051], ["01-07", 1.989], ["01-08", 2.613], ["01-09", 2.676], ["01-10", 2.582], ["01-11", 2.659], ["01-12", 2.553], ["01-13", 1.983], ["01-14", 1.962], ["01-15", 2.633], ["01-16", 2.64], ["01-17", 2.696], ["01-18", 2.779], ["01-19", 2.855], ["01-20", 2.131], ["01-21", 2.083], ["01-22", 2.882], ["01-23", 2.683], ["01-24", 2.698], ["01-25", 2.594], ["01-26", 2.67], ["01-27", 2.097], ["01-28", 2.523], ["01-29", 2.583], ["01-30", 2.494], ["01-31", 2.633], ["02-01", 2.566], ["02-02", 2.411], ["02-03", 2.395], ["02-04", 2.444], ["02-05", 2.407], ["02-06", 2.604], ["02-07", 2.528], ["02-08", 2.105], ["02-09", 2.664], ["02-10", 2.619], ["02-11", 2.596], ["02-12", 2.624], ["02-13", 2.545], ["02-14", 2.187], ["02-15", 2.53], ["02-16", 2.536], ["02-17", 2.608], ["02-18", 2.497], ["02-19", 2.542], ["02-20", 2.6], ["02-21", 2.572], ["02-22", 2.008], ["02-23", 1.938], ["02-24", 1.987], ["02-25", 1.929], ["02-26", 2.111], ["02-27", 2.087], ["02-28", 2.187], ["03-01", 2.058], ["03-02", 1.998], ["03-03", 1.983], ["03-04", 2.111], ["03-05", 2.11], ["03-06", 2.04], ["03-07", 2.01], ["03-08", 2.203], ["03-09", 2.079], ["03-10", 2.132], ["03-11", 2.376], ["03-12", 2.24], ["03-13", 2.403], ["03-14", 2.326], ["03-15", 2.093], ["03-16", 2.108], ["03-17", 2.158], ["03-18", 2.73], ["03-19", 2.56], ["03-20", 2.791], ["03-21", 2.123], ["03-22", 1.613], ["03-23", 1.44], ["03-24", 1.228], ["03-25", 1.223], ["03-26", 1.101], ["03-27", 0.934], ["03-28", 0.757], ["03-29", 0.889], ["03-30", 1.364], ["03-31", 1.319], ["04-01", 1.104], ["04-02", 1.384], ["04-03", 1.436], ["04-04", 1.47], ["04-05", 1.448], ["04-06", 1.413], ["04-07", 1.394], ["04-08", 2.077], ["04-09", 0.976], ["04-10", 0.984], ["04-11", 1.01], ["04-12", 0.978], ["04-13", 0.587], ["04-14", 0.635], ["04-15", 0.562], ["04-16", 0.72], ["04-17", 0.808], ["04-18", 0.787], ["04-19", 1.218], ["04-20", 0.74], ["04-21", 0.772], ["04-22", 0.996], ["04-23", 1.111], ["04-24", 1.399], ["04-25", 1.245], ["04-26", 1.565], ["04-27", 0.953], ["04-28", 1.621], ["04-29", 1.882], ["04-30", 0.821], ["05-01", 0.957], ["05-02", 1.099], ["05-03", 0.979], ["05-04", 0.971], ["05-05", 0.95], ["05-06", 1.228], ["05-07", 1.565], ["05-08", 1.865], ["05-09", 2.361], ["05-10", 2.045], ["05-11", 1.694], ["05-12", 1.506], ["05-13", 1.819], ["05-14", 1.713], ["05-15", 2.04], ["05-16", 1.726], ["05-17", 1.677], ["05-18", 1.5], ["05-19", 1.906], ["05-20", 1.573], ["05-21", 1.454], ["05-22", 1.264], ["05-23", 0.982], ["05-24", 0.913], ["05-25", 1.012], ["05-26", 1.001], ["05-27", 1.034], ["05-28", 1.027], ["05-29", 1.116], ["05-30", 1.22], ["05-31", 2.714], ["06-01", 2.678], ["06-02", 2.677], ["06-03", 1.46], ["06-04", 3.113], ["06-05", 2.986], ["06-06", 3.58], ["06-07", 3.131], ["06-08", 1.098], ["06-09", 1.257], ["06-10", 1.261], ["06-11", 2.886], ["06-12", 2.433], ["06-13", 1.763], ["06-14", 1.572], ["06-15", 1.585], ["06-16", 1.614], ["06-17", 1.753], ["06-18", 1.955], ["06-19", 1.735], ["06-20", 2.314], ["06-21", 2.409], ["06-22", 1.647], ["06-23", 1.635], ["06-24", 1.974], ["06-25", 1.174], ["06-26", 1.018], ["06-27", 1.163], ["06-28", 1.192], ["06-29", 1.174], ["06-30", 0.885], ["07-01", 1.211], ["07-02", 1.19], ["07-03", 1.369], ["07-04", 1.429], ["07-05", 1.455], ["07-06", 1.396], ["07-07", 1.372], ["07-08", 1.344], ["07-09", 1.425], ["07-10", 1.351], ["07-11", 1.525], ["07-12", 1.452], ["07-13", 1.235], ["07-14", 1.29], ["07-15", 1.215], ["07-16", 1.247], ["07-17", 1.187], ["07-18", 1.177], ["07-19", 1.292], ["07-20", 1.317], ["07-21", 1.359], ["07-22", 1.829], ["07-23", 1.385], ["07-24", 0.99], ["07-25", 1.104], ["07-26", 1.087], ["07-27", 1.131], ["07-28", 1.066], ["07-29", 1.118], ["07-30", 0.998], ["07-31", 0.848], ["08-01", 0.824], ["08-02", 0.851], ["08-03", 1.209], ["08-04", 1.237], ["08-05", 1.193], ["08-06", 1.098], ["08-07", 1.16], ["08-08", 1.201], ["08-09", 1.285], ["08-10", 0.869], ["08-11", 0.908], ["08-12", 1.314], ["08-13", 1.474], ["08-14", 1.603], ["08-15", 1.684], ["08-16", 1.649], ["08-17", 1.641], ["08-18", 1.858], ["08-19", 1.966], ["08-20", 1.912], ["08-21", 1.753], ["08-22", 1.83], ["08-23", 2.122], ["08-24", 0.902], ["08-25", 0.953], ["08-26", 1.611], ["08-27", 1.435], ["08-28", 1.195], ["08-29", 1.124], ["08-30", 1.152], ["08-31", 1.01], ["09-01", 1.131], ["09-02", 1.265], ["09-03", 1.046], ["09-04", 1.37], ["09-05", 2.103], ["09-06", 2.012], ["09-07", 1.963], ["09-08", 2.021], ["09-09", 1.836], ["09-10", 1.874], ["09-11", 1.888], ["09-12", 1.898], ["09-13", 1.96], ["09-14", 2.029], ["09-15", 1.004], ["09-16", 0.954], ["09-17", 0.91], ["09-18", 1.828], ["09-19", 1.935], ["09-20", 1.889], ["09-21", 1.76], ["09-22", 1.873], ["09-23", 2.023], ["09-24", 1.707], ["09-25", 1.636], ["09-26", 1.69], ["09-27", 1.701], ["09-28", 1.625], ["09-29", 1.533], ["09-30", 1.101], ["10-01", 1.108], ["10-02", 1.08], ["10-03", 1.096], ["10-04", 1.163], ["10-05", 1.099], ["10-06", 1.152], ["10-07", 1.089], ["10-08", 1.398], ["10-09", 1.499], ["10-10", 1.497], ["10-11", 1.457], ["10-12", 1.452], ["10-13", 1.432], ["10-14", 1.436], ["10-15", 1.386], ["10-16", 1.425], ["10-17", 1.763], ["10-18", 1.933], ["10-19", 1.414], ["10-20", 1.368], ["10-21", 1.555], ["10-22", 1.698], ["10-23", 1.692], ["10-24", 1.816], ["10-25", 1.671], ["10-26", 1.604], ["10-27", 1.425], ["10-28", 1.706], ["10-29", 1.679], ["10-30", 1.614], ["10-31", 1.666], ["11-01", 1.664], ["11-02", 1.583], ["11-03", 1.507], ["11-04", 1.639], ["11-05", 1.779], ["11-06", 1.864], ["11-07", 1.83], ["11-08", 1.811], ["11-09", 1.823], ["11-10", 1.975], ["11-11", 2.259], ["11-12", 2.265], ["11-13", 2.323], ["11-14", 2.255], ["11-15", 2.266], ["11-16", 2.161], ["11-17", 2.08], ["11-18", 1.616], ["11-19", 2.21], ["11-20", 2.313], ["11-21", 2.041], ["11-22", 1.994], ["11-23", 1.719], ["11-24", 1.646], ["11-25", 1.79], ["11-26", 2.026], ["11-27", 1.853], ["11-28", 1.423], ["11-29", 1.481], ["11-30", 1.427], ["12-01", 1.331], ["12-02", 1.471], ["12-03", 1.871], ["12-04", 1.898], ["12-05", 1.809], ["12-06", 1.642], ["12-07", 1.083], ["12-08", 1.141], ["12-09", 1.673], ["12-10", 1.9], ["12-11", 1.879], ["12-12", 1.783], ["12-13", 1.921], ["12-14", 1.162], ["12-15", 1.141], ["12-16", 1.896], ["12-17", 1.943], ["12-18", 1.936], ["12-19", 1.871], ["12-20", 1.921], ["12-21", 1.154], ["12-22", 1.144], ["12-23", 1.905], ["12-24", 1.955], ["12-25", 1.751], ["12-26", 1.9], ["12-27", 2.171], ["12-28", 1.199], ["12-29", 1.164], ["12-30", 2.489], ["12-31", 2.095]], "sep_mean": 1.652, "sep_sd": 0.372, "sep_lo": 1.28, "sep_hi": 2.024}, "kw_class": {"method": "pareto", "frac": 0.8, "benefit": "clk", "benefit_label": "点击量", "cut_cost": 12164.19, "cut_benefit": 6640, "total_kw": 1884, "class_order": ["黄金词", "重点词", "潜力词", "问题词", "无效词"], "classes": {"黄金词": {"n": 2, "cost": 22325.7, "clk": 17493, "eff": 10526.8, "cost_share": 0.0157, "bounce": 0.3982, "dur_sec": 362.8, "cpe": 2.12}, "重点词": {"n": 19, "cost": 1103487.3, "clk": 656355, "eff": 352819.5, "cost_share": 0.7739, "bounce": 0.4625, "dur_sec": 320.0, "cpe": 3.13}, "潜力词": {"n": 1159, "cost": 254358.5, "clk": 158084, "eff": 40798.9, "cost_share": 0.1784, "bounce": 0.7419, "dur_sec": 166.9, "cpe": 6.23}, "问题词": {"n": 3, "cost": 45778.3, "clk": 2883, "eff": 756.6, "cost_share": 0.0321, "bounce": 0.7376, "dur_sec": 202.4, "cpe": 60.51}, "无效词": {"n": 701, "cost": 0.0, "clk": 0, "eff": 0.0, "cost_share": 0.0, "bounce": null, "dur_sec": null, "cpe": null}}, "fracs": [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], "sensitivity": [{"frac": 0.6, "黄金词": {"n": 2, "cpe": 1.82, "cost_share": 0.0329, "bounce": 0.5641}, "重点词": {"n": 7, "cpe": 2.73, "cost_share": 0.5192, "bounce": 0.3933}, "潜力词": {"n": 1172, "cpe": 5.9, "cost_share": 0.3631, "bounce": 0.6882}, "问题词": {"n": 2, "cpe": 6.04, "cost_share": 0.0848, "bounce": 0.5726}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.65, "黄金词": {"n": 2, "cpe": 1.82, "cost_share": 0.0329, "bounce": 0.5641}, "重点词": {"n": 9, "cpe": 2.95, "cost_share": 0.6002, "bounce": 0.414}, "潜力词": {"n": 1170, "cpe": 6.15, "cost_share": 0.3063, "bounce": 0.705}, "问题词": {"n": 2, "cpe": 4.91, "cost_share": 0.0606, "bounce": 0.5517}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.7, "黄金词": {"n": 2, "cpe": 2.47, "cost_share": 0.0298, "bounce": 0.6343}, "重点词": {"n": 11, "cpe": 2.98, "cost_share": 0.6505, "bounce": 0.4324}, "潜力词": {"n": 1167, "cpe": 5.89, "cost_share": 0.2537, "bounce": 0.6912}, "问题词": {"n": 3, "cpe": 6.07, "cost_share": 0.066, "bounce": 0.6249}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.75, "黄金词": {"n": 1, "cpe": 2.48, "cost_share": 0.0075, "bounce": 0.5927}, "重点词": {"n": 15, "cpe": 3.02, "cost_share": 0.7244, "bounce": 0.4529}, "潜力词": {"n": 1165, "cpe": 5.8, "cost_share": 0.2313, "bounce": 0.6962}, "问题词": {"n": 2, "cpe": 38.33, "cost_share": 0.0368, "bounce": 0.8787}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.8, "黄金词": {"n": 2, "cpe": 2.12, "cost_share": 0.0157, "bounce": 0.3982}, "重点词": {"n": 19, "cpe": 3.13, "cost_share": 0.7739, "bounce": 0.4625}, "潜力词": {"n": 1159, "cpe": 6.23, "cost_share": 0.1784, "bounce": 0.7419}, "问题词": {"n": 3, "cpe": 60.51, "cost_share": 0.0321, "bounce": 0.7376}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.85, "黄金词": {"n": 5, "cpe": 4.71, "cost_share": 0.0133, "bounce": 0.8567}, "重点词": {"n": 23, "cpe": 3.11, "cost_share": 0.8006, "bounce": 0.4626}, "潜力词": {"n": 1149, "cpe": 6.48, "cost_share": 0.1349, "bounce": 0.7323}, "问题词": {"n": 6, "cpe": 17.96, "cost_share": 0.0513, "bounce": 0.6804}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.9, "黄金词": {"n": 7, "cpe": 2.34, "cost_share": 0.0095, "bounce": 0.7669}, "重点词": {"n": 34, "cpe": 3.19, "cost_share": 0.8437, "bounce": 0.4811}, "潜力词": {"n": 1130, "cpe": 7.52, "cost_share": 0.0891, "bounce": 0.7418}, "问题词": {"n": 12, "cpe": 16.24, "cost_share": 0.0577, "bounce": 0.7139}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}, {"frac": 0.95, "黄金词": {"n": 10, "cpe": 2.5, "cost_share": 0.008, "bounce": 0.6975}, "重点词": {"n": 59, "cpe": 3.33, "cost_share": 0.9108, "bounce": 0.4992}, "潜力词": {"n": 1094, "cpe": 7.62, "cost_share": 0.041, "bounce": 0.7608}, "问题词": {"n": 20, "cpe": 19.98, "cost_share": 0.0402, "bounce": 0.6905}, "无效词": {"n": 701, "cpe": null, "cost_share": 0.0, "bounce": null}}], "cross_unit": 290}, "holiday_mult": [0.24, 0.28, 0.29, 0.24], "annual_avg_reg": 233.7};
+
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtInt(v){return Number(v).toLocaleString("en-US");}
+function fmtDur(sec){const m=Math.floor(sec/60),s=Math.round(sec%60);return m+" 分 "+s+" 秒";}
+function pct(v,d){return v==null?"—":(v*100).toFixed(d==null?1:d)+"%";}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+const tipEl=document.getElementById("tip");
+function tipShow(html,x,y){
+  tipEl.innerHTML=html; tipEl.classList.add("on");
+  const w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let nx=x+16, ny=y+16;
+  if(nx+w>window.innerWidth-10) nx=x-w-16;
+  if(ny+h>window.innerHeight-10) ny=y-h-16;
+  tipEl.style.left=Math.max(8,nx)+"px"; tipEl.style.top=Math.max(8,ny)+"px";
+}
+function tipHide(){tipEl.classList.remove("on");}
+function bindTip(node,build){
+  node.setAttribute("class",(node.getAttribute("class")||"")+" hit");
+  node.addEventListener("mouseenter",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mousemove",e=>tipShow(build(),e.clientX,e.clientY));
+  node.addEventListener("mouseleave",tipHide);
+}
+function trow(a,b){return "<div class='row'><span>"+esc(a)+"</span><span>"+b+"</span></div>";}
+function ttitle(s){return "<span class='tt'>"+esc(s)+"</span>";}
+function mkPills(boxId,labels,onPick){
+  const box=document.getElementById(boxId);
+  if(!box) return;
+  labels.forEach((lab,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="pill"+(i===0?" on":""); b.textContent=lab;
+    b.onclick=function(){
+      const cs=box.children;
+      for(let k=0;k<cs.length;k++) cs[k].classList.toggle("on",k===i);
+      onPick(i,lab);
+    };
+    box.appendChild(b);
+  });
+  if(labels.length) onPick(0,labels[0]);
+}
+/* 数值滚动：从 0 缓动到目标值。动效关闭或环境不支持时直接落位。 */
+function countUp(node,target,opt){
+  if(!node) return;
+  opt=opt||{};
+  const dur=opt.dur||760, dec=opt.dec==null?0:opt.dec;
+  const fmt=opt.fmt||function(v){
+    return Number(v).toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  };
+  const reduce=document.body&&document.body.classList&&document.body.classList.contains("reduce");
+  if(reduce||typeof requestAnimationFrame!=="function"){ node.textContent=fmt(target); return; }
+  let t0=null;
+  function step(ts){
+    if(t0===null) t0=ts;
+    const p=Math.min(1,(ts-t0)/dur);
+    node.textContent=fmt(target*(1-Math.pow(1-p,3)));
+    if(p<1) requestAnimationFrame(step); else node.textContent=fmt(target);
+  }
+  node.textContent=fmt(0);
+  requestAnimationFrame(step);
+}
+/* 连续滑块：档位由数据通道预先算定，onChange 只做查表与重绘。 */
+function mkSlider(boxId,opt,onChange){
+  const box=document.getElementById(boxId);
+  if(!box) return null;
+  const w=document.createElement("div"); w.className="slwrap";
+  const lab=document.createElement("div"); lab.className="sllab";
+  const inp=document.createElement("input");
+  // 用属性而非字段赋值，便于无头校验脚本按 input[type=range] 定位并驱动
+  inp.setAttribute("type","range"); inp.setAttribute("class","sl");
+  ["min","max","step"].forEach(function(a){ inp.setAttribute(a,opt[a]); });
+  inp.value=(opt.value==null?opt.min:opt.value);
+  w.appendChild(lab); w.appendChild(inp);
+  if(opt.ticks){
+    const t=document.createElement("div"); t.className="slticks";
+    opt.ticks.forEach(function(x){
+      const s=document.createElement("span"); s.textContent=x; t.appendChild(s);
+    });
+    w.appendChild(t);
+  }
+  box.appendChild(w);
+  function upd(){
+    const v=Number(inp.value);
+    inp.setAttribute("value",v);          // 与当前值同步，便于校验脚本读取
+    lab.innerHTML=(opt.label?opt.label(v):"")
+      +"<b class='slval'>"+(opt.readout?opt.readout(v):v)+"</b>";
+    onChange(v);
+  }
+  inp.oninput=upd;
+  upd();
+  return inp;
+}
+/* 入场动画：给 SVG 节点挂动画类。动效关闭时直接跳过，不影响最终形态。 */
+function anim(node,kind){
+  if(!node) return node;
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce")) return node;
+  node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);
+  return node;
+}
+function animDraw(path,len){
+  if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))
+    return path;
+  path.style.setProperty("--len",len||1200);
+  path.setAttribute("stroke-dasharray",len||1200);
+  return anim(path,"draw");
+}
+
+
+(function(){
+  const H=DATA.p4_hist, U=DATA.p4_uncert;
+  const LBL={imp:"展现量",clk:"点击量",reg:"注册量"};
+  const UNIT={imp:"次",clk:"次",reg:"人"};
+  const keys=Object.keys(H);
+  document.getElementById("cvList").textContent=keys.map(function(k){
+    return LBL[k]+" "+U[k].cv;
+  }).join("、");
+  mkPills("cvPills",keys.map(function(k){ return LBL[k]; }),function(i){
+    const k=keys[i], h=H[k], u=U[k];
+    clear("barCv");
+    document.getElementById("cvT").textContent=LBL[k]+" 日分布（2025 全年 "+h.n+" 天）";
+    const W=400,CH=240,p=40;
+    const svg=el("svg",{viewBox:"0 0 "+W+" "+CH,width:"100%"});
+    const nb=h.counts.length, maxc=Math.max.apply(null,h.counts);
+    const step=(W-2*p)/nb, bw=step-3;
+    const Y=function(v){ return CH-34-(CH-34-16)*v/maxc; };
+    for(let g=0;g<=3;g++){ const y=16+(CH-34-16)*g/3; svg.appendChild(el("line",{x1:p,y1:y,x2:W-p,y2:y,stroke:"var(--line2)"})); }
+    h.counts.forEach(function(c,j){
+      const x=p+j*step;
+      const bar=el("rect",{x:x,y:Y(c),width:Math.max(2,bw),height:Math.max(0,CH-34-Y(c)),rx:3,fill:"var(--teal)",opacity:.8});
+      bindTip(bar,function(){
+        return ttitle(h.edges[j]+" ~ "+h.edges[j+1]+" "+UNIT[k])
+          +trow("天数",c+" 天")+trow("占全年",(c/h.n*100).toFixed(1)+"%");
+      });
+      svg.appendChild(anim(bar,"grow"));
+    });
+    [0,Math.floor(nb/2),nb-1].forEach(function(j){
+      svg.appendChild(txt(p+j*step+bw/2,CH-20,h.edges[j],{"text-anchor":"middle","font-size":8.5,fill:"var(--muted)"}));
+    });
+    svg.appendChild(el("line",{x1:p,y1:CH-34,x2:W-p,y2:CH-34,stroke:"var(--line)"}));
+    document.getElementById("barCv").appendChild(svg);
+    document.getElementById("cvStats").innerHTML=
+      "<table class='tb' style='margin-top:8px'>"
+      +"<tr><th>变异系数 CV</th><th>日均值</th><th>单日最小</th><th>单日最大</th></tr>"
+      +"<tr><td class='num'>"+u.cv+"</td><td class='num'>"+fmtInt(u.mean)+"</td>"
+      +"<td class='num'>"+fmtInt(u.min)+"</td><td class='num'>"+fmtInt(u.max)+"</td></tr></table>";
+  });
+})();
+
+
+(function(){
+  const S=DATA.p4_sep, B=DATA.p4_band, R=DATA.ratio, C=DATA.cpc, AA=DATA.annual_avg_reg;
+  const LBL={imp:"展现量",clk:"点击量",cost:"消费额",reg:"注册量"};
+  const UNIT={imp:"次",clk:"次",cost:"元",reg:"人"};
+  const keys=["imp","clk","cost","reg"];
+  let curKey="reg", curK=1.0, firstDraw=true;
+  const ksOf=function(b,k){ return b.ks[Math.round((k-0.5)/0.25)]||b.ks[2]; };
+  const fmtV=function(k,v){ return k==="cost"?("¥"+fmtInt(Math.round(v))):fmtInt(Math.round(v)); };
+  const row=function(a){ return "<tr>"+a.map(function(x,i){
+    return "<td"+(i===0?" class='l'":" class='num'")+">"+x+"</td>"; }).join("")+"</tr>"; };
+  function draw(){
+    const k=curKey, vals=S[k], b=B[k], kk=ksOf(b,curK);
+    clear("band");
+    const W=400,H=252,p=42;
+    const svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:"100%"});
+    const n=vals.length;
+    const maxv=Math.max.apply(null,vals.concat([kk.hi]));
+    const minv=Math.min(0,Math.min.apply(null,vals));
+    const X=function(i){ return p+(W-2*p)*(i+0.5)/n; };
+    const Y=function(v){ return H-32-(H-32-20)*(v-minv)/((maxv-minv)||1); };
+    svg.appendChild(el("rect",{x:p,y:Y(kk.hi),width:W-2*p,height:Math.max(1,Y(kk.lo)-Y(kk.hi)),
+      fill:"rgba(224,160,74,.22)"}));
+    svg.appendChild(el("line",{x1:p,y1:Y(b.mean),x2:W-p,y2:Y(b.mean),
+      stroke:"var(--teal-d)","stroke-width":2,"stroke-dasharray":"5 4"}));
+    const bw=(W-2*p)/n-7;
+    vals.forEach(function(v,i){
+      const x=X(i)-bw/2, y=Y(v);
+      const bar=el("rect",{x:x,y:y,width:bw,height:Math.max(0,H-32-y),rx:3,fill:"var(--gold)",opacity:.85});
+      bindTip(bar,function(){
+        return ttitle("2025-"+S.dates[i])
+          +trow(LBL[k],fmtInt(v)+" "+UNIT[k])
+          +trow("窗口均值",b.mean.toFixed(1))
+          +trow("±"+curK+"σ 区间",kk.lo+" ~ "+kk.hi);
+      });
+      svg.appendChild(anim(bar,"grow"));
+    });
+    S.dates.forEach(function(d,i){
+      svg.appendChild(txt(X(i),H-16,d,{"text-anchor":"middle","font-size":8.5,fill:"var(--muted)"}));
+    });
+    svg.appendChild(el("line",{x1:p,y1:H-32,x2:W-p,y2:H-32,stroke:"var(--line)"}));
+    svg.appendChild(txt(p,14,"均值 "+b.mean.toFixed(1)+" · ±"+curK+"σ "+kk.lo+" ~ "+kk.hi+" · 样本 7 天",
+      {"font-size":9.5,fill:"var(--muted)"}));
+    document.getElementById("band").appendChild(svg);
+    // 正态假设 vs 实测覆盖：两者并列，说明 ±kσ 不能直接当置信区间引用
+    const gap=(kk.norm-kk.cov)*100;
+    document.getElementById("bandCov").innerHTML=
+      "±"+curK+"σ 区间 <b>"+kk.lo+" ~ "+kk.hi+"</b>：正态假设下覆盖 <b>"+pct(kk.norm,1)
+      +"</b>，放回 2025 全年 365 天逐日序列实测只覆盖 <b>"+pct(kk.cov,1)+"</b>，差 "
+      +gap.toFixed(1)+" 个百分点。"
+      +(k==="reg"&&AA?"其中一因是位置：窗口日均 "+b.mean.toFixed(1)+" 人为全年日均 "+AA
+        +" 人的 "+(b.mean/AA).toFixed(2)+" 倍，区间整体右移；散布形态的偏离另居其次。"
+        +"因此论文中应改用经验分位数或 bootstrap 给区间，不应直接引用正态覆盖概率。":"");
+    document.getElementById("bandChartNote").innerHTML=
+      "区间由同期 7 天的样本标准差给出，样本量仅 7，标准差本身的估计误差很大。"
+      +(k==="reg"&&AA?"":"该区间刻画的是这 7 天内部的波动量级，既不是全年分布，也不是 2026 年的置信区间。");
+    buildTable();
+    firstDraw=false;
+  }
+  mkPills("bandPills",keys.map(function(k){ return LBL[k]; }),
+          function(i){ curKey=keys[i]; draw(); });
+  mkSlider("bandSlider",{min:0.5,max:2,step:0.25,value:1,
+    label:function(){ return "区间半宽（样本标准差的倍数）　"; },
+    readout:function(v){ return "±"+v.toFixed(2)+"σ"; },
+    ticks:["±0.5σ","±1σ","±1.5σ","±2σ"]},
+    function(v){ curK=v; draw(); });
+  function buildTable(){
+    const g=function(key,dec){
+      const b=B[key], kk=ksOf(b,curK);
+      if(dec) return pct(kk.lo,dec)+" ~ "+pct(kk.hi,dec);
+      return fmtV(key,kk.lo)+" ~ "+fmtV(key,kk.hi);
+    };
+    document.getElementById("bandTable").innerHTML=
+      "<tr><th>不确定量</th><th>2025 同期均值</th><th>期望范围（±"+curK+"σ）</th><th>口径与来源</th></tr>"
+    +row(["竞价（以实际点击成本为代理）",C.mean+" 元/点击",""
+          +C.sep_lo+" ~ "+C.sep_hi+" 元/点击（按 9 月 "+C.sep.length+" 天）",
+          "逐日 消费额 ÷ 点击量（derived）；真实出价未观测，成交价不等同于出价"])
+    +row(["展现量",fmtInt(Math.round(B.imp.mean))+" 次/日",
+          g("imp")+" 次/日",
+          "Sheet1 逐日展现量"])
+    +row(["展现位（上方位占比）",pct(B.upimp_share.mean,2),
+          g("upimp_share",2),
+          "Sheet1 上方位展现量 / 展现量"])
+    +row(["点击量",fmtInt(Math.round(B.clk.mean))+" 次/日",
+          g("clk")+" 次/日",
+          "Sheet1 逐日点击量"])
+    +row(["浏览量","按点击量折算",
+          fmtInt(Math.round(ksOf(B.clk,curK).lo*R.pv_per_clk))+" ~ "
+          +fmtInt(Math.round(ksOf(B.clk,curK).hi*R.pv_per_clk))+" 次/日",
+          "年度浏览/点击比率 "+R.pv_per_clk+"（derived）；附件无逐日浏览量"])
+    +row(["注册量",fmtInt(Math.round(B.reg.mean))+" 人/日",
+          g("reg")+" 人/日",
+          "Sheet2 逐日新注册数"]);
+  }
+  document.getElementById("bandNote").innerHTML=
+    "六项里展现量、展现位、点击量、注册量四项可由附件逐日数据直接给出区间。"
+    +"竞价没有直接观测，只能以实际点击成本（消费额 ÷ 点击量）作代理：全年 "+C.n+" 天均值 "+C.mean
+    +" 元/点击、CV "+C.cv+"，9 月 "+C.sep.length+" 天 "+C.sep_mean+" ±"+C.sep_sd+" 元/点击；"
+    +"需注明这是成交价而非出价，真实竞价通常高于它。"
+    +"浏览量只有年度总量，按年度比率折算。这两项应声明为 derived，不能写成实测区间。";
+})();
+
+
+(function(){
+  const o=DATA.overview, R=DATA.ratio, A=DATA.realloc;
+  countUp(document.getElementById("plCap"),A.budget_cap,{dec:2});
+  document.getElementById("plTop").textContent=pct(o.top_cost_share,2);
+  document.getElementById("plCtr").textContent=pct(R.ctr,2);
+  document.getElementById("plPv").textContent=R.pv_per_clk;
+  document.getElementById("plReg").textContent=R.reg_per_clk;
+  const rules=[
+    ["预算上限","7 天投入之和不超过 2025 年实际投入 "+fmtInt(A.budget_cap)+" 元按日均的折算，逐日累计不超预算。"],
+    ["选词优先级","按问题2 的类别：黄金词优先、重点词保留、潜力词小额试投、问题词暂停、无效词剔除。"],
+    ["逐日节奏","按问题1 的时间规律调整：工作日与周六倾斜，周一、周日以及假日窗口内回收。"],
+    ["展位选择","上方位消费占比 2025 年实测 "+pct(o.top_cost_share,2)+"，按情景切换顶部与非顶部出价。"],
+    ["不确定性处理","以 2025 年日分布作经验分布抽样；若不愿假定分布，则取不确定集合内的最坏情形。"]
+  ];
+  document.getElementById("plRules").innerHTML=rules.map(function(x){
+    return "<p style='margin:0 0 8px'><b>"+x[0]+"</b>　"+x[1]+"</p>";
+  }).join("");
+
+  // 路径选择依据：用实测覆盖与正态假设的偏离来决定该选哪条路
+  const B=DATA.p4_band.reg, k1=B.ks[2], k2=B.ks[6];
+  document.getElementById("plSel").innerHTML=
+    "三条路径的分歧只在「对 ξ 的分布知道多少」。本数据实测：以 ±1σ 作区间，"
+    +"正态假设下应覆盖 "+pct(k1.norm,1)+"，放回 2025 全年 365 天逐日序列实测只覆盖 "+pct(k1.cov,1)
+    +"；放宽带到 ±2σ，理论 "+pct(k2.norm,1)+"、实测仍只有 "+pct(k2.cov,1)+"。"
+    +"参数化的分布假设在这份数据上不成立，因此<b>不宜直接套用「假定分布 + 解析置信区间」</b>："
+    +"若走 A，ξ 应取经验分布（非参数）而非拟合的正态；若担心经验分布在尾部不可靠"
+    +"（一年的样本对尾部几乎没有信息），则应走 B 或 C，用不确定集合或分布邻域把尾部风险显式兜住。"
+    +"窗口只有 7 天，SAA 的抽样次数受此限制，尾部估计同样不可靠——这一点应在论文中声明。";
+})();
+
+
+(function(){
+  const o=DATA.overview, K=DATA.kw_class;
+  document.getElementById("smTopCost").textContent=(o.top_cost_share*100).toFixed(2)+"%";
+  document.getElementById("smTopImp").textContent=(o.top_imp_share*100).toFixed(2)+"%";
+  const ms=DATA.holiday_mult;
+  document.getElementById("smHol").innerHTML="四个主要假日窗口的日均注册为全年日均的 "
+    +Math.min.apply(null,ms).toFixed(2)+"–"+Math.max.apply(null,ms).toFixed(2)+" 倍";
+  const cl=K.classes;
+  document.getElementById("smDead").textContent=cl["无效词"].n;
+  document.getElementById("smKey").textContent=cl["重点词"].n+" 个重点词";
+  document.getElementById("smKeyShare").textContent=(cl["重点词"].cost_share*100).toFixed(1)+"%";
+  document.getElementById("smBad").textContent=cl["问题词"].cpe.toFixed(2);
+  document.getElementById("qTop").textContent=(o.top_cost_share*100).toFixed(2)+"%";
+  document.getElementById("qHol").textContent=Math.min.apply(null,ms).toFixed(2);
+  document.getElementById("qBad").textContent=cl["问题词"].cpe.toFixed(2);
+})();
+
+
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var auto=false, tlT=[], st={armed:false,last:0,fired:0};
+function beats(sc){ return $$('.wrap > *',sc); }
+function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+function tlRun(i){
+  tlStop();
+  var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+  if(document.body.classList.contains('reduce')){
+    bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+    return;
+  }
+  bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+  bs.forEach(function(b,k){
+    var t=260+k*gap; pos=t;
+    tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+  });
+  tlT.push(setTimeout(function(){
+    if(tk!==TOKEN) return;
+    bs.forEach(function(b){ b.classList.remove('stg'); });
+    auto=false; syncAuto();
+  },pos+820));
+}
+function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(auto){ tlRun(i); } else { beats(sc).forEach(function(b){ b.classList.add('in'); }); }
+}
+function syncAuto(){}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+function boot(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null;
+    if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    var now=Date.now();
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false; goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false); auto=false; syncAuto(); goTo(0);
+}
+boot();
+})();
+
+</script>
+</body>
+</html>

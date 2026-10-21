@@ -1,0 +1,369 @@
+{
+  "schema_version": "1.0",
+  "case_id": "20261009_D题_D组",
+  "derived_from": "artifacts/20261009_D题_D组/truth/problem_contract.json",
+  "method_library": ".harness/skills/mm-1-机理识别与模型路线比较/方法库/索引.md（35 张卡片，已按 §10 决策树检索）",
+  "overall_note": "四问均不引入统计/机器学习拟合：题面是确定性离散几何 + 组合决策结构。所有求解步骤均为『建议/待执行』，无任何结果已运行。",
+  "questions": [
+    {
+      "question_id": "q01",
+      "mechanism_evidence": ["R4 冲突定义（频段交叠 ∧ 时间交叠）", "R1/R2 离散化", "R12/AS2 周期窗口展开", "实测：150 个计划、T∈{8,40,60}、n∈{3,4,12}"],
+      "task_kind": "判定 + 枚举 + 统计（非优化）",
+      "routes": [
+        {
+          "route_id": "q01_m01",
+          "role": "main（最小可行）",
+          "name": "时频占用集合展开 + 逐对交叠判定（稀疏集合/布尔矩阵双实现）",
+          "method_id": null,
+          "method_id_note": "库外：方法库无『区间相交枚举/冲突图构建』卡片；最接近的 M-DET-001（异常/变点检测）与 M-NET-001（路径）机制不匹配，强行套用会扭曲题目结构。按 §10 决策树，本题不属预测/评价/仿真/网络类，而是确定性几何判定。",
+          "core_relation": "对每个计划 i：频段集合 B_i={l_i,…,r_i−1}；窗口集合 W_i={ [E_i+(k−1)P_i, E_i+(k−1)P_i+L_i) : k=1..n_i }；占用格子 O_i = B_i × (∪_k W_k 的整数格)。conflict(i,j) ⟺ (B_i ∩ B_j ≠ ∅) ∧ (∃ u∈W_i, v∈W_j: u ∩ v ≠ ∅)。等价矩阵形式：M_i[b,t]∈{0,1}，⟨M_i, M_j⟩ > 0 即冲突。",
+          "why_minimal": "无需任何标定参数、无近似、可精确验证；150 计划的两两组合仅 11175 对，每对窗口比较 ≤ n_i·n_j ≤ 144，总比较量约 10^6 级，单机可穷举，故不需要启发式。",
+          "required_data": ["附件1 列『用频装备编号』（AS3 唯一性核验）", "『频段区间』字符串解析为 (l,r)", "『时间区间』解析为 (S,E)", "『间隔时长』T、『使用次数』n（实测可用）"],
+          "steps": [
+            "1) 解析区间字符串为左闭右开整数端点；校验 0 ≤ l < r ≤ 100、L=r−L>0、n≥1",
+            "2) 生成 B_i、W_i、O_i（稀疏 set 或位图）",
+            "3) 先按频段排序/分桶剪枝（B_i∩B_j=∅ 的对直接跳过），再做时间窗口比较",
+            "4) 输出无序对清单（i<j，去重）与窗口重叠次数 m_ij",
+            "5) 用第二种实现（布尔矩阵点积）交叉校验同一冲突集合（等价性检查）",
+            "6) 统计：冲突对总数、类别组合分布、按装备冲突度、Top 冲突装备、时间重叠次数合计"
+          ],
+          "applicability": "100 频段、时间包络 [0,T_ceil) 可枚举；计划数 ≤ 数千时可行",
+          "termination": "全部 C(150,2) 对枚举完毕（穷尽，无迭代停止问题）",
+          "risks": [
+            "UN1：窗口展开口径错误会使全部结果系统性偏差（最高风险）",
+            "区间字符串解析口径：[80,90) 是否含 89 频段（应含），是否可能是 [80,90] 闭区间写法混用",
+            "重复对/自对被计入（AS7）",
+            "result1 仅 3 列 → 多窗口冲突的登记口径（UN6）与论文统计口径不一致风险"
+          ],
+          "verifiability": "双实现一致 + 抽样人工回代 + 对称性/对角零/无重复三项结构检查 + 边界用例（同频段相邻不重叠、窗口首尾相接 [40,45) 与 [45,50) 不算交叠）",
+          "metrics": ["冲突对数 |E_conf|", "类别组合分布", "装备冲突度分布（均值/最大）", "窗口重叠次数合计 Σm_ij", "频段占用率、时间占用率"],
+          "selection_summary": {
+            "primary_method_id": null,
+            "backup_method_ids": ["q01_b01"],
+            "problem_fit": 0.95,
+            "interpretability": 0.98,
+            "data_fit": 0.9,
+            "computational_fit": 0.95,
+            "validation_plan": ["双算法等价校验", "抽样回代", "结构不变量检查", "边界用例单测"],
+            "key_assumptions": ["AS1", "AS2", "AS3", "AS7"],
+            "known_risks": ["时间窗口展开口径", "区间字符串解析口径"],
+            "reason_for_selection": "题目是精确判定任务，穷举可行且可验证；任何近似或统计方法都会降低可信度",
+            "disqualifying_conditions": ["若计划规模增至 10^4 以上（此时改用 b01 的分桶+位图或闭式计数）", "若 UN1 改为仅首次窗口判定（模型退化为单次区间相交，仍适用但需重跑）"],
+            "required_user_confirmations": ["UN1", "UN6"]
+          }
+        },
+        {
+          "route_id": "q01_b01",
+          "role": "backup（备选）",
+          "name": "扫描线 + 同余闭式的周期区间重叠计数",
+          "method_id": null,
+          "method_id_note": "库外（算法级备选，用于规模扩展与结果互校）",
+          "core_relation": "把每个窗口视为时间轴上的线段，扫描线维护活跃集合统计重叠；对同一对计划，窗口重叠条件化为不等式 |S_i + k P_i − S_j − m P_j| < L（同余/整点计数），用 gcd 与取整公式闭式统计重叠对数",
+          "why_backup": "复杂度更优（避免 n_i·n_j 枚举），可与主路线的重叠次数互相验证；但实现易错、可解释性低于穷举，故不作主路线",
+          "required_data": "同 q01_m01",
+          "steps": ["按频段建倒排索引", "对频段相交的候选对做扫描线", "闭式计数与穷举计数互校"],
+          "applicability": "n_i、频段数很大时的加速路线",
+          "termination": "扫描线事件耗尽",
+          "risks": ["边界开闭处理错误", "不同窗长 L_i≠L_j 时同余公式失效（须回退到扫描线）"],
+          "verifiability": "与主路线逐对结果完全一致才可采用",
+          "metrics": ["与主路线一致率", "加速比"],
+          "selection_summary": {
+            "primary_method_id": null,
+            "backup_method_ids": [],
+            "problem_fit": 0.8,
+            "interpretability": 0.7,
+            "data_fit": 0.9,
+            "computational_fit": 0.99,
+            "validation_plan": ["与 q01_m01 结果逐对比对"],
+            "key_assumptions": ["AS1", "AS2"],
+            "known_risks": ["开闭区间与同余计数边界"],
+            "reason_for_selection": "规模扩展与交叉校验用",
+            "disqualifying_conditions": ["两计划窗长不等且需精确计数时"],
+            "required_user_confirmations": []
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "q02",
+      "mechanism_evidence": ["R5 消解定义", "R6 单参数/撤销", "R8 少撤销少调整", "R9 优先级分层", "R10 幅度上限", "R11 频段合法性", "q01 冲突清单"],
+      "task_kind": "组合优化（离散动作选择 + 几何可行性）",
+      "routes": [
+        {
+          "route_id": "q02_m01",
+          "role": "main（最小可行）",
+          "name": "候选动作预枚举 + 分层（字典序）0-1 整数规划，配冲突割平面迭代校验",
+          "method_id": "M-OPT-002",
+          "core_relation": "动作集 A_i = {频段平移 δ^f ∈ [−10,10] 整数} ∪ {时间平移 δ^t ∈ [−5,5] 整数} ∪ {撤销}；选 x_{i,k}∈{0,1}，Σ_k x_{i,k} ≤ 1（R6）。目标分层：min 撤销数 ≻ min A 类被调整数（R9）≻ min 被调整计划总数（R8）≻ min Σ|δ|（R10）。硬约束：对每一对 (i,j)，给定动作组合下若 O_i' ∩ O_j' ≠ ∅ 则禁止（用重叠布尔变量 y_ij 与 big-M 线性化，M 取该对候选动作的重叠矩阵，天然有界，不引入无界 M）。求解方式：先解『只选动作不校验新增冲突』的松弛覆盖模型，再检查冲突、把违反的冲突对作为割平面加回（lazy constraint / cut），迭代至零冲突。",
+          "why_minimal": "幅度上限使动作空间有限且很小（每计划 ≤ 21+11+1=33 个动作），150 计划 → 约 5×10^3 个 0-1 变量，现代开源 MILP 可处理；结果完全可解释（每行即 result2 一行），且能给出最优性间隙作为『最多/最少』论证。",
+          "required_data": ["附件1 全部 5 列", "q01 冲突对清单与 m_ij", "类别映射（AS4 核验结果）", "频段合法域（A: [0,100)，B/C: [10,100)）", "时间包络"],
+          "steps": [
+            "1) 由 q01 结果提取参与冲突的装备子集 I_conf（非冲突装备默认保留不动）",
+            "2) 对每个 i∈I_conf 生成合法候选动作（含不越界、频段合法性校验），并预计算每个动作后的 O_i'",
+            "3) 对每对冲突装备建动作对兼容性表 compat(i,j)（两动作组合是否消除原冲突且不引入新冲突）",
+            "4) 解字典序 MILP：第一层最小化撤销数（撤销代价极大权重）；依次固定后一层",
+            "5) 用静态校验器复算全集合冲突数；若非 0，把新冲突对加入约束重新求解（迭代上限建议 ≤ 20 轮，未收敛则转 q02_b01 兜底）",
+            "6) 输出 result2 行（仅改动项，AS11）+ 表1 统计 + 内部完整方案表"
+          ],
+          "applicability": "动作空间有限、约束可精确线性化、规模 ≤ 10^3 变量量级",
+          "termination": "求解器给到 gap ≤ 1% 或分层目标全部固定；迭代校验零冲突；否则降级",
+          "risks": [
+            "big-M/兼容性表规模：compat 表是 |A_i|×|A_j| 级，需按冲突对稀疏存储",
+            "平移引入的新冲突（必须迭代校验，不能只覆盖原冲突边）",
+            "字典序多解 → result2 不唯一，需在论文中说明目标口径",
+            "MILP 求解时间不可控（题面无算力限制，需设时间上限并报告 gap）"
+          ],
+          "verifiability": "零冲突复算（与 q01 同一校验器）、单参数约束逐行检查、幅度与频段合法域检查、表1 计数守恒（保留+调整+撤销=各类总数，合计=150）、LP 松弛下界与整数解间隙",
+          "metrics": ["n_rev（撤销数）", "n_adj（调整数）", "A/B/C 各类 保留/调整/撤销（表1）", "Σ|δ^f|、Σ|δ^t|（调整幅度）", "消解后冲突数（必须=0）", "与基线对比的改善率", "MILP gap 与求解时间"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-002",
+            "backup_method_ids": ["M-OPT-007", "M-OPT-004", "q02_b01"],
+            "problem_fit": 0.9,
+            "interpretability": 0.9,
+            "data_fit": 0.85,
+            "computational_fit": 0.6,
+            "validation_plan": ["零冲突静态复算", "约束逐条核查", "计数守恒检查", "LP 松弛下界对比", "随机抽样动作回代"],
+            "key_assumptions": ["AS1", "AS6", "AS8-无关", "AS11", "UN8（目标口径）"],
+            "known_risks": ["新冲突迭代不收敛", "规模导致 gap 偏大", "多解不可复现（需固定求解器版本与随机种子/分支规则）"],
+            "reason_for_selection": "题目语义就是离散动作 + 硬可行性 + 分层最小化，MILP 直接表达『至多调一个参数』『要么撤销』这类逻辑约束；卡片 hard_constraints（Big-M 需有界）已通过用兼容性表替代大 M 满足",
+            "disqualifying_conditions": ["兼容性表规模超内存或求解 30 min 仍 gap > 5% → 降级到 q02_b01 启发式", "若 UN1 变更导致冲突对数量级剧增"],
+            "required_user_confirmations": ["UN1", "UN8"]
+          }
+        },
+        {
+          "route_id": "q02_b01",
+          "role": "backup（备选/兜底）",
+          "name": "冲突图最大权独立集（先定保留集）+ 贪心平移消解 + 局部搜索/模拟退火",
+          "method_id": "M-OPT-007",
+          "core_relation": "在冲突图 G=(V,E) 上按优先级定权（A≫B≫C，权重比须由 R9 措辞支撑，不得虚构），求最大权独立集或以『撤销代价』为权的最小顶点覆盖给出粗解；再对未消除的冲突边按优先级贪心选择平移动作（先低优先级、幅度最小），配合交换/爬山局部搜索或模拟退火减少调整数",
+          "why_backup": "规模鲁棒、实现简单，但『最多/最少』无法给出严格最优性证据；须报告种子、重复次数与最好/平均解，不得称全局最优",
+          "required_data": "同 q02_m01（不需兼容性全表）",
+          "steps": ["建冲突图", "启发式求保留集", "贪心分配最小幅度平移", "局部搜索迭代至无改进或达时限", "静态校验零冲突"],
+          "applicability": "MILP 超时/gap 过大，或计划规模显著增大时",
+          "termination": "连续 N 轮无改进或达到预设迭代/时限；零冲突为可行退出条件",
+          "risks": ["权重设定主观（须做权重敏感性）", "局部最优", "随机性导致结果不可复现"],
+          "verifiability": "同主路线静态校验 + 多次独立运行的最好/最差/均值区间 + 与 MILP 上界/下界对比",
+          "metrics": ["同 q02_m01 + 运行间方差", "达到零冲突所需迭代数"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-007",
+            "backup_method_ids": [],
+            "problem_fit": 0.75,
+            "interpretability": 0.65,
+            "data_fit": 0.85,
+            "computational_fit": 0.85,
+            "validation_plan": ["零冲突校验", "多次运行统计", "与 MILP 结果间隙"],
+            "key_assumptions": ["AS1", "AS6", "优先级权重比（需明确来源）"],
+            "known_risks": ["不得把一次启发式运行标为全局最优（§14）"],
+            "reason_for_selection": "作为 MILP 不可行时的降级路线（卡片 fallbacks：LP 松弛、启发式、分解、局部搜索）",
+            "disqualifying_conditions": ["若题目要求严格『最少调整数』证明，则不能单独使用"],
+            "required_user_confirmations": ["UN8"]
+          }
+        },
+        {
+          "route_id": "q02_a01",
+          "role": "alternative-objective（目标口径备选）",
+          "name": "多目标（Pareto）消解：撤销数 / 调整数 / 调整幅度 / A 类保持度",
+          "method_id": "M-OPT-004",
+          "core_relation": "把 R8/R9/R10 表达为 4 个目标，求 ε-Pareto 前沿或加权和（权重由字典序近似），把前沿交给用户在闸门上选点",
+          "why_not_main": "题面用『尽量』给出的是弱顺序关系而非明确权衡系数，字典序更符合文字；多目标仅作为口径澄清与敏感性工具",
+          "required_data": "同 q02_m01",
+          "steps": ["分层目标转成 ε-约束", "生成前沿", "报告各解的表1 统计供用户选点"],
+          "applicability": "当 UN8 由用户确认『需要权衡而非分层』时",
+          "termination": "前沿覆盖度或指定 ε 步长",
+          "risks": ["虚构权重（§14 禁止）"],
+          "verifiability": "前沿支配关系自检 + 每解零冲突校验",
+          "metrics": ["Pareto 点数", "各目标区间", "被选解的表1 统计"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-004",
+            "backup_method_ids": ["M-OPT-002"],
+            "problem_fit": 0.7,
+            "interpretability": 0.8,
+            "data_fit": 0.8,
+            "computational_fit": 0.5,
+            "validation_plan": ["非支配性自检", "逐解零冲突"],
+            "key_assumptions": ["UN8"],
+            "known_risks": ["权重来源不明确"],
+            "reason_for_selection": "用于暴露『少撤销 vs 少调整』的取舍，辅助闸门决策",
+            "disqualifying_conditions": ["题面已给出优先级顺序时可略过"],
+            "required_user_confirmations": ["UN8"]
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "q03",
+      "mechanism_evidence": ["R2 100 频段固定", "『不增加时频资源』（AS8/UN2）", "『基于问题2 的无冲突计划』（依赖 q02 输出）", "C 类只能用非主要频段（R11）", "实测 C 类 n=12、T=8（UN4）"],
+      "task_kind": "组合优化（最大化新增数量 / 二维矩形装箱）",
+      "routes": [
+        {
+          "route_id": "q03_m01",
+          "role": "main（最小可行）",
+          "name": "空闲时频剖面分解 + 频段内一维时间区间装箱（集合装载 ILP + 贪心填充）",
+          "method_id": "M-OPT-002",
+          "core_relation": "由既有计划算出每个频段 b 的已占用时间集合，得到各频段空闲时间集合 F_b；新增 C 类计划（带宽 w、窗长 L、间隔 T、次数 n 按 UN4 固定）等价于为它选一组连续频段 [l,l+w) 与起始 S，使其全部 n 个窗口在每个所用频段内均落在空闲集合中（可用『逐频段 0-1 空闲位图与候选模板位图的按位与』精确判定）。目标 max K；候选放置模板池 = 合法 (l,S) 组合（w 固定时 l 仅 10−99−w 个，S 在 [0,T_ceil−(n−1)P−L] 内），选 z_j∈{0,1}，Σz_j → max，互斥约束 z_i+z_j ≤ 1（模板重叠时），与既有计划的不可用模板直接 z_j=0 剪枝。",
+          "why_minimal": "把二维装箱分解为『逐位图与』+一维区间放置，避免引入复杂 2D 装箱理论；模板可穷举（150 个既有计划下空闲格子充裕），且能同时给出资源计数上界 ⌊|F| / (n·L·w)⌋ 用于论证『最多』。",
+          "required_data": ["q02 输出无冲突计划集（全部 5 参数）", "C 类参数模板（UN4，需实测附件1 C 类的 w、L 众数）", "资源包络口径（UN2、UN3）", "频段合法域 [10,100)"],
+          "steps": [
+            "1) 生成既有计划的逐频段 0-1 位图，合并为总占用位图 Occ[b, t]",
+            "2) 枚举候选模板 (l,S)，用位图与运算筛掉与 Occ 相交的模板",
+            "3) 计算资源上界 K_ub = min(⌊|F|/格子数⌋, 频段维度可容纳数)，并给出时间维度更紧的上界（每频段空闲段长度切分）",
+            "4) 先按 l 分组做一维时间区间装箱（首次适应递减 FFD 类贪心）得下界 K_lb",
+            "5) 用集合装载 ILP 在模板池上求精确解或带 gap 的解；贪心解作 warm start",
+            "6) 静态复算零冲突后，输出 result3（序号 + 频段区间 + 时间区间）"
+          ],
+          "applicability": "UN2=(a) 且 UN3=(a)（既有计划不动）时最紧适用；若允许重排既有计划则需换成全局 2D 装箱/CP 模型",
+          "termination": "MILP 证明最优或 gap ≤ 1%；或贪心解与上界差 ≤ 1 并如实报告",
+          "risks": [
+            "上界与可达解之间可能有较大间隙 → 不得把下界解称『最多』",
+            "UN4 未定时单计划格子数错误，直接改变 K",
+            "新增计划之间在频段维度互相占用（须互斥约束，不能各自独立贪心）",
+            "result3 只登记频段与时间区间，间隔/次数须在论文中显式声明取值口径"
+          ],
+          "verifiability": "与既有集合零冲突复算；新增集合内部零冲突复算；每个新增计划频段数= w 且 ⊆ [10,100)；上界推导逐条可查（空闲格计数、频段容量计数）",
+          "metrics": ["新增数量 K", "上界 K_ub 与间隙 K_ub−K", "资源利用率 U", "各频段剩余空闲时间", "求解状态/gap/时间"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-002",
+            "backup_method_ids": ["M-OPT-005", "M-OPT-007", "q03_b01"],
+            "problem_fit": 0.85,
+            "interpretability": 0.85,
+            "data_fit": 0.7,
+            "computational_fit": 0.6,
+            "validation_plan": ["零冲突复算", "上界推导审计", "与贪心下界对比", "口径敏感性（UN2 三选）"],
+            "key_assumptions": ["AS1", "AS8", "AS9", "UN4", "AS5（C 类 w、L）"],
+            "known_risks": ["模板池过大导致 ILP 慢（需按频段/时间分块）", "『最多』只能以 gap 或上界证明强度表述"],
+            "reason_for_selection": "最大化 + 互斥 + 二值选择正是 0-1 规划的典型结构；卡片 hard_constraints（规模与分解）已通过逐频段分解满足",
+            "disqualifying_conditions": ["若 UN2 取 (b)（资源总量不变、允许腾挪）→ 主路线失效，改用全局重排的 CP/MILP", "若 UN4 取 (b)（带宽/窗长可自选）→ 候选池爆炸，须改用 DP/启发式"],
+            "required_user_confirmations": ["UN2", "UN3", "UN4"]
+          }
+        },
+        {
+          "route_id": "q03_b01",
+          "role": "backup（备选）",
+          "name": "分频段一维 DP / 时间轴切段的最优填充 + 模拟退火跨频段联合",
+          "method_id": "M-OPT-005",
+          "core_relation": "固定频段起点 l 后，问题化为一维时间轴上带周期结构的区间放置；对『窗口序列可整体平移』的计划用 DP（状态=时间轴游标，决策=放置/跳过）求该频段组合下的最大放置数；跨频段组合用退火/列生成式枚举",
+          "why_backup": "一维时可给出该切片的精确最优，且计算量小；但多频段联合（连续 w 个频段同时可用）使状态维数上升，不如 ILP 表达直接",
+          "required_data": "同 q03_m01",
+          "steps": ["按频段组合切片", "一维 DP 求局部最优", "退火/列枚举联合", "零冲突校验"],
+          "applicability": "模板池过大或 ILP 不可解时；UN4=(b) 时的主候选",
+          "termination": "DP 边界耗尽；退火无改进",
+          "risks": ["跨频段耦合被切片忽略 → 低估或高估 K", "需报告切片误差"],
+          "verifiability": "与 q03_m01 下界/上界对比 + 零冲突复算",
+          "metrics": ["K（分片之和）", "切片间隙", "与 ILP 解差"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-005",
+            "backup_method_ids": ["M-OPT-007"],
+            "problem_fit": 0.7,
+            "interpretability": 0.75,
+            "data_fit": 0.7,
+            "computational_fit": 0.85,
+            "validation_plan": ["下界/上界夹逼", "零冲突复算"],
+            "key_assumptions": ["AS8", "AS9", "UN4"],
+            "known_risks": ["切片不保证全局可行"],
+            "reason_for_selection": "一维周期放置具有最优子结构，DP 可在小切片上给出精确值",
+            "disqualifying_conditions": ["连续多频段耦合强时单独使用会失真"],
+            "required_user_confirmations": ["UN2", "UN4"]
+          }
+        }
+      ]
+    },
+    {
+      "question_id": "q04",
+      "mechanism_evidence": ["问题4：允许部分 C 类调整间隔时长", "|ΔT| ≤ 10Δt", "『对问题1 中检测出的时频冲突进行消解』（输入为原始集 + q01 冲突清单）", "R6/R8/R9/R10/R11 仍适用（AS10）"],
+      "task_kind": "组合优化（q02 动作集扩张后的松弛变体）",
+      "routes": [
+        {
+          "route_id": "q04_m01",
+          "role": "main（最小可行）",
+          "name": "q02 的 MILP 复用 + C 类间隔动作维扩张（δ^T ∈ [−10,10]）",
+          "method_id": "M-OPT-002",
+          "core_relation": "对 p_i=C 的装备，动作集追加 δ^T ∈ {−10,…,10}∖{0}（保持 T_i+δ^T ≥ 1，且窗长 L 与次数 n 不变）；A_i 由 ≤33 增至 ≤54。兼容性表与分层目标与 q02 完全同构：min 撤销 ≻ min A 类调整 ≻ min 调整总数 ≻ min Σ|δ|（含 |δ^T| 计入幅度）。因间隔改变会使该装备第 2..n 个窗口整体重排，需重新展开 O_i' 后再判定重叠。",
+          "why_minimal": "复用 q01 判定器与 q02 模型骨架，只增一个动作维度；不引入新理论，结果与 q02 直接可比。",
+          "required_data": ["附件1 原始集（不经 q02 修改）", "q01 冲突清单", "C 类识别（AS4）", "与 q02 相同的目标口径 UN8"],
+          "steps": [
+            "1) 生成含 δ^T 的候选动作（C 类）与仅 δ^f/δ^t 的动作（A/B 类）",
+            "2) 对每个动作重展开窗口与占用格子（间隔改变 → 周期 P_i 改变）",
+            "3) 计算新的兼容性表 compat(i,j)（此时窗口不再等间距，判定仍用集合相交）",
+            "4) 同 q02 分层求解 + 冲突割平面迭代",
+            "5) 静态校验：仅 C 类动间隔、|δ^T| ≤ 10、单参数、零冲突",
+            "6) 输出 result4（A 编号 / B 频段 / C 时间 / D 间隔 / E 撤销）+ 表1 统计 + 与 q02 差异对比"
+          ],
+          "applicability": "同 q02_m01；动作空间仍有限",
+          "termination": "gap ≤ 1% 或分层目标固定 + 零冲突校验通过",
+          "risks": [
+            "间隔改变后窗口不再周期对齐，剪枝（周期公式）失效，须回到集合相交判定",
+            "规模上升（C 类 90 个 × 21 个间隔动作）使 MILP 更慢",
+            "若允许 δ^T=0 与 δ^f/δ^t 同时选，违反 R6",
+            "与 q02 对比需在同一目标口径与同一校验器下进行，否则结论不可比"
+          ],
+          "verifiability": "零冲突复算；间隔约束逐行核查（类别 + |ΔT|）；表1 计数守恒；与 q02 同口径指标对比",
+          "metrics": ["n_rev / n_adj 及与 q02 的差值", "被调整间隔的 C 类装备数", "Σ|δ^T|", "消解后冲突数=0", "gap 与时间"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-002",
+            "backup_method_ids": ["M-OPT-007", "q04_b01"],
+            "problem_fit": 0.9,
+            "interpretability": 0.9,
+            "data_fit": 0.85,
+            "computational_fit": 0.5,
+            "validation_plan": ["零冲突复算", "间隔约束核查", "计数守恒", "与 q02 对比"],
+            "key_assumptions": ["AS1", "AS6", "AS10", "UN5", "UN8"],
+            "known_risks": ["规模导致超时", "多解与 q02 不可比（需固定求解配置）"],
+            "reason_for_selection": "问题4 本质是 q02 的约束松弛，同构模型保证可比性与可验证性",
+            "disqualifying_conditions": ["若 UN5 用户改为放宽平移幅度，动作空间需同步扩张（不改变模型形式）"],
+            "required_user_confirmations": ["UN5", "UN8"]
+          }
+        },
+        {
+          "route_id": "q04_b01",
+          "role": "backup（备选）",
+          "name": "两阶段启发式：先最小改动集（顶点覆盖式）再对 C 类做间隔微调局部搜索",
+          "method_id": "M-OPT-007",
+          "core_relation": "先用 q02_b01 的贪心+局部搜索得到『只动频段/时间』的可行解；再在可行解邻域内对 C 类间隔做单动作交换（一段式改进），若交换能减少撤销/调整数则接受（爬山/大邻域搜索 LNS）",
+          "why_backup": "把新增维度当作改进算子，天然给出『q02 解 → q04 改进解』的可解释增量链条，计算量小；但无最优性证据",
+          "required_data": "同 q04_m01 + q02 的一个可行解",
+          "steps": ["取 q02 可行解", "枚举 C 类间隔单参数改动", "接受改进（保持零冲突）", "迭代至无改进"],
+          "termination": "连续 N 轮目标无改进",
+          "risks": ["初始解质量决定终局（局部最优）", "改进算子只覆盖单参数改动，可能漏掉需联动改动"],
+          "verifiability": "每次接受前做零冲突复算；报告改进次数与运行方差",
+          "metrics": ["相对 q02 解的目标改善量", "运行间方差", "校验通过次数"],
+          "selection_summary": {
+            "primary_method_id": "M-OPT-007",
+            "backup_method_ids": [],
+            "problem_fit": 0.7,
+            "interpretability": 0.7,
+            "data_fit": 0.85,
+            "computational_fit": 0.9,
+            "validation_plan": ["零冲突复算", "多次运行统计", "与 MILP 对比间隙"],
+            "key_assumptions": ["AS10", "UN5"],
+            "known_risks": ["不得称全局最优"],
+            "reason_for_selection": "MILP 超时时的降级路线，同时可作为论文中『放宽间隔收益』的直观证据链",
+            "disqualifying_conditions": ["需要严格『最少调整数』论证时"],
+            "required_user_confirmations": ["UN5"]
+          }
+        }
+      ]
+    }
+  ],
+  "cross_question_evaluation_plan": {
+    "status": "全部为『建议/待执行』，本阶段未运行任何求解",
+    "checks": [
+      "统一静态校验器：对任一方案集合复算冲突数（供 q01/q02/q03/q04 共用，避免各问口径不一）",
+      "守恒检查：各类 保留+调整+撤销 = 该类总数；合计 = 150（依赖 AS4 核验）",
+      "幅度检查：|δ^f| ≤ 10、|δ^t| ≤ 5、|δ^T| ≤ 10（仅 C）",
+      "单参数检查：每个装备至多一类改动或撤销（R6）",
+      "频段合法域检查：B/C ⊆ [10,100)，全部 ⊆ [0,100)，频段数不变",
+      "可复现性：固定求解器版本、时间上限、随机种子、输入文件哈希（由下游代码阶段落实）",
+      "敏感性（待执行）：UN1 两种判定口径、UN2 三种资源口径、UN8 两种目标口径下的结论变化幅度"
+    ],
+    "expression_suggestions": [
+      "论文表1：类别 × {保留, 调整, 撤销}，并注明口径 AS11（未改动者不计入 result2/result4 行）",
+      "问题1 统计建议给出：冲突对总数、类别组合分布、装备冲突度分布、时间重叠窗口次数合计（与 result1 行数的对应关系需文字说明）",
+      "问题3 建议同时报告 K、上界 K_ub、间隙、资源利用率 U 与口径声明（UN2/UN3/UN4）",
+      "问题4 建议与问题2 并列同表对比（同口径下的 n_adj、n_rev 差异）"
+    ]
+  },
+  "forbidden_and_status": {
+    "prohibitions_checked": ["未因题面出现『最多/尽量』直接套启发式（先给 MILP 精确路线，启发式仅在有明确启用条件时降级）", "未虚构参数、权重、分布或样本量（权重比来源标注为题面措辞，且标记 UN8 待确认）", "未把任何未运行结果写成已求解/已验证", "未把相关当因果"],
+    "all_routes_status": "candidate（候选，未执行）"
+  }
+}

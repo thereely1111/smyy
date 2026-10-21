@@ -1,0 +1,11 @@
+### M-PRE-006 分类与排序模型
+- **task_types**：二分类、多分类、风险分层、优先级排序。
+- **problem_signature**：输出为类别、概率或排序，而不是连续数值。
+- **core_idea**：学习 `P(Y|X)` 或样本偏序关系。
+- **inputs**：标签定义、类别成本、阈值、排序指标、分组信息。
+- **outputs**：类别/概率/排序、阈值、ROC/PR、校准。
+- **assumptions**：标签定义稳定；类别采样机制已知或可校正。
+- **validation**：混淆矩阵、F1、ROC-AUC、PR-AUC、Brier、校准曲线、分组公平性。
+- **selection_tags**：`classification, ranking, probability, imbalanced`
+- **fallbacks**：改变阈值、代价敏感学习、重采样、分层模型。
+- **agent_actions**：确认正负类含义 -> 看类别比例 -> 选指标 -> 校准 -> 阈值敏感性。

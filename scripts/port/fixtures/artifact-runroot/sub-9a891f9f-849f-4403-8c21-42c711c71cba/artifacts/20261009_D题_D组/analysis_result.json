@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "artifact": "analysis_result",
+  "case_id": "20261009_D题_D组",
+  "problem_id": "2026-CUMCM-D",
+  "title": "2026 年高教社杯全国大学生数学建模竞赛 D 题：时频冲突检测与消解",
+  "agent": "题目解析智能体",
+  "stage": "S1",
+  "status": "PARTIAL",
+  "status_reason": "输入盘点、题目契约、子问题依赖、符号假设、数据质量、逐问模型路线（每问 2 个候选）均已完成并落盘；但 6 项口径（C1/C2/C3/C5/C7/C9）需用户在闸门 1 拍板后才能进入 S3 实作，且本轮未做任何求解计算，故整体状态为 PARTIAL（分析完整、口径待拍板）。",
+  "session_dir": "sub-9a891f9f-849f-4403-8c21-42c711c71cba",
+  "runtime_root": "E:\\数模演易\\smyy\\workspace\\runtimes\\14ef7e16-06c8-34ff-8845-c19866cb2689",
+  "analysis_version": "v1.0",
+  "primary_artifacts": [
+    "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/analysis_v1.0.md"
+  ],
+  "supersedes": null,
+  "version_note": "analysis_v1.0.md 是本次交付的首个版本，尚未被任何下游消费。落盘后在本轮内做过两处**交付前原地更正**（未另起 v1.1，因为不存在需要失效的旧下游引用）：(1) 题面文件名与大小由 D.pdf/238,394 B 更正为 input_manifest.json 实测的 D题.pdf/442,550 B（sha256 04945c2d…2a9）；(2) §1 增补『路径口径』说明（会话目录前缀与 …/附件/ 展开）。truth/problem_contract.json 同步做了同一处文件名/大小更正，并把 q03 空闲集公式中的 ASCII 反斜杠改为 ∖（集合差），solution_map.json 使用同一写法，三处现已一致。",
+  "artifacts": [
+    { "role": "primary_analysis_markdown", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/analysis_v1.0.md", "status": "written", "current": true },
+    { "role": "problem_contract", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/truth/problem_contract.json", "status": "written", "current": true },
+    { "role": "solution_map", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/truth/solution_map.json", "status": "written", "current": true },
+    { "role": "analysis_index", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis_result.json", "status": "written", "current": true },
+    { "role": "input_probe_facts", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/facts.json", "status": "written_by_probe_inputs", "note": "由 probe_inputs.py 按 --out-dir=analysis/ 生成，不在固定 truth/ 目录下" },
+    { "role": "input_digest_text", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/input_digest.md", "status": "written_by_probe_inputs" },
+    { "role": "pdf_page_image", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/pages/page_01.png", "status": "written_by_probe_inputs" },
+    { "role": "pdf_page_image", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/pages/page_02.png", "status": "written_by_probe_inputs" },
+    { "role": "attachment_data_profile", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/data_profile.json", "status": "written", "note": "只读统计画像（分类计数、频段/时间/间隔/次数分布、派生量、异常标记），非求解结果" },
+    { "role": "data_profile_script", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/data_profile.py", "status": "written_instrumentation", "note": "生成 data_profile.json 的只读统计脚本；不属于 S3 解题代码包" },
+    { "role": "attachment_probe_script", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/profile_attachment.py", "status": "written_instrumentation", "note": "openpyxl 独立复核 5 个附件表头/行数（含 result 模板为空表的结论来源）；不属于 S3 解题代码包" },
+    { "role": "prepared_input_manifest", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/input_manifest.json", "status": "written_by_prepare_input", "note": "题名 D题、PDF 与各附件的 original/stored_as/size/sha256 权威登记" },
+    { "role": "problem_pdf", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/D题.pdf", "status": "read", "bytes": 442550, "sha256": "04945c2db24cd6cb659de55e6a23ddd43553ec61bc1c7741010a7eac220712a9" },
+    { "role": "attachment_1_main_data", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/附件/81200078-d244-4cbf-84d9-db2a0f2bf6f1-1.xlsx", "status": "read", "bytes": 16067, "sha256": "b7f905cd2629f9a85b47db352be503404a0cd5b8f70b9209aafdf7e262f3449c" },
+    { "role": "attachment_2_template_result1", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/附件/3e5eece8-445d-45fa-8dd7-ded7b9597a50-result1.xlsx", "status": "read_headers_only", "bytes": 10135 },
+    { "role": "attachment_2_template_result2", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/附件/7ed640dd-46b2-480b-81ee-5bbe81edbaac-result2.xlsx", "status": "read_headers_only", "bytes": 9832 },
+    { "role": "attachment_2_template_result3", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/附件/1908bb00-c6ab-4dbf-9f0b-33a0b1b44824-result3.xlsx", "status": "read_headers_only", "bytes": 8362 },
+    { "role": "attachment_2_template_result4", "path": "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/input/D题/附件/b689efb7-6f61-4a17-a75b-2cbc43a617a3-result4.xlsx", "status": "read_headers_only", "bytes": 9854 }
+  ],
+  "scope_enforced": {
+    "did": ["输入盘点与归属核实", "题面事实/来源锚点", "子问题契约与依赖图", "假设/变量/符号/单位表", "数据需求与质量评估", "逐问机理与 2 个模型候选（含适用条件、所需数据、风险、可检验性、待确认项）", "评价体系与检验计划（全部标为建议/待执行）", "覆盖性与一致性自检"],
+    "did_not_do": ["未求解任何模型/未计算任何数值结果", "未生成解题代码", "未生成动画/思维导图/图表/HTML", "未撰写论文", "未把候选路线写成已选定方案"]
+  },
+  "subquestions": [
+    { "question_id": "q01", "task": "时频冲突检测（附件 1 的 150 组计划，输出全部冲突对及重叠区间，填 result1）", "depends_on": [], "primary_candidate": "m01 时频格点集合求交 + 频段分桶扫描（精确完全枚举，库外区间相交基元）", "alternative_candidate": "m02 0-1 占用张量 + 向量化判交（M-OPT-002 表示层）" },
+    { "question_id": "q02", "task": "时间平移 ≤5Δt、频段平移 ≤10Δf 或撤销前提下的冲突消解，按表 1 统计未调整/调整/撤销（result2）", "depends_on": ["q01"], "primary_candidate": "m03 分层（词典序/ε-约束）0-1 再布置 MILP（M-OPT-002 + M-OPT-004 分层）", "alternative_candidate": "m04 冲突图 + 分层构造启发式/局部搜索（M-OPT-007，图论部分库外）" },
+    { "question_id": "q03", "task": "不增加时频资源条件下最多可新增多少类装备（题面称 D 类，模板与参数按 C 类），给出其用频计划（result3）", "depends_on": ["q01", "q02（条件性，见 C13）"], "primary_candidate": "m05 空闲格点最大基数装载 MILP + 密度上界 ⌊|F|/72⌋ 夹逼（M-OPT-002）", "alternative_candidate": "m06 周期错位解析打包 + First-Fit/局部搜索（M-OPT-007，解析部分库外）" },
+    { "question_id": "q04", "task": "在第 2 问条件下允许部分 C 类装备调整相邻使用间隔时长（≤10Δt）后的冲突消解（result4）", "depends_on": ["q01", "q02"], "primary_candidate": "m07 m03 骨架 + 间隔决策档扩容的分层 MILP（M-OPT-002）", "alternative_candidate": "m08 破坏-修复两阶段启发式，复用 q02 解（M-OPT-007）" }
+  ],
+  "attachment_ownership_verified": {
+    "method": "PDF 第 1 页逐问（附件 1 / 附件 2 模板 result1–result4）+ 第 2 页『附录 附件说明』+ profile_attachment.py 的 openpyxl 实测表头交叉核对",
+    "conclusion": "文件名以 -1.xlsx 者为附件 1（150 行数据）；result1–result4 为附件 2 的空模板（仅表头，行数 0）",
+    "correction_of_probe_output": "probe_inputs.py 对 4 个模板报 rows=0/columns=0，已核实为『空模板』而非读取失败；analysis_v1.0.md §1 已写明该澄清，下游不得据此认为附件缺失"
+  },
+  "verified_data_facts": {
+    "note": "以下均为附件实测/题面事实，非模型求解结果",
+    "rows": 150,
+    "columns": ["用频装备编号", "频段区间", "时间区间", "间隔时长", "使用次数"],
+    "class_counts_by_id_prefix": { "A": 20, "B": 40, "C": 90 },
+    "class_parameter_patterns": { "A": "L=4,d=5Δt,g=6Δt,n=3", "B": "L=2,d=10Δt,g=5Δt,n=1", "C": "L=3,d=2Δt,g=8Δt,n=12" },
+    "band_axis_observed": "0..100（右开，存在起点 0 与右端 100 的记录）→ 支撑频段总数 K=100 与 0 基索引推断",
+    "gap_duration_stats": { "min": 5, "max": 60, "note": "与 A/B/C 三类模板值 6/5/8 并存，存在非模板间隔取值（待确认，见 analysis_v1.0.md §7）" },
+    "use_count_values_observed": [1, 3, 5, 6, 8, 9, 10, 12],
+    "derived_max_last_occupancy_end": 643,
+    "derived_sum_timefreq_cells": 16680,
+    "missing_values": 0,
+    "invalid_flags_seen_in_profile": { "band_end_gt_100_or_neg": "empty", "band_or_time_nonpositive": "empty" }
+  },
+  "blocking_items_for_gate1": [
+    { "id": "C2", "issue": "『间隔时长 g』口径：P=d+g（附录示例逐字推导）还是 P=g", "impact": "决定全部 n≥3 计划的窗口位置 → q01 冲突对集合、q02/q03/q04 方案整体变化" },
+    { "id": "C3", "issue": "冲突判据覆盖轮次：全部 n 次窗口，还是仅『首次使用的时间区间』", "impact": "直接改变 q01 答案与后续三问规模" },
+    { "id": "C7", "issue": "时间视野 H 未由题面给出（实测最晚占用 643）", "impact": "q03 的『最多新增数』量级完全由 H 决定，无法报单值" },
+    { "id": "C5", "issue": "q03 新增装备参数是否严格沿用 C 类模板 (L=3,d=2,n=12)", "impact": "候选集规模与模型路线（m05 是否可用）" },
+    { "id": "C1", "issue": "频段索引基准 0 基还是 1 基", "impact": "平移/装载可行域边界与贴边计划合法位移" },
+    { "id": "C9", "issue": "表 1 多目标优先级排序（撤销/调整数/类别优先级/幅度）", "impact": "q02/q04 表 1 每一格与解的不唯一性" }
+  ],
+  "pending_user_confirmations_full_list": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13（q03 是否基于 q02 消解后的方案）", "求解器可用性（python-mip 或 OR-Tools CP-SAT）与用户计算时限", "q04『部分 C 类』是否有数量上限"],
+  "not_executed_statements": [
+    "所有 validation_plan、敏感性分析、上下界夹逼、0 冲突复检均为『建议/待执行』，未运行",
+    "未计算 |E|（冲突对总数）、表 1 任一格、新增数 M、q04 相对 q02 的收益",
+    "m01 与 m02 的结果等价性仅为交叉验证设计，未验证",
+    "任何候选模型（m01–m08）均未被选定，选定需闸门 1 用户确认"
+  ],
+  "handoff": {
+    "next_stage": "S2（分析动画）可在用户拍板口径后进行；S3（解题代码）需闸门 1 通过后派发",
+    "for_downstream_version_pointer": "下游只认本文件 primary_artifacts[0] 指向的文件（当前 analysis_v1.0.md），不要按文件名版本号猜测",
+    "required_gate_items": ["pairing（题面-附件归属已实测确认）", "model_choice（每问 2 候选，见 solution_map.json handoff_to_next_stage.model_choice_items_to_present）", "tier_plan（动画档数由用户定）"]
+  },
+  "next_action": "父编排渲染闸门 1：确认 6 项阻断口径（C1/C2/C3/C5/C7/C9）+ C13 + 求解器可用性，并按 solution_map.json 的每问 2 候选做模型选择；通过后派发 S2/S3",
+  "resumable": true
+}

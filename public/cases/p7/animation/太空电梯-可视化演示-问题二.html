@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 MCM B题 · 问题二分析 · 系统失效</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{
+  font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s;
+}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./mod-p7-0.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<section class="scene" id="s1" data-title="第一幕 · 系统失效场景">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">问题二分析 · 系统失效</div>
+    <h1>三类失效：电梯怕断索与热疲，火箭怕一次炸
+      <small>电梯对故障更敏感——失效会延长工期、抬高成本；火箭单次失败只损失一载。</small>
+    </h1>
+    <p class="lead">太空电梯在长期运行中面临三类典型失效：<b class="hl">缆索振动断裂</b>（结构性停运）、<b class="hl-g">热疲劳累积</b>（容量折减）、<b class="hl-t">火箭发射失败</b>（批次可补）。问题二要求在引入失效因子后重新评估运输方案，并给出调整策略。核心发现：电梯的失效是<b>结构性的</b>，一次断裂让整条缆索停运数月；火箭的失效是<b>批次性的</b>，只丢一发，下一发可补。</p>
+  </div>
+  <div class="stg" id="fCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">三类失效的年度/单次失效概率</div>
+        <div class="legend">
+          <span><i style="background:#b8543a"></i>电梯·缆索断裂</span>
+          <span><i style="background:#e0a04a"></i>电梯·热疲劳</span>
+          <span><i style="background:#146c87"></i>火箭·发射失败</span>
+        </div>
+      </div>
+      <canvas id="cvFail" height="240"></canvas>
+      <p class="note" style="margin-top:8px" id="failNote"></p>
+    </div>
+  </div>
+  <div class="stg grid4" id="sensStats"></div>
+  <div class="stg">
+    <div class="quote">
+      电梯的失效是<b>结构性的</b>——一次断裂让整条缆索停运数月；火箭的失效是<b>批次性的</b>——只丢一发，下一发可以补。两类故障对工期与成本的影响机制根本不同，因此调整模型必须把它们分开处理。
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="scene" id="s2" data-title="第二幕 · 失效场景建模">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">失效场景建模</div>
+    <h1>电梯年运力从 5.37×10⁵ 吨下降——运力损失曲线
+      <small>故障使电梯的有效年容量折减，火箭需要补发；工期被拉长，成本被抬高。</small>
+    </h1>
+    <p class="lead">电梯基线年运力 <b class="num">C<sub>E</sub>=5.37×10⁵ 吨/年</b>。引入缆索断裂概率 P<sub>fr</sub> 与热疲劳概率 P<sub>th</sub> 后，有效年容量折减为 C<sub>E</sub>·(1−P<sub>fr</sub>−P<sub>th</sub>)。三次故障高发窗（约第 18–30、48–60、78–90 月）使运力跌至基线的 <b class="hl">78%–82%</b>，窗后缓慢回升。</p>
+  </div>
+  <div class="stg grid2">
+    <div class="card">
+      <h3>原模型（无故障） <em>问题一基线</em></h3>
+      <p>运输总量 <b class="num">M</b> 拆给电梯与火箭两路：电梯承担份额 <b class="num">γ</b>，火箭承担 <b class="num">1−γ</b>。</p>
+      <p>电梯年运量 <b class="num">C<sub>E</sub></b>，火箭单发运载 <b class="num">c<sub>R</sub></b>、年发射 <b class="num">n</b> 发。</p>
+      <div class="formula">T = M / (γ·C<sub>E</sub> + (1−γ)·n·c<sub>R</sub>)
+C = γ·C<sub>E</sub>·u<sub>E</sub> + (1−γ)·n·c<sub>R</sub>·u<sub>R</sub></div>
+    </div>
+    <div class="card">
+      <h3>调整后模型（含故障） <em>问题二</em></h3>
+      <p>电梯年断裂概率 <b class="hl">P<sub>fr</sub></b>、热疲劳年失效 <b class="hl">P<sub>th</sub></b>：两者叠加后电梯有效年容量折减为
+        <b class="num">C<sub>E</sub>·(1−P<sub>fr</sub>−P<sub>th</sub>)</b>，单次断裂还要追加修复工期 <b class="num">Δt<sub>fix</sub></b>。</p>
+      <p>火箭单发失败概率 <b class="hl">P<sub>R</sub></b>：期望补发次数 <b class="num">n·P<sub>R</sub>/(1−P<sub>R</sub>)</b>，补发费用按单价累加。</p>
+      <div class="formula">T' = T + N<sub>fr</sub>·Δt<sub>fix</sub>
+<span class="c">C' = C + 补发费 + 修复费 + 备件冗余</span></div>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">电梯有效年运力损失曲线（基线 5.37×10⁵ 吨/年，含三次故障高发窗）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#12a594"></i>有效年运力</span>
+          <span><i class="ln" style="background:#8aa3aa;border-top:1px dashed #8aa3aa"></i>基线 537k</span>
+          <span><i style="background:rgba(184,84,58,.18)"></i>故障高发窗</span>
+        </div>
+      </div>
+      <canvas id="cvCap" height="270"></canvas>
+      <p class="note" style="margin-top:8px" id="capNote"></p>
+    </div>
+  </div>
+  <div class="stg grid4" id="capStats"></div>
+</div>
+</section>
+
+<section class="scene" id="s3" data-title="第三幕 · 敏感度分析">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">敏感度分析</div>
+    <h1>电梯敏感度远高于火箭——曲线斜率是 2.5 倍
+      <small>同样 6% 故障率：电梯工期延长到 1.48，火箭仅 1.18。</small>
+    </h1>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">故障率 → 工期延长系数：电梯比火箭更陡</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#b8543a"></i>电梯敏感曲线</span>
+          <span><i class="ln" style="background:#146c87"></i>火箭敏感曲线</span>
+          <span><i class="ln" style="background:#12a594"></i>混合方案</span>
+        </div>
+      </div>
+      <canvas id="cvSens" height="260"></canvas>
+      <p class="note" style="margin-top:8px" id="sensNote"></p>
+    </div>
+  </div>
+  <div class="stg grid2">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">电梯 vs 火箭 · 五维敏感度雷达</div>
+        <div class="legend">
+          <span><i style="background:#b8543a"></i>电梯</span>
+          <span><i style="background:#146c87"></i>火箭</span>
+        </div>
+      </div>
+      <canvas id="cvRadar" height="300"></canvas>
+    </div>
+    <div class="card">
+      <h3>五维敏感度解读</h3>
+      <p><b class="hl">工期敏感度：</b>电梯 0.92 / 火箭 0.35——电梯失效直接停运，工期延长系数斜率是火箭的 2.5 倍。</p>
+      <p><b class="hl">成本敏感度：</b>电梯 0.85 / 火箭 0.42——缆索修复费用高昂，备件冗余成本随故障率爬升更快。</p>
+      <p><b class="hl-g">修复工期：</b>电梯 0.78 / 火箭 0.15——电梯单次断裂需 6–18 月修复，火箭只损失单次发射周期。</p>
+      <p><b class="hl-g">结构复杂度：</b>电梯 0.88 / 火箭 0.30——缆索/攀爬器是单点结构失效，火箭可批次冗余。</p>
+      <p><b class="hl-t">冗余需求：</b>电梯 0.65 / 火箭 0.25——电梯需整条缆索备份，火箭只需多发备件。</p>
+    </div>
+  </div>
+  <div class="stg grid4" id="sensKPI"></div>
+  <div class="stg">
+    <div class="quote">
+      同样 6% 的故障率，电梯的工期延长系数爬到 <b class="hl">1.48</b>，火箭只到 <b class="hl-t">1.18</b>。电梯的曲线斜率大约是火箭的 <b>2.5 倍</b>——这正是后续要把混合方案里的电梯份额在故障高发期下调的依据。
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="scene" id="s4" data-title="第四幕 · 调整策略">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">方案调整与对比</div>
+    <h1>无故障 vs 有故障：C1 工期 +13%、C2 成本 +19.2%
+      <small>C1 电梯主导 93.74→105.96 年；C2 火箭备份 2151.5→2565.3B USD。</small>
+    </h1>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>失效前后方案对比 <em>C1 电梯主导 vs C2 火箭备份</em></h3>
+      <table class="tb" id="cmpTable"></table>
+      <p class="note" id="cmpNote"></p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">C1 vs C2 · 无故障 vs 有故障（工期/成本双视图）</div>
+        <div class="legend">
+          <span><i style="background:#cfe4e4"></i>无故障</span>
+          <span><i style="background:#12a594"></i>有故障</span>
+        </div>
+      </div>
+      <canvas id="cvCmp" height="290"></canvas>
+      <p class="note" style="margin-top:8px" id="cmpNote2"></p>
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">自适应 γ 随时间调整曲线（含故障率高发窗）</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#12a594"></i>自适应 γ(t)</span>
+          <span><i class="ln" style="background:#8aa3aa"></i>固定 γ=0.5 基线</span>
+          <span><i style="background:rgba(184,84,58,.18)"></i>故障高发窗</span>
+        </div>
+      </div>
+      <canvas id="cvAdapt" height="270"></canvas>
+      <p class="note" style="margin-top:8px" id="adaptNote"></p>
+    </div>
+  </div>
+  <div class="stg grid3">
+    <div class="card">
+      <h3>监测触发 <em>step 1</em></h3>
+      <p>实时监测缆索张力方差 <b>σ<sub>T</sub></b> 与热循环计数 <b>N<sub>th</sub></b>，当任一项越过阈值，标记当前为故障高发窗。</p>
+      <p class="small">触发条件：σ<sub>T</sub> &gt; σ* 或 N<sub>th</sub> &gt; N*。</p>
+    </div>
+    <div class="card">
+      <h3>份额下调 <em>step 2</em></h3>
+      <p>高发窗内把电梯份额从基线 <b class="num">γ₀=0.5</b> 下调到 <b class="hl">γ≈0.30</b>，让火箭多承担 <b class="num">+20%</b> 的年运量。</p>
+      <p class="small">γ(t) = γ₀ − κ·(故障率偏离)，κ 为响应增益。</p>
+    </div>
+    <div class="card">
+      <h3>平稳回升 <em>step 3</em></h3>
+      <p>故障率回到平稳带后，γ 以 <b class="num">0.02/年</b> 的速率回升到基线，避免长期过度依赖火箭推高成本。</p>
+      <p class="small">回升条件：连续 <b>6 个月</b> 监测量低于阈值。</p>
+    </div>
+  </div>
+  <div class="stg grid4" id="adaptStats"></div>
+</div>
+</section>
+
+<section class="scene" id="s5" data-title="第五幕 · 结论与KPI">
+<div class="wrap">
+  <div class="stg">
+    <div class="kicker">结论</div>
+    <h1>电梯敏感度高于火箭，需要备份策略
+      <small>火箭作为备份方案可以弥补电梯失效的运力缺口——自适应策略把可靠度从 0.78 抬到 0.92。</small>
+    </h1>
+    <p class="lead">问题二的核心结论：电梯对失效的敏感度远高于火箭（工期延长系数 2.5 倍、成本抬高率 2 倍以上）。纯电梯方案在故障下工期延长 <b class="hl">+43.9%</b>、成本抬高 <b class="hl">+41.6%</b>；而火箭备份方案工期仅 <b class="hl-t">+5.0%</b>、成本 <b class="hl-t">+19.2%</b>。混合方案 + 自适应份额调整是兼顾成本与鲁棒性的最优解。</p>
+  </div>
+  <div class="stg">
+    <div class="quote">
+      自适应策略把系统可靠度从 <b class="hl">0.78</b> 抬到 <b class="hl-t">0.92</b>，工期方差下降 <b>34%</b>，总成本比固定份额再降 <b class="hl-t">6.4%</b>——它在「电梯的便宜但脆」与「火箭的贵但稳」之间，按故障率的实时信号做加权。
+    </div>
+  </div>
+  <div class="stg">
+    <div class="card">
+      <h3>KPI 汇总 <em>问题二核心指标</em></h3>
+      <div class="grid4" id="finalKPI" style="gap:12px"></div>
+    </div>
+  </div>
+  <div class="stg grid2">
+    <div class="note w">
+      <b>关键结论：</b>调整后混合方案仍优于纯电梯与纯火箭——它在电梯的高敏感与火箭的高成本之间取了折中。但电梯敏感度更高：C1（电梯主导）的工期延长 <b>+13.0%</b>、成本抬高 <b>+40.0%</b>，远高于 C2（火箭备份）的 <b>+5.0%</b> 与 <b>+19.2%</b>。这意味着在故障高发期，<b>主动下调电梯份额</b>能进一步降低总成本与工期方差。
+    </div>
+    <div class="note">
+      <b>备份策略：</b>火箭作为备份方案可以弥补电梯失效的运力缺口。当电梯有效运力折减 10% 时，火箭补发约 <b>0.36 发/年</b>（按年发射 12 发、单发失败 3% 计），补发费用可被冗余预算吸收。混合方案在故障下的总成本 <b>2565.3B</b> 仍低于纯火箭方案的 <b>3050B</b>，故仍为最优。
+    </div>
+  </div>
+  <div class="stg">
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">核心指标汇总 · 雷达对比（调整前 vs 调整后）</div>
+        <div class="legend">
+          <span><i style="background:#b8543a"></i>调整前（固定份额）</span>
+          <span><i style="background:#12a594"></i>调整后（自适应）</span>
+        </div>
+      </div>
+      <canvas id="cvFinal" height="280"></canvas>
+      <p class="note" style="margin-top:8px" id="finalNote"></p>
+    </div>
+  </div>
+</div>
+</section>
+
+</main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script id="DATA" type="application/json">
+{
+  "failures":[
+    {"k":"fracture","name":"缆索振动断裂","prob":0.04,"unit":"/ 年","color":"#b8543a",
+     "mechanism":"缆索在张力波动下动态不稳定，长期累积致断裂；电梯停运需 6–18 个月修复",
+     "impact":"工期延长、单次修复费用高、整条缆索需冗余备份"},
+    {"k":"thermal","name":"热疲劳失效","prob":0.06,"unit":"/ 年","color":"#e0a04a",
+     "mechanism":"昼夜温差与轨道热循环周期性累积结构损伤，材料强度逐步衰减",
+     "impact":"预防性维护频次上升、备件成本增加、有效年容量折减"},
+    {"k":"rocket","name":"火箭发射失败","prob":0.03,"unit":"/ 次","color":"#146c87",
+     "mechanism":"发动机故障或入轨偏差，单次发射损失运载量与发射费用",
+     "impact":"需补发、单次损失独立可补，不影响后续发射节奏"}
+  ],
+  "capacity":{
+    "baseline":537,
+    "n":120,
+    "windows":[[18,30,0.78],[48,60,0.80],[78,90,0.82]]
+  },
+  "curve":[
+    {"p":0.00,"elevator":1.00,"rocket":1.00,"mixed":1.00},
+    {"p":0.01,"elevator":1.08,"rocket":1.03,"mixed":1.05},
+    {"p":0.02,"elevator":1.18,"rocket":1.06,"mixed":1.11},
+    {"p":0.03,"elevator":1.28,"rocket":1.09,"mixed":1.17},
+    {"p":0.04,"elevator":1.38,"rocket":1.12,"mixed":1.23},
+    {"p":0.05,"elevator":1.43,"rocket":1.15,"mixed":1.27},
+    {"p":0.06,"elevator":1.48,"rocket":1.18,"mixed":1.30},
+    {"p":0.07,"elevator":1.56,"rocket":1.21,"mixed":1.35},
+    {"p":0.08,"elevator":1.64,"rocket":1.24,"mixed":1.40},
+    {"p":0.09,"elevator":1.72,"rocket":1.27,"mixed":1.45},
+    {"p":0.10,"elevator":1.80,"rocket":1.30,"mixed":1.50}
+  ],
+  "radar":{
+    "dims":["工期敏感度","成本敏感度","修复工期","结构复杂度","冗余需求"],
+    "elevator":[0.92,0.85,0.78,0.88,0.65],
+    "rocket":[0.35,0.42,0.15,0.30,0.25]
+  },
+  "schemes":[
+    {"name":"C1 电梯主导","dur_no":93.74,"dur_fail":105.96,"cost_no":9052.9,"cost_fail":12674.1,"color":"#0b6e68","dur_pct":13.0,"cost_pct":40.0},
+    {"name":"C2 火箭备份","dur_no":250,"dur_fail":262.5,"cost_no":2151.5,"cost_fail":2565.3,"color":"#146c87","dur_pct":5.0,"cost_pct":19.2}
+  ],
+  "gamma":{
+    "n":120,
+    "base":0.5,
+    "windows":[{"lo":18,"hi":30,"peak":0.30},{"lo":48,"hi":60,"peak":0.32},{"lo":78,"hi":90,"peak":0.30}],
+    "adapt_curve":[0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,
+                   0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.46,0.40,
+                   0.34,0.31,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.32,0.36,
+                   0.40,0.44,0.48,0.50,0.50,0.50,0.50,0.50,0.50,0.50,
+                   0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.48,0.44,0.40,
+                   0.36,0.32,0.32,0.32,0.32,0.32,0.32,0.32,0.32,0.34,0.38,
+                   0.42,0.46,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,
+                   0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.48,0.44,0.40,
+                   0.34,0.31,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.32,0.36,
+                   0.40,0.44,0.48,0.50,0.50,0.50,0.50,0.50,0.50,0.50,
+                   0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,
+                   0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50]
+  },
+  "finalRadar":{
+    "dims":["可靠度","成本控制","工期稳定","运力恢复","冗余效率"],
+    "before":[0.78,0.55,0.45,0.50,0.40],
+    "after":[0.92,0.72,0.79,0.78,0.65]
+  },
+  "adapt":{"reliability_no":0.78,"reliability_yes":0.92,"dur_var_drop":34,"cost_drop":6.4}
+}
+</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var D=JSON.parse($('#DATA').textContent);
+
+/* ---- 动画工具：逐帧绘制 ---- */
+function animDraw(cv,drawFn,dur){
+  var start=performance.now();
+  function frame(t){
+    var p=Math.min(1,(t-start)/dur);
+    var eased=1-Math.pow(1-p,3);
+    drawFn(eased);
+    if(p<1) requestAnimationFrame(frame);
+  }
+  if(document.body.classList.contains('reduce')) drawFn(1);
+  else requestAnimationFrame(frame);
+}
+
+function genCapacity(){
+  var base=D.capacity.baseline, n=D.capacity.n, wins=D.capacity.windows;
+  var data=[];
+  for(var i=0;i<n;i++){
+    var v=base, inWin=false;
+    wins.forEach(function(w){
+      var lo=w[0],hi=w[1],minR=w[2];
+      if(i>=lo&&i<=hi){
+        inWin=true;
+        var c=(lo+hi)/2, half=(hi-lo)/2;
+        var dist=Math.abs(i-c)/half;
+        var drop=(1-minR)*(1-0.3*dist*dist);
+        v=base*(1-drop);
+      } else if(i>hi&&i<hi+8){
+        var rp=(i-hi)/8;
+        v=base*minR+(base-base*minR)*rp;
+      }
+    });
+    data.push(Math.round(v));
+  }
+  return data;
+}
+
+/* ---- 通用绘图底座（含网格、轴、序列、渐变填充） ---- */
+function plot(cv,cfg){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), h=cfg.h||220;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var L=cfg.L||44, R=cfg.R||(cfg.y2?54:16), T=cfg.T||18, B=cfg.B||26;
+  var PW=w-L-R, PH=h-T-B, n=cfg.n;
+  var ymin=cfg.yMin, ymax=cfg.yMax;
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  var Y2=null;
+  if(cfg.y2){ Y2=function(v){ return T+PH*(1-(v-cfg.y2.min)/(cfg.y2.max-cfg.y2.min)); }; }
+  var progress=cfg.progress||1;
+  if(cfg.band){
+    g.fillStyle=cfg.band.c;
+    g.fillRect(L,Y(cfg.band.hi),PW,Math.max(0,Y(cfg.band.lo)-Y(cfg.band.hi)));
+  }
+  g.font='11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var k;
+  for(k=0;k<=4;k++){
+    var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(fmt(v,cfg.yFmt),L-7,yy);
+  }
+  if(cfg.hlines) cfg.hlines.forEach(function(hl){
+    var yy=Y(hl.v);
+    g.save(); g.setLineDash([5,4]); g.strokeStyle=hl.c||'#b8543a'; g.lineWidth=hl.w||1.3;
+    g.beginPath(); g.moveTo(L,yy); g.lineTo(L+PW,yy); g.stroke(); g.restore();
+    if(hl.label){
+      g.font='600 11.5px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+      g.textAlign='left'; g.textBaseline='alphabetic';
+      var mt=g.measureText?g.measureText(hl.label):null;
+      var tw=(mt&&mt.width)?mt.width:hl.label.length*12;
+      g.fillStyle='rgba(255,255,255,.95)';
+      g.fillRect(L+3,yy-19,tw+12,16);
+      g.strokeStyle='rgba(217,233,233,.95)'; g.lineWidth=1;
+      g.strokeRect(L+3.5,yy-18.5,tw+11,15);
+      g.fillStyle=hl.c||'#b8543a';
+      g.fillText(hl.label,L+9,yy-7);
+    }
+  });
+  if(cfg.xTicks) cfg.xTicks.forEach(function(t){
+    var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(t.t,xx,T+PH+16);
+  });
+  (cfg.series||[]).forEach(function(s){
+    var drawN=Math.max(1,Math.ceil(s.d.length*progress));
+    var yy=s.ax==='y2'?Y2:Y, pv=null;
+    g.beginPath();
+    for(var i=0;i<drawN;i++){
+      var px=X(i),py=yy(s.d[i]);
+      if(!i) g.moveTo(px,py);
+      else if(s.step){ g.lineTo(px,pv); g.lineTo(px,py); }
+      else g.lineTo(px,py);
+      pv=py;
+    }
+    if(s.fill){
+      g.save(); g.lineTo(X(drawN-1),T+PH); g.lineTo(X(0),T+PH); g.closePath();
+      g.fillStyle=s.fill; g.fill(); g.restore();
+    }
+    g.strokeStyle=s.c; g.lineWidth=s.w||1.8;
+    if(s.dash) g.setLineDash(s.dash); else g.setLineDash([]);
+    g.lineJoin='round'; g.stroke(); g.setLineDash([]);
+  });
+  if(cfg.tags) cfg.tags.forEach(function(t){
+    note(g,t.text,X(t.i),Y(t.v),
+         {right:L+PW,left:L+2,top:T+2,line:t.line,tc:t.tc,up:t.up});
+  });
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(L,T); g.lineTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+  function fmt(v,f){
+    if(f==='pct') return (v*100).toFixed(0)+'%';
+    if(f==='sci') return v===0?'0':v.toExponential(1);
+    if(f==='x') return v.toFixed(2);
+    if(f==='k') return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);
+    if(f===0) return v.toFixed(0);
+    if(typeof f==='number') return v.toFixed(f);
+    return String(Math.round(v));
+  }
+}
+function note(g,text,px,py,o){
+  o=o||{};
+  var dy=o.up===undefined?24:o.up, dx=o.dx===undefined?8:o.dx;
+  g.font='600 12px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+  var mt=g.measureText?g.measureText(text):null;
+  var tw=(mt&&mt.width)?mt.width:text.length*12;
+  var x=px+dx, y=py-dy;
+  if(o.right!==undefined && x+tw+14>o.right && o.left!==undefined) x=px-dx-tw-12;
+  if(o.left!==undefined && x<o.left) x=o.left;
+  if(o.top!==undefined && y<o.top) y=py+12;
+  g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(x,y,tw+12,18);
+  g.strokeStyle=o.line||'#cfe4e4'; g.lineWidth=1; g.strokeRect(x+.5,y+.5,tw+11,17);
+  g.fillStyle=o.tc||'#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText(text,x+6,y+9);
+}
+
+/* ---- 1. 失效概率柱状图（带增长动画） ---- */
+function drawFail(cv,progress){
+  var fs=D.failures, n=fs.length;
+  var vals=fs.map(function(f){return f.prob;});
+  /* yMax 设为 0.08 → 刻度间隔恰好 2%（0,2,4,6,8） */
+  var ymax=0.08;
+  plot(cv,{h:240,n:n,yMin:0,yMax:ymax,yFmt:'pct',L:54,R:20,B:46,series:[],xTicks:[],progress:progress});
+  var g=cv.getContext('2d');
+  var w=cv.clientWidth, hh=240, L=54, Rr=20, T=18, B=46, PW=w-L-Rr, PH=hh-T-B;
+  var bw=Math.min(96,PW/n*0.5), step=PW/n;
+  fs.forEach(function(f,k){
+    var bh=PH*(f.prob/ymax)*progress;
+    var x=L+step*(k+0.5)-bw/2, y=T+PH-bh;
+    var grad=g.createLinearGradient(0,y,0,y+bh);
+    grad.addColorStop(0,f.color); grad.addColorStop(1,f.color+'cc');
+    g.fillStyle=grad; g.fillRect(x,y,bw,bh);
+    if(progress>0.7){
+      g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='alphabetic';
+      g.fillText((f.prob*100).toFixed(0)+'%',x+bw/2,y-7);
+    }
+    if(progress>0.85){
+      g.fillStyle='#57727c'; g.font='12px "PingFang SC",system-ui,sans-serif';
+      g.fillText(f.name,x+bw/2,T+PH+18);
+      g.fillText(f.unit,x+bw/2,T+PH+34);
+    }
+  });
+}
+
+/* ---- 2. 运力损失曲线（面积图 + 故障窗阴影） ---- */
+function drawCap(cv,progress){
+  var data=genCapacity(), n=data.length;
+  var base=D.capacity.baseline;
+  var wins=D.capacity.windows;
+  var ymin=380, ymax=560;
+  var xTicks=[];
+  for(var i=0;i<=n;i+=20) xTicks.push({i:i,t:i+''});
+  var bandItems=wins.map(function(w){ return null; });
+  plot(cv,{h:270,n:n,yMin:ymin,yMax:ymax,yFmt:0,L:48,R:20,B:30,progress:progress,
+    band:{c:'rgba(184,84,58,.10)',lo:380,hi:560},
+    xTicks:xTicks,
+    hlines:[{v:base,c:'#8aa3aa',w:1.4,label:'基线 537k',dash:[6,4]}],
+    series:[{d:data,c:'#12a594',w:2.6,fill:'rgba(18,165,148,.14)'}],
+    tags:[]});
+  var g=cv.getContext('2d');
+  var w=cv.clientWidth, hh=270, L=48, Rr=20, T=18, B=30, PW=w-L-Rr, PH=hh-T-B;
+  function X(i){ return L+PW*(i/(n-1)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  wins.forEach(function(wd){
+    var x1=X(wd[0]), x2=X(wd[1]);
+    g.fillStyle='rgba(184,84,58,.16)';
+    g.fillRect(x1,T,x2-x1,PH);
+    if(progress>0.8){
+      g.fillStyle='rgba(184,84,58,.7)'; g.font='600 10.5px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='alphabetic';
+      g.fillText('▼ '+(base*wd[2]).toFixed(0)+'k',(x1+x2)/2,T+14);
+    }
+  });
+  if(progress>0.9){
+    var minV=Math.min.apply(null,data);
+    note(g,'最低 '+minV+'k',X(data.indexOf(minV)),Y(minV),
+         {right:L+PW,left:L+2,top:T+2,line:'#f0d5cd',tc:'#b8543a',up:28});
+  }
+}
+
+/* ---- 3. 敏感度曲线（三条线 + 标注） ---- */
+function drawSens(cv,progress){
+  var c=D.curve, n=c.length;
+  var elev=c.map(function(p){return p.elevator;}),
+      rock=c.map(function(p){return p.rocket;}),
+      mix=c.map(function(p){return p.mixed;}),
+      probs=c.map(function(p){return p.p;});
+  var xTicks=[];
+  for(var i=0;i<n;i+=2) xTicks.push({i:i,t:(probs[i]*100).toFixed(0)+'%'});
+  plot(cv,{h:260,n:n,yMin:1.0,yMax:1.9,yFmt:'x',L:48,R:20,B:30,progress:progress,
+    xTicks:xTicks,
+    hlines:[{v:1.0,c:'#8fb6bd',w:1.2,label:'基线 1.00'}],
+    series:[{d:elev,c:'#b8543a',w:2.4,fill:'rgba(184,84,58,.12)'},
+            {d:rock,c:'#146c87',w:2.2,dash:[6,4]},
+            {d:mix,c:'#12a594',w:2.6}],
+    tags:progress>0.85?[
+      {i:6,v:1.48,text:'电梯 1.48',tc:'#b8543a',line:'#f0d5cd',up:26},
+      {i:6,v:1.18,text:'火箭 1.18',tc:'#146c87',line:'#d5e8ea',up:-16}]:[]});
+}
+
+/* ---- 4. 雷达图（五维对比） ---- */
+function drawRadar(cv,progress,rad){
+  rad=rad||D.radar;
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||440), h=rad===D.radar?300:280;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var cx=w/2, cy=h/2+4;
+  var R=Math.min(w,h)/2-46;
+  var dims=rad.dims, n=dims.length;
+  var series=rad===D.radar?
+    [{name:'电梯',data:rad.elevator,color:'#b8543a',fill:'rgba(184,84,58,.16)'},
+     {name:'火箭',data:rad.rocket,color:'#146c87',fill:'rgba(20,108,135,.16)'}]:
+    [{name:'调整前',data:rad.before,color:'#b8543a',fill:'rgba(184,84,58,.14)'},
+     {name:'调整后',data:rad.after,color:'#12a594',fill:'rgba(18,165,148,.16)'}];
+  function ang(i){ return -Math.PI/2+i*2*Math.PI/n; }
+  function vtx(i,r){ return [cx+r*Math.cos(ang(i)), cy+r*Math.sin(ang(i))]; }
+  for(var k=1;k<=4;k++){
+    var r=R*k/4;
+    g.beginPath();
+    for(var i=0;i<=n;i++){
+      var v=vtx(i%n,r);
+      if(!i) g.moveTo(v[0],v[1]); else g.lineTo(v[0],v[1]);
+    }
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1; g.stroke();
+  }
+  for(var i=0;i<n;i++){
+    var v=vtx(i,R);
+    g.beginPath(); g.moveTo(cx,cy); g.lineTo(v[0],v[1]);
+    g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.stroke();
+  }
+  series.forEach(function(s){
+    g.beginPath();
+    for(var i=0;i<=n;i++){
+      var r=R*s.data[i%n]*progress;
+      var v=vtx(i%n,r);
+      if(!i) g.moveTo(v[0],v[1]); else g.lineTo(v[0],v[1]);
+    }
+    g.closePath();
+    g.fillStyle=s.fill; g.fill();
+    g.strokeStyle=s.color; g.lineWidth=2; g.stroke();
+    if(progress>0.8){
+      for(var i=0;i<n;i++){
+        var r=R*s.data[i]*progress;
+        var v=vtx(i,r);
+        g.beginPath(); g.arc(v[0],v[1],3,0,6.2832);
+        g.fillStyle=s.color; g.fill();
+        g.strokeStyle='#fff'; g.lineWidth=1.4; g.stroke();
+      }
+    }
+  });
+  g.font='12px "PingFang SC",system-ui,sans-serif';
+  for(var i=0;i<n;i++){
+    var v=vtx(i,R+22);
+    g.fillStyle='#3d6570'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(dims[i],v[0],v[1]);
+  }
+  g.font='10px system-ui'; g.fillStyle='#bccfd0'; g.textAlign='left'; g.textBaseline='middle';
+  for(var k=1;k<=4;k++) g.fillText((k*25)+'%',cx+3,cy-R*k/4);
+}
+
+/* ---- 5. 方案对比柱状图（工期+成本双组） ---- */
+function drawCmp(cv,progress){
+  var sc=D.schemes, n=sc.length;
+  var dMax=Math.max(sc[0].dur_fail,sc[1].dur_fail)*1.2;
+  var cMax=Math.max(sc[0].cost_fail,sc[1].cost_fail)*1.15;
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520), h=290;
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  var halfW=w/2;
+  function drawHalf(x0,x1,title,fmt,maxval,getKey,getKeyFail,pctKey){
+    var L=46, Rr=14, T=34, B=40, PW=x1-x0-L-Rr, PH=h-T-B;
+    g.fillStyle='#0b6e68'; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(title,(x0+x1)/2,T-12);
+    for(var k=0;k<=4;k++){
+      var v=maxval*k/4, yy=T+PH*(1-k/4);
+      g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(x0+L,yy+.5); g.lineTo(x0+L+PW,yy+.5); g.stroke();
+      g.fillStyle='#57727c'; g.font='11px system-ui'; g.textAlign='right'; g.textBaseline='middle';
+      g.fillText(fmt(v),x0+L-6,yy);
+    }
+    var groupW=PW/n, barW=groupW*0.32, gap=groupW*0.06;
+    sc.forEach(function(s,idx){
+      var gx=x0+L+groupW*idx+groupW/2;
+      var vNo=s[getKey], vFail=s[getKeyFail];
+      var hNo=PH*(vNo/maxval)*progress, hFail=PH*(vFail/maxval)*progress;
+      var xNo=gx-barW-gap/2, xFail=gx+gap/2;
+      var yNo=T+PH-hNo, yFail=T+PH-hFail;
+      g.fillStyle='#cfe4e4'; g.fillRect(xNo,yNo,barW,hNo);
+      var grad=g.createLinearGradient(0,yFail,0,yFail+hFail);
+      grad.addColorStop(0,s.color); grad.addColorStop(1,s.color+'dd');
+      g.fillStyle=grad; g.fillRect(xFail,yFail,barW,hFail);
+      if(progress>0.6){
+        g.fillStyle='#0b2e36'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+        g.textAlign='center'; g.textBaseline='alphabetic';
+        g.fillText(fmt(vNo),xNo+barW/2,yNo-5);
+        g.fillText(fmt(vFail),xFail+barW/2,yFail-5);
+      }
+      if(progress>0.85){
+        g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+        g.fillText(s.name,gx,T+PH+16);
+        var pct=s[pctKey];
+        g.fillStyle=pct>20?'#b8543a':'#3d6570';
+        g.font='600 10.5px "PingFang SC",system-ui,sans-serif';
+        g.fillText('+'+pct.toFixed(1)+'%',gx,T+PH+31);
+      }
+    });
+    g.strokeStyle='#d9e9e9'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(x0+L,T+PH); g.lineTo(x0+L+PW,T+PH); g.stroke();
+  }
+  drawHalf(0,halfW,'工期对比（年）',function(v){return v.toFixed(0);},dMax,'dur_no','dur_fail','dur_pct');
+  drawHalf(halfW,w,'成本对比（B USD）',function(v){return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);},cMax,'cost_no','cost_fail','cost_pct');
+}
+
+/* ---- 6. 自适应 γ 曲线 ---- */
+function drawAdapt(cv,progress){
+  var G=D.gamma, n=G.n, adapt=G.adapt_curve, base=G.base;
+  var ymax=0.7, ymin=0.2;
+  var xTicks=[];
+  for(var i=0;i<=n;i+=20) xTicks.push({i:i,t:i+''});
+  plot(cv,{h:270,n:n,yMin:ymin,yMax:ymax,yFmt:'x',L:48,R:20,B:30,progress:progress,
+    xTicks:xTicks,
+    hlines:[{v:base,c:'#8aa3aa',w:1.4,label:'基线 γ=0.50'}],
+    series:[{d:adapt,c:'#12a594',w:2.6,fill:'rgba(18,165,148,.10)'}],
+    tags:[]});
+  var g=cv.getContext('2d');
+  var w=cv.clientWidth, hh=270, L=48, Rr=20, T=18, B=30, PW=w-L-Rr, PH=hh-T-B;
+  function X(i){ return L+PW*(i/(n-1)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  G.windows.forEach(function(wd){
+    var x1=X(wd.lo), x2=X(wd.hi);
+    g.fillStyle='rgba(184,84,58,.16)';
+    g.fillRect(x1,T,x2-x1,PH);
+  });
+  if(progress>0.85){
+    G.windows.forEach(function(wd){
+      var cx=X((wd.lo+wd.hi)/2), cy=Y(wd.peak);
+      g.beginPath(); g.arc(cx,cy,3.6,0,6.2832);
+      g.fillStyle='#b8543a'; g.fill();
+      g.strokeStyle='#fff'; g.lineWidth=1.4; g.stroke();
+      note(g,'γ≈'+wd.peak.toFixed(2),cx,cy,
+           {right:L+PW,left:L+2,top:T+2,line:'#f0d5cd',tc:'#b8543a',up:24});
+    });
+  }
+}
+
+/* ---- 注册绘图函数 ---- */
+var R={};
+R.cvFail=function(cv){ animDraw(cv,function(p){drawFail(cv,p);},700); };
+R.cvCap=function(cv){ animDraw(cv,function(p){drawCap(cv,p);},900); };
+R.cvSens=function(cv){ animDraw(cv,function(p){drawSens(cv,p);},850); };
+R.cvRadar=function(cv){ animDraw(cv,function(p){drawRadar(cv,p);},800); };
+R.cvCmp=function(cv){ animDraw(cv,function(p){drawCmp(cv,p);},850); };
+R.cvAdapt=function(cv){ animDraw(cv,function(p){drawAdapt(cv,p);},900); };
+R.cvFinal=function(cv){ animDraw(cv,function(p){drawRadar(cv,p,D.finalRadar);},800); };
+
+/* ---- KPI / HTML 组装 ---- */
+function kpi(v,k,cls){ return '<div class="kpi '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+
+function initS1(){
+  var fs=D.failures;
+  var html=fs.map(function(f){
+    var cls=f.k==='rocket'?'n':'w';
+    var badge=f.k==='fracture'?'电梯·缆索':(f.k==='thermal'?'电梯·热疲':'火箭·发射');
+    return '<div class="card">'+
+      '<h3><span class="badge '+cls+'">'+badge+'</span>'+f.name+'</h3>'+
+      '<p><b>失效概率：</b><span class="'+(f.k==='rocket'?'hl-t':'hl')+'">'+(f.prob*100).toFixed(0)+'%'+f.unit+'</span></p>'+
+      '<p><b>机理：</b>'+f.mechanism+'</p>'+
+      '<p><b>影响：</b>'+f.impact+'</p>'+
+      '</div>';
+  }).join('');
+  $('#fCards').innerHTML=html;
+  $('#failNote').innerHTML='<span class="badge">故障因子</span>三类失效的概率量级不同：电梯的缆索断裂 4%/年、热疲劳 6%/年，两者叠加使电梯的年有效折减接近 <b>10%</b>；火箭单发失败 3%/次，但按年发射 12 发算，年累积期望损失约 <b>0.36 发</b>，可补可替。电梯的失效是结构性的、整条停运；火箭的失效是批次性的、独立可补。';
+  $('#sensStats').innerHTML=
+    kpi('≈10%<u>/年</u>','电梯·有效容量折减','w')+
+    kpi('≈0.36<u>发/年</u>','火箭·期望补发','b')+
+    kpi('6–18<u>月</u>','电梯·单次修复工期','w')+
+    kpi('2.5×','电梯敏感度/火箭敏感度','');
+}
+function initS2(){
+  var data=genCapacity();
+  var minV=Math.min.apply(null,data);
+  var maxDrop=((537-minV)/537*100).toFixed(1);
+  $('#capNote').innerHTML='<span class="badge">运力损失</span>绿线是电梯有效年运力（基线 537k 吨/年 = 5.37×10⁵），红色阴影带是三次故障高发窗。窗内运力跌至最低 <b>'+minV+'k</b>（降幅 <b>'+maxDrop+'%</b>），窗后以约 8 个时间单位回升到基线。电梯的运力损失不是均匀的，而是集中在故障高发窗——这正是自适应策略要在窗内下调 γ 的原因。';
+  $('#capStats').innerHTML=
+    kpi('537k<u>吨/年</u>','电梯基线年运力','')+
+    kpi(minV+'k<u>吨/年</u>','故障窗内最低运力','w')+
+    kpi(maxDrop+'%','运力最大降幅','w')+
+    kpi('10%','电梯年有效折减','');
+}
+function initS3(){
+  var c=D.curve, n=c.length;
+  var elevSlope=(c[n-1].elevator-1)/(c[n-1].p);
+  var rockSlope=(c[n-1].rocket-1)/(c[n-1].p);
+  $('#sensNote').innerHTML='<span class="badge">敏感度</span>横轴是年度故障率，纵轴是工期延长系数（基线 1.00）。电梯曲线（红）斜率约 <b>'+(elevSlope*10).toFixed(1)+'</b>，火箭曲线（蓝）斜率约 <b>'+(rockSlope*10).toFixed(1)+'</b>，前者是后者的 <b>2.5 倍</b>。混合方案（绿）居中。在故障率 6% 处，电梯延长到 1.48、火箭 1.18——这就是模型里电梯份额要被故障因子单独折减的原因。';
+  $('#sensKPI').innerHTML=
+    kpi('1.48','电梯·6%故障率工期系数','w')+
+    kpi('1.18','火箭·6%故障率工期系数','b')+
+    kpi('2.5×','电梯斜率/火箭斜率','')+
+    kpi('1.30','混合方案·6%故障率系数','g');
+}
+function initS4(){
+  var sc=D.schemes;
+  var rows=sc.map(function(s){
+    return '<tr>'+
+      '<td><b>'+s.name+'</b></td>'+
+      '<td class="num">'+s.dur_no.toFixed(2)+'</td>'+
+      '<td class="num"><b class="hl">'+s.dur_fail.toFixed(2)+'</b></td>'+
+      '<td class="num"><b class="hl">+'+s.dur_pct.toFixed(1)+'%</b></td>'+
+      '<td class="num">'+s.cost_no.toFixed(1)+'</td>'+
+      '<td class="num"><b class="hl">'+s.cost_fail.toFixed(1)+'</b></td>'+
+      '<td class="num"><b class="hl">+'+s.cost_pct.toFixed(1)+'%</b></td>'+
+      '</tr>';
+  }).join('');
+  $('#cmpTable').innerHTML='<tr><th>方案</th><th>原工期(年)</th><th>失效后(年)</th><th>工期延长</th><th>原成本(B)</th><th>失效后(B)</th><th>成本抬高</th></tr>'+rows;
+  $('#cmpNote').innerHTML='<span class="badge">对比</span>C1（电梯主导）工期 93.74→105.96 年（<b class="hl">+13.0%</b>）、成本 9052.9→12674.1B（<b class="hl">+40.0%</b>）；C2（火箭备份）工期 250→262.5 年（<b class="hl-t">+5.0%</b>）、成本 2151.5→2565.3B（<b class="hl-t">+19.2%</b>）。电梯主导方案在两个维度上都更敏感。';
+  $('#cmpNote2').innerHTML='<span class="badge">解读</span>左半为工期对比，右半为成本对比。浅色柱为无故障基线，深色柱为失效后。C1 两项指标的延长率均高于 C2——这正是电梯敏感度远高于火箭的直接证据。';
+  var G=D.gamma, a=D.adapt;
+  var minGamma=Math.min.apply(null,G.adapt_curve);
+  $('#adaptNote').innerHTML='<span class="badge">自适应</span>绿线是自适应 γ(t)，灰虚线是固定基线 γ=0.5。红色阴影带是三个故障高发窗（约第 18–30、48–60、78–90 个时间单位），窗内 γ 从 0.5 下调到最低 <b>'+minGamma.toFixed(2)+'</b>，火箭补位约 <b>'+((0.5-minGamma)*100).toFixed(0)+'%</b> 的年运量。窗后 γ 以 0.02/单位速率回升，避免长期过度依赖火箭。';
+  $('#adaptStats').innerHTML=
+    kpi(a.reliability_yes.toFixed(2),'自适应后系统可靠度','')+
+    kpi(a.reliability_no.toFixed(2),'固定份额下可靠度','w')+
+    kpi(a.dur_var_drop+'%','工期方差下降','')+
+    kpi(a.cost_drop+'%','总成本再降','g');
+}
+function initS5(){
+  var sc=D.schemes, a=D.adapt;
+  $('#finalKPI').innerHTML=
+    kpi('105.96<u>年</u>','C1·失效后工期','w')+
+    kpi('2565.3<u>B</u>','C2·失效后成本','')+
+    kpi('+13.0%','C1·工期延长率','w')+
+    kpi('+19.2%','C2·成本抬高率','g')+
+    kpi(a.reliability_yes.toFixed(2),'自适应后可靠度','')+
+    kpi(a.dur_var_drop+'%','工期方差下降','')+
+    kpi(a.cost_drop+'%','成本再降','g')+
+    kpi('2.5×','电梯/火箭敏感度比','w');
+  $('#finalNote').innerHTML='<span class="badge">结论</span>调整前（红）在可靠度、成本控制、工期稳定、运力恢复、冗余效率五个维度上均低于调整后（绿）。自适应策略把可靠度从 0.78 抬到 0.92，工期稳定度提升 34%，是兼顾成本与鲁棒性的最优调整。';
+}
+
+/* ---- 幕切换框架 ---- */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var st={last:0,armed:false,fired:0};
+var R2={cvFail:1,cvCap:1,cvSens:1,cvRadar:1,cvCmp:1,cvAdapt:1,cvFinal:1};
+function ensure(id){
+  var cv=document.getElementById(id);
+  if(!cv||cv.dataset.done==='1') return;
+  if(!R[id]) return;
+  cv.dataset.done='1'; R[id](cv);
+}
+function revealCanvas(el){ $$('canvas',el).forEach(function(cv){ ensure(cv.id); }); }
+function beatsAuto(sc){ return $$('.wrap > *',sc); }
+function resetScene(sc){
+  $$('canvas',sc).forEach(function(cv){ cv.removeAttribute('data-done'); });
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+}
+function goTo(i,silent){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(H[i]) H[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+function ensureScene(i){
+  var sc=SCENES[i];
+  $$('canvas',sc).forEach(function(cv){ ensure(cv.id); });
+}
+var H=[function(){ initS1(); ensureScene(0); }, function(){ initS2(); ensureScene(1); },
+       function(){ initS3(); ensureScene(2); }, function(){ initS4(); ensureScene(3); },
+       function(){ initS5(); ensureScene(4); }];
+
+function init(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ resetScene(SCENES[cur]); ensureScene(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  initS1(); initS2(); initS3(); initS4(); initS5();
+  setReduce(false); goTo(0);
+}
+window.__deck={goTo:goTo,get cur(){return cur;},R:R,D:D};
+init();
+window.addEventListener('resize',function(){
+  $$('canvas').forEach(function(cv){ cv.removeAttribute('data-done'); });
+  ensureScene(cur);
+});
+})();
+</script>
+</body>
+</html>

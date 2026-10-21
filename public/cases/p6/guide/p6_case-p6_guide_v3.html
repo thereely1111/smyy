@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>实训指导书 · 智能手机电池耗电建模</title>
+<style>
+  :root{
+    --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+    --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+    --teal:#12a594; --teal-d:#0b6e68; --gold:#e0a04a; --gold-d:#8a6313;
+    --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.8 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:40px 24px 64px}
+  .hd{border-bottom:2px solid var(--teal);padding-bottom:18px;margin-bottom:28px}
+  .kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+  h1{font-size:27px;line-height:1.35;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .sub{font-size:14px;color:var(--muted);margin:0}
+  .blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;
+    box-shadow:var(--sh);margin-bottom:18px}
+  h3{margin:0 0 12px;font-size:17px;font-weight:600;color:var(--teal-d)}
+  h3 + h3{margin-top:14px}
+  h4{margin:14px 0 8px;font-size:14.5px;font-weight:600;color:var(--teal-d)}
+  p{margin:0 0 10px;font-size:14.5px;color:var(--ink2);line-height:1.85}
+  p:last-child{margin-bottom:0}
+  b,strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 10px;padding-left:22px}
+  li{font-size:14px;color:var(--ink2);line-height:1.9;margin-bottom:3px}
+  .note{
+    font-size:13px;color:#5a6b78;background:#fafdfd;border:1px dashed var(--line);
+    border-radius:9px;padding:10px 14px;line-height:1.8;margin-top:12px;
+  }
+  .formula{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;
+    color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.9;
+    overflow:auto;white-space:pre-wrap;margin:4px 0 12px;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 12px}
+  th,td{border-bottom:1px solid var(--line2);padding:7px 10px;text-align:left}
+  th{font-size:12px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+  td b{color:var(--teal-d)}
+  .foot{margin-top:8px;font-size:12.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="kicker">2026 美赛 A 题 · 实训指导书</div>
+    <h1>智能手机电池耗电建模</h1>
+    <p class="sub">锂电池 SOC 连续时间模型 · 四因素到四问逐级加深</p>
+  </div>
+
+  <section class="blk">
+    <h3>一、题目重述与信息结构</h3>
+    <p>智能手机已成为日常生活的核心设备，其续航表现受<b>屏幕亮度</b>、<b>处理器负载</b>、<b>后台网络活动</b>与<b>环境温度</b>等多因素影响。某厂商提供了一批放电试验日志（含 SOC 序列与整段放电时长记录），并标注了每组试验的四个载荷指标：屏幕亮度 <b>L</b>、处理器负载 <b>u</b>、后台网络活跃度 <b>n</b>（均归一化到 0~1）与环境温度 <b>T</b>（℃）。要求完成四个问题：</p>
+    <ul>
+      <li><b>问题一</b>：建立锂电池 SOC 的<b>连续时间模型</b>，刻画上述四因素对整机平均功率的影响，并利用日志数据辨识模型参数、评估拟合精度；</li>
+      <li><b>问题二</b>：预测四种典型使用场景（A 轻度待机、B 中度常规、C 重度游戏+高清视频、D 高温户外导航）下的<b>剩余可用时间</b>，并给出预测的<b>置信区间</b>；</li>
+      <li><b>问题三</b>：在尽量不影响用户体验的前提下提出<b>三条可执行</b>的续航优化建议，量化每条建议的续航增益并说明其代价；</li>
+      <li><b>问题四</b>：对模型系数做<b>灵敏度分析</b>，判定最敏感因素，并给出温度影响的定量结论。</li>
+    </ul>
+    <p><b>关键简化</b>：以整机平均功率 P_total 为核心，把四因素统一压缩为一个静态功率表达式，再叠加温度修正因子 φ(T)；SOC 演化由此化为<b>一组线性方程</b>，四问共用同一骨架（这是本题第一个得分点）。</p>
+    <div class="note">这一步的关键是画出“环境温度 → φ(T) 修正 → 四载荷叠加 → 整机功率 P_total → SOC 线性下降”的单链结构图，标清四问共用的模型式与各自不同的求解目标（参数辨识 / 续航预测 / 优化 / 灵敏度）。评委一眼就能看出你是否抓住了“一个模型、四问递进”的主线。</div>
+  </section>
+
+  <section class="blk">
+    <h3>二、数据与载荷说明</h3>
+    <p>试验数据设定为 <b>200 组</b>放电试验，每组 <b>50 个</b> SOC 采样点，合计 <b>10000 个</b>观测点；SOC 采样噪声 <b>σ = 0.021 SOC</b>，整段放电时长记录抖动 <b>5.8%</b>。电池额定能量取</p>
+    <div class="formula">C = 4000 mAh × 3.85 V = 15.4 Wh</div>
+    <table>
+      <tr><th>符号</th><th>含义</th><th>取值 / 范围</th><th>单位</th></tr>
+      <tr><td><b>L</b></td><td>屏幕亮度（归一化载荷指标）</td><td>0 ~ 1</td><td>—</td></tr>
+      <tr><td><b>u</b></td><td>处理器负载（归一化载荷指标）</td><td>0 ~ 1</td><td>—</td></tr>
+      <tr><td><b>n</b></td><td>后台网络活跃度（归一化载荷指标）</td><td>0 ~ 1</td><td>—</td></tr>
+      <tr><td><b>T</b></td><td>环境温度</td><td>−10 ~ 40</td><td>℃</td></tr>
+      <tr><td><b>SOC</b></td><td>荷电状态（观测区间 0.96 → 0.32）</td><td>0 ~ 1</td><td>—</td></tr>
+      <tr><td><b>C</b></td><td>电池额定能量</td><td>15.4</td><td>Wh</td></tr>
+      <tr><td><b>P_total</b></td><td>整机平均功率</td><td>待辨识/计算</td><td>W</td></tr>
+    </table>
+    <div class="note">载荷指标均为 0~1 的归一化量，量纲统一，无需再做量纲分析；四因素在功率式中<b>线性叠加</b>，温度只通过 φ(T) 做整体缩放。这条假设直接决定了后续“线性最小二乘可解”的优势。</div>
+  </section>
+
+  <section class="blk">
+    <h3>三、建模思路：SOC 连续时间模型与温度修正</h3>
+    <p>SOC 以恒定功率放电时近似线性下降，连续时间模型取</p>
+    <div class="formula">dSOC/dt = − P_total / C × 100%
+P_total = φ(T) · ( P_base + a_s·L + a_c·u + a_n·n )
+φ(T)   = 1 + 0.006·|T − 25| + 0.00035·(T − 25)²</div>
+    <p>其中 <b>P_base</b> 为静态底耗，<b>a_s / a_c / a_n</b> 分别为屏幕、处理器、网络的功率系数，单位均为 W；<b>φ(T)</b> 为温度修正因子，以 25℃ 为基准，偏离越远则内阻与极化损耗越大、整机功耗越高。</p>
+    <p>放电时长与功率的关系为 t = (SOC_HI − SOC_LO)·C / P_total，即<b>续航对功率是反比、对功率是凸函数</b>——这条性质是问题三“联合增益大于逐条增益之和”的根本原因。</p>
+    <div class="note">建模时最容易踩的坑：① 把 φ(T) 写成乘在温度项之外还是某个载荷上——本题是“整机缩放”，必须整体乘；② 忘记 SOC 观测区间是 0.96→0.32 而非 1→0，算时长时会差一个比例因子。</div>
+  </section>
+
+  <section class="blk">
+    <h3>四、参数辨识方法：最小二乘的线性化推导</h3>
+    <p>直接对 dSOC/dt 求系数会带噪声放大，改用<b>积分形式</b>。对单条试验，从初始时刻积分得</p>
+    <div class="formula">SOC_HI − SOC(t) = φ(T)·( P_base + a_s·L + a_c·u + a_n·n ) · t / C</div>
+    <p>令 y = SOC_HI − SOC_obs，把 200 组 × 50 点<b>池化</b>成 10000 行，构造设计矩阵</p>
+    <div class="formula">X = [ φ(T)·t/C ,  φ(T)·L·t/C ,  φ(T)·u·t/C ,  φ(T)·n·t/C ]   (10000 × 4)</div>
+    <p>于是 y = X·[P_base, a_s, a_c, a_n]ᵀ 成为<b>标准线性最小二乘</b>，用 numpy 的 <span style="font-family:Consolas,monospace">np.linalg.lstsq</span> 一次求解即可，系数标准差由残差协方差给出：</p>
+    <div class="formula">θ̂ = argmin ‖X·θ − y‖² ,   sd(θ̂) = sqrt( diag( (XᵀX)⁻¹ · rᵀr / (m − 4) ) )</div>
+    <p>辨识结果（池化最小二乘，200 组试验 / 10000 个采样点，numpy）为 <b>P_base = 0.15 W、a_s = 1.35 W、a_c = 1.80 W、a_n = 1.10 W</b>。拟合优度：<b>R² = 0.988、RMSE = 0.021 SOC、MAPE = 4.6%、最大瞬时偏差 0.083 SOC</b>。</p>
+    <div class="note">线性化的价值：把“辨识一个非线性动态模型”降为“解一个 4 元线性最小二乘”，既避免初值敏感，又天然给出系数不确定度 sd，可直接用于问题二置信带（δ 法传播）。这是本题第二个得分点。</div>
+  </section>
+
+  <section class="blk">
+    <h3>五、求解步骤与代码要点</h3>
+    <p>四个问题共用一套 numpy 流程，建议按下列顺序实现：</p>
+    <ul>
+      <li><b>步骤 1 · 生成/读入日志</b>：200 组试验，载荷 L、u、n 在 0~1 内随机取值，T 在 −10~40℃ 内取值；真实时长 = (SOC_HI−SOC_LO)·C / P_total，再乘 (1 + 0.058 抖动) 得到记录时长；每组取 50 个采样点并叠加 σ = 0.021 的 SOC 噪声。</li>
+      <li><b>步骤 2 · 构造线性方程</b>：按上式堆叠设计矩阵 X（(试验×采样点) × 4）与向量 y，调用 <span style="font-family:Consolas,monospace">np.linalg.lstsq</span> 得到 θ̂，并按残差给出 sd。</li>
+      <li><b>步骤 3 · 精度评估</b>：用 θ̂ 回代预测 SOC 与时长，计算 R²、RMSE、MAPE、最大瞬时偏差。</li>
+      <li><b>步骤 4 · 四场景续航</b>：对场景 (L,u,n,T) 计算 φ(T) 与 P_total，续航 t = C / P_total；95% 带 = δ 法参数不确定度 ⊕（载荷波动 5%）场景波动，取 1.96 分位合成。</li>
+      <li><b>步骤 5 · 优化与灵敏度</b>：基线取场景 B，改动单因素算续航增益；对四个系数各 +10% 复算续航变化，得到敏感度排序。</li>
+    </ul>
+    <div class="formula">φ(T) = 1 + 0.006·|T-25| + 0.00035·(T-25)**2
+P = φ * (p[0] + p[1]*L + p[2]*u + p[3]*n)
+t = C / P
+band = 1.96 * sqrt( (C/P²·‖g·sd‖)² + (0.05·t)² )</div>
+    <div class="note">自检三件套：① 拟合残差均值应接近 0、R² 稳定在 0.98 以上；② 四场景续航应随载荷单调递减（A &gt; B &gt; C）；③ 关掉时长抖动/噪声重跑，θ̂ 应逼近真值 [0.15, 1.35, 1.80, 1.10]。三条都过，模型才算站得住。</div>
+  </section>
+
+  <section class="blk">
+    <h3>六、四场景续航预测结果（问题二）</h3>
+    <table>
+      <tr><th>场景</th><th>L</th><th>u</th><th>n</th><th>T / φ</th><th>P_total (W)</th><th>续航 (h)</th><th>95% 带 (h)</th></tr>
+      <tr><td><b>A 轻度</b> 待机/轻度刷屏</td><td>0.20</td><td>0.10</td><td>0.05</td><td>25℃ / 1.0000</td><td>0.655</td><td><b>23.51</b></td><td>±2.32</td></tr>
+      <tr><td><b>B 中度</b> 常规使用</td><td>0.55</td><td>0.35</td><td>0.40</td><td>25℃ / 1.0000</td><td>1.963</td><td><b>7.85</b></td><td>±0.77</td></tr>
+      <tr><td><b>C 重度</b> 游戏+高清视频</td><td>0.90</td><td>0.90</td><td>0.80</td><td>25℃ / 1.0000</td><td>3.865</td><td><b>3.98</b></td><td>±0.39</td></tr>
+      <tr><td><b>D 极端</b> 高温户外导航</td><td>0.70</td><td>0.50</td><td>0.60</td><td>35℃ / 1.0950</td><td>2.907</td><td><b>5.30</b></td><td>±0.52</td></tr>
+    </table>
+    <p class="note" style="margin-top:0">95% 带为<b>参数不确定度 ⊕ 场景载荷波动 5%</b> 的合成结果（1.96 分位）。A 场景载荷最轻、功率最小，续航最长且绝对带宽最大；C 场景功率最大，续航最短。</p>
+  </section>
+
+  <section class="blk">
+    <h3>七、三条续航优化建议（问题三）</h3>
+    <p>基线取<b>场景 B（中度常规，7.85 h）</b>，逐条测算如下：</p>
+    <table>
+      <tr><th>建议</th><th>载荷调整</th><th>续航 (h)</th><th>增益</th><th>代价</th></tr>
+      <tr><td>1 亮度阈值</td><td>L 0.55 → 0.35</td><td><b>9.10</b></td><td>+16.0%</td><td>强光下可视性下降</td></tr>
+      <tr><td>2 后台网络</td><td>n 0.40 → 0.22</td><td><b>8.73</b></td><td>+11.2%</td><td>消息延迟约 15 min</td></tr>
+      <tr><td>3 温控散热</td><td>场景 D 35℃ → 25℃</td><td><b>5.80</b></td><td>+9.5%</td><td>需主动散热外壳</td></tr>
+      <tr><td><b>联合</b>（亮度+网络）</td><td>L = 0.35 n = 0.22</td><td><b>10.30</b></td><td>+31.3%</td><td>两项代价叠加</td></tr>
+    </table>
+    <p><b>凸性结论</b>：逐条增益 +1.25 h、+0.88 h 合计 +2.13 h，而联合实际 +2.46 h —— 因为 <b>t = C/P 对功率 P 是凸函数</b>，同时压低多项载荷的收益大于逐条收益之和。</p>
+    <div class="note">这一条是论文的高光讨论点：若评委追问“为什么不是简单相加”，就用凸性 t''(P) &gt; 0 回答——边际收益随功率下降而递减，组合优化天然优于单项累加。</div>
+  </section>
+
+  <section class="blk">
+    <h3>八、灵敏度分析与温度结论（问题四）</h3>
+    <p>以基线场景 B 为例，各系数 +10% 后复算续航变化：</p>
+    <table>
+      <tr><th>系数</th><th>扰动</th><th>续航变化</th><th>敏感度</th></tr>
+      <tr><td><b>a_s</b> 亮度系数</td><td>+10%</td><td>−3.7%</td><td>最高</td></tr>
+      <tr><td><b>a_c</b> 负载系数</td><td>+10%</td><td>−3.1%</td><td>高</td></tr>
+      <tr><td><b>a_n</b> 网络系数</td><td>+10%</td><td>−2.2%</td><td>中</td></tr>
+      <tr><td><b>P_base</b> 静态底耗</td><td>+10%</td><td>−0.8%</td><td>低</td></tr>
+    </table>
+    <p><b>敏感度排序：a_s &gt; a_c &gt; a_n &gt; P_base</b>，即<b>屏幕亮度是第一敏感因素</b>。</p>
+    <p><b>温度结论</b>：<b>|T − 25| 每升高 5℃，φ 上升 3.9%，续航下降 3.7%</b>。温度通过 φ(T) 整体缩放功率，偏离基准温度越远，续航衰减越快（平方项使高温端更陡）。</p>
+    <div class="note">排序结论与工程直觉一致：最容易被用户主动调节、系数也最大的是屏幕亮度；而静态底耗属于“关机也在耗”的硬件开销，占比小、灵敏度低。</div>
+  </section>
+
+  <section class="blk">
+    <h3>九、结论与注意事项</h3>
+    <h4>结论</h4>
+    <ul>
+      <li>四问共用一套“SOC 线性下降 + 温度修正”骨架，参数辨识可完全线性化，模型简洁且可解释；</li>
+      <li>辨识得 P_base = 0.15 W、a_s = 1.35 W、a_c = 1.80 W、a_n = 1.10 W，R² = 0.988、MAPE = 4.6%，精度满足工程预测；</li>
+      <li>四场景续航 A 23.51 h / B 7.85 h / C 3.98 h / D 5.30 h，均附带 95% 置信带；</li>
+      <li>三条建议分别增益 +16.0% / +11.2% / +9.5%，联合（亮度+网络）达 +31.3%，凸性使组合收益高于累加；</li>
+      <li>敏感度排序 a_s &gt; a_c &gt; a_n &gt; P_base，温度每偏 5℃ 续航约降 3.7%。</li>
+    </ul>
+    <h4>局限与改进</h4>
+    <ul>
+      <li>整机平均功率按载荷线性叠加，忽略载荷间耦合（如高温加剧处理器降频）与动态瞬态，更精细可引入交叉项或状态相关系数；</li>
+      <li>φ(T) 采用对称二次型，低温柔性电池的强非线性未单独建模，可分段拟合；</li>
+      <li>置信带仅含参数不确定度与 5% 载荷波动，未计入电池老化的容量衰减，长期预测需引入 SOH 折减。</li>
+    </ul>
+    <div class="note">论文结构建议：摘要（务必写关键数字 R² = 0.988、四场景续航、+31.3% 联合增益）→ 问题重述 → 符号说明 → 模型建立与线性化 → 参数辨识与精度 → 四场景预测与置信带 → 三条建议与凸性 → 灵敏度与温度 → 结论 → 附录（numpy 代码与结果表）。</div>
+  </section>
+
+  <div class="foot">数模演易 · 2026 美赛 A 题实训指导书</div>
+</div>
+</body>
+</html>

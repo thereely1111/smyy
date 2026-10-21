@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM D题 · 问题二 · 冲突消解</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --r:12px; --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);overflow:hidden;
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.splitnav{display:none}
+
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi.w .v{color:var(--warn)}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+
+#tip{position:fixed;z-index:80;pointer-events:none;background:rgba(9,38,45,.96);color:#eaf7f5;
+  border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 26px rgba(0,0,0,.24);opacity:0;transition:opacity .12s;max-width:320px}
+#tip.on{opacity:1}
+#tip b{color:#7fd8c9}
+#tip .tt{display:block;font-weight:700;color:#fff;margin-bottom:3px;font-size:12.5px}
+
+.blink-red{animation:blinkRed 1.2s ease-in-out infinite}
+@keyframes blinkRed{0%,100%{opacity:.9}50%{opacity:.3}}
+.move-anim{transition:transform .9s cubic-bezier(.22,.8,.3,1) !important}
+.formula{font-family:"SFMono-Regular",Consolas,monospace;background:#0b2e36;
+  color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto}
+.formula .c{color:#7fd8c9}
+.formula .k{color:#ffd88a;font-weight:600}
+.tf-grid{background:#0b2e36;border-radius:10px;padding:14px}
+
+/* 交互组件 */
+.interact-hint{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--teal-d);
+  background:#eef8f6;border:1px solid #cfebe6;border-left:3px solid var(--teal);border-radius:0 9px 9px 0;padding:9px 13px}
+.interact-hint b{color:var(--teal-d)}
+.interact-hint .ico{font-size:15px}
+.approach-tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  color:#fff;background:linear-gradient(135deg,var(--teal-d),var(--cyan));border-radius:999px;padding:4px 12px;letter-spacing:.03em}
+.approach-tag.gold{background:linear-gradient(135deg,var(--gold-d),var(--gold))}
+.approach-tag.warn{background:linear-gradient(135deg,#8d4229,#c2683f)}
+.ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:600}
+.badge.q{background:#eef7f6;color:var(--teal-d)}
+.badge.w{background:var(--warn-bg);color:var(--warn)}
+
+/* 消解日志步进条 */
+.logline{font-size:12px;color:var(--ink2);padding:4px 8px;border-radius:4px;margin:2px 0;background:#fafdfd;border:1px solid var(--line2);
+  display:flex;gap:8px;align-items:center}
+.logline .tag{font-size:10px;padding:1px 6px;border-radius:999px;font-weight:600;flex:0 0 auto}
+.tag.f{background:#eef7f6;color:var(--teal-d)}
+.tag.t{background:#eef3f7;color:var(--blue)}
+.tag.x{background:var(--warn-bg);color:var(--warn)}
+.tag.ok{background:#eef7f6;color:var(--teal-d)}
+
+/* 候选动作卡片 */
+.cand{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.cand .c{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:#fafdfd;transition:.2s}
+.cand .c.try{border-color:var(--teal);background:#eef8f6;box-shadow:0 0 0 3px rgba(18,165,148,.12)}
+.cand .c.fail{opacity:.55;border-style:dashed}
+.cand .c .h{font-size:12.5px;font-weight:600;color:var(--teal-d);margin-bottom:3px}
+.cand .c .b{font-size:11.5px;color:var(--muted);line-height:1.6}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">问题二 · 冲突消解</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ========= 幕 1：消解约束与动作空间 ========= -->
+<section class="scene" id="s1" data-title="一 · 消解约束与动作空间">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题二的核心约束</div>
+      <h1>一个用频计划最多调一个参数
+        <small>频移 ±10Δf、时移 ±5Δt，优先级 A &gt; B &gt; C，撤销只作兜底。</small>
+      </h1>
+      <p class="lead">问题一告诉我们「哪里有冲突」，问题二要回答「怎么把冲突消除」。题面对消解动作给了严格限制：每个装备只能从 <b>频段平移</b>、<b>时间平移</b>、<b>撤销</b> 三者中<strong>选一个</strong>执行，且平移有硬上限。这不是一道"随便挪挪就行"的题——它真正考的是在受限动作空间里<span class="hl">如何取舍</span>。</p>
+      <p class="lead">消解的艺术可以拆成三问：<span class="hl-t">让谁动</span>（原则上让低优先级方）、<span class="hl-t">动多少</span>（在能消掉冲突的前提下尽量小）、<span class="hl-t">动哪个参数</span>（频段或时间，选那个「挪一点点就够」的自由度）。这三问的答案，共同构成了本题的消解策略。</p>
+    </div>
+
+    <div class="interact-hint">
+      <span class="ico">🧭</span>
+      <span><b>本页怎么用：</b>本幕讲清"能做什么动作"；第二幕给出贪心消解算法；第三幕是可交互的消解动画（可单步、可自动播放、可重置）；第四幕对交付物 result2.xlsx 做说明。← → 键切换幕，也可用底部圆点跳转。</span>
+    </div>
+
+    <div class="grid3">
+      <div class="card" style="border-left:3px solid var(--teal)">
+        <h3>① 最多一个参数</h3>
+        <div class="quote">"一个用频计划只能调整其中一个参数或撤销"</div>
+        <p class="small">不能同时既调频段又调时间。因此每一步都要在「频移 / 时移 / 撤销」中<strong>择一</strong>——选择的标准是：哪个动作能消掉当前冲突、且代价最小。</p>
+        <p class="small">这条约束把问题从"连续优化"压缩成了<b>离散选择</b>：每个冲突对的解决方式只有有限几种。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue)">
+        <h3>② 平移上限</h3>
+        <div class="quote">"频段、时间调整的最大平移幅度分别为 10Δf、5Δt"</div>
+        <p class="small">频移窗口 [-10, +10]Δf，共 20 个可选的整数偏移；时移窗口 [-5, +5]Δt，共 10 个。注意频域资源总量只有 100Δf，一次 10Δf 的平移相当于挪动了 1/10 的整个频段。</p>
+        <p class="small">这是<b>问题三（无上限）</b>与问题二的核心区别：问题二里「只要挪得够远就能避开」，问题三里却只能靠重新规划。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold)">
+        <h3>③ 优先级 A &gt; B &gt; C</h3>
+        <div class="quote">"A 类最高、B 类其次、C 类最低，高优先级应尽量保持"</div>
+        <p class="small">实际含义：消解时让 <b>低优先级那方动</b>，高优先方保持原位。A 类 20 件、B 类 50 件、C 类 80 件，因此绝大多数冲突都能"让 C 类让路"。</p>
+        <p class="small">A-A 冲突最棘手（谁都不想动），只能让其中一方微移或撤销——但 A 类数量少，这类冲突占比很低。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>动作空间汇总 <em>按优先级从高到低尝试</em></h3>
+      <table class="tb">
+        <tr><th>动作</th><th>参数变化</th><th>约束</th><th>代价度量</th><th>首选场景</th></tr>
+        <tr><td>频段平移 <span class="badge q">频移</span></td><td>fs、fe 整体 ±δ，ts、te 不变</td><td>|δ| ≤ 10Δf</td><td>平移幅度 |δ| 越小越好</td><td>频段上存在连续空隙</td></tr>
+        <tr><td>时间平移 <span class="badge q">时移</span></td><td>ts、te 整体 ±δ，fs、fe 不变</td><td>|δ| ≤ 5Δt</td><td>平移幅度 |δ| 越小越好</td><td>时间轴上存在可用间隙</td></tr>
+        <tr><td>撤销 <span class="badge w">撤销</span></td><td>移除该用频计划</td><td>题面未鼓励</td><td>代价最高（装备失去用频）</td><td>频移时移均无法避开</td></tr>
+      </table>
+      <div class="note" style="margin-top:10px">注意：题面强调「除非特别说明，一般不调整使用次数和使用间隔时长」——所以频移和时移是<strong>主手段</strong>，撤销是最后的兜底；使用次数 n 与间隔 iv 这两个参数在问题二中保持不动，直到问题四才被放开。</div>
+    </div>
+
+    <div class="card">
+      <h3>约束的数学表述 <em>为什么它是离散的</em></h3>
+      <div class="formula">
+设装备 i 的原参数为 (fs<sub>i</sub>, fe<sub>i</sub>, ts<sub>i</sub>, te<sub>i</sub>, iv<sub>i</sub>, n<sub>i</sub>)。
+<span class="c">// 决策变量：每件装备至多一个动作</span>
+动作 a<sub>i</sub> ∈ { <span class="k">频移 δ<sub>f</sub></span>, <span class="k">时移 δ<sub>t</sub></span>, <span class="k">撤销</span>, 不动 }
+约束：  |δ<sub>f</sub>| ≤ 10,   |δ<sub>t</sub>| ≤ 5,   且 δ<sub>f</sub> 与 δ<sub>t</sub> <span class="k">不可同时非零</span>
+<span class="c">// 目标：消解后冲突对 = 0，且代价最小</span>
+min  Σ<sub>i</sub> [ w<sub>1</sub>·|δ<sub>i</sub>| + w<sub>2</sub>·<span class="k">1</span>{a<sub>i</sub>=撤销} · M<sub>i</sub> ]
+s.t. 对所有 (i,j)：调整后无时频重叠
+其中 M<sub>i</sub> 按优先级递增（C 撤销代价最小，A 撤销代价最大）
+      </div>
+      <p class="small" style="margin-top:8px">这个整数规划模型就是问题二的"满分形态"。实际比赛中，N=150 规模直接用 ILP 求解器也未必秒出，所以主流做法是<b>贪心快速出可行解</b>，再用<b>局部搜索 / 元启发式</b>做改进——我们下一页就展开。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 2：贪心消解策略 ========= -->
+<section class="scene" id="s2" data-title="二 · 贪心消解策略">
+  <div class="wrap">
+    <div>
+      <div class="kicker">算法思路</div>
+      <h1>先保 A，再调 B，最后看 C
+        <small>按优先级从高到低处理，每次让低优先级那方做最小幅度的可行调整。</small>
+      </h1>
+      <p class="lead">消解不必一次性求全局最优（那会是 ILP），而可以 <b>逐对消解 + 每次贪心选最优动作</b>。对 N=150 的规模，这个思路足够快；更关键的是，它天然匹配题面「尽量减少调整幅度、尽量减少被调整数量」的偏好——因为贪心每次都从最小幅度开始试探。</p>
+      <p class="lead">下面的伪代码是本题最核心的一段逻辑，也是论文里必须写清楚的算法主体。请注意它的三个要点：<span class="hl-t">逐对处理</span>（每次只解决一对冲突）、<span class="hl-t">低优先方让路</span>（保护高优先级）、<span class="hl-t">幅度从小到大</span>（代价局部最小）。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>主循环 <em>逐对贪心消解</em></h3>
+        <div class="formula">
+<span class="c">输入</span>: equip[], 优先级 P[·] ∈ {1,2,3}
+<span class="c">输出</span>: actions[] = [{id, type, delta}]
+
+<span class="k">循环直到无冲突</span>:
+  1. 找任意一对冲突 (i, j)
+  2. low ← P[i] &lt; P[j] ? i : j   <span class="c">// 低优先方负责让</span>
+     high ← 另一方                  <span class="c">// 高优先方保持</span>
+  3. <span class="k">尝试频移</span> low: δ ∈ [0,±10] 从小到大
+     若频移后 low 与 <span class="hl">所有</span>其他装备无冲突:
+       record {low, "freq", δ}; 更新 low 的频段; <span class="k">continue</span>
+  4. <span class="k">尝试时移</span> low: δ ∈ [0,±5] 从小到大
+     若时移后 low 与 <span class="hl">所有</span>其他装备无冲突:
+       record {low, "time", δ}; 更新 low 的时间; <span class="k">continue</span>
+  5. <span class="k">撤销 low</span>: record {low, "cancel"}; 标记 low 失效
+        </div>
+        <p class="small" style="margin-top:8px">关键在第 3、4 步的"<b>与所有其他装备无冲突</b>"：不是只躲开当前对手，而是保证移动后不会撞上别人——这叫<b>可行移动</b>，是贪心不至于"按下葫芦浮起瓢"的前提。</p>
+      </div>
+      <div class="card">
+        <h3>A-A / 同优先级冲突的特殊处理</h3>
+        <p>两边优先级相同时，不能用上面的"让低优先方动"规则。此时按以下次序处理：</p>
+        <ul style="font-size:13.5px;color:var(--ink2);line-height:1.9;padding-left:18px;margin:0">
+          <li>先让<b>涉及冲突数较少</b>的一方尝试频移（幅度最小优先，仍需在 ±10Δf 内）</li>
+          <li>若都不行，再尝试时移（±5Δt 内）</li>
+          <li>仍不行，则撤销其中一方——优先撤销<b>被更多冲突波及</b>者（牺牲它可一次消掉更多冲突）</li>
+        </ul>
+        <div class="note" style="margin-top:8px">A 类仅 20 件，A-A 冲突对很少；这一分支命中频率低，但论文里必须交代清楚，否则会被质疑"同优先级怎么办"。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>为什么贪心是合理的 <em>三条题面偏好 → 三条算法选择</em></h3>
+      <div class="grid3">
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <div class="approach-tag">偏好一</div>
+          <p class="small" style="margin-top:8px">"尽量减少被调整的用频计划数量" → 一次频移/时移可能同时消掉该装备与<b>多个对手</b>的冲突，贪心优先选「一动多得」的动作。</p>
+        </div>
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <div class="approach-tag">偏好二</div>
+          <p class="small" style="margin-top:8px">"尽量减少调整幅度" → δ 从 1 开始、由小到大试探，第一个可行解即最小幅度解，无需枚举全部。</p>
+        </div>
+        <div style="border:1px solid var(--line2);border-radius:9px;padding:10px 12px">
+          <div class="approach-tag">偏好三</div>
+          <p class="small" style="margin-top:8px">"A 类应尽量保持" → 永远让低优先级方"让路"，A 类的位移被视为最后手段。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>复杂度分析 <em>为什么这个规模能秒出</em></h3>
+      <table class="tb">
+        <tr><th>环节</th><th>操作</th><th>复杂度</th><th>N=150 时的量级</th></tr>
+        <tr><td>冲突检测</td><td>朴素两两扫描 O(N²)×每次的矩形对数</td><td>O(N²·n²)</td><td>可接受，n 平均≈3.5</td></tr>
+        <tr><td>单次可行移动检查</td><td>候选装备 vs 全部 active 装备</td><td>O(N·n²)</td><td>约 150×12 次判定</td></tr>
+        <tr><td>每步试探</td><td>最多 (20+10) 个候选 δ</td><td>O(30·N·n²)</td><td>约 5×10⁴ 次判定</td></tr>
+        <tr class="on"><td>总迭代</td><td>冲突逐步减少，上限 &lt; 冲突总数</td><td>O(K·30·N·n²)</td><td>实测毫秒~秒级</td></tr>
+      </table>
+      <div class="note" style="margin-top:10px">右列的量级说明了为什么可以"边算边演"：每次点击「下一步」都在做一次真实的最优化试探，动画不是预设的，而是现场算出来的。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 3：消解动画 ========= -->
+<section class="scene" id="s3" data-title="三 · 消解动画（可交互）">
+  <div class="wrap">
+    <div>
+      <div class="kicker">逐步消解 · 现场计算</div>
+      <h1>每一步：检测冲突 → 选动作 → 移动 → 再检测
+        <small>点「下一步」单步观察，或点「自动消解」看完整过程；网格里红色斑块就是当前还没消掉的冲突。</small>
+      </h1>
+      <p class="lead">下面的网格实时展示消解过程中每一件装备的位置。<b>红色闪烁</b>的色块表示"此刻仍然存在的时频冲突"；每执行一次调整或撤销，红色就会减少一些；点「重置」可从头再看一遍。消解日志会逐条记录「谁动了、往哪动、动了多少、为了避开谁」。</p>
+    </div>
+
+    <div class="interact-hint">
+      <span class="ico">🖱️</span>
+      <span><b>操作指引：</b>「下一步」= 单步执行一次消解动作；「自动消解」= 每 0.6 秒自动推进一步（可随时点「停止」暂停）；「重置」= 回到初始冲突状态重新演示。观察重点：① 红色块如何逐个消失；② 每次移动的幅度是否都很小；③ 被撤销的装备颜色变灰。</span>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">消解动画舞台 · 频域 0–100Δf × 时域 0–maxΔt</div>
+        <div class="ctl">
+          <button class="tbtn" id="btnStep">下一步</button>
+          <button class="tbtn" id="btnAuto">自动消解</button>
+          <button class="tbtn" id="btnReset">重置</button>
+          <span class="hint" id="stepHint">0 步 · 0 保留 · 0 调整 · 0 撤销</span>
+        </div>
+      </div>
+      <div id="tfSolve" class="tf-grid"></div>
+      <div class="legend">
+        <span><i style="background:rgba(224,122,95,.8)"></i>A 类（优先 3）</span>
+        <span><i style="background:rgba(30,159,196,.8)"></i>B 类（优先 2）</span>
+        <span><i style="background:rgba(18,165,148,.8)"></i>C 类（优先 1）</span>
+        <span><i style="background:#ff4d6d"></i>红色 = 仍有冲突</span>
+        <span><i style="background:#9ab7bd;opacity:.4"></i>灰色 = 已撤销</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>本步决策分析 <em>实时展示贪心如何在三个动作中择优</em></h3>
+      <div id="candBox" class="cand">
+        <div class="c"><div class="h">频段平移</div><div class="b" id="cd-f">等待执行…</div></div>
+        <div class="c"><div class="h">时间平移</div><div class="b" id="cd-t">等待执行…</div></div>
+        <div class="c"><div class="h">撤销</div><div class="b" id="cd-x">等待执行…</div></div>
+      </div>
+      <p class="small" style="margin-top:8px">绿色高亮 = 本步真正采用的动作；虚线 = 尝试过但不可行/代价更高的动作。这张卡片就是"贪心如何决策"的可视化证据。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>消解日志 <em>逐条动作记录</em></h3>
+        <div id="solveLog" style="max-height:280px;overflow-y:auto"></div>
+        <div class="note" id="solveNote" style="margin-top:8px">点击「自动消解」或「下一步」开始。</div>
+      </div>
+      <div class="card">
+        <h3>消解统计 <em>按类别的保留 / 调整 / 撤销</em></h3>
+        <table class="tb" id="solveStat">
+          <tr><th>类别</th><th>保留</th><th>调整</th><th>撤销</th></tr>
+          <tr><td class="l"><b>A 类</b></td><td class="num" id="stA">—</td><td class="num" id="adjA">—</td><td class="num" id="canA">—</td></tr>
+          <tr><td class="l"><b>B 类</b></td><td class="num" id="stB">—</td><td class="num" id="adjB">—</td><td class="num" id="canB">—</td></tr>
+          <tr><td class="l"><b>C 类</b></td><td class="num" id="stC">—</td><td class="num" id="adjC">—</td><td class="num" id="canC">—</td></tr>
+          <tr class="on"><td><b>合计</b></td><td class="num" id="stT">—</td><td class="num" id="adjT">—</td><td class="num" id="canT">—</td></tr>
+        </table>
+        <div class="note" style="margin-top:8px">这张表就是题面<b>表 1</b>的数据来源：按类别统计保留/调整/撤销的装备数量。理想的消解结果：A 类撤销 = 0、撤销总数尽量小、调整幅度尽量小。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 幕 4：result2.xlsx 与小结 ========= -->
+<section class="scene" id="s4" data-title="四 · result2.xlsx 与小结">
+  <div class="wrap">
+    <div>
+      <div class="kicker">交付物 &amp; 方法总结</div>
+      <h1>result2.xlsx 的格式与消解有效性
+        <small>一行一件装备的动作：频移填新频段、时移填新时间、撤销填"是"。</small>
+      </h1>
+      <p class="lead">问题二的交付物是一份 <b>result2.xlsx</b> 和论文里的表 1 统计。前者逐件装备给出调整后的参数（每行只能三选一：填频段、填时间、或在撤销列标记"是"）；后者是前面动画里那张按类别的保留/调整/撤销汇总表。两者必须完全自洽。</p>
+      <p class="lead">好的消解方案应满足：<b>A 类撤销为 0</b>（最高优先级不受损）、<b>撤销集中在 C 类</b>（低优先级承担代价）、<b>总撤销数尽量小</b>、<b>平均调整幅度尽量小</b>。这四条既是评价指标，也是论文里做对比实验的抓手。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>result2.xlsx 模板 <em>逐装备一行</em></h3>
+        <table class="tb">
+          <tr><th>装备编号</th><th>调整后频段范围</th><th>调整后时间区间</th><th>撤销</th></tr>
+          <tr><td class="l">A003</td><td class="l">[15, 30)</td><td class="l">（不动）</td><td class="l">否</td></tr>
+          <tr><td class="l">B007</td><td class="l">（不动）</td><td class="l">[22, 37)</td><td class="l">否</td></tr>
+          <tr><td class="l">C015</td><td class="l">（不动）</td><td class="l">（不动）</td><td class="l"><b class="hl">是</b></td></tr>
+          <tr class="on"><td class="l">C021</td><td class="l">[40, 55)</td><td class="l">（不动）</td><td class="l">否</td></tr>
+          <tr><td class="l">…</td><td class="l">…</td><td class="l">…</td><td class="l">…</td></tr>
+        </table>
+        <p class="small">每行一件装备，三列中"至多一个非空"。未调整的装备保持原值即可，"撤销"列填"是"表示放弃该计划。</p>
+      </div>
+      <div class="card">
+        <h3>消解算法的可改进方向 <em>冲高分用</em></h3>
+        <ul style="font-size:13.5px;color:var(--ink2);line-height:1.9;padding-left:18px;margin:0">
+          <li><b>全局优化（ILP / CP-SAT）</b>：把贪心换成整数规划，目标 = 撤销数×大权重 + 调整幅度之和，可用求解器直接求最优。</li>
+          <li><b>邻域搜索</b>：贪心出初解后，用 Tabu Search / 模拟退火微调，进一步压低撤销数与幅度。</li>
+          <li><b>冲突图连通分量分解</b>：把冲突图拆成互不影响的子图，各子图独立求解后再合并，降低问题规模。</li>
+          <li><b>A-A 子图的独立集 / 顶点覆盖</b>：在 A-A 冲突图上求最小顶点覆盖，即"最少撤销几件 A 类"。</li>
+        </ul>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="approach-tag">贪心消解</span>
+          <span class="approach-tag gold">ILP 全局优化</span>
+          <span class="approach-tag">邻域搜索</span>
+          <span class="approach-tag warn">冲突图分解</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote">「对问题 1 中检测出的时频冲突进行消解，将消解方案保存到文件 result2.xlsx 中，并在论文中按表 1 的格式给出时频冲突消解的统计结果。」
+      <div class="small" style="margin-top:6px">→ 论文必须给出两类东西：① result2.xlsx 的统计汇总（按类别的保留/调整/撤销表）；② 消解方法的数学模型（如上面那段 ILP）与复杂度分析。</div>
+    </div>
+
+    <div class="grid3">
+      <div class="card"><h3>方法论定位</h3><p>问题二是经典的 <b>约束满足 + 优先级调度</b> 问题：贪心能快速出可行解，ILP 能出更优解，图论能处理特殊子结构（如 A-A 子图）。三者互补，构成完整的求解体系。</p></div>
+      <div class="card"><h3>评估指标</h3><p>论文里建议给全：<b>总撤销数</b>、<b>A 类撤销数</b>（理想为 0）、<b>平均调整幅度</b>、<b>消解后冲突对数</b>（必须为 0），并可对贪心与 ILP 两版方案做对比。</p></div>
+      <div class="card"><h3>承上启下</h3><p>本幕得到的是"无冲突基线"。问题三将放开频移上限，在不新增资源的前提下塞入更多 C 类装备——相当于"自由平移 + 贪心装箱"。继续下一页。</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+
+<script>
+/* ========= 数据与工具（与前两页共用） ========= */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){const t=el("text",Object.assign({x,y},a||{}));t.textContent=s;return t;}
+function clear(id){const e=document.getElementById(id);if(e)e.innerHTML="";}
+
+function mulberry32(seed){return function(){
+  let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);
+  return((t^t>>>14)>>>0)/4294967296;
+};}
+function genData(seed){
+  const rnd=mulberry32(seed||42);
+  const CLASS=[
+    {k:"A",n:20,priority:3,color:"#e07a5f"},
+    {k:"B",n:50,priority:2,color:"#1e9fc4"},
+    {k:"C",n:80,priority:1,color:"#12a594"}
+  ];
+  const all=[];let idx=1;
+  for(const c of CLASS){
+    for(let i=0;i<c.n;i++){
+      const bw=4+Math.floor(rnd()*2);
+      const fs=Math.floor(rnd()*(100-bw));
+      const tau=5+Math.floor(rnd()*2);
+      const ts=Math.floor(rnd()*220);
+      const iv=50+Math.floor(rnd()*60);
+      const n=2+Math.floor(rnd()*3);
+      const id=c.k+String(idx).padStart(3,"0");
+      all.push({id,cls:c.k,priority:c.priority,color:c.color,
+        fs,fe:fs+bw,ts,te:ts+tau,iv,n,bw,tau,rects:[],status:"active",
+        orig_fs:fs,orig_ts:ts,orig_iv:iv});idx++;
+    }
+  }
+  for(const e of all)for(let k=0;k<e.n;k++){
+    const t0=e.ts+k*e.iv;
+    e.rects.push({fs:e.fs,fe:e.fe,ts:t0,te:t0+e.tau,k});
+  }
+  let maxT=0;for(const e of all)for(const r of e.rects)if(r.te>maxT)maxT=r.te;
+  return {equip:all,maxT,classes:CLASS};
+}
+
+/* 冲突检测 */
+function detectConflicts(equip){
+  const conflicts=[];
+  const act=equip.filter(e=>e.status==="active");
+  for(let i=0;i<act.length;i++){
+    for(let j=i+1;j<act.length;j++){
+      const e1=act[i],e2=act[j];
+      const overlaps=[];
+      for(const r1 of e1.rects){
+        for(const r2 of e2.rects){
+          const fs=Math.max(r1.fs,r2.fs),fe=Math.min(r1.fe,r2.fe);
+          const ts=Math.max(r1.ts,r2.ts),te=Math.min(r1.te,r2.te);
+          if(fs<fe&&ts<te)overlaps.push({fs,fe,ts,te});
+        }
+      }
+      if(overlaps.length>0)conflicts.push({a:e1,b:e2,overlaps});
+    }
+  }
+  return conflicts;
+}
+
+/* 检查一组 rects 是否与所有 active 装备都不冲突 */
+function isConflictFree(candidateRects, exceptEquip, actives){
+  for(const e of actives){
+    if(e===exceptEquip||e.status!=="active")continue;
+    for(const r1 of candidateRects){
+      for(const r2 of e.rects){
+        if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe) &&
+           Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te))return false;
+      }
+    }
+  }
+  return true;
+}
+
+/* 对 low 装备尝试频移 / 时移，返回 {type, delta, newRects} 或 null */
+function tryShift(low, actives, maxFShift, maxTShift){
+  for(let d=1;d<=maxFShift;d++){
+    for(const sign of [1,-1]){
+      const delta=sign*d;
+      const newRects=low.rects.map(r=>({fs:r.fs+delta,fe:r.fe+delta,ts:r.ts,te:r.te,k:r.k}));
+      if(newRects.some(r=>r.fs<0||r.fe>100))continue;
+      if(isConflictFree(newRects,low,actives))
+        return {type:"freq",delta,newRects};
+    }
+  }
+  for(let d=1;d<=maxTShift;d++){
+    for(const sign of [1,-1]){
+      const delta=sign*d;
+      const newRects=low.rects.map(r=>({fs:r.fs,fe:r.fe,ts:r.ts+delta,te:r.te+delta,k:r.k}));
+      if(isConflictFree(newRects,low,actives))
+        return {type:"time",delta,newRects};
+    }
+  }
+  return null;
+}
+
+/* 贪心消解主函数：返回每一步的记录 */
+function greedySolve(data){
+  const equip=data.equip.map(e=>({...e,rects:e.rects.map(r=>({...r}))}));
+  const steps=[];
+  const FSHIFT=10, TSHIFT=5;
+  let iter=0;
+  while(iter++<2000){
+    const confs=detectConflicts(equip);
+    if(confs.length===0)break;
+    const c=confs[0];
+    let high,low;
+    if(c.a.priority!==c.b.priority){
+      high=c.a.priority>c.b.priority?c.a:c.b;
+      low=c.a.priority<c.b.priority?c.a:c.b;
+    }else{
+      const act=equip.filter(e=>e.status==="active");
+      const cnt=function(e){
+        let s=0;
+        for(const o of act){if(o===e)continue;
+          for(const r1 of e.rects)for(const r2 of o.rects)
+            if(Math.max(r1.fs,r2.fs)<Math.min(r1.fe,r2.fe)&&Math.max(r1.ts,r2.ts)<Math.min(r1.te,r2.te)){s++;break;}
+        }
+        return s;
+      };
+      const cntA=cnt(c.a), cntB=cnt(c.b);
+      high=cntA>=cntB?c.a:c.b;
+      low=cntA>=cntB?c.b:c.a;
+    }
+    const res=tryShift(low,equip,FSHIFT,TSHIFT);
+    if(res){
+      low.rects=res.newRects;
+      if(res.type==="freq"){low.fs+=res.delta;low.fe+=res.delta;}
+      else{low.ts+=res.delta;low.te+=res.delta;}
+      low.action=res.type;low.delta=res.delta;
+      steps.push({low,high,type:res.type,delta:res.delta,msg:
+        low.id+"("+low.cls+") "+(res.type==="freq"?"频移":"时移")+" "+(res.delta>0?"+":"")+res.delta
+        +"Δ"+(res.type==="freq"?"f":"t")+" 避开 "+high.id+"("+high.cls+")"});
+    }else{
+      low.status="cancelled";
+      low.action="cancel";
+      steps.push({low,high,type:"cancel",msg:
+        low.id+"("+low.cls+") 撤销（频移≤10Δf、时移≤5Δt 均无法避开）"});
+    }
+  }
+  return {steps,equip};
+}
+
+/* 时频网格 */
+function tfGrid(containerId,opts){
+  opts=opts||{};
+  const W=opts.W||900,H=opts.H||340,pad=opts.pad||50;
+  const maxF=opts.maxF||100,maxT=opts.maxT||DATA2.maxT;
+  const yStep=opts.yStep||10, xStep=opts.xStep||100;
+  const svg=el("svg",{viewBox:"0 0 "+W+" "+H,preserveAspectRatio:"xMidYMid meet"});
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(el("line",{x1:pad,y1:y,x2:W-pad,y2:y,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(el("line",{x1:x,y1:pad,x2:x,y2:H-pad,stroke:"rgba(255,255,255,.06)","stroke-width":1}));
+  }
+  svg.appendChild(el("line",{x1:pad,y1:H-pad,x2:W-pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  svg.appendChild(el("line",{x1:pad,y1:pad,x2:pad,y2:H-pad,stroke:"rgba(255,255,255,.3)","stroke-width":1.2}));
+  for(let f=0;f<=maxF;f+=yStep){
+    const y=pad+(H-pad*2)*f/maxF;
+    svg.appendChild(txt(pad-6,y+3,String(f),{"text-anchor":"end","font-size":8.5,fill:"#9ab7bd"}));
+  }
+  for(let t=0;t<=maxT;t+=xStep){
+    const x=pad+(W-pad*2)*t/maxT;
+    svg.appendChild(txt(x,H-pad+12,String(t),{"text-anchor":"middle","font-size":8.5,fill:"#9ab7bd"}));
+  }
+  svg.appendChild(txt(pad-38,pad-18,"Δf",{"font-size":9.5,fill:"#7fd8c9","font-weight":"600"}));
+  svg.appendChild(txt(W-pad,pad-18,"Δt",{"text-anchor":"end","font-size":9.5,fill:"#7fd8c9","font-weight":"600"}));
+  svg._tf={W,H,pad,maxF,maxT};
+  document.getElementById(containerId).appendChild(svg);
+  return svg;
+}
+function tfDrawRect(svg,rect,color,opts){
+  opts=opts||{};const g=svg._tf;if(!g)return;
+  const x=g.pad+(g.W-g.pad*2)*rect.ts/g.maxT;
+  const y=g.pad+(g.H-g.pad*2)*rect.fs/g.maxF;
+  const w=(g.W-g.pad*2)*(rect.te-rect.ts)/g.maxT;
+  const h=(g.H-g.pad*2)*(rect.fe-rect.fs)/g.maxF;
+  const r=el("rect",{x,y,width:Math.max(w,.5),height:Math.max(h,.5),rx:1.2,
+    fill:color,opacity:opts.opacity||.78,stroke:opts.stroke||color,"stroke-width":opts.sw||.6});
+  if(opts.cls)r.setAttribute("class",opts.cls);
+  svg.appendChild(r);
+  if(opts.title)r.setAttribute("data-t",opts.title);
+  return r;
+}
+
+/* ========= 页面级状态 ========= */
+const DATA2=genData(42);
+const SOL=greedySolve(DATA2);
+let stepDone=0, autoTimer=null;
+
+function redrawStage(){
+  const svg=document.querySelector("#tfSolve svg");if(!svg)return;
+  svg.querySelectorAll("rect").forEach(n=>{if(n.getAttribute("class")!=="bgr")n.remove();});
+  for(const e of SOL.equip){
+    const cancelled=e.status==="cancelled";
+    for(const r of e.rects){
+      const node=tfDrawRect(svg,r,cancelled?"#9ab7bd":e.color,{opacity:cancelled?.16:.74,sw:.6});
+      node.setAttribute("class","bgr");
+    }
+  }
+  const confs=detectConflicts(SOL.equip);
+  for(const c of confs){
+    for(const ov of c.overlaps){
+      tfDrawRect(svg,ov,"#ff4d6d",{opacity:.9,sw:2.2,cls:"blink-red"});
+    }
+  }
+  updateStat();
+}
+
+function updateStat(){
+  const a=SOL.equip.filter(e=>e.cls==="A"), b=SOL.equip.filter(e=>e.cls==="B"), c=SOL.equip.filter(e=>e.cls==="C");
+  const stat=arr=>[arr.filter(e=>e.status==="active"&&!e.action).length,
+                   arr.filter(e=>e.action==="freq"||e.action==="time").length,
+                   arr.filter(e=>e.status==="cancelled").length];
+  const sa=stat(a), sb=stat(b), sc=stat(c);
+  const stT=sa[0]+sb[0]+sc[0], adjT=sa[1]+sb[1]+sc[1], canT=sa[2]+sb[2]+sc[2];
+  document.getElementById("stA").textContent=sa[0];document.getElementById("adjA").textContent=sa[1];document.getElementById("canA").textContent=sa[2];
+  document.getElementById("stB").textContent=sb[0];document.getElementById("adjB").textContent=sb[1];document.getElementById("canB").textContent=sb[2];
+  document.getElementById("stC").textContent=sc[0];document.getElementById("adjC").textContent=sc[1];document.getElementById("canC").textContent=sc[2];
+  document.getElementById("stT").textContent=stT;document.getElementById("adjT").textContent=adjT;document.getElementById("canT").textContent=canT;
+  const confsNow=detectConflicts(SOL.equip).length;
+  document.getElementById("stepHint").textContent="已执行 "+stepDone+" 步 · 剩 "+confsNow+" 冲突 · 保留 "+stT+" · 调整 "+adjT+" · 撤销 "+canT;
+}
+
+function setCand(step){
+  const f=document.getElementById("cd-f"),t=document.getElementById("cd-t"),x=document.getElementById("cd-x");
+  [f,t,x].forEach(n=>n.parentNode.className="c");
+  if(!step){f.textContent="等待执行…";t.textContent="等待执行…";x.textContent="等待执行…";return;}
+  const L=step.low,H=step.high;
+  if(step.type==="freq"){
+    f.textContent="✓ 可行：δ="+(step.delta>0?"+":"")+step.delta+"Δf，移动后与全部装备无冲突 → 采用";
+    f.parentNode.className="c try";
+    t.textContent="未尝试：频移已找到可行解，按「先频后时」顺序无需再试";
+    t.parentNode.className="c fail";
+    x.textContent="无需撤销（本步未牺牲装备）";
+    x.parentNode.className="c fail";
+  }else if(step.type==="time"){
+    f.textContent="✗ 频移 ±10Δf 内均不可行（越界或有新冲突）";
+    f.parentNode.className="c fail";
+    t.textContent="✓ 可行：δ="+(step.delta>0?"+":"")+step.delta+"Δt，移动后与全部装备无冲突 → 采用";
+    t.parentNode.className="c try";
+    x.textContent="无需撤销（本步未牺牲装备）";
+    x.parentNode.className="c fail";
+  }else{
+    f.textContent="✗ 频移 ±10Δf 内均不可行";f.parentNode.className="c fail";
+    t.textContent="✗ 时移 ±5Δt 内均不可行";t.parentNode.className="c fail";
+    x.textContent="✓ 兜底：撤销 "+L.id+"（"+L.cls+" 类），代价最高但保证无冲突 → 采用";
+    x.parentNode.className="c try";
+  }
+}
+
+function reset(){
+  const fresh=genData(42);
+  const r=greedySolve(fresh);
+  SOL.steps=r.steps;SOL.equip=r.equip;
+  stepDone=0;
+  clear("solveLog");
+  document.getElementById("solveNote").textContent="已重置到初始冲突状态，可重新演示。";
+  setCand(null);
+  initStage();
+}
+
+function doStep(){
+  if(stepDone>=SOL.steps.length){
+    document.getElementById("solveNote").textContent="✓ 全部冲突已消解完成，最终冲突对 = 0。";
+    return;
+  }
+  const step=SOL.steps[stepDone];
+  const log=document.getElementById("solveLog");
+  const line=document.createElement("div");
+  line.className="logline";
+  const tagCls=step.type==="freq"?"f":step.type==="time"?"t":"x";
+  const tagTxt=step.type==="freq"?"频移":step.type==="time"?"时移":"撤销";
+  line.innerHTML="<span class='tag "+tagCls+"'>"+tagTxt+"</span><span>"+step.msg+"</span>";
+  log.appendChild(line);
+  log.scrollTop=log.scrollHeight;
+  stepDone++;
+  setCand(step);
+  redrawStage();
+  document.getElementById("solveNote").textContent="已完成 "+stepDone+" / "+SOL.steps.length+" 步。";
+}
+
+/* ========= 场景控制 ========= */
+(function(){
+  const scenes=document.querySelectorAll(".scene");
+  const dots=document.getElementById("dots");
+  let cur=0;
+  scenes.forEach((s,i)=>{const d=document.createElement("button");d.className="dot"+(i===0?" on":"");
+    d.title=s.getAttribute("data-title");d.onclick=()=>goto(i);dots.appendChild(d);});
+  function goto(i){
+    cur=Math.max(0,Math.min(scenes.length-1,i));
+    for(let k=0;k<scenes.length;k++){
+      scenes[k].classList.toggle("active",k===cur);dots.children[k].classList.toggle("on",k===cur);
+    }
+    document.getElementById("scTitle").textContent=scenes[cur].getAttribute("data-title");
+    document.getElementById("pgNow").textContent=cur+1;document.getElementById("pgAll").textContent=scenes.length;
+    document.getElementById("prog").style.width=((cur+1)/scenes.length*100)+"%";
+    if(scenes[cur]._onEnter)scenes[cur]._onEnter();
+  }
+  document.getElementById("btnPrev").onclick=()=>goto(cur-1);
+  document.getElementById("btnNext").onclick=()=>goto(cur+1);
+  document.getElementById("btnReplay").onclick=()=>goto(cur);
+  document.getElementById("btnFx").onclick=function(){
+    document.body.classList.toggle("reduce");
+    this.classList.toggle("on",!document.body.classList.contains("reduce"));
+    this.textContent=document.body.classList.contains("reduce")?"动效 关":"动效 开";
+  };
+  document.addEventListener("keydown",ev=>{
+    if(ev.key==="ArrowRight")goto(cur+1);else if(ev.key==="ArrowLeft")goto(cur-1);
+  });
+
+  function initStage(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;
+      const ba=document.getElementById("btnAuto");ba.textContent="自动消解";ba.classList.remove("on");}
+    clear("tfSolve");
+    tfGrid("tfSolve",{W:900,H:320,maxT:DATA2.maxT,xStep:100});
+    stepDone=0;
+    clear("solveLog");
+    setCand(null);
+    redrawStage();
+  }
+  scenes[2]._onEnter=initStage;
+
+  document.getElementById("btnStep").onclick=doStep;
+  document.getElementById("btnReset").onclick=function(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;
+      const ba=document.getElementById("btnAuto");ba.textContent="自动消解";ba.classList.remove("on");}
+    reset();
+  };
+  document.getElementById("btnAuto").onclick=function(){
+    const ba=this;
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;ba.textContent="自动消解";ba.classList.remove("on");return;}
+    if(stepDone>=SOL.steps.length){reset();}
+    ba.textContent="停止";ba.classList.add("on");
+    autoTimer=setInterval(()=>{
+      doStep();
+      if(stepDone>=SOL.steps.length){
+        clearInterval(autoTimer);autoTimer=null;
+        ba.textContent="自动消解完成 ✓";ba.classList.remove("on");
+      }
+    },600);
+  };
+
+  /* 所有幕的 _onEnter 定义完成后再进入首幕，确保幕 1 内容首次即渲染 */
+  goto(0);
+})();
+</script>
+</body>
+</html>

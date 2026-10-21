@@ -1,0 +1,13 @@
+# docker/frontend/Dockerfile 专用构建上下文裁剪（BuildKit 会用它整体覆盖根 .dockerignore）
+# 与根 .dockerignore 的区别：不排除 frontend/dist —— 本镜像构建需要 COPY frontend/dist/
+# 因此用本 Dockerfile 构建前端镜像无需再临时改动根 .dockerignore
+.git
+**/.DS_Store
+frontend/node_modules
+backend/target
+gui-test-screenshots
+black-monkey_assets
+*.miora
+docs
+workspace/*
+!workspace/agents

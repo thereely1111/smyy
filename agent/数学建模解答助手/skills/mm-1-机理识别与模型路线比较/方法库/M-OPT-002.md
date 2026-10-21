@@ -1,0 +1,18 @@
+### M-OPT-002 整数规划 / 混合整数线性规划（IP/MILP）
+- **task_types**：选址、选项目、开关决策、指派、排班、路径、逻辑约束。
+- **problem_signature**：变量必须取整数或 0/1；出现“是否、只能、至少一个、若则、不能同时”。
+- **core_idea**：在线性模型上增加离散决策，通过分支定界、割平面等求解。
+- **mathematical_form**：LP 形式 + `x_i ∈ Z` 或 `x_i ∈ {0,1}`。
+- **inputs**：逻辑关系、固定成本、容量、整数变量、Big-M 或指示约束参数。
+- **outputs**：整数最优解、上下界、最优性间隙、节点搜索信息。
+- **assumptions**：线性关系或可可靠线性化；Big-M 有合理上界。
+- **hard_constraints**：Big-M 无界、规模极大且没有分解策略时需谨慎。
+- **strengths**：表达离散决策能力强，结果易解释。
+- **limitations**：计算量可能指数增长；错误的 Big-M 会造成数值病态。
+- **validation**：逐条检查逻辑约束、整数性、可行性、最优性间隙与替代解。
+- **sensitivity**：固定成本、容量、需求、时间窗、整数约束放松前后差异。
+- **complexity**：NP-hard 子类常见；需报告求解时间和 gap。
+- **selection_tags**：`integer, binary, logic, scheduling, location`
+- **composable_with**：`M-OPT-003, M-NET-002, M-TIME-003, M-UNC-002`
+- **fallbacks**：LP 松弛、启发式、滚动时域、分解、局部搜索。
+- **agent_actions**：识别离散语义 -> 构造逻辑约束 -> 设置有效边界 -> 求解 -> 验证逻辑与 gap。

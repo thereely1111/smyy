@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 CUMCM B题 · 问题三分析</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.topbar{position:fixed;left:0;right:0;top:0;height:56px;z-index:40;display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.grid2,.grid3,.grid4{grid-template-columns:1fr}.scene{padding:16px 14px 24px}}
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.pill{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.16s}
+.pill:hover{border-color:var(--teal);color:var(--teal-d)}
+.pill.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+table.tb td:first-child{white-space:nowrap}
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox svg{display:block;width:100%;height:auto}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+.note{font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);border-radius:9px;padding:9px 12px;line-height:1.75}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.g{background:#eef8f6;border-color:#cfe7e5;color:var(--teal-d)}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+.navbar{position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
+.navbar button.nb{font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+body.reduce .wrap>.stg{opacity:1;transform:none;transition:none}
+body.reduce .scene{transition:none}
+.formula{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:#0b2e36;color:#cdeee9;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.75;overflow:auto;white-space:pre}
+.formula .c{color:#7fd8c9}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 2px;background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.ctl .lb{font-size:12.5px;color:var(--ink2);font-weight:600;flex:none}
+.ctl input[type=range]{flex:1;min-width:140px;accent-color:var(--teal-d);cursor:pointer}
+.ctl .val{font-variant-numeric:tabular-nums;font-weight:700;color:var(--teal-d);min-width:64px;text-align:right;font-size:13.5px}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.fadein{animation:fadeIn .5s ease-out both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:growY .60s cubic-bezier(.2,.7,.3,1) both}
+@keyframes growY{from{transform:scaleY(.02)}to{transform:scaleY(1)}}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="splitnav"><a href="./01_全局问题分析.html">全局</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<section class="scene" id="s1" data-title="一 · 正六边形全局覆盖">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题三 · 全向源、数量未知</div>
+      <h1>不知道源在哪，就先保证「一定能听到」
+        <small>用中心加一圈测点覆盖整个 1800 m 区域，任何位置的源都至少能被一个测点听到。</small>
+      </h1>
+      <p class="lead">问题三里所有源都是全向的，但我们不知道它们的位置，甚至不知道有几个（只知道 10–16 个）。策略分两步：先用少数几个测点把整个区域「盖住」，保证任何位置的源都会在某次测量中被听到；再转向局部，精确定位并清除。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">中心 + 圆周 6 点 · 正六边形覆盖</div></div>
+        <div class="ctl">
+          <span class="lb">圆周半径 ρ</span>
+          <input type="range" id="rhoRange" min="800" max="1600" step="50" value="1150">
+          <span class="val" id="rhoVal">1150 m</span>
+        </div>
+        <div class="ctl">
+          <span class="lb">试投源数量 n</span>
+          <input type="range" id="srcRange" min="10" max="16" step="1" value="13">
+          <span class="val" id="srcVal">13 个</span>
+        </div>
+        <div id="coverChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--teal)"></i>覆盖圆</span>
+          <span><i style="background:var(--blue)"></i>测点</span>
+          <span><i style="background:var(--gold)"></i>目标区域边界</span>
+          <span><i style="background:var(--warn)"></i>随机源位置</span>
+        </div>
+        <div class="note" id="coverNote"></div>
+      </div>
+      <div class="card">
+        <h3>为什么是「中心 + 正六边形」</h3>
+        <p>目标区域是半径 1800 m 的圆。每个测点的有效接收半径至少 1000 m，取其一个合适的工作半径 ρ，把它画成一个覆盖圆。</p>
+        <div class="quote">要让若干个半径 ρ 的圆盖住半径 1800 m 的圆，最省的点数是<b>中心 1 个 + 圆周 6 个</b>，圆周上的点按 60° 均分。这是圆盘覆盖的经典正六边形构型。</div>
+        <div class="formula"><span class="c"># 覆盖的充分条件</span>
+外圈测点距圆心 ρ，相邻夹角 60°
+相邻两测点间距 = ρ            <span class="c"># 正六边形边长 = 半径</span>
+覆盖半径需满足： ρ ≥ 1800 / √3 ≈ 1039 m
+实际取 ρ ≈ 1150 m 留出裕量</div>
+        <div class="note">取 ρ ≈ 1150 m，既让中心与圆周的覆盖圆相互叠压不留缝，又让每个测点到区域边缘的距离不超过有效接收半径。ρ 越小点数需求越大，ρ 越大外圈越难覆盖。</div>
+      </div>
+    </div>
+    <div class="grid4" id="kpiC"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题三的「发现」阶段——只知源的总数范围（10–16 个）且全部为全向源，位置完全未知，要求给出保证全部发现的覆盖策略。</p>
+      <p><b class="hl-t">本幕结论：</b>用「中心 1 点 + 圆周 6 点」的正六边形构型把整个半径 1800 m 区域盖住，任何位置的源都至少被一个测点听到。半径 ρ 的圆盖住 1800 m 圆盘的充分条件是 <b>ρ ≥ 1800/√3 ≈ 1039 m</b>，实际取 ρ ≈ 1150 m 留出裕量。规律是：ρ 越小所需测点越多，ρ 越大外圈越难覆盖。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s2" data-title="二 · 局部定位与清除">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题三 · 从「听到」到「清除」</div>
+      <h1>覆盖只负责发现，清除还要走过去
+        <small>一旦某个测点听到源，就切到局部：多次交会定位，移动到 20 m 内执行 /clear。</small>
+      </h1>
+      <p class="lead">全局覆盖解决「有没有漏」。一旦某个频道被听到，机器狗就要转入局部流程：围绕该源换位置测量，用交会把定位区域缩小到 R ≤ 20 m，再移动到源附近执行清除。清除后该频道的源被核销，继续扫其余频道。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">单个源的「发现 → 交会 → 清除」流程</div></div>
+        <div class="ctl">
+          <span class="lb">播放进度</span>
+          <input type="range" id="flowRange" min="0" max="100" step="1" value="0">
+          <span class="val" id="flowVal">0%</span>
+        </div>
+        <div id="flowChart"></div>
+        <div class="legend">
+          <span><i style="background:var(--blue)"></i>机器狗</span>
+          <span><i style="background:var(--gold)"></i>源</span>
+          <span><i class="ln" style="background:var(--teal)"></i>示向度</span>
+        </div>
+        <div class="note" id="flowNote"></div>
+      </div>
+      <div class="card">
+        <h3>单源清除的耗时构成</h3>
+        <table class="tb">
+          <tr><th>动作</th><th>耗时</th><th>次数</th></tr>
+          <tr><td>检测 /measure</td><td class="num">5 s</td><td class="num">2–3</td></tr>
+          <tr><td>切换频道</td><td class="num">1 s</td><td class="num">按需</td></tr>
+          <tr><td>移动 (直线/5 m·s⁻¹)</td><td class="num">距离 ÷ 5</td><td class="num">若干段</td></tr>
+          <tr><td>清除 /clear（已清除）</td><td class="num">5 s</td><td class="num">1</td></tr>
+          <tr><td>清除 /clear（未发现）</td><td class="num">3 s</td><td class="num">偶尔</td></tr>
+        </table>
+        <div class="note w">每次移动前应先把定位区域缩到足够小，避免「跑过去却没清掉」——未发现清除只花 3 s，但白跑一趟的移动时间往往是主要浪费。</div>
+      </div>
+    </div>
+    <div class="grid4" id="kpiF"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题三的「清除」阶段——覆盖只负责发现，发现之后还需要定位到 R ≤ 20 m 并执行 /clear。</p>
+      <p><b class="hl-t">本幕结论：</b>一旦某频道被听到，立即转入局部流程：围绕该源换位置测量，用交会把定位区域缩小到 R ≤ 20 m，再移动到源附近清除，随后核销该频道。单源耗时由检测（5 s × 2–3 次）、切换频道、移动（距离 ÷ 5 m/s）与清除（5 s）构成，其中移动往往占主要开销——所以必须先定位准再动身，避免「跑过去却没清掉」的无谓往返。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s3" data-title="三 · 终止条件与状态核销">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题三 · 什么时候才能 /exit</div>
+      <h1>20 个频道全部核销，才算做完
+        <small>只要还有频道没确认，就不能退出——这是问题三最容易被扣分的地方。</small>
+      </h1>
+      <p class="lead">每个频道最多一个源。机器狗必须对 20 个频道逐一给出结论：要么「已清除」，要么「经完整覆盖确认不存在」。只有全部核销后，才能调用 /exit 结束。下面用一个状态面板跟踪全部频道的进度。</p>
+    </div>
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop"><div class="ct">20 频道核销状态</div></div>
+        <div class="ctl">
+          <span class="lb">已清除源数 n</span>
+          <input type="range" id="doneRange" min="0" max="16" step="1" value="4">
+          <span class="val" id="doneVal">4 个</span>
+        </div>
+        <div id="stateGrid"></div>
+        <div class="legend">
+          <span><i style="background:var(--teal-d)"></i>已清除</span>
+          <span><i style="background:var(--muted)"></i>确认不存在</span>
+          <span><i style="background:var(--gold)"></i>待处理</span>
+        </div>
+        <div class="note" id="stateNote"></div>
+      </div>
+      <div class="card">
+        <h3>退出前的自检清单</h3>
+        <table class="tb">
+          <tr><th>检查项</th><th>要求</th></tr>
+          <tr><td>频道 1–20</td><td>每个频道都有明确结论</td></tr>
+          <tr><td>已清除频道的源</td><td>确认在 20 m 内执行过 /clear</td></tr>
+          <tr><td>未发现频道</td><td>确认被完整覆盖扫过（非「没去看」）</td></tr>
+          <tr><td>重复源</td><td>同一频道不重复清除</td></tr>
+          <tr><td>剩余时间</td><td>留出退出余量</td></tr>
+        </table>
+        <div class="note">「未发现」与「没去查」是两回事：前者是覆盖确认过、结果为不存在；后者只是尚未检查。只有前者才能核销一个频道。</div>
+      </div>
+    </div>
+    <div class="grid3" id="kpiT"></div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题三的终止条件——必须对全部 20 个频道逐一给出结论后，才能调用 /exit。</p>
+      <p><b class="hl-t">本幕结论：</b>每个频道最多一个源，其状态只有两种可以核销：已清除，或经完整覆盖确认「不存在」。关键区分是「未发现」与「没去查」是两回事——前者是覆盖确认过、结论为不存在，后者只是尚未检查，不能核销。只有 20 个频道全部有明确结论后才能退出，这正是问题三最容易失分的地方。</p>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="s4" data-title="四 · 时序与耗时预算">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题三 · 把时间花在哪</div>
+      <h1>覆盖阶段轻，清除阶段重
+        <small>发现靠 7 个测点一次扫过，真正吃时间的是逐个源的定位与移动清除。</small>
+      </h1>
+      <p class="lead">把整个任务拆成三个阶段：进场、全局覆盖、局部清除。移动耗时由直线距离除以 5 m/s 得到，因此路径规划直接决定总时间。</p>
+    </div>
+    <div class="canvasbox">
+      <div class="cvtop"><div class="ct">三阶段耗时构成（按源数量估算）</div></div>
+      <div class="ctl">
+        <span class="lb">源数量 n</span>
+        <input type="range" id="numRange" min="10" max="16" step="1" value="12">
+        <span class="val" id="numVal">12 个</span>
+      </div>
+      <div id="timeChart"></div>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>检测</span>
+        <span><i style="background:var(--cyan)"></i>切换频道</span>
+        <span><i style="background:var(--blue)"></i>移动</span>
+        <span><i style="background:var(--gold)"></i>清除</span>
+      </div>
+      <div class="note" id="timeNote"></div>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>阶段一 · 进场</h3><p>从区域外进入，直接走向覆盖构型的中心点，耗时以移动距离计。</p></div>
+      <div class="card"><h3>阶段二 · 全局覆盖</h3><p>沿「中心 → 外圈 6 点」依次测量，开销以切换频道与检测为主，移动路径建议沿圆弧走以减少回头路。</p></div>
+      <div class="card"><h3>阶段三 · 局部清除</h3><p>对每个被听到的频道交会定位并清除。<b class="hl-t">移动耗时占比最高</b>，因此定位越准、跑空越少，总时间越短。</p></div>
+    </div>
+    <div class="note">本页耗时数字为依据题面规则的演示估算，用于说明优化方向；实际以官方模拟器计时为准。</div>
+    <div class="card">
+      <h3>赛题对应与结论小结</h3>
+      <p><b class="hl-t">赛题对应：</b>本幕对应问题三的完整时间预算——要在有限时间内走完「进场 → 全局覆盖 → 局部清除」全过程。</p>
+      <p><b class="hl-t">本幕结论：</b>全局覆盖阶段（中心 + 外圈 6 点，共 7 个测点）开销轻，以切换频道与检测为主；局部清除阶段最重，其中移动耗时占比最高。因此优化总时间的着力点是路径规划与定位精度——定位越准、跑空越少，总时间越短。图中耗时随源数量 n 近似线性增长，可作为时间预算的上界。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+<div id="tip"></div>
+<script>
+var NS="http://www.w3.org/2000/svg";
+function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a){var t=el("text",Object.assign({x:x,y:y},a||{}));t.textContent=s;return t;}
+function anim(node,kind){if(!node)return node;if(document.body&&document.body.classList&&document.body.classList.contains("reduce"))return node;node.setAttribute("class",(node.getAttribute("class")||"")+" "+kind);return node;}
+
+/* ---- 幕一：正六边形覆盖 ---- */
+(function(){
+  var W=560,H=440,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var cx=W/2, cy=H/2-10, Rt=150;  /* 1800 m -> 150 px */
+  var nt=document.getElementById("coverNote");
+  var scale=Rt/1800;
+  /* 用固定种子随机撒点，保证每次重绘位置稳定 */
+  function seeded(n){
+    var out=[], s=n*9301+49297;
+    function rnd(){ s=(s*9301+49297)%233280; return s/233280; }
+    for(var i=0;i<n;i++){
+      var a=rnd()*Math.PI*2, rr=Math.sqrt(rnd())*1750;
+      out.push({x:cx+Math.cos(a)*rr*scale, y:cy+Math.sin(a)*rr*scale});
+    }
+    return out;
+  }
+  function draw(rho, n){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var rp=rho*scale;
+    var pts=[{x:cx,y:cy,main:true}];
+    for(var i=0;i<6;i++){ var a=-Math.PI/2+i*Math.PI/3; pts.push({x:cx+Math.cos(a)*rp,y:cy+Math.sin(a)*rp}); }
+    /* 覆盖圆 */
+    pts.forEach(function(p){
+      svg.appendChild(el("circle",{cx:p.x,cy:p.y,r:rp,fill:"rgba(18,165,148,.08)",stroke:"var(--teal)","stroke-width":1,"stroke-dasharray":"4 5",opacity:.8}));
+    });
+    /* 目标区域边界 */
+    svg.appendChild(el("circle",{cx:cx,cy:cy,r:Rt,fill:"none",stroke:"var(--gold)","stroke-width":2.2}));
+    svg.appendChild(txt(cx,cy+Rt+22,"目标区域 半径 1800 m",{"font-size":11.5,fill:"var(--gold-d)","text-anchor":"middle"}));
+    /* 随机源位置（红点），并标注是否被覆盖 */
+    var srcs=seeded(n), missed=0;
+    srcs.forEach(function(sp){
+      var covered=false;
+      for(var k=0;k<pts.length;k++){
+        var ux=sp.x-pts[k].x, uy=sp.y-pts[k].y;
+        if(Math.sqrt(ux*ux+uy*uy)<=rp+0.5){ covered=true; break; }
+      }
+      if(!covered) missed++;
+      var c=el("circle",{cx:sp.x,cy:sp.y,r:4.2,fill:covered?"var(--warn)":"#c0392b","stroke":"#fff","stroke-width":1});
+      if(!covered) anim(c,"pulse");
+      svg.appendChild(c);
+    });
+    /* 测点 */
+    pts.forEach(function(p){
+      var c=el("circle",{cx:p.x,cy:p.y,r:6,fill:"var(--blue)"});
+      if(p.main) anim(c,"fadein");
+      svg.appendChild(c);
+    });
+    svg.appendChild(txt(pts[0].x,pts[0].y-12,"中心",{"font-size":11,fill:"var(--blue)","text-anchor":"middle"}));
+    var ok=rho>=1040;
+    nt.innerHTML="ρ = <b>"+rho+" m</b>、试投 <b>"+n+"</b> 个源："
+      +(ok
+        ? "覆盖半径满足 ρ ≥ 1800/√3 ≈ 1039 m，7 个覆盖圆相互叠压，区域<b>无空隙</b>，撒下的 "+n+" 个源全部落入某个覆盖圆内——<span class='hl-t'>保证任何位置的源都会被听到。</span>"
+        : "<span class='hl'>ρ 偏小，中心与圆周之间出现覆盖缝隙，本次有 "+missed+" 个源落在缝隙里被漏掉。</span>");
+    return missed;
+  }
+  var rg=document.getElementById("rhoRange"), vv=document.getElementById("rhoVal");
+  var sg=document.getElementById("srcRange"), sv=document.getElementById("srcVal");
+  var box=document.getElementById("kpiC");
+  function upd(){
+    var rho=Number(rg.value), n=Number(sg.value);
+    vv.textContent=rho+" m"; sv.textContent=n+" 个";
+    draw(rho,n);
+    var ok=rho>=1040;
+    box.innerHTML="";
+    [["测点数","7","个","b"],["圆周半径 ρ",String(rho),"m",""],
+     ["覆盖下限","1039","m","g"],["覆盖余量",(rho-1039)+"","m",ok?"":"w"]].forEach(function(k){
+      var d=document.createElement("div"); d.className="kpi "+k[3];
+      d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+      box.appendChild(d);
+    });
+  }
+  rg.oninput=upd; sg.oninput=upd;
+  upd();
+  document.getElementById("coverChart").appendChild(svg);
+})();
+
+/* ---- 幕二：单源流程动画 ---- */
+(function(){
+  var W=620,H=400,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var nt=document.getElementById("flowNote");
+  var kf=document.getElementById("kpiF");
+  var src={x:470,y:150};
+  var pathPts=[{x:110,y:330},{x:250,y:300},{x:300,y:150},{x:src.x-40,y:src.y+20}];
+  /* 每段路径对应的真实里程（m），用于估算移动耗时 */
+  var segLen=[0,520,230,60];
+  function draw(p){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    /* 源 */
+    svg.appendChild(el("circle",{cx:src.x,cy:src.y,r:7,fill:"var(--gold)"}));
+    svg.appendChild(txt(src.x,src.y-14,"源",{"font-size":11,fill:"var(--gold-d)","text-anchor":"middle"}));
+    svg.appendChild(el("circle",{cx:src.x,cy:src.y,r:20*0.0833,fill:"none",stroke:"var(--warn)","stroke-width":1.4,"stroke-dasharray":"3 3"}));
+    /* 机器狗轨迹 */
+    var segs=3, t=p/100*segs, i=Math.min(2,Math.floor(t)), f=t-i;
+    var P0=pathPts[i], P1=pathPts[i+1];
+    var pos={x:P0.x+(P1.x-P0.x)*f, y:P0.y+(P1.y-P0.y)*f};
+    var d="M "+pathPts[0].x+" "+pathPts[0].y;
+    for(var k=1;k<=i;k++) d+=" L "+pathPts[k].x+" "+pathPts[k].y;
+    d+=" L "+pos.x+" "+pos.y;
+    svg.appendChild(el("path",{d:d,fill:"none",stroke:"var(--cyan)","stroke-width":2,"stroke-dasharray":"5 4"}));
+    /* 测点与示向度 */
+    for(var k=1;k<=i;k++){
+      var S=pathPts[k];
+      svg.appendChild(el("circle",{cx:S.x,cy:S.y,r:5,fill:"var(--blue)"}));
+      svg.appendChild(el("line",{x1:S.x,y1:S.y,x2:src.x,y2:src.y,stroke:"var(--teal)","stroke-width":1,"stroke-dasharray":"4 4",opacity:.7}));
+    }
+    /* 定位区域随进度收敛：从 300 m 缩到 18 m */
+    var Rl=Math.max(18, 300*Math.pow(1-p/100,1.6));
+    if(p>=1){
+      svg.appendChild(el("circle",{cx:src.x,cy:src.y,r:Rl*0.0833,fill:"none",stroke:"var(--cyan)","stroke-width":1.6,"stroke-dasharray":"6 4",opacity:.9}));
+    }
+    svg.appendChild(el("circle",{cx:pos.x,cy:pos.y,r:7,fill:"var(--blue)"}));
+    svg.appendChild(txt(pos.x,pos.y+22,"机器狗",{"font-size":11,fill:"var(--blue)","text-anchor":"middle"}));
+    var msg = p<33?"① 覆盖扫描时听到该频道 → 记下大致方向"
+      : p<66?"② 换位置再测 → 两条示向度交会出定位区域"
+      : p<99?"③ 定位区域缩小到 R ≤ 20 m → 直线移动过去"
+      : "④ 进入 20 m 内 → 执行 /clear → 该频道核销";
+    nt.innerHTML=msg;
+    /* KPI 读数 */
+    var moved=0, meas=(p<33?1:p<66?2:3);
+    for(var m=0;m<=i;m++) moved+=segLen[m+1];
+    moved+=Math.round((segLen[Math.min(3,i+1)]||0)*f);
+    var mvT=moved/5, measT=meas*5, clearT=p>=99?5:0, swT=Math.ceil(meas/2);
+    kf.innerHTML="";
+    [["定位区域 R", Rl.toFixed(0), "m", Rl<=20?"g":"w"],
+     ["测量次数", meas, "次", ""],
+     ["移动里程", moved, "m", "b"],
+     ["本段估算耗时", (mvT+measT+clearT+swT).toFixed(0), "s", ""]].forEach(function(k){
+      var el2=document.createElement("div"); el2.className="kpi "+k[3];
+      el2.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+      kf.appendChild(el2);
+    });
+  }
+  var rg=document.getElementById("flowRange"), vv=document.getElementById("flowVal");
+  rg.oninput=function(){ var v=Number(rg.value); vv.textContent=v+"%"; draw(v); };
+  draw(0);
+  document.getElementById("flowChart").appendChild(svg);
+})();
+
+/* ---- 幕三：20 频道状态 ---- */
+(function(){
+  var grid=document.getElementById("stateGrid");
+  var dr=document.getElementById("doneRange"), dv=document.getElementById("doneVal");
+  var nt=document.getElementById("stateNote"), kt=document.getElementById("kpiT");
+  grid.style.display="grid"; grid.style.gridTemplateColumns="repeat(5,1fr)"; grid.style.gap="8px";
+  /* 固定几号频道有源，其余为「确认不存在」 */
+  var srcCh=[2,6,11,14,18,3,9,16,5,13,1,8,20,7,12,15];
+  function render(n){
+    var kinds=[];
+    for(var i=1;i<=20;i++){
+      var si=srcCh.indexOf(i);
+      kinds.push(si<0?"确认不存在":(si<n?"已清除":"待处理"));
+    }
+    var done=0, cleared=0;
+    grid.innerHTML="";
+    kinds.forEach(function(k,i){
+      if(k!=="待处理") done++;
+      if(k==="已清除") cleared++;
+      var col=k==="已清除"?"var(--teal-d)":k==="确认不存在"?"var(--muted)":"var(--gold)";
+      var d=document.createElement("div");
+      d.style.cssText="border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;background:#fff";
+      d.innerHTML="<div style='font-size:11px;color:var(--muted)'>#"+(i+1)+"</div>"
+        +"<div style='font-size:11.5px;font-weight:600;color:"+col+";margin-top:2px'>"+k+"</div>";
+      grid.appendChild(d);
+    });
+    var todo=20-done;
+    nt.innerHTML="20 个频道中：已清除 <b>"+cleared+"</b>、确认不存在 <b>"+(done-cleared)+"</b>、待处理 <b>"+todo+"</b>；"
+      +(todo>0?"<span class='hl'>仍有 "+todo+" 个频道未给出结论，此时调用 /exit 会被判为提前退出。</span>":"<span class='hl-t'>全部核销，可以安全 /exit。</span>");
+    kt.innerHTML="";
+    [["已核销频道", done+"/20", "", done>=20?"g":"w"],
+     ["已清源", cleared, "个", ""],
+     ["确认不存在", done-cleared, "个", "b"],
+     ["待处理", todo, "个", todo>0?"w":"g"]].forEach(function(k){
+      var d=document.createElement("div"); d.className="kpi "+k[3];
+      d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+      kt.appendChild(d);
+    });
+  }
+  dr.oninput=function(){ var n=Number(dr.value); dv.textContent=n+" 个"; render(n); };
+  render(4);
+})();
+
+/* ---- 幕四：三阶段耗时 ---- */
+(function(){
+  var W=1040,H=220,svg=el("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H});
+  var nr=document.getElementById("numRange"), nv=document.getElementById("numVal");
+  var nt=document.getElementById("timeNote");
+  var movedAsW=0;
+  function build(n){
+    /* 三阶段耗时按源数量 n 估算 */
+    var stages=[
+      {name:"阶段一 · 进场",segs:[["移动",120,"var(--blue)"]]},
+      {name:"阶段二 · 全局覆盖",segs:[["切换频道",80,"var(--cyan)"],["检测",210,"var(--teal)"],["移动",360,"var(--blue)"]]},
+      {name:"阶段三 · 局部清除",segs:[["移动",n*150,"var(--blue)"],["检测",n*10,"var(--teal)"],["清除",n*5,"var(--gold)"],["切换频道",n*2,"var(--cyan)"]]}
+    ];
+    var total=stages.reduce(function(s,st){return s+st.segs.reduce(function(a,b){return a+b[1];},0);},0);
+    movedAsW=stages[2].segs[0][1];
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var x=20, y=64, bh=48, maxW=(W-40)*0.72;
+    stages.forEach(function(st){
+      var cx=x;
+      st.segs.forEach(function(sg){
+        var w=sg[1]/total*maxW;
+        var r=el("rect",{x:cx,y:y,width:w,height:bh,rx:3,fill:sg[2]});
+        if(sg[1]/total>0.02) anim(r,"grow");
+        svg.appendChild(r);
+        cx+=w;
+      });
+      svg.appendChild(txt(x,y-12,st.name,{"font-size":12,fill:"var(--teal-d)","font-weight":600}));
+      svg.appendChild(txt(cx+8,y+30,(st.segs.reduce(function(a,b){return a+b[1];},0)/60).toFixed(0)+" 分",{"font-size":12,fill:"var(--muted)"}));
+      y+=86;
+    });
+    svg.appendChild(txt(W-20,26,"总耗时 ≈ "+(total/60).toFixed(0)+" 分钟（示意）",{"font-size":12,fill:"var(--ink2)","text-anchor":"end","font-weight":600}));
+    nt.innerHTML="按 "+n+" 个源估算，阶段三的<b>移动</b>占约 "+((movedAsW/total*100).toFixed(0))+"%。问题三的优化重点不在「测得快」，而在<b>少跑空路</b>：定位越准、清除顺序越合理，总时间越短。拖动滑条可以看到，源数量每增加 1 个，总耗时主要由移动里程线性抬高。";
+  }
+  nr.oninput=function(){ var n=Number(nr.value); nv.textContent=n+" 个"; build(n); };
+  build(12);
+  document.getElementById("timeChart").appendChild(svg);
+
+  var box=document.getElementById("kpiT");
+  [["检测","5","s/次",""],["切换频道","1","s/次","b"],["清除(已清除)","5","s","g"],["清除(未发现)","3","s","w"]].forEach(function(k){
+    var d=document.createElement("div"); d.className="kpi "+k[3];
+    d.innerHTML="<div class='k'>"+k[0]+"</div><div class='v'>"+k[1]+"<u>"+k[2]+"</u></div>";
+    box.appendChild(d);
+  });
+})();
+
+/* ---- 导航 ---- */
+(function(){
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+  var tlT=[], st={armed:false,last:0,fired:0};
+  function beats(sc){ return $$('.wrap > *',sc); }
+  function tlStop(){ tlT.forEach(clearTimeout); tlT=[]; }
+  function tlRun(i){
+    tlStop();
+    var sc=SCENES[i], bs=beats(sc), tk=TOKEN, gap=430, pos=0;
+    if(document.body.classList.contains('reduce')){
+      bs.forEach(function(b){ b.classList.remove('stg'); b.classList.add('in'); });
+      return;
+    }
+    bs.forEach(function(b){ b.classList.remove('in'); b.classList.add('stg'); });
+    bs.forEach(function(b,k){
+      var t=260+k*gap; pos=t;
+      tlT.push(setTimeout(function(){ if(tk!==TOKEN) return; b.classList.add('in'); },t));
+    });
+    tlT.push(setTimeout(function(){
+      if(tk!==TOKEN) return;
+      bs.forEach(function(b){ b.classList.remove('stg'); });
+    },pos+820));
+  }
+  function resetScene(sc){ beats(sc).forEach(function(b){ b.classList.remove('stg','in'); }); }
+  function goTo(i){
+    i=Math.max(0,Math.min(N-1,i));
+    if(i===cur) return;
+    if(cur>=0) SCENES[cur].classList.remove('active');
+    cur=i; TOKEN++;
+    var sc=SCENES[i];
+    resetScene(sc);
+    sc.scrollTop=0; sc.classList.add('active');
+    $('#scTitle').textContent=sc.dataset.title||'';
+    $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+    $('#pgNow').textContent=i+1;
+    $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+    st.armed=false;
+    tlRun(i);
+  }
+  function boot(){
+    var dots='';
+    for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+    $('#dots').innerHTML=dots;
+    $('#pgAll').textContent=N;
+    $('#dots').addEventListener('click',function(e){
+      var t=e.target.closest?e.target.closest('.dot'):null;
+      if(t) goTo(+t.dataset.i);
+    });
+    $('#btnNext').onclick=function(){ goTo(cur+1); };
+    $('#btnPrev').onclick=function(){ goTo(cur-1); };
+    document.addEventListener('keydown',function(e){
+      var tag=(e.target.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea'||tag==='select') return;
+      var k=e.key;
+      if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+      else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+      else if(k==='Home'){ e.preventDefault(); goTo(0); }
+      else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+      else if(k==='r'||k==='R'){ tlStop(); resetScene(SCENES[cur]); tlRun(cur); }
+      else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+    });
+    window.addEventListener('wheel',function(e){
+      var sc=SCENES[cur]; if(!sc) return;
+      var max=sc.scrollHeight-sc.clientHeight;
+      var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+      var want=e.deltaY>0?1:-1;
+      var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+      if(!edge){ st.armed=false; st.last=Date.now(); return; }
+      var now=Date.now();
+      if(!st.armed){ st.armed=true; st.last=now; return; }
+      if(now-st.last>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+        st.fired=now; st.armed=false; goTo(cur+want);
+      }
+      st.last=now;
+    },{passive:false});
+    goTo(0);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

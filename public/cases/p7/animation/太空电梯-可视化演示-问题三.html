@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 MCM Problem B · 太空电梯 问题三 · 水循环 SIRS 模型</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+.kpi::after{content:"";position:absolute;right:-12px;top:-12px;width:44px;height:44px;border-radius:50%;
+  background:radial-gradient(circle,rgba(18,165,148,.10),transparent 70%);pointer-events:none}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff;font-weight:600}
+
+/* 动效总开关（类名驱动） */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{transition:none}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>太空电梯 · 水循环 SIRS</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./mod-p7-0.html">全局</a><a href="./mod-p7-1.html">问题一</a><a href="./mod-p7-2.html">问题二</a><a href="./mod-p7-3.html" class="on">问题三</a><a href="./mod-p7-4.html">问题四</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ============== 第一幕 问题三概述 ============== -->
+<section class="scene" id="s1" data-title="一 · 问题三概述：月球水循环需求">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题 3 · 第一幕</div>
+      <h1>十万人的水：闭环里漏掉的那一截
+        <small>月球基地 10 万人、人均日需 50 L，构成一个近似闭环的供水系统。问题三要求建立水循环模型，分析净需水与运输方案。</small>
+      </h1>
+      <p class="lead">题面给定的关键约束：殖民地设计人口 10 万人，人均日需水 50 L，全年毛用水约 25 Mt。闭环回收后仍有一部分不可回收的损耗，必须由地球通过太空电梯与火箭运送补给。问题三的核心是<b class="hl-t">建立 SIRS 水循环模型</b>，量化年净需水，并给出电梯与火箭的运水最优分配。</p>
+    </div>
+
+    <div class="grid4 stg" id="ovKpi"></div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">月球水循环总览 · 从地球补给到闭环回收</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>可再生水流</span>
+          <span><i style="background:#1e9fc4"></i>再生水回流</span>
+          <span><i style="background:#b8543a"></i>地球补给</span>
+          <span><i style="background:#e0a04a"></i>不可回收损耗</span>
+        </div>
+      </div>
+      <canvas id="cvOverview" height="280"></canvas>
+      <p class="note" style="margin-top:8px"><span class="badge">总览</span>水从地球（Input_Earth）进入可用洁水库（Stock），分配给生活/农业/工业三路使用（Input），废水经回收进入再生水池（Recycling）回流到 Stock；不可回收的损耗则必须由地球持续补给。年净需水 7.51 Mt 是这条补给线的稳态流量。</p>
+    </div>
+
+    <div class="grid2 stg">
+      <div class="card">
+        <h3>问题三题面要求 <em>逐字摘录</em></h3>
+        <div class="quote">「建立月球基地水循环模型，分析水需求与运输方案。考虑殖民地人口、人均用水、水回收率，给出年净需水量与电梯/火箭的运水分配。」</div>
+        <p class="small">本题三个输出：① SIRS 水循环模型；② 年净需水测算；③ 电梯与火箭的运水最优分配与成本。</p>
+      </div>
+      <div class="card">
+        <h3>建模思路 <em>三步走</em></h3>
+        <p><b class="hl-t">第一步</b>：把水量看作四只箱子 S/I/R/E，写出 dR/dt = η_h·W_h + η_a·W_a 的回收方程。</p>
+        <p><b class="hl-g">第二步</b>：扣掉两路回收贡献后，剩下不可回收的损耗之和即年净需水 Input_Earth。</p>
+        <p><b class="hl">第三步</b>：在电梯年运水配额 2.06 Mt 与火箭边际成本的约束下，求最优混合分配。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 第二幕 SIRS 模型建立 ============== -->
+<section class="scene" id="s2" data-title="二 · SIRS 模型：Stock-Input-Recycling-Supply 四箱">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题 3 · 第二幕</div>
+      <h1>SIRS 四箱模型：水流的闭环回路
+        <small>Stock（库存）→ Input（使用）→ Recycling（再生）→ 回到 Stock；不可回收损耗由 Earth 补给顶上。Canvas 动画展示水流循环。</small>
+      </h1>
+      <p class="lead">把月球基地水量看成四只箱子：<b>S</b>（可用洁水库存）、<b>I</b>（生活/农业/工业用水输入）、<b>R</b>（再生水池）、<b>E</b>（地球补给 Supply）。两路回收支路分别按 η_h=0.88 与 η_a=0.72 回流到 R；不可回收部分进入损耗箱，必须由 E 持续补给才能维持闭环稳态。</p>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">SIRS 水循环动态图 · 带流动粒子的闭环</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>Stock 洁水流</span>
+          <span><i style="background:#0b6e68"></i>生活用水</span>
+          <span><i style="background:#e0a04a"></i>农业用水</span>
+          <span><i style="background:#146c87"></i>工业用水</span>
+          <span><i style="background:#1e9fc4"></i>再生回流</span>
+          <span><i style="background:#b8543a"></i>地球补给</span>
+        </div>
+      </div>
+      <canvas id="cvCycle" height="420"></canvas>
+      <p class="note" id="cycleNote" style="margin-top:8px"></p>
+    </div>
+
+    <div class="grid2 stg">
+      <div class="card">
+        <h3>SIRS 四箱定义 <em>每只箱子的物理意义</em></h3>
+        <table class="tb">
+          <tr><th>箱子</th><th>含义</th><th>年水量</th></tr>
+          <tr><td class="l"><b class="hl-t">S</b> Stock</td><td class="l">可用洁水库存（蓄水池）</td><td class="num">25.0 Mt</td></tr>
+          <tr><td class="l"><b class="hl-t">I</b> Input</td><td class="l">生活/农业/工业用水流</td><td class="num">25.0 Mt</td></tr>
+          <tr><td class="l"><b class="hl-t">R</b> Recycling</td><td class="l">再生水池（回收后）</td><td class="num">17.49 Mt</td></tr>
+          <tr><td class="l"><b class="hl">E</b> Supply</td><td class="l">地球补给（Input_Earth）</td><td class="num">7.51 Mt</td></tr>
+        </table>
+        <p class="small">稳态条件：dS/dt = 0，即 R + E = I（回收 + 补给 = 用水）。</p>
+      </div>
+      <div class="card">
+        <h3>回收方程 <em>两路 η 决定回流比例</em></h3>
+        <div class="quote"><span class="badge">核心方程</span>
+        dR/dt = η_h · W_h(t) + η_a · W_a(t)<br>
+        Input_Earth(t) = I(t) − R(t) = (1−η_h)·W_h + (1−η_a)·W_a + W_ind</div>
+        <p>国际空间站水回收率 93–98%。殖民地 10 万人规模放大后：<b>生活废水 η_h ≈ 0.88</b>（淋浴/洗涤/呼吸凝结为主）；<b>农业废水 η_a ≈ 0.72</b>（蒸腾、土壤吸附与渗漏难以收回）。</p>
+        <p class="small">两个 η 的差距决定净需水结构：农业损耗占大头。</p>
+      </div>
+    </div>
+
+    <div class="grid4 stg" id="cycleKpi"></div>
+  </div>
+</section>
+
+<!-- ============== 第三幕 水需求数据 ============== -->
+<section class="scene" id="s3" data-title="三 · 水需求数据：年净需水 7.51 Mt">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题 3 · 第三幕</div>
+      <h1>年净需水 7.51 Mt：闭环里漏掉的那一截
+        <small>毛用水 25 Mt 减去两路回收 17.49 Mt，剩余 7.51 Mt 是地球必须运送的 Input_Earth。它超过任何单一运输系统的运力。</small>
+      </h1>
+      <p class="lead">闭环每一轮都有水漏出去：农业蒸腾、呼吸凝结外逸、工业消耗、管网渗漏。这些不可回收项加总后再扣两路回收贡献，剩下的就是年净需水量。<b class="hl-t">7.51 Mt 是问题三所有运送方案的输入边界</b>。</p>
+    </div>
+
+    <div class="grid4 stg" id="demandKpi"></div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">年净需水 7.51 Mt 分解 · 四类不可回收损耗</div>
+        <div class="legend">
+          <span><i style="background:#0b6e68"></i>生活损耗</span>
+          <span><i style="background:#e0a04a"></i>农业损耗</span>
+          <span><i style="background:#146c87"></i>工业损耗</span>
+          <span><i style="background:#b8543a"></i>蒸发与其他</span>
+        </div>
+      </div>
+      <canvas id="cvDemand" height="280"></canvas>
+      <p class="note" id="demandNote" style="margin-top:8px"></p>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">逐年净需水累积：从基建期到稳态</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#12a594"></i>年净需水</span>
+          <span><i class="ln" style="background:#1e9fc4"></i>累计净需水</span>
+          <span><i class="ln" style="background:#b8543a"></i>稳态 7.51 Mt/年</span>
+        </div>
+      </div>
+      <canvas id="cvCum" height="240"></canvas>
+      <p class="note" id="cumNote" style="margin-top:8px"></p>
+    </div>
+
+    <div class="card stg">
+      <h3>为什么超过单系统容量 <em>把净需水对到运力上限</em></h3>
+      <p>太空电梯单线年运水上限约 2.1 Mt（受配重、climber 节数与基建物资挤占影响）；火箭每发约 15 t 到月轨，全年满负荷约 5.5 Mt。<b class="hl-t">7.51 Mt 同时超出电梯与火箭任何一方的单独运力</b>，所以运送必须混合，这是第四幕要解决的问题。</p>
+      <div class="quote"><span class="badge q">关键约束</span>Input_Earth(t) = 7.51 Mt/年，是殖民地稳态运行的最低补水下限。低于这条线，再生水池水位单调下降，闭环失稳。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 第四幕 运输方案对比 ============== -->
+<section class="scene" id="s4" data-title="四 · 运输方案：电梯 27.5% + 火箭 72.5%">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题 3 · 第四幕</div>
+      <h1>成本最优：电梯 2.06 Mt + 火箭 5.45 Mt
+        <small>电梯运力优先配给高密度基建物资，水只能占其 27.5%；剩余 72.5% 由火箭承担，对应每天约 10 次发射。总成本 129.19 B USD。</small>
+      </h1>
+      <p class="lead">运水两条路成本结构相反：电梯边际成本低、但年运水配额被基建挤到 2.06 Mt 上限；火箭边际成本高、但发次可调。最优解让电梯吃满配额，剩余缺口全交给火箭。</p>
+    </div>
+
+    <div class="grid2 stg">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">运水比例：电梯 27.5% / 火箭 72.5%</div>
+        </div>
+        <canvas id="cvPie" height="280"></canvas>
+        <p class="note" id="pieNote" style="margin-top:8px"></p>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">两条运水路的成本对比 <em>USD/kg</em></div>
+        </div>
+        <canvas id="cvCost" height="280"></canvas>
+        <p class="note" id="costNote" style="margin-top:8px"></p>
+      </div>
+    </div>
+
+    <div class="grid4 stg" id="allocKpi"></div>
+
+    <div class="card stg">
+      <h3>为什么火箭占大头 <em>不是火箭便宜，是电梯运力被基建挤占</em></h3>
+      <p>电梯每公斤运水成本远低于火箭，但 climber 的有效载荷要优先运送：<b>结构材料、生命保障设备、能源系统、辐射屏蔽</b>。这些物资密度高、体积小、不可压缩，占走了电梯约 70% 的年运力配额。水密度大、价值低，在电梯排队里排在基建之后，只能拿到剩余的 27.5%。</p>
+      <div class="quote"><span class="badge w">运力约束</span>电梯年运水 2.06 Mt 是其总载荷配额扣去基建物资后的余量，<b>不是物理上限，是排队优先级造成的实际上限</b>。火箭补上 5.45 Mt 是次优但必需的选择。</div>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">日发射节奏 · 一年 3650 次火箭的分时分布</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#b8543a"></i>每日发射次数</span>
+          <span><i class="ln" style="background:#e0a04a"></i>平均 10 次/日</span>
+        </div>
+      </div>
+      <canvas id="cvLaunch" height="200"></canvas>
+      <p class="note" id="launchNote" style="margin-top:8px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 第五幕 结论 ============== -->
+<section class="scene" id="s5" data-title="五 · 结论：年净需水 7.51 Mt · 总成本 129.19 B">
+  <div class="wrap">
+    <div class="stg">
+      <div class="kicker">问题 3 · 第五幕</div>
+      <h1>结论汇总：7.51 Mt 净需水 · 129.19 B USD
+        <small>SIRS 闭环模型给出年净需水边界，电梯+火箭混合运送给出最优成本。两个数字定义了问题三的全部答案。</small>
+      </h1>
+      <p class="lead">问题三的输出可以压缩成两条主线：<b class="hl-t">年净需水 7.51 Mt</b> 是地球必须运送的水量下限；<b class="hl">总成本 129.19 B USD</b> 是在电梯运力被基建挤占的约束下、由电梯 2.06 Mt + 火箭 5.45 Mt 混合运送的最优成本。</p>
+    </div>
+
+    <div class="grid4 stg" id="sumKpi"></div>
+
+    <div class="grid2 stg">
+      <div class="card">
+        <h3>关键结论 <em>三条主线</em></h3>
+        <p><b class="hl-t">① 闭环回收率决定净需水</b>：η_h=0.88 与 η_a=0.72 的差距使农业损耗占大头（2.74 Mt），是后续运送方案的结构性来源。</p>
+        <p><b class="hl-g">② 运力约束决定混合比例</b>：电梯年运水配额 2.06 Mt 是排队优先级造成的实际上限，不是物理上限。剩余缺口必须由火箭顶上。</p>
+        <p><b class="hl">③ 稳态节奏</b>：5.45 Mt/年由约 3650 次火箭发射承担，平均每日 10 次，集中在月球当地白天窗口。</p>
+      </div>
+      <div class="card">
+        <h3>最优分配方案 <em>电梯 + 火箭</em></h3>
+        <table class="tb">
+          <tr><th>项</th><th>电梯</th><th>火箭</th><th>合计</th></tr>
+          <tr class="on"><td class="l">运水量</td><td class="num">2.06 Mt</td><td class="num">5.45 Mt</td><td class="num"><b>7.51 Mt</b></td></tr>
+          <tr><td class="l">占比</td><td class="num">27.5%</td><td class="num">72.5%</td><td class="num">100%</td></tr>
+          <tr><td class="l">单位成本</td><td class="num">$0.018/kg</td><td class="num">$0.024/kg</td><td class="num">—</td></tr>
+          <tr><td class="l">年成本</td><td class="num">37.1 B</td><td class="num">92.1 B</td><td class="num"><b>129.19 B</b></td></tr>
+          <tr><td class="l">年发次</td><td class="num">—</td><td class="num">3650</td><td class="num">3650</td></tr>
+        </table>
+        <div class="quote"><span class="badge q">最优性</span>电梯吃满 2.06 Mt 配额，剩余 5.45 Mt 全交火箭；任何把更多份额从电梯挪给火箭的方案都会提高总成本。</div>
+      </div>
+    </div>
+
+    <div class="canvasbox stg">
+      <div class="cvtop">
+        <div class="ct">问题三全景：从毛用水到最优成本</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>毛用水 25 Mt</span>
+          <span><i style="background:#1e9fc4"></i>回收 17.49 Mt</span>
+          <span><i style="background:#b8543a"></i>地球补给 7.51 Mt</span>
+          <span><i style="background:#0b6e68"></i>电梯 2.06 Mt</span>
+          <span><i style="background:#e0a04a"></i>火箭 5.45 Mt</span>
+        </div>
+      </div>
+      <canvas id="cvSummary" height="300"></canvas>
+      <p class="note" id="sumNote" style="margin-top:8px"></p>
+    </div>
+  </div>
+</section>
+
+</main><div class="navbar"><button class="nb" id="btnPrev" title="上一幕">‹</button><div id="dots"></div><button class="nb" id="btnNext" title="下一幕">›</button><div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div></div>
+
+<script id="DATA" type="application/json">{
+  "cycle":{
+    "population":100000,
+    "per_capita_daily":50,
+    "eta_h":0.88,
+    "eta_a":0.72,
+    "gross_annual":25.0,
+    "net_annual":7.51,
+    "life_inflow":13.5,
+    "agri_inflow":9.8,
+    "ind_inflow":1.7,
+    "life_loss":1.62,
+    "agri_loss":2.74,
+    "ind_loss":1.70,
+    "evap_loss":1.45,
+    "recycled":17.49
+  },
+  "demand":{
+    "total":7.51,
+    "parts":[
+      {"k":"生活损耗","v":1.62,"c":"#0b6e68","eta":0.88},
+      {"k":"农业损耗","v":2.74,"c":"#e0a04a","eta":0.72},
+      {"k":"工业损耗","v":1.70,"c":"#146c87","eta":0.00},
+      {"k":"蒸发与其他","v":1.45,"c":"#b8543a","eta":0.00}
+    ]
+  },
+  "alloc":{
+    "total":7.51,
+    "elevator":2.06,
+    "rocket":5.45,
+    "elevator_pct":27.5,
+    "rocket_pct":72.5,
+    "cost_b":129.19,
+    "elevator_cost_b":37.1,
+    "rocket_cost_b":92.1,
+    "launches_per_day":10,
+    "launches_per_year":3650,
+    "elevator_cost_per_kg":0.018,
+    "rocket_cost_per_kg":0.024,
+    "elevator_quota":2.10,
+    "elevator_base":5.00
+  },
+  "timeline":{
+    "years":[1,2,3,4,5,6,7,8,9,10],
+    "annual":[0.40,0.85,1.80,3.60,5.20,6.40,7.00,7.51,7.51,7.51],
+    "cumulative":[0.40,1.25,3.05,6.65,11.85,18.25,25.25,32.76,40.27,47.78]
+  },
+  "launch_daily":[3,5,7,8,9,10,11,12,11,10,9,8,7,6,5,4,3,2,1,0,0,1,2,3]
+}</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var D=JSON.parse($('#DATA').textContent);
+D.ui=D.ui||{};
+var CY=D.cycle, DM=D.demand, AL=D.alloc, TL=D.timeline;
+
+/* ---------------- 画图基础工具 ---------------- */
+function prepCanvas(cv,h){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  return {g:g,w:w,h:h};
+}
+function roundRect(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+function kpi(v,k,cls){ return '<div class="kpi '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+
+/* 全局动画时间，用于流动粒子等 */
+var T0=Date.now();
+function animTime(){ return (Date.now()-T0)/1000; }
+
+/* ---------------- 第一幕 概览图 ---------------- */
+var R={};
+R.cvOverview=function(cv){
+  var d=prepCanvas(cv,280), g=d.g, w=d.w, h=d.h;
+  var cx=w/2, cy=h/2;
+  var t=animTime();
+
+  /* 三个圆环节点：地球→库存→使用→回收→库存 */
+  var nodes=[
+    {t:'地球补给\nE=7.51 Mt',x:80, y:cy, c:'#b8543a', r:38},
+    {t:'可用洁水\nS=25 Mt',x:cx, y:60, c:'#12a594', r:42},
+    {t:'用水输入\nI=25 Mt',x:cx, y:cy+30, c:'#0b6e68', r:38},
+    {t:'再生水池\nR=17.49 Mt',x:w-80, y:cy, c:'#1e9fc4', r:42}
+  ];
+
+  /* 流向边 */
+  var edges=[
+    {a:nodes[0],b:nodes[1],c:'#b8543a',label:'Input_Earth',speed:1.0},
+    {a:nodes[1],b:nodes[2],c:'#0b6e68',label:'分配',speed:1.2},
+    {a:nodes[2],b:nodes[3],c:'#e0a04a',label:'回收 η',speed:1.0,dash:[6,4]},
+    {a:nodes[3],b:nodes[1],c:'#1e9fc4',label:'再生回流',speed:1.3},
+    {a:nodes[2],b:nodes[0],c:'#b8543a',label:'损耗',speed:0.8,dash:[4,4]}
+  ];
+
+  /* 画边 + 流动粒子 */
+  edges.forEach(function(e){
+    g.save();
+    g.strokeStyle=e.c; g.lineWidth=2;
+    if(e.dash) g.setLineDash(e.dash); else g.setLineDash([]);
+    g.beginPath(); g.moveTo(e.a.x,e.a.y); g.lineTo(e.b.x,e.b.y); g.stroke();
+    g.setLineDash([]);
+    /* 流动粒子（多个） */
+    if(!document.body.classList.contains('reduce')){
+      for(var k=0;k<3;k++){
+        var p=((t*e.speed+k/3)%1);
+        var px=e.a.x+(e.b.x-e.a.x)*p;
+        var py=e.a.y+(e.b.y-e.a.y)*p;
+        g.fillStyle=e.c; g.globalAlpha=0.85*(1-Math.abs(p-0.5)*0.4);
+        g.beginPath(); g.arc(px,py,3.2,0,6.2832); g.fill();
+        g.globalAlpha=1;
+      }
+    }
+    /* 箭头 */
+    var ang=Math.atan2(e.b.y-e.a.y,e.b.x-e.a.x);
+    g.translate(e.b.x-Math.cos(ang)*(e.b.r+2),e.b.y-Math.sin(ang)*(e.b.r+2));
+    g.rotate(ang);
+    g.fillStyle=e.c; g.beginPath();
+    g.moveTo(-7,-4); g.lineTo(0,0); g.lineTo(-7,4); g.closePath(); g.fill();
+    g.restore();
+    /* 边标签 */
+    var mx=(e.a.x+e.b.x)/2, my=(e.a.y+e.b.y)/2;
+    g.font='600 10.5px "PingFang SC",system-ui,sans-serif';
+    var tw=g.measureText?g.measureText(e.label).width:e.label.length*10;
+    g.fillStyle='rgba(255,255,255,.95)'; g.fillRect(mx-tw/2-4,my-8,tw+8,15);
+    g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(mx-tw/2-3.5,my-7.5,tw+7,14);
+    g.fillStyle=e.c; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(e.label,mx,my);
+  });
+
+  /* 画节点 */
+  nodes.forEach(function(n){
+    g.save();
+    /* 脉动光晕 */
+    if(!document.body.classList.contains('reduce')){
+      var pulse=0.5+0.5*Math.sin(t*2.5);
+      g.fillStyle=n.c; g.globalAlpha=0.12+pulse*0.10;
+      g.beginPath(); g.arc(n.x,n.y,n.r+8+pulse*4,0,6.2832); g.fill();
+      g.globalAlpha=1;
+    }
+    g.shadowColor='rgba(11,46,54,.10)'; g.shadowBlur=10; g.shadowOffsetY=2;
+    g.fillStyle='rgba(255,255,255,.97)'; g.strokeStyle=n.c; g.lineWidth=2;
+    g.beginPath(); g.arc(n.x,n.y,n.r,0,6.2832); g.fill(); g.shadowBlur=0;
+    g.stroke();
+    /* 文字 */
+    var lines=n.t.split('\n');
+    g.fillStyle=n.c; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(lines[0],n.x,n.y-7);
+    g.fillStyle='#57727c'; g.font='10.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(lines[1],n.x,n.y+8);
+    g.restore();
+  });
+
+  /* 顶部标题 */
+  g.fillStyle='#57727c'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('闭环：E→S→I→R→S，损耗由 E 顶上；年净需水 7.51 Mt',12,16);
+};
+
+function fillOvKpi(){
+  $('#ovKpi').innerHTML=
+    kpi(CY.population/10000+' <u>万</u>','殖民地设计人口','')+
+    kpi(CY.per_capita_daily+' <u>L/日</u>','人均日需水','b')+
+    kpi(CY.gross_annual+' <u>Mt</u>','年毛用水','')+
+    kpi(CY.net_annual+' <u>Mt/年</u>','年净需水（地球补给）','w');
+}
+
+/* ---------------- 第二幕 SIRS 循环图（核心动画） ---------------- */
+R.cvCycle=function(cv){
+  var d=prepCanvas(cv,420), g=d.g, w=d.w, h=d.h;
+  var cx=w/2, cy=h/2+10;
+  var t=animTime();
+
+  /* 节点圆周布局：6 个节点 */
+  var nodes=[
+    {k:'S', t:'可用洁水\nStock', v:'25.0 Mt', x:cx, y:cy-150, c:'#12a594', r:44},
+    {k:'I_h', t:'生活用水\nInput_h', v:CY.life_inflow+' Mt', x:cx-180, y:cy-40, c:'#0b6e68', r:40},
+    {k:'I_a', t:'农业用水\nInput_a', v:CY.agri_inflow+' Mt', x:cx+180, y:cy-40, c:'#e0a04a', r:40},
+    {k:'I_i', t:'工业用水\nInput_i', v:CY.ind_inflow+' Mt', x:cx, y:cy+40, c:'#146c87', r:40},
+    {k:'R', t:'再生水池\nRecycling', v:CY.recycled+' Mt', x:cx, y:cy+150, c:'#1e9fc4', r:44},
+    {k:'E', t:'地球补给\nSupply', v:'7.51 Mt', x:cx-230, y:cy+150, c:'#b8543a', r:40}
+  ];
+  /* 窄画布收紧 */
+  if(w<720){ nodes.forEach(function(n){ n.x=cx+(n.x-cx)*0.80; }); }
+  if(w<560){ nodes.forEach(function(n){ n.x=cx+(n.x-cx)*0.66; }); }
+
+  function findNode(id){ for(var i=0;i<nodes.length;i++) if(nodes[i].k===id) return nodes[i]; return null; }
+
+  /* 流向边 */
+  var edges=[
+    {from:'S',to:'I_h',c:'#0b6e68',label:'分配',speed:1.0,curve:0.0},
+    {from:'S',to:'I_a',c:'#e0a04a',label:'分配',speed:1.0,curve:0.0},
+    {from:'S',to:'I_i',c:'#146c87',label:'分配',speed:0.9,curve:0.0},
+    {from:'I_h',to:'R',c:'#12a594',label:'',speed:1.2,recycle:true},
+    {from:'I_a',to:'R',c:'#12a594',label:'',speed:1.0,recycle:true},
+    {from:'I_i',to:'E',c:'#b8543a',label:'100% 损耗',speed:0.7,dash:[5,4]},
+    {from:'R',to:'S',c:'#1e9fc4',label:'再生回流',speed:1.4,curve:0.0},
+    {from:'E',to:'S',c:'#b8543a',label:'',speed:0.9,curve:0.0},
+    {from:'I_h',to:'E',c:'#e0a04a',label:'',speed:0.6,dash:[4,3],small:true},
+    {from:'I_a',to:'E',c:'#e0a04a',label:'',speed:0.6,dash:[4,3],small:true}
+  ];
+
+  /* 画边（带弯曲与流动粒子） */
+  edges.forEach(function(e){
+    var a=findNode(e.from), b=findNode(e.to);
+    if(!a||!b) return;
+    g.save();
+    /* 曲线控制点 */
+    var mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    var dx=b.x-a.x, dy=b.y-a.y, len=Math.sqrt(dx*dx+dy*dy)||1;
+    var nx=-dy/len, ny=dx/len, off=e.recycle?16:10;
+    var cpx=mx+nx*off, cpy=my+ny*off;
+
+    g.strokeStyle=e.c; g.lineWidth=e.recycle?2.4:1.8;
+    if(e.dash) g.setLineDash(e.dash); else g.setLineDash([]);
+    g.beginPath(); g.moveTo(a.x,a.y);
+    g.quadraticCurveTo(cpx,cpy,b.x,b.y); g.stroke();
+    g.setLineDash([]);
+
+    /* 流动粒子（多个，沿贝塞尔曲线移动） */
+    if(!document.body.classList.contains('reduce')){
+      var np=e.small?2:3;
+      for(var k=0;k<np;k++){
+        var p=((t*e.speed+k/np)%1);
+        var omp=1-p;
+        var px=omp*omp*a.x+2*omp*p*cpx+p*p*b.x;
+        var py=omp*omp*a.y+2*omp*p*cpy+p*p*b.y;
+        g.fillStyle=e.c; g.globalAlpha=0.9*(1-Math.abs(p-0.5)*0.3);
+        g.beginPath(); g.arc(px,py,e.recycle?4:3.4,0,6.2832); g.fill();
+        g.globalAlpha=1;
+      }
+    }
+
+    /* 箭头 */
+    var ang=Math.atan2(b.y-cpy,b.x-cpx);
+    g.translate(b.x-Math.cos(ang)*(b.r+2),b.y-Math.sin(ang)*(b.r+2));
+    g.rotate(ang);
+    g.fillStyle=e.c; g.beginPath();
+    g.moveTo(-7,-4); g.lineTo(0,0); g.lineTo(-7,4); g.closePath(); g.fill();
+    g.restore();
+
+    /* 边标签：偏移量按边两端节点半径取大值 + 外扩 */
+    var rPad=Math.max(a.r,b.r)+14;
+    var lblOff=e.recycle?rPad+8:rPad+4;
+    var lx=mx+nx*lblOff, ly=my+ny*lblOff;
+    g.font='600 10.5px "PingFang SC",system-ui,sans-serif';
+    var tw=g.measureText?g.measureText(e.label).width:e.label.length*10;
+    g.fillStyle='rgba(255,255,255,.96)'; g.fillRect(lx-tw/2-4,ly-8,tw+8,15);
+    g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.strokeRect(lx-tw/2-3.5,ly-7.5,tw+7,14);
+    g.fillStyle=e.c; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(e.label,lx,ly);
+  });
+
+  /* 画节点（带脉动光晕） */
+  nodes.forEach(function(n){
+    g.save();
+    /* 脉动光晕 */
+    if(!document.body.classList.contains('reduce')){
+      var pulse=0.5+0.5*Math.sin(t*2+n.x*0.01);
+      g.fillStyle=n.c; g.globalAlpha=0.10+pulse*0.10;
+      g.beginPath(); g.arc(n.x,n.y,n.r+10+pulse*5,0,6.2832); g.fill();
+      g.globalAlpha=1;
+    }
+    /* 主体 */
+    g.shadowColor='rgba(11,46,54,.10)'; g.shadowBlur=12; g.shadowOffsetY=3;
+    g.fillStyle='rgba(255,255,255,.97)'; g.strokeStyle=n.c; g.lineWidth=2.2;
+    g.beginPath(); g.arc(n.x,n.y,n.r,0,6.2832); g.fill(); g.shadowBlur=0;
+    g.stroke();
+    /* 内圈装饰 */
+    g.strokeStyle=n.c; g.globalAlpha=0.25; g.lineWidth=1;
+    g.beginPath(); g.arc(n.x,n.y,n.r-5,0,6.2832); g.stroke(); g.globalAlpha=1;
+    /* 文字 */
+    var lines=n.t.split('\n');
+    g.fillStyle=n.c; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(lines[0],n.x,n.y-10);
+    g.fillStyle='#57727c'; g.font='10.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(lines[1],n.x,n.y+4);
+    g.fillStyle=n.c; g.font='700 12px "PingFang SC",system-ui,sans-serif';
+    g.fillText(n.v,n.x,n.y+18);
+    g.restore();
+  });
+
+  /* 标题 */
+  g.fillStyle='#57727c'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('SIRS 闭环：S→I(生活/农业/工业)→R→S，损耗由 E=Input_Earth 补给；稳态条件 dS/dt=0',12,16);
+};
+function fillCycleKpi(){
+  $('#cycleKpi').innerHTML=
+    kpi('10 <u>万人</u>','殖民地设计人口','')+
+    kpi(CY.eta_h,'生活废水回收率 η_h','')+
+    kpi(CY.eta_a,'农业废水回收率 η_a','g')+
+    kpi(CY.net_annual+' <u>Mt/年</u>','年净需水（地球补给）','w');
+  $('#cycleNote').innerHTML='<span class="badge">SIRS</span>四只水箱：S（可用洁水）→ I（生活/农业/工业用水）→ R（再生水）→ 回到 S。生活废水走 η_h=0.88 支路、农业废水走 η_a=0.72 支路回到 R；不可回收损耗（蒸发、消耗、渗漏）必须由 E=Input_Earth 顶上，年净需水 7.51 Mt。闭环稳态条件：dS/dt=0。';
+}
+
+/* ---------------- 第三幕 水需求 ---------------- */
+R.cvDemand=function(cv){
+  var d=prepCanvas(cv,280), g=d.g, w=d.w, h=d.h;
+  var parts=DM.parts, vals=parts.map(function(p){return p.v;}), n=parts.length;
+  var ymax=Math.max.apply(null,vals)*1.35;
+  var L=52, Rr=18, T=24, B=48, PW=w-L-Rr, PH=h-T-B;
+  var bw=Math.min(120,PW/n*0.5), step=PW/n;
+  var t=animTime();
+
+  function Y(v){ return T+PH*(1-v/ymax); }
+
+  /* 网格 */
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(2)+' Mt',L-7,yy);
+  }
+  g.strokeStyle='#d9e9e9'; g.beginPath(); g.moveTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+
+  /* 柱（带增长动画） */
+  parts.forEach(function(p,k){
+    var target=PH*(p.v/ymax);
+    /* 增长进度（0→1，2 秒内完成） */
+    var prog=document.body.classList.contains('reduce')?1:Math.min(1,t/2);
+    prog=Math.max(0,Math.min(1,prog-k*0.15));
+    prog=Math.max(0,prog);
+    var bh=target*prog;
+    var x=L+step*(k+0.5)-bw/2, y=T+PH-bh;
+    /* 柱体渐变 */
+    var grd=g.createLinearGradient(0,y,0,T+PH);
+    grd.addColorStop(0,p.c); grd.addColorStop(1,p.c+'cc');
+    g.fillStyle=grd; g.fillRect(x,y,bw,bh);
+    /* 顶部高光 */
+    g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(x,y,bw,3);
+    /* 数值标签 */
+    if(prog>0.6){
+      g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='alphabetic';
+      g.fillText(p.v.toFixed(2)+' Mt',x+bw/2,y-7);
+    }
+    /* X 轴标签 */
+    g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(p.k,x+bw/2,T+PH+18);
+    if(p.eta>0){ g.fillStyle='#8aa3aa'; g.fillText('η='+(p.eta*100).toFixed(0)+'%',x+bw/2,T+PH+33); }
+    else { g.fillStyle='#8aa3aa'; g.fillText('不可回收',x+bw/2,T+PH+33); }
+  });
+
+  /* 合计线 */
+  var total=DM.total;
+  var ty=Y(total);
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='#b8543a'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(L,ty); g.lineTo(L+PW,ty); g.stroke(); g.restore();
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('合计 '+total.toFixed(2)+' Mt/年',L+4,ty-5);
+};
+function fillDemandKpi(){
+  var parts=DM.parts;
+  $('#demandKpi').innerHTML=
+    kpi(DM.total.toFixed(2)+' <u>Mt/年</u>','年净需水合计','w')+
+    kpi(parts[0].v.toFixed(2)+' <u>Mt</u>','生活损耗（η_h=0.88）','')+
+    kpi(parts[1].v.toFixed(2)+' <u>Mt</u>','农业损耗（η_a=0.72）','g')+
+    kpi((parts[2].v+parts[3].v).toFixed(2)+' <u>Mt</u>','工业 + 蒸发损耗','b');
+  $('#demandNote').innerHTML='<span class="badge">分解</span>7.51 Mt 按四个不可回收项分解：农业损耗 2.74 Mt 占比最大（η_a=0.72 最低），生活损耗 1.62 Mt（η_h=0.88 较高），工业消耗 1.70 Mt 全部损失，蒸发与其他 1.45 Mt。四项相加恰好等于地球必须补给的 Input_Earth。';
+}
+R.cvCum=function(cv){
+  var annual=TL.annual, cum=TL.cumulative, n=annual.length;
+  var ymax=Math.max(Math.max.apply(null,annual),Math.max.apply(null,cum))*1.1;
+  var d=prepCanvas(cv,240), g=d.g, w=d.w, h=d.h;
+  var L=54, Rr=54, T=18, B=26, PW=w-L-Rr, PH=h-T-B;
+  var t=animTime();
+
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return T+PH*(1-v/ymax); }
+
+  /* 网格 */
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(2)+' Mt',L-7,yy);
+  }
+  /* X 轴刻度 */
+  TL.years.forEach(function(y,i){
+    var xx=X(i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText('Y'+y,xx,T+PH+16);
+  });
+
+  /* 稳态线 */
+  var sy=Y(7.51);
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='#b8543a'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(L,sy); g.lineTo(L+PW,sy); g.stroke(); g.restore();
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('稳态 7.51 Mt/年',L+4,sy-5);
+
+  /* 累计曲线（带动画绘制） */
+  var prog=document.body.classList.contains('reduce')?1:Math.min(1,t*0.8);
+  var drawN=Math.max(1,Math.floor(n*prog));
+  g.strokeStyle='#1e9fc4'; g.lineWidth=2.4; g.lineJoin='round';
+  g.beginPath();
+  for(var i=0;i<drawN;i++){
+    var px=X(i),py=Y(cum[i]);
+    if(i===0) g.moveTo(px,py); else g.lineTo(px,py);
+  }
+  g.stroke();
+  /* 填充 */
+  g.fillStyle='rgba(30,159,196,.14)';
+  g.lineTo(X(drawN-1),T+PH); g.lineTo(X(0),T+PH); g.closePath(); g.fill();
+
+  /* 柱状 */
+  annual.forEach(function(v,i){
+    var bx=X(i), by=Y(v), bw=18;
+    g.fillStyle='#12a594'; g.fillRect(bx-bw/2,by,bw,T+PH-by);
+    g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(bx-bw/2,by,bw,2);
+  });
+
+  $('#cumNote').innerHTML='<span class="badge">累积</span>蓝色累计线在前三年缓慢爬升，Y5 进入稳态后每年增加 7.51 Mt。柱状为当年净需水，基建期低、稳态期持平 7.51 Mt。';
+};
+
+/* ---------------- 第四幕 运水分配 ---------------- */
+R.cvPie=function(cv){
+  var d=prepCanvas(cv,280), g=d.g, w=d.w, h=d.h;
+  var cx=w/2-30, cy=h/2, Rr=Math.min(w,h)/2-32;
+  var elev=AL.elevator, rock=AL.rocket, total=elev+rock;
+  var a1=Math.PI*2*elev/total, a2=Math.PI*2*rock/total;
+  var start=-Math.PI/2;
+  var t=animTime();
+
+  /* 增长进度 */
+  var prog=document.body.classList.contains('reduce')?1:Math.min(1,t*1.2);
+  var curA1=a1*prog, curA2=a2*prog;
+
+  /* 电梯扇区（透色渐变，同问题四风格） */
+  var grd1=g.createRadialGradient(cx,cy,Rr*0.3,cx,cy,Rr);
+  grd1.addColorStop(0,'#12a594'); grd1.addColorStop(1,'#fff');
+  g.fillStyle=grd1;
+  g.beginPath(); g.moveTo(cx,cy);
+  g.arc(cx,cy,Rr,start,start+curA1); g.closePath(); g.fill();
+  g.strokeStyle='#12a594'; g.lineWidth=2.2; g.stroke();
+
+  /* 火箭扇区（透色渐变，同问题四风格） */
+  var grd2=g.createRadialGradient(cx,cy,Rr*0.3,cx,cy,Rr);
+  grd2.addColorStop(0,'#b8543a'); grd2.addColorStop(1,'#fff');
+  g.fillStyle=grd2;
+  g.beginPath(); g.moveTo(cx,cy);
+  g.arc(cx,cy,Rr,start+curA1,start+curA1+curA2); g.closePath(); g.fill();
+  g.strokeStyle='#b8543a'; g.lineWidth=2.2; g.stroke();
+
+  /* 中心镂空 */
+  g.fillStyle='#fff';
+  g.beginPath(); g.arc(cx,cy,Rr*0.45,0,Math.PI*2); g.fill();
+  g.strokeStyle='#d9e9e9'; g.lineWidth=1; g.stroke();
+
+  /* 标签 */
+  if(prog>0.5){
+    function mid(s){ return start + s/2; }
+    var m1=mid(a1), m2=start+a1+mid(a2);
+    function putLabel(ang,txt,sub,c){
+      var lx=cx+Math.cos(ang)*(Rr*0.92), ly=cy+Math.sin(ang)*(Rr*0.92);
+      g.fillStyle=c; g.font='700 15px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='middle';
+      g.fillText(txt,lx,ly-8);
+      g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+      g.fillText(sub,lx,ly+9);
+    }
+    putLabel(m1,AL.elevator_pct+'%','电梯 '+elev.toFixed(2)+' Mt','#0b2e36');
+    putLabel(m2,AL.rocket_pct+'%','火箭 '+rock.toFixed(2)+' Mt','#0b2e36');
+  }
+
+  /* 中心文字 */
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('运水合计',cx,cy-9);
+  g.fillStyle='#0b6e68'; g.font='700 14px "PingFang SC",system-ui,sans-serif';
+  g.fillText(total.toFixed(2)+' Mt',cx,cy+8);
+
+  /* 右侧成本块 */
+  g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('总成本',w-100,cy-30);
+  g.fillStyle='#b8543a'; g.font='700 20px "PingFang SC",system-ui,sans-serif';
+  g.fillText(AL.cost_b+' B',w-100,cy-4);
+  g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.fillText('USD',w-100+72,cy-4);
+  g.fillStyle='#0b2e36'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.fillText('日发射',w-100,cy+24);
+  g.fillStyle='#b8543a'; g.font='700 17px "PingFang SC",system-ui,sans-serif';
+  g.fillText('≈ '+AL.launches_per_day+' 次',w-100,cy+44);
+};
+function fillPieNote(){
+  $('#pieNote').innerHTML='<span class="badge">最优混合</span>电梯吃满 2.06 Mt 运水配额（27.5%），火箭承担剩余 5.45 Mt（72.5%）。电梯运力优先配给基建物资，水只能拿到剩余配额。';
+}
+R.cvCost=function(cv){
+  var items=[
+    {k:'电梯',v:AL.elevator_cost_per_kg,c:'#0b6e68'},
+    {k:'火箭',v:AL.rocket_cost_per_kg,c:'#b8543a'}
+  ];
+  var ymax=Math.max.apply(null,items.map(function(x){return x.v;}))*1.35;
+  var d=prepCanvas(cv,280), g=d.g, w=d.w, h=d.h;
+  var L=60, Rr=18, T=34, B=48, PW=w-L-Rr, PH=h-T-B;
+  var n=items.length, bw=Math.min(110,PW/n*0.5), step=PW/n;
+  var t=animTime();
+
+  function Y(v){ return T+PH*(1-v/ymax); }
+  /* 网格 */
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText('$'+v.toFixed(3)+'/kg',L-7,yy);
+  }
+  g.strokeStyle='#d9e9e9'; g.beginPath(); g.moveTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+
+  items.forEach(function(it,k){
+    var target=PH*(it.v/ymax);
+    var prog=document.body.classList.contains('reduce')?1:Math.min(1,t*1.2-k*0.3);
+    prog=Math.max(0,prog);
+    var bh=target*prog;
+    var x=L+step*(k+0.5)-bw/2, y=T+PH-bh;
+    var grd=g.createLinearGradient(0,y,0,T+PH);
+    grd.addColorStop(0,it.c); grd.addColorStop(1,it.c+'cc');
+    g.fillStyle=grd; g.fillRect(x,y,bw,bh);
+    g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(x,y,bw,3);
+    if(prog>0.5){
+      g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+      g.textAlign='center'; g.textBaseline='alphabetic';
+      g.fillText('$'+it.v.toFixed(3)+'/kg',x+bw/2,y-10);
+    }
+    g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(it.k+' 运水',x+bw/2,T+PH+18);
+  });
+
+  g.fillStyle='#8aa3aa'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('电梯单位成本低，但年运水配额仅 '+AL.elevator.toFixed(2)+' Mt',L,T+PH+34);
+};
+function fillCostNote(){
+  $('#costNote').innerHTML='<span class="badge">成本对比</span>电梯每公斤运水 $'+AL.elevator_cost_per_kg.toFixed(3)+'，火箭 $'+AL.rocket_cost_per_kg.toFixed(3)+'/kg。电梯便宜但不能多用——其 '+AL.elevator_base.toFixed(2)+' Mt 总载荷配额中，基建物资占走约 '+(AL.elevator_base-AL.elevator_quota).toFixed(2)+' Mt，水只拿到 '+AL.elevator_quota.toFixed(2)+' Mt 配额。';
+  $('#allocKpi').innerHTML=
+    kpi(AL.elevator.toFixed(2)+' <u>Mt</u>','电梯运水（27.5%）','')+
+    kpi(AL.rocket.toFixed(2)+' <u>Mt</u>','火箭运水（72.5%）','w')+
+    kpi(AL.cost_b+' <u>B USD</u>','年总成本','g')+
+    kpi('≈ '+AL.launches_per_day+' <u>次/日</u>','火箭发射节奏','b');
+}
+R.cvLaunch=function(cv){
+  var dList=D.launch_daily, n=dList.length;
+  var ymax=Math.max.apply(null,dList)*1.3;
+  var d=prepCanvas(cv,200), g=d.g, w=d.w, h=d.h;
+  var L=46, Rr=16, T=18, B=30, PW=w-L-Rr, PH=h-T-B;
+  var t=animTime();
+
+  function X(i){ return L+PW*(n<=1?0:i/(n-1)); }
+  function Y(v){ return T+PH*(1-v/ymax); }
+  /* 网格 */
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0),L-7,yy);
+  }
+  /* X 刻度 */
+  [{i:0,t:'0'},{i:6,t:'6'},{i:12,t:'12'},{i:18,t:'18'},{i:23,t:'24'}].forEach(function(tk){
+    var xx=X(tk.i);
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(tk.t,xx,T+PH+16);
+  });
+
+  /* 平均线 */
+  var ay=Y(10);
+  g.save(); g.setLineDash([5,4]); g.strokeStyle='#e0a04a'; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(L,ay); g.lineTo(L+PW,ay); g.stroke(); g.restore();
+  g.fillStyle='#e0a04a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('平均 10 次/日',L+4,ay-5);
+
+  /* 曲线 + 填充（带动画绘制） */
+  var prog=document.body.classList.contains('reduce')?1:Math.min(1,t*1.5);
+  var drawN=Math.max(1,Math.floor(n*prog));
+  g.strokeStyle='#b8543a'; g.lineWidth=2.2; g.lineJoin='round';
+  g.beginPath();
+  for(var i=0;i<drawN;i++){
+    var px=X(i),py=Y(dList[i]);
+    if(i===0) g.moveTo(px,py); else g.lineTo(px,py);
+  }
+  g.stroke();
+  g.fillStyle='rgba(184,84,58,.15)';
+  g.lineTo(X(drawN-1),T+PH); g.lineTo(X(0),T+PH); g.closePath(); g.fill();
+
+  /* 数据点 */
+  for(var i=0;i<drawN;i++){
+    var px=X(i),py=Y(dList[i]);
+    g.fillStyle='#b8543a'; g.beginPath(); g.arc(px,py,2.5,0,6.2832); g.fill();
+  }
+
+  $('#launchNote').innerHTML='<span class="badge">发射节奏</span>一天 24 小时的发射次数分布，集中在月球当地的白天窗口（约 6–18 时）。平均每日约 10 次发射，全年约 '+AL.launches_per_year+' 次，对应 5.45 Mt/年的运水量。';
+};
+
+/* ---------------- 第五幕 结论汇总图 ---------------- */
+R.cvSummary=function(cv){
+  var d=prepCanvas(cv,300), g=d.g, w=d.w, h=d.h;
+  var t=animTime();
+  var L=60, Rr=20, T=30, B=40, PW=w-L-Rr, PH=h-T-B;
+
+  /* 桑基式水流图：毛用水 → 分解 → 运输 */
+  /* 第一层：毛用水 25 Mt（绿） */
+  var grossW=PW*0.85;
+  var gx=L+(PW-grossW)/2;
+  /* 分解：回收 17.49 + 损耗 7.51 */
+  var recycledW=grossW*(CY.recycled/CY.gross_annual);
+  var netW=grossW*(CY.net_annual/CY.gross_annual);
+  /* 运输分解：电梯 2.06 + 火箭 5.45 */
+  var elevW=netW*(AL.elevator/CY.net_annual);
+  var rockW=netW*(AL.rocket/CY.net_annual);
+
+  /* 增长进度 */
+  var prog=document.body.classList.contains('reduce')?1:Math.min(1,t*0.9);
+
+  /* 第一层：毛用水 */
+  var y1=T, h1=50;
+  var grd=g.createLinearGradient(0,y1,0,y1+h1);
+  grd.addColorStop(0,'#12a594'); grd.addColorStop(1,'#0b6e68');
+  g.fillStyle=grd;
+  g.fillRect(gx,y1,grossW*prog,h1);
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(gx,y1,grossW*prog,3);
+  g.fillStyle='#fff'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  if(prog>0.5) g.fillText('毛用水 25.0 Mt',gx+grossW*prog/2,y1+h1/2);
+
+  /* 分流连接（回收 + 损耗） */
+  var y2=T+h1+30, h2=40;
+  var recycledX=gx, netX=gx+recycledW;
+  /* 回收流 */
+  g.fillStyle='#1e9fc4'; g.globalAlpha=0.6;
+  g.beginPath();
+  g.moveTo(recycledX,y1+h1);
+  g.lineTo(recycledX,y1+h1+15);
+  g.lineTo(recycledX+recycledW*prog,y1+h1+15);
+  g.lineTo(recycledX+recycledW*prog,y2);
+  g.lineTo(recycledX,y2);
+  g.closePath(); g.fill(); g.globalAlpha=1;
+  /* 损耗流 */
+  g.fillStyle='#b8543a'; g.globalAlpha=0.6;
+  g.beginPath();
+  g.moveTo(netX,y1+h1);
+  g.lineTo(netX,y1+h1+15);
+  g.lineTo(netX+netW*prog,y1+h1+15);
+  g.lineTo(netX+netW*prog,y2);
+  g.lineTo(netX,y2);
+  g.closePath(); g.fill(); g.globalAlpha=1;
+
+  /* 第二层：回收 + 损耗 */
+  var grd2=g.createLinearGradient(0,y2,0,y2+h2);
+  grd2.addColorStop(0,'#1e9fc4'); grd2.addColorStop(1,'#0b6e68');
+  g.fillStyle=grd2; g.fillRect(recycledX,y2,recycledW*prog,h2);
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(recycledX,y2,recycledW*prog,3);
+  if(prog>0.5){
+    g.fillStyle='#fff'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('回收 '+CY.recycled+' Mt',recycledX+recycledW*prog/2,y2+h2/2);
+  }
+  var grd3=g.createLinearGradient(0,y2,0,y2+h2);
+  grd3.addColorStop(0,'#d6684e'); grd3.addColorStop(1,'#b8543a');
+  g.fillStyle=grd3; g.fillRect(netX,y2,netW*prog,h2);
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(netX,y2,netW*prog,3);
+  if(prog>0.5){
+    g.fillStyle='#fff'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('地球补给 7.51 Mt',netX+netW*prog/2,y2+h2/2);
+  }
+
+  /* 第三层：电梯 + 火箭 */
+  var y3=y2+h2+30, h3=46;
+  /* 连接流 */
+  g.fillStyle='#0b6e68'; g.globalAlpha=0.5;
+  g.beginPath();
+  g.moveTo(netX,y2+h2); g.lineTo(netX,y2+h2+15);
+  g.lineTo(netX+elevW*prog,y2+h2+15); g.lineTo(netX+elevW*prog,y3);
+  g.lineTo(netX,y3); g.closePath(); g.fill();
+  g.fillStyle='#e0a04a'; g.globalAlpha=0.5;
+  g.beginPath();
+  g.moveTo(netX+elevW,y2+h2); g.lineTo(netX+elevW,y2+h2+15);
+  g.lineTo(netX+elevW+rockW*prog,y2+h2+15); g.lineTo(netX+elevW+rockW*prog,y3);
+  g.lineTo(netX+elevW,y3); g.closePath(); g.fill();
+  g.globalAlpha=1;
+
+  var grd4=g.createLinearGradient(0,y3,0,y3+h3);
+  grd4.addColorStop(0,'#1ea89c'); grd4.addColorStop(1,'#0b6e68');
+  g.fillStyle=grd4; g.fillRect(netX,y3,elevW*prog,h3);
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(netX,y3,elevW*prog,3);
+  if(prog>0.5){
+    g.fillStyle='#fff'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('电梯 '+AL.elevator+' Mt',netX+elevW*prog/2,y3+h3/2);
+  }
+  var grd5=g.createLinearGradient(0,y3,0,y3+h3);
+  grd5.addColorStop(0,'#e0a04a'); grd5.addColorStop(1,'#b8543a');
+  g.fillStyle=grd5; g.fillRect(netX+elevW,y3,rockW*prog,h3);
+  g.fillStyle='rgba(255,255,255,.2)'; g.fillRect(netX+elevW,y3,rockW*prog,3);
+  if(prog>0.5){
+    g.fillStyle='#fff'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('火箭 '+AL.rocket+' Mt',netX+elevW+rockW*prog/2,y3+h3/2);
+  }
+
+  /* 标签 */
+  g.fillStyle='#57727c'; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('① 毛用水 25 Mt',12,y1+12);
+  g.fillText('② 回收 17.49 / 损耗 7.51',12,y2+12);
+  g.fillText('③ 电梯 2.06 / 火箭 5.45',12,y3+12);
+
+  /* 成本标签 */
+  g.fillStyle='#b8543a'; g.font='700 14px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='right'; g.textBaseline='alphabetic';
+  g.fillText('总成本 129.19 B USD',w-10,y3+h3+28);
+};
+function fillSumKpi(){
+  $('#sumKpi').innerHTML=
+    kpi(CY.net_annual+' <u>Mt/年</u>','年净需水','w')+
+    kpi(AL.elevator+' <u>Mt</u>','电梯运水（27.5%）','')+
+    kpi(AL.rocket+' <u>Mt</u>','火箭运水（72.5%）','')+
+    kpi(AL.cost_b+' <u>B USD</u>','年总成本','g');
+  $('#sumNote').innerHTML='<span class="badge">全景</span>三层水流：① 毛用水 25 Mt → ② 回收 17.49 Mt + 地球补给 7.51 Mt → ③ 电梯 2.06 Mt + 火箭 5.45 Mt。总成本 129.19 B USD 是该分配方案的最优值。';
+}
+
+/* ---------------- 幕初始化 ---------------- */
+function initS1(){ fillOvKpi(); }
+function initS2(){ fillCycleKpi(); }
+function initS3(){ fillDemandKpi(); }
+function initS4(){ fillPieNote(); fillCostNote(); }
+function initS5(){ fillSumKpi(); }
+
+/* ---------------- 幕调度（复用框架） ---------------- */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var st={last:0,armed:false,fired:0};
+var animCvs=['cvOverview','cvCycle','cvDemand','cvCum','cvPie','cvCost','cvLaunch','cvSummary'];
+function ensure(id){
+  var cv=document.getElementById(id);
+  if(!cv||!R[id]) return;
+  /* 动画类画布每次都重画 */
+  cv.dataset.done='1'; R[id](cv);
+}
+function revealCanvas(el){ $$('canvas',el).forEach(function(cv){ ensure(cv.id); }); }
+function beatsAuto(sc){ return $$('.wrap > *',sc); }
+function resetScene(sc){
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+}
+function goTo(i){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(H[i]) H[i]();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+}
+function ensureScene(i){
+  var sc=SCENES[i];
+  $$('canvas',sc).forEach(function(cv){ ensure(cv.id); });
+}
+var H=[function(){ initS1(); ensureScene(0); },function(){ initS2(); ensureScene(1); },function(){ initS3(); ensureScene(2); },function(){ initS4(); ensureScene(3); },function(){ initS5(); ensureScene(4); }];
+function init(){
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ resetScene(SCENES[cur]); ensureScene(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  /* 滚轮翻幕 */
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  initS1(); initS2(); initS3(); initS4(); initS5();
+  setReduce(false); goTo(0);
+}
+
+/* 动画循环：当前幕的动画类画布持续刷新 */
+var rafId=null;
+function tickAnim(){
+  if(cur>=0 && !document.body.classList.contains('reduce')){
+    var sc=SCENES[cur];
+    if(sc){
+      $$('canvas',sc).forEach(function(cv){
+        if(animCvs.indexOf(cv.id)>=0 && R[cv.id]){
+          R[cv.id](cv);
+        }
+      });
+    }
+  }
+  rafId=requestAnimationFrame(tickAnim);
+}
+window.addEventListener('resize',function(){
+  if(cur>=0) ensureScene(cur);
+});
+init();
+requestAnimationFrame(tickAnim);
+window.__deck={goTo:goTo,get cur(){return cur;},R:R,D:D};
+})();
+</script></body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智能体平台 · UI 重构设计方案（靛蓝 × 紫）</title>
+<style>
+/* ============================================================
+   本文档自身即按提案中的设计体系排版（所见即所得）
+   配色方案 B：靛蓝主色 × 紫色智能态 × Slate 石板灰中性
+   全程无黑色，最大文本色为 slate-800 #1E293B
+   ============================================================ */
+:root {
+  /* ── Primitive: Slate 中性色阶（冷调石板灰，无黑） ── */
+  --gray-25:  #fcfdfe;
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;   /* 禁用/装饰 */
+  --gray-500: #64748b;   /* 次要正文（AA 达标） */
+  --gray-700: #334155;
+  --gray-800: #1e293b;   /* 标题（最深文本色） */
+  --gray-900: #0f172a;   /* 仅深色元素内文字 */
+
+  /* ── Primitive: 品牌与功能色 ── */
+  --primary:       #4f46e5;  /* 靛蓝：主操作/链接/选中 */
+  --primary-hover: #4338ca;
+  --primary-soft:  #eef2ff;
+  --ai:            #7c3aed;  /* 紫：AI 智能态专用 */
+  --ai-soft:       #f5f3ff;
+  --success:       #16a34a;  --success-soft: #f0fdf4;
+  --warning:       #d97706;  --warning-soft: #fffbeb;
+  --error:         #dc2626;  --error-soft:   #fef2f2;
+  --info:          #2563eb;  --info-soft:    #eff6ff;
+
+  /* ── Semantic ── */
+  --bg:         #ffffff;
+  --bg-subtle:  #f8fafc;
+  --surface:    #ffffff;
+  --text-hi:    #1e293b;
+  --text-body:  #475569;
+  --text-muted: #94a3b8;
+
+  /* ── 字体 ── */
+  --font-display: 'Cal Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', Menlo, monospace;
+
+  /* ── 间距（4px 基数）── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  /* ── 圆角 ── */
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 9999px;
+
+  /* ── 阴影（slate 色调，ring-first）── */
+  --shadow-sm: rgba(15,23,42,.55) 0 1px 3px -3px, rgba(15,23,42,.08) 0 0 0 1px, rgba(15,23,42,.04) 0 2px 4px;
+  --shadow-md: rgba(15,23,42,.55) 0 2px 6px -4px, rgba(15,23,42,.10) 0 0 0 1px, rgba(15,23,42,.07) 0 6px 12px;
+  --shadow-lg: rgba(15,23,42,.45) 0 4px 10px -6px, rgba(15,23,42,.12) 0 0 0 1px, rgba(15,23,42,.10) 0 12px 24px;
+
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-body);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── 顶部导航 ── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200);
+}
+.topbar-inner {
+  max-width: 1120px; margin: 0 auto; padding: var(--sp-3) var(--sp-6);
+  display: flex; align-items: center; gap: var(--sp-6);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; color: var(--text-hi); font-size: 17px; letter-spacing: -0.2px; }
+.brand-dot { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--primary) 55%, var(--ai) 55%); flex: none; }
+.topbar nav { display: flex; gap: var(--sp-1); margin-left: auto; flex-wrap: wrap; }
+.topbar nav a {
+  color: var(--text-body); text-decoration: none; font-size: 13.5px; font-weight: 500;
+  padding: 6px 12px; border-radius: var(--r-pill); transition: all .15s var(--ease);
+}
+.topbar nav a:hover { background: var(--primary-soft); color: var(--primary); }
+
+.doc { max-width: 1120px; margin: 0 auto; padding: var(--sp-12) var(--sp-6) 96px; }
+
+/* ── Hero ── */
+.hero { padding: var(--sp-12) 0 var(--sp-10); border-bottom: 1px solid var(--gray-200); }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--primary);
+  background: var(--primary-soft); padding: 5px 14px; border-radius: var(--r-pill);
+  margin-bottom: var(--sp-5);
+}
+.hero-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+h1 {
+  font-family: var(--font-display); font-size: 52px; font-weight: 600;
+  line-height: 1.12; letter-spacing: -1px; color: var(--text-hi);
+  max-width: 780px;
+}
+h1 em { font-style: normal; color: var(--primary); }
+.hero-sub { margin-top: var(--sp-5); font-size: 18px; line-height: 1.7; max-width: 680px; color: var(--text-body); }
+.hero-meta { margin-top: var(--sp-6); display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.chip {
+  font-size: 12.5px; font-weight: 500; color: var(--text-hi);
+  background: var(--bg); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);
+  padding: 6px 14px; border-radius: var(--r-pill);
+}
+
+/* ── 章节 ── */
+section { padding-top: var(--sp-12); }
+h2 {
+  font-family: var(--font-display); font-size: 30px; font-weight: 600;
+  letter-spacing: -0.4px; color: var(--text-hi); margin-bottom: var(--sp-3);
+  display: flex; align-items: baseline; gap: var(--sp-3);
+}
+h2 .no { font-family: var(--font-mono); font-size: 14px; color: var(--primary); font-weight: 500; }
+.sec-desc { max-width: 720px; margin-bottom: var(--sp-8); font-size: 15.5px; }
+h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text-hi); margin: var(--sp-8) 0 var(--sp-4); letter-spacing: -0.2px; }
+
+/* ── 卡片 ── */
+.card { background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--shadow-sm); padding: var(--sp-6); }
+.card + .card { margin-top: var(--sp-4); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
+@media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ── 原则卡 ── */
+.principle { display: flex; gap: var(--sp-4); align-items: flex-start; }
+.p-icon {
+  width: 40px; height: 40px; border-radius: var(--r-md); flex: none;
+  display: grid; place-items: center; font-size: 18px;
+  background: var(--primary-soft);
+}
+.principle b { display: block; font-size: 15.5px; color: var(--text-hi); margin-bottom: 4px; font-weight: 600; }
+.principle p { font-size: 14px; line-height: 1.65; }
+
+/* ── 色板 ── */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp-3); }
+.swatch { border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); background: var(--surface); }
+.swatch .fill { height: 64px; }
+.swatch .info { padding: 10px 12px; }
+.swatch .name { font-size: 12.5px; font-weight: 600; color: var(--text-hi); }
+.swatch .hex { font-family: var(--font-mono); font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+/* ── 表格 ── */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); padding: 10px 12px; border-bottom: 1px solid var(--gray-200); }
+td { padding: 11px 12px; border-bottom: 1px solid var(--gray-100); color: var(--text-body); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code, .inline-code { font-family: var(--font-mono); font-size: 12.5px; background: var(--gray-100); padding: 2px 7px; border-radius: 5px; color: var(--text-hi); }
+.pass { color: var(--success); font-weight: 600; font-size: 12.5px; }
+.fail { color: var(--error); font-weight: 600; font-size: 12.5px; }
+
+/* ── 字阶演示 ── */
+.type-row { display: flex; align-items: baseline; gap: var(--sp-6); padding: var(--sp-4) 0; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
+.type-row:last-child { border-bottom: none; }
+.type-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--gray-500); width: 210px; flex: none; line-height: 1.5; }
+.type-sample-display { font-family: var(--font-display); font-weight: 600; color: var(--text-hi); letter-spacing: -0.6px; line-height: 1.15; }
+.type-sample-body { color: var(--text-hi); }
+
+/* ── 组件演示 ── */
+.demo-stage {
+  background:
+    linear-gradient(var(--gray-50), var(--gray-50)),
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(79,70,229,.02) 10px, rgba(79,70,229,.02) 11px);
+  border-radius: var(--r-xl); box-shadow: var(--shadow-sm);
+  padding: var(--sp-8); display: flex; flex-wrap: wrap; gap: var(--sp-4); align-items: center;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  padding: 9px 18px; border-radius: var(--r-md); border: none; cursor: pointer;
+  transition: all .15s var(--ease);
+}
+.btn-primary { background: var(--primary); color: #fff; box-shadow: rgba(255,255,255,.2) 0 2px 0 inset; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-ghost { background: #fff; color: var(--text-hi); box-shadow: var(--shadow-sm); }
+.btn-ghost:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.btn-danger { background: var(--error); color: #fff; }
+.btn-sm { font-size: 13px; padding: 6px 13px; border-radius: var(--r-sm); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+.input-demo {
+  width: 260px; max-width: 100%; padding: 10px 14px; font-size: 14.5px;
+  font-family: var(--font-body); color: var(--text-hi);
+  border: none; border-radius: var(--r-md); box-shadow: var(--shadow-sm);
+  outline: none; transition: box-shadow .15s var(--ease);
+  background: #fff;
+}
+.input-demo::placeholder { color: var(--gray-400); }
+.input-demo:focus { box-shadow: rgba(79,70,229,.4) 0 0 0 3px, var(--shadow-sm); }
+.input-err { box-shadow: rgba(220,38,38,.5) 0 0 0 1px, rgba(220,38,38,.15) 0 0 0 3px; }
+
+/* ── 聊天气泡 mock ── */
+.chat-mock { display: flex; flex-direction: column; gap: var(--sp-4); max-width: 560px; width: 100%; }
+.bubble {
+  padding: 12px 16px; font-size: 14.5px; line-height: 1.65; max-width: 85%;
+  border-radius: 14px;
+}
+.bubble-user { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+.bubble-ai { align-self: flex-start; background: #fff; color: var(--text-body); box-shadow: var(--shadow-sm); border-bottom-left-radius: 4px; }
+.bubble-ai .ai-cursor { display: inline-block; width: 7px; height: 15px; background: var(--ai); border-radius: 2px; vertical-align: -2px; margin-left: 3px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.tool-chip {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--text-body);
+  background: var(--gray-100); border-radius: var(--r-pill); padding: 5px 12px;
+}
+.tool-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+.tool-chip.running .dot { background: var(--ai); }
+
+/* ── 布局线框（SVG 容器）── */
+.wire { background: var(--surface); border-radius: var(--r-xl); box-shadow: var(--shadow-sm); padding: var(--sp-5); }
+.wire-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-3); }
+.wire-label b { font-size: 14px; color: var(--text-hi); font-weight: 600; }
+.wire-label span { font-family: var(--font-mono); font-size: 11px; color: var(--gray-500); }
+
+/* ── 阶段路线 ── */
+.phase { display: flex; gap: var(--sp-5); position: relative; padding-bottom: var(--sp-6); }
+.phase:not(:last-child)::before { content: ''; position: absolute; left: 17px; top: 40px; bottom: 0; width: 2px; background: var(--gray-200); }
+.phase-no { width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center; font-family: var(--font-mono); font-size: 13px; font-weight: 600; background: var(--primary); color: #fff; z-index: 1; }
+.phase b { font-size: 15.5px; color: var(--text-hi); display: block; margin-bottom: 4px; font-weight: 600; }
+.phase p { font-size: 14px; }
+.phase .scope { display: inline-block; margin-top: 6px; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill); }
+.scope-now { background: var(--primary-soft); color: var(--primary); }
+.scope-later { background: var(--gray-100); color: var(--text-body); }
+
+.notice {
+  border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5); font-size: 14px;
+  background: var(--warning-soft); color: #92400e; box-shadow: rgba(217,119,6,.25) 0 0 0 1px;
+  margin: var(--sp-6) 0;
+}
+.notice b { font-weight: 700; }
+
+footer { margin-top: var(--sp-12); padding-top: var(--sp-8); border-top: 1px solid var(--gray-200); font-size: 13px; color: var(--gray-500); }
+
+@media (max-width: 640px) {
+  h1 { font-size: 36px; }
+  h2 { font-size: 24px; }
+  .doc { padding: var(--sp-8) var(--sp-4) 64px; }
+  .topbar nav { display: none; }
+  .type-meta { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-dot"></span>Agent Platform · UI 重构方案</div>
+    <nav>
+      <a href="#principles">设计原则</a>
+      <a href="#color">色彩</a>
+      <a href="#type">字体</a>
+      <a href="#space">间距与深度</a>
+      <a href="#components">组件</a>
+      <a href="#layout">响应式布局</a>
+      <a href="#a11y">可访问性</a>
+      <a href="#roadmap">落地路线</a>
+    </nav>
+  </div>
+</div>
+
+<main class="doc">
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <header class="hero">
+    <div class="hero-tag">设计方案 v2 · 已去掉黑色 · 仅评审，不改代码</div>
+    <h1>靛蓝作骨，紫色为魂，<br>一套<em>轻盈无黑</em>的智能界面体系</h1>
+    <p class="hero-sub">
+      按你的要求重构配色：<b>全程无黑色</b>。主操作按钮、用户气泡、选中态统一使用靛蓝
+      Indigo（#4F46E5）；「AI 正在思考/生成」使用专属紫色 Violet（#7C3AED），两个色相同属蓝紫家族、
+      和谐共处又各司其职；中性色从纯黑灰换成冷调 Slate 石板灰，界面整体更轻盈通透。
+      保留 Cal Sans + Inter 字体、ring 阴影质感与 4px 间距体系，所有规范按
+      Tailwind v4 + shadcn 技术栈给出落地映射。
+    </p>
+    <div class="hero-meta">
+      <span class="chip">🪻 靛蓝主色 × 紫色智能态</span>
+      <span class="chip">🪶 Slate 石板灰中性</span>
+      <span class="chip">📐 三层 Token 体系</span>
+      <span class="chip">📱 响应式三档布局</span>
+      <span class="chip">♿ WCAG AA</span>
+    </div>
+  </header>
+
+  <!-- ═══════════ 01 原则 ═══════════ -->
+  <section id="principles">
+    <h2><span class="no">01</span>设计原则</h2>
+    <p class="sec-desc">四条原则决定之后的每一个 token、组件和布局决策。它们来自对现有界面的审计与你的新要求：去黑、轻盈、智能感。</p>
+
+    <div class="grid-2">
+      <div class="card principle"><div class="p-icon">🫧</div><div><b>轻盈为底，色彩即信号</b><p>告别炭黑重压：界面以白与浅石板灰铺底，靛蓝承担主操作，紫色只在「智能发生」时点亮。色彩稀缺，才可信。</p></div></div>
+      <div class="card principle"><div class="p-icon">🧩</div><div><b>Token 三层，一处定义</b><p>Primitive（原始色阶）→ Semantic（语义角色）→ Component（组件用法）。页面禁止写死色值，换主题/改品牌只动一层。</p></div></div>
+      <div class="card principle"><div class="p-icon">👪</div><div><b>蓝紫一家，分工明确</b><p>靛蓝与紫同属冷色家族，天然和谐；用「靛蓝=用户操作、紫=AI 行为」这条单规则，让用户一眼分辨「我做的」和「AI 做的」。</p></div></div>
+      <div class="card principle"><div class="p-icon">♿</div><div><b>可访问性是地基</b><p>对比度、44px 触达、焦点环、键盘路径在 token 层一次做对。现网次要正文 #898989 不达标，本方案直接修正为 slate-500。</p></div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 02 色彩 ═══════════ -->
+  <section id="color">
+    <h2><span class="no">02</span>色彩系统</h2>
+    <p class="sec-desc">
+      核心结构：<b>靛蓝主色</b>（按钮/链接/选中）+ <b>紫色智能态</b>（AI 生成中/流式光标/AI 徽标）+ 冷调 Slate 中性阶。
+      最深文本色为 slate-800（#1E293B，偏蓝的深灰，非黑），全方案零黑色。
+    </p>
+
+    <h3>品牌双色</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="fill" style="background:#4f46e5"></div><div class="info"><div class="name">靛蓝 Indigo · 主色</div><div class="hex">#4F46E5 · 白字对比 6.3:1</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#4338ca"></div><div class="info"><div class="name">靛蓝 Hover</div><div class="hex">#4338CA</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#eef2ff"></div><div class="info"><div class="name">靛蓝浅底 · 选中/导航态</div><div class="hex">#EEF2FF</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#7c3aed"></div><div class="info"><div class="name">紫 Violet · AI 智能态 ✦ 新增</div><div class="hex">#7C3AED · 白字对比 5.1:1</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#f5f3ff"></div><div class="info"><div class="name">紫浅底 · 生成中/AI 徽标</div><div class="hex">#F5F3FF</div></div></div>
+    </div>
+
+    <h3>语义功能色（含浅底，用于 Alert / Toast / 徽标）</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="fill" style="background:#16a34a"></div><div class="info"><div class="name">成功 Success</div><div class="hex">#16A34A / 底 #F0FDF4</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#d97706"></div><div class="info"><div class="name">警告 Warning</div><div class="hex">#D97706 / 底 #FFFBEB</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#dc2626"></div><div class="info"><div class="name">错误 Error</div><div class="hex">#DC2626 / 底 #FEF2F2</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#2563eb"></div><div class="info"><div class="name">信息 Info</div><div class="hex">#2563EB / 底 #EFF6FF</div></div></div>
+    </div>
+
+    <h3>Slate 中性色阶（冷调石板灰，无黑 · 10 档）</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="fill" style="background:#fcfdfe;border-bottom:1px solid #eee"></div><div class="info"><div class="name">slate-25</div><div class="hex">#FCFDFE</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#f8fafc;border-bottom:1px solid #eee"></div><div class="info"><div class="name">slate-50 · 页面浅底</div><div class="hex">#F8FAFC</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#f1f5f9"></div><div class="info"><div class="name">slate-100 · 悬停/代码底</div><div class="hex">#F1F5F9</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#e2e8f0"></div><div class="info"><div class="name">slate-200 · 分隔/边框</div><div class="hex">#E2E8F0</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#cbd5e1"></div><div class="info"><div class="name">slate-300</div><div class="hex">#CBD5E1</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#94a3b8"></div><div class="info"><div class="name">slate-400 · 占位符/禁用</div><div class="hex">#94A3B8</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#64748b"></div><div class="info"><div class="name">slate-500 · 次要正文 ✦</div><div class="hex">#64748B · AA 达标</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#334155"></div><div class="info"><div class="name">slate-700</div><div class="hex">#334155</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#1e293b"></div><div class="info"><div class="name">slate-800 · 标题（最深）</div><div class="hex">#1E293B</div></div></div>
+      <div class="swatch"><div class="fill" style="background:#0f172a"></div><div class="info"><div class="name">slate-900 · 深色元素内文字</div><div class="hex">#0F172A</div></div></div>
+    </div>
+
+    <div class="notice">
+      <b>⚠️ 审计发现（仍然成立）：</b>现网 <code class="inline-code">--text: #898989</code> 被大范围用作次要正文，白底对比度仅约 3.5:1，
+      <b>低于 WCAG AA 要求的 4.5:1</b>。本方案将其角色交给 slate-500（#64748B，4.8:1），
+      slate-400（#94A3B8）降级为占位符/装饰专用——对老用户感知影响最小、收益最大的一处修正。
+    </div>
+  </section>
+
+  <!-- ═══════════ 03 字体 ═══════════ -->
+  <section id="type">
+    <h2><span class="no">03</span>字体系统</h2>
+    <p class="sec-desc">
+      保留现有字体资产：Cal Sans（展示标题）+ Inter Variable（正文）+ Geist Mono（代码/ID）。
+      中文场景统一回落 PingFang SC / Microsoft YaHei。重构点是<b>收敛字阶</b>：8 档固定刻度，
+      且明确「Cal Sans 只做标题、Inter 只做正文」的纪律。标题色 slate-800，非黑。
+    </p>
+
+    <div class="card" style="padding:var(--sp-6) var(--sp-8)">
+      <div class="type-row">
+        <div class="type-meta">Display · Cal Sans 600<br>40px / 1.12 / -1px</div>
+        <div class="type-sample-display" style="font-size:40px">智能体工作台</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">H2 · Cal Sans 600<br>30px / 1.2 / -0.4px</div>
+        <div class="type-sample-display" style="font-size:30px">会话与产物面板</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">H3 · Cal Sans 600<br>20px / 1.3</div>
+        <div class="type-sample-display" style="font-size:20px">知识库检索设置</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Title · Inter 600<br>16px / 1.4</div>
+        <div class="type-sample-body" style="font-size:16px;font-weight:600">卡片标题 / 弹窗标题（UI 组件一律 Inter）</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Body · Inter 400<br>15px / 1.65</div>
+        <div class="type-sample-body" style="font-size:15px">正文与 AI 回复内容。中文行高不低于 1.6，长文阅读区限制在 680px 以内保证可读性。</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Caption · Inter 500<br>13px / 1.4</div>
+        <div class="type-sample-body" style="font-size:13px;color:var(--text-body)">辅助说明 · 时间戳 · 表单提示文字</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Mono · Geist Mono<br>13px / 1.5</div>
+        <div class="type-sample-body" style="font-family:var(--font-mono);font-size:13px;background:var(--gray-100);padding:2px 8px;border-radius:6px">agent_id: as_7f3k2 · tool_call · 路径/代码</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 04 间距与深度 ═══════════ -->
+  <section id="space">
+    <h2><span class="no">04</span>间距、圆角与深度</h2>
+    <p class="sec-desc">4px 基数的 8 档间距刻度；圆角 5 档；深度沿用「ring 阴影优先」手法——用阴影代替边框画边界，阴影基色调为 slate 冷灰。三档 elevation 命名固化。</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3 style="margin-top:0">间距 · 4px 基数</h3>
+        <table>
+          <tr><td><code>sp-1 ~ sp-3</code></td><td>4/8/12 · 组件内部</td></tr>
+          <tr><td><code>sp-4 ~ sp-5</code></td><td>16/20 · 卡片内边距</td></tr>
+          <tr><td><code>sp-6 ~ sp-8</code></td><td>24/32 · 区块间隔</td></tr>
+          <tr><td><code>sp-10 ~ sp-12</code></td><td>40/48 · 页面节奏</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">圆角 · 5 档</h3>
+        <table>
+          <tr><td><code>6px</code></td><td>小按钮 / 输入内元素</td></tr>
+          <tr><td><code>8px</code></td><td>按钮 / 输入框</td></tr>
+          <tr><td><code>12px</code></td><td>小卡片 / 气泡内块</td></tr>
+          <tr><td><code>16px</code></td><td>卡片 / 面板 / 弹窗</td></tr>
+          <tr><td><code>pill</code></td><td>徽标 / 状态点 / 标签</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">深度 · 3 档 ring 阴影</h3>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div style="width:72px;height:48px;border-radius:10px;background:#fff;box-shadow:var(--shadow-sm)"></div>
+          <div style="width:72px;height:48px;border-radius:10px;background:#fff;box-shadow:var(--shadow-md)"></div>
+          <div style="width:72px;height:48px;border-radius:10px;background:#fff;box-shadow:var(--shadow-lg)"></div>
+        </div>
+        <p style="font-size:13px;margin-top:12px">elevation-1 静态卡片 → elevation-2 悬停/下拉 → elevation-3 弹窗/命令面板。hover 统一上浮 1px + 阴影升档，150ms。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 05 组件 ═══════════ -->
+  <section id="components">
+    <h2><span class="no">05</span>核心组件规范</h2>
+    <p class="sec-desc">
+      现有 44 个 shadcn 组件全部保留为底座，重构的是<b>规范与状态定义</b>。主按钮由炭黑改为靛蓝——这是与现网观感差异最大的一处，但换来的是明确的「品牌色 + 可交互暗示」。
+    </p>
+
+    <h3>按钮 · 四变体 × 三尺寸 × 全状态</h3>
+    <div class="demo-stage">
+      <button class="btn btn-primary">发送</button>
+      <button class="btn btn-ghost">取消</button>
+      <button class="btn btn-danger">删除会话</button>
+      <button class="btn btn-primary" disabled>执行中…</button>
+      <button class="btn btn-ghost btn-sm">查看产物</button>
+      <div style="width:100%;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <input class="input-demo" placeholder="输入消息，Enter 发送…">
+        <input class="input-demo input-err" value="会话名称不能为空">
+      </div>
+    </div>
+    <div class="card" style="margin-top:var(--sp-4)">
+      <table>
+        <tr><th>状态</th><th>规范</th></tr>
+        <tr><td><b>Hover</b></td><td>上浮 1px + elevation 升一档，150ms；靛蓝按钮加深至 #4338CA</td></tr>
+        <tr><td><b>Focus（键盘）</b></td><td>3px 靛蓝焦点环 rgba(79,70,229,.4)，与 hover 视觉区分</td></tr>
+        <tr><td><b>Disabled</b></td><td>整体 50% 透明，cursor: not-allowed（现有 base 层规范保留）</td></tr>
+        <tr><td><b>Loading</b></td><td>文字替换为「执行中…」+ spinner，宽度锁定防抖动</td></tr>
+        <tr><td><b>触达面积</b></td><td>移动端可点目标 ≥ 44×44px（视觉尺寸可小，热区不可小）</td></tr>
+      </table>
+    </div>
+
+    <h3>对话流 · 本产品的灵魂组件</h3>
+    <div class="grid-2">
+      <div class="card">
+        <div class="chat-mock">
+          <div class="bubble bubble-user">帮我整理上周的会话产物，生成一份摘要文档</div>
+          <div class="tool-chip"><span class="dot"></span>list_artifacts · 0.8s</div>
+          <div class="tool-chip running"><span class="dot"></span>write_file · artifacts/摘要.md</div>
+          <div class="bubble bubble-ai">已完成。摘要文档已写入 <b>artifacts/摘要.md</b>，共汇总 12 个会话、34 个产物文件，重点结论包括……<span class="ai-cursor"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <tr><th>元素</th><th>规范</th></tr>
+          <tr><td>用户气泡</td><td>靛蓝底白字（代表「我的操作」），右上角小圆角 4px，最大宽 85%</td></tr>
+          <tr><td>AI 气泡</td><td>白底 ring 阴影（代表「AI 的回复」），左下角 4px，走 Markdown 排版</td></tr>
+          <tr><td>工具调用</td><td>灰色 pill 行内展示；运行中状态点转<b>紫色</b>，完成后转绿色</td></tr>
+          <tr><td>流式生成</td><td><b>紫色</b>光标块 600ms 闪烁——「智能可见」的核心瞬间</td></tr>
+          <tr><td>产物引用</td><td>行内文件 chip（靛蓝浅底），hover 预览，点击定位到产物面板</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>反馈组件约定</h3>
+    <div class="grid-3">
+      <div class="card" style="background:var(--success-soft);box-shadow:rgba(22,163,74,.25) 0 0 0 1px"><b style="color:#166534;font-size:14px">✓ 已保存</b><p style="font-size:13px;margin-top:4px;color:#166534">Toast 右下角，4s 自动消退，同一时刻最多 3 条堆叠</p></div>
+      <div class="card" style="background:var(--warning-soft);box-shadow:rgba(217,119,6,.25) 0 0 0 1px"><b style="color:#92400e;font-size:14px">⚠ 连接不稳定</b><p style="font-size:13px;margin-top:4px;color:#92400e">非阻断提醒；阻断性错误一律用 Dialog 而非 Toast</p></div>
+      <div class="card" style="background:var(--error-soft);box-shadow:rgba(220,38,38,.25) 0 0 0 1px"><b style="color:#991b1b;font-size:14px">✕ 运行失败</b><p style="font-size:13px;margin-top:4px;color:#991b1b">必须附「重试」主操作与错误码（可复制）</p></div>
+    </div>
+    <div class="card" style="margin-top:var(--sp-4)">
+      <table>
+        <tr><th>场景</th><th>组件约定</th></tr>
+        <tr><td>加载态</td><td>首屏骨架屏（skeleton，禁止转圈占整屏）；局部刷新用 300ms 淡入</td></tr>
+        <tr><td>空状态</td><td>插画 + 一句话说明 + 唯一主 CTA（如「新建会话」），复用现有 empty-state 组件</td></tr>
+        <tr><td>危险操作</td><td>二次确认 Dialog；正文写清后果与不可逆性，确认键用红色变体</td></tr>
+        <tr><td>表单校验</td><td>失焦即校验，错误文案贴字段下方，输入框转红色 ring；提交时聚焦首个错误项</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════ 06 布局 ═══════════ -->
+  <section id="layout">
+    <h2><span class="no">06</span>响应式布局策略</h2>
+    <p class="sec-desc">
+      工作台（/space）是核心场景：会话列表、聊天主区、产物面板三者的关系随断点变化。
+      关键原则：<b>聊天主区永远在场</b>，列表与产物面板按断点降级为抽屉（Sheet）。
+      侧边导航由深色改为<b>浅石板灰底 + 靛蓝选中态</b>，整页无重色块，更轻盈。
+      分栏聊天列保留 8px 右内边距，避免滚动条贴分隔条。
+    </p>
+
+    <div class="grid-3">
+      <div class="wire">
+        <div class="wire-label"><b>桌面 ≥ 1280px</b><span>三栏常驻</span></div>
+        <svg viewBox="0 0 300 190" width="100%">
+          <rect x="0" y="0" width="300" height="190" rx="10" fill="#f8fafc"/>
+          <rect x="10" y="10" width="64" height="170" rx="8" fill="#f1f5f9"/>
+          <rect x="16" y="20" width="52" height="18" rx="9" fill="#eef2ff"/>
+          <rect x="22" y="25" width="40" height="8" rx="4" fill="#4f46e5"/>
+          <rect x="16" y="46" width="48" height="6" rx="3" fill="#cbd5e1"/>
+          <rect x="16" y="60" width="44" height="6" rx="3" fill="#cbd5e1"/>
+          <rect x="82" y="10" width="90" height="170" rx="8" fill="#fff"/>
+          <rect x="90" y="20" width="60" height="8" rx="4" fill="#e2e8f0"/>
+          <rect x="90" y="36" width="74" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="90" y="50" width="68" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="90" y="64" width="72" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="180" y="10" width="110" height="170" rx="8" fill="#fff" stroke="#e2e8f0"/>
+          <rect x="190" y="20" width="56" height="8" rx="4" fill="#f5f3ff"/>
+          <rect x="190" y="38" width="90" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+          <rect x="190" y="86" width="90" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+          <text x="245" y="170" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="monospace">导航 | 会话 | 产物</text>
+        </svg>
+        <p style="font-size:13px;margin-top:10px">侧边导航 220px（浅灰底、靛蓝选中）+ 会话列表 280px + 聊天区自适应；产物面板 320px 可折叠。</p>
+      </div>
+
+      <div class="wire">
+        <div class="wire-label"><b>平板 768–1279px</b><span>两栏 + 抽屉</span></div>
+        <svg viewBox="0 0 300 190" width="100%">
+          <rect x="0" y="0" width="300" height="190" rx="10" fill="#f8fafc"/>
+          <rect x="10" y="10" width="110" height="170" rx="8" fill="#fff"/>
+          <rect x="18" y="20" width="60" height="8" rx="4" fill="#e2e8f0"/>
+          <rect x="18" y="36" width="94" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="18" y="50" width="88" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="18" y="64" width="92" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="128" y="10" width="162" height="170" rx="8" fill="#fff" stroke="#e2e8f0"/>
+          <rect x="138" y="20" width="70" height="10" rx="5" fill="#4f46e5"/>
+          <rect x="138" y="42" width="130" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="138" y="56" width="140" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="138" y="70" width="120" height="6" rx="3" fill="#f1f5f9"/>
+          <rect x="138" y="150" width="142" height="22" rx="11" fill="#fff" stroke="#e2e8f0"/>
+          <text x="209" y="185" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="monospace">会话列表 | 聊天区 · 产物→抽屉</text>
+        </svg>
+        <p style="font-size:13px;margin-top:10px">导航折叠为图标栏（64px）；产物面板改为右滑 Sheet，消息内产物 chip 常驻可点。</p>
+      </div>
+
+      <div class="wire">
+        <div class="wire-label"><b>手机 &lt; 768px</b><span>单列 · 主区为王</span></div>
+        <svg viewBox="0 0 300 190" width="100%">
+          <rect x="0" y="0" width="300" height="190" rx="10" fill="#f8fafc"/>
+          <rect x="95" y="6" width="110" height="178" rx="12" fill="#fff" stroke="#e2e8f0"/>
+          <rect x="103" y="14" width="26" height="14" rx="4" fill="#eef2ff"/>
+          <rect x="103" y="38" width="70" height="22" rx="8" fill="#4f46e5"/>
+          <rect x="126" y="66" width="80" height="34" rx="8" fill="#fff" stroke="#e2e8f0"/>
+          <rect x="103" y="106" width="46" height="12" rx="6" fill="#f1f5f9"/>
+          <rect x="103" y="150" width="94" height="24" rx="12" fill="#fff" stroke="#e2e8f0"/>
+          <rect x="215" y="10" width="76" height="170" rx="8" fill="#fff" stroke="#e2e8f0" stroke-dasharray="4 3" opacity=".55"/>
+          <text x="253" y="98" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="monospace">列表/产物</text>
+          <text x="150" y="30" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="monospace">汉堡菜单呼出</text>
+        </svg>
+        <p style="font-size:13px;margin-top:10px">单列聊天；导航与会话列表统一收进左滑抽屉；输入框吸附底栏，触达目标 ≥44px。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 07 可访问性 ═══════════ -->
+  <section id="a11y">
+    <h2><span class="no">07</span>可访问性基线（WCAG AA）</h2>
+    <p class="sec-desc">对比度逐对校验结果——这是重构 token 时的一次性验证，之后由 lint/CI 防回归。</p>
+    <div class="card">
+      <table>
+        <tr><th>前景 / 背景</th><th>用途</th><th>对比度</th><th>AA（4.5:1）</th></tr>
+        <tr><td><code>#1E293B / #FFFFFF</code></td><td>标题 · 正文强调</td><td>12.6 : 1</td><td class="pass">✓ 通过</td></tr>
+        <tr><td><code>#64748B / #FFFFFF</code></td><td>次要正文（新）</td><td>4.8 : 1</td><td class="pass">✓ 通过</td></tr>
+        <tr><td><code>#FFFFFF / #4F46E5</code></td><td>靛蓝主按钮 · 用户气泡</td><td>6.3 : 1</td><td class="pass">✓ 通过</td></tr>
+        <tr><td><code>#4F46E5 / #FFFFFF</code></td><td>靛蓝文字/图标/链接</td><td>6.3 : 1</td><td class="pass">✓ 通过</td></tr>
+        <tr><td><code>#7C3AED / #FFFFFF</code></td><td>紫色智能态文字/图标</td><td>5.1 : 1</td><td class="pass">✓ 通过</td></tr>
+        <tr><td><code>#94A3B8 / #FFFFFF</code></td><td>占位符/装饰</td><td>2.9 : 1</td><td class="fail">✗ 仅限装饰用途</td></tr>
+      </table>
+    </div>
+    <div class="grid-2" style="margin-top:var(--sp-4)">
+      <div class="card"><b style="color:var(--text-hi);font-size:15px">键盘与焦点</b><p style="font-size:14px;margin-top:6px">全部交互可 Tab 到达，顺序符合视觉流；焦点环 3px 靛蓝统一 token；Dialog 打开锁焦点、ESC 关闭、关闭后焦点归还。命令面板支持 ⌘K。</p></div>
+      <div class="card"><b style="color:var(--text-hi);font-size:15px">动态与缩放</b><p style="font-size:14px;margin-top:6px">所有动效尊重 prefers-reduced-motion；页面支持 200% 文字缩放不破版；流式光标、骨架屏动画均提供降级静态态。</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 08 路线 ═══════════ -->
+  <section id="roadmap">
+    <h2><span class="no">08</span>落地路线图</h2>
+    <p class="sec-desc">按「先体系、后组件、再页面」的顺序推进，每一阶段独立可交付、可回滚。本轮仅评审本方案，<b>任何阶段动代码前都会再次与你确认</b>。</p>
+
+    <div class="card">
+      <div class="phase">
+        <div class="phase-no">P1</div>
+        <div><b>Token 层落地</b><p>在 index.css 建立三层 token（primitive / semantic / component），主色切靛蓝、中性色切 Slate、次要正文色修正为 #64748B。shadcn 变量名保持兼容，44 个组件零改动直接受益。</p><span class="scope scope-now">下一阶段执行 · 改动最小、收益最大</span></div>
+      </div>
+      <div class="phase">
+        <div class="phase-no">P2</div>
+        <div><b>组件规范收敛</b><p>按钮/输入/卡片/气泡按本方案状态矩阵核对与补齐（loading、焦点环、触达热区、用户气泡靛蓝化、AI 光标紫色化），输出 Storybook 状态对照页作为设计 QA 基准。</p><span class="scope scope-later">待评审后排期</span></div>
+      </div>
+      <div class="phase">
+        <div class="phase-no">P3</div>
+        <div><b>响应式三档布局</b><p>工作台三栏/两栏+抽屉/单列三档改造，侧边导航浅色化+靛蓝选中态，产物面板 Sheet 化；保留 8px 聊天列内边距等既有细节约定。</p><span class="scope scope-later">待评审后排期</span></div>
+      </div>
+      <div class="phase">
+        <div class="phase-no">P4</div>
+        <div><b>暗色模式</b><p>基于 semantic token 做 dark 变体（Tailwind v4 @custom-variant dark 已就绪）：Slate 反转为深底、靛蓝提亮至 #818CF8、紫提亮至 #A78BFA，逐页面验收对比度。</p><span class="scope scope-later">依赖 P1 token 完成</span></div>
+      </div>
+    </div>
+
+    <div class="notice" style="background:var(--primary-soft);color:#3730a3;box-shadow:rgba(79,70,229,.25) 0 0 0 1px">
+      <b>评审关注点建议：</b>① 主按钮靛蓝化后与链接色同源，视觉层级靠「填充 vs 下划线」区分，请确认接受；② AI 紫出现频率已刻意压低（仅生成中/工具运行/AI 徽标），如觉得存在感不足或过强可调；③ 次要正文改 slate-500 会带来全局观感轻微变化。
+    </div>
+  </section>
+
+  <footer>
+    UI Designer · AI 智能体平台界面重构方案 v2（靛蓝 × 紫 · 无黑） · 2026-09-19 · 本文档排版即按提案设计体系渲染（靛蓝主色 + 紫色智能态 + Slate 中性 + ring 阴影 + 4px 间距刻度），可直接作为「方案即规范」的验收样例。
+  </footer>
+
+</main>
+</body>
+</html>

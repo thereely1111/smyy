@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026 MCM B题 · 问题四分析 · LCA生命周期评估</title>
+<style>
+:root{
+  --bg:#f3fafa; --card:#ffffff; --line:#d9e9e9; --line2:#eaf4f4;
+  --ink:#0b2e36; --ink2:#3d6570; --muted:#57727c;
+  --teal:#12a594; --teal-d:#0b6e68; --blue:#146c87; --cyan:#1e9fc4;
+  --gold:#e0a04a; --gold-d:#8a6313; --warn:#b8543a; --warn-bg:#fbf0ec;
+  --sh:0 1px 2px rgba(11,46,54,.05),0 8px 24px rgba(11,46,54,.06);
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+b,strong{font-weight:600;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:fixed;left:0;right:0;top:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:12.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.brand i{font-style:normal;color:var(--teal);font-weight:600}
+.scene-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--teal-d);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px}
+.tbtn{
+  font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.tbtn:hover{border-color:var(--teal);color:var(--teal-d)}
+.tbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+/* ---------- 舞台与幕 ---------- */
+#stage{position:fixed;left:0;right:0;top:56px;bottom:76px;overflow:hidden}
+.scene{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 28px;
+  opacity:0;visibility:hidden;transform:translateY(22px) scale(.994);
+  transition:opacity .45s ease,transform .5s cubic-bezier(.22,.8,.3,1),visibility .45s;
+}
+.scene::-webkit-scrollbar{width:9px}
+.scene::-webkit-scrollbar-thumb{background:#cfe4e4;border-radius:9px}
+.scene.active{opacity:1;visibility:visible;transform:none}
+.wrap{max-width:1180px;margin:0 auto}
+.wrap>*{margin-bottom:16px}
+.wrap>*:last-child{margin-bottom:0}
+
+/* 逐拍露出 */
+.wrap>.stg{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.3,1)}
+.wrap>.stg.in{opacity:1;transform:none}
+
+/* ---------- 文字块 ---------- */
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:600;text-transform:uppercase}
+h1{font-size:26px;line-height:1.4;margin:6px 0 8px;font-weight:600;letter-spacing:-.01em}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{font-size:15px;color:var(--ink2);line-height:1.85;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+.card h3 em{font-style:normal;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+.card p{margin:0 0 8px;font-size:14px;color:var(--ink2);line-height:1.8}
+.card p:last-child{margin-bottom:0}
+.quote{
+  font-size:14px;line-height:1.9;color:var(--ink);background:var(--line2);
+  border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;
+}
+.small{font-size:12.5px;color:var(--muted);line-height:1.75}
+.hl{color:var(--warn);font-weight:600}
+.hl-t{color:var(--teal-d);font-weight:600}
+.hl-g{color:var(--gold-d);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.flexrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:320px}
+@media(max-width:960px){
+  .grid2,.grid3,.grid4,.grid6{grid-template-columns:1fr}
+  .scene{padding:16px 14px 24px}
+}
+
+/* ---------- 徽标 ---------- */
+.badge{display:inline-block;font-size:11px;line-height:1.6;padding:1px 7px;border-radius:5px;
+  background:var(--line2);color:var(--blue);border:1px solid #d5e8ea;margin-right:6px;white-space:nowrap}
+.badge.p{background:#fdf4e8;color:var(--gold-d);border-color:#f0dcbb}
+.badge.q{background:#eef7f6;color:var(--teal-d);border-color:#cfe7e5}
+.badge.w{background:var(--warn-bg);color:var(--warn);border-color:#f0d5cd}
+.badge.n{background:#f6f8f9;color:var(--muted);border-color:#e3eaec}
+
+/* ---------- 指标 ---------- */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .k{font-size:11.5px;color:var(--muted);letter-spacing:.03em;margin-bottom:3px}
+.kpi .v{font-size:19px;font-weight:600;color:var(--teal-d);line-height:1.3}
+.kpi .v u{text-decoration:none;font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi.g .v{color:var(--gold-d)}
+.kpi.b .v{color:var(--blue)}
+.kpi.w .v{color:var(--warn)}
+
+/* ---------- 指标卡（6 指标） ---------- */
+.metric{
+  background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px 14px;
+  border-top:3px solid var(--teal);
+}
+.metric.m1{border-top-color:#b8543a}
+.metric.m2{border-top-color:#e0a04a}
+.metric.m3{border-top-color:#7a4fb5}
+.metric.m4{border-top-color:#2e8b57}
+.metric.m5{border-top-color:#146c87}
+.metric.m6{border-top-color:#8a6313}
+.metric h4{margin:0 0 6px;font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px}
+.metric h4 .ico{display:inline-block;width:10px;height:10px;border-radius:3px}
+.metric .desc{font-size:12.5px;color:var(--ink2);line-height:1.7;margin:0 0 8px}
+.metric .monet{font-size:11.5px;color:var(--muted);background:var(--line2);border-radius:6px;padding:4px 8px;display:inline-block}
+
+/* ---------- 表格 ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+table.tb th,table.tb td{border-bottom:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.tb th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafdfd;letter-spacing:.03em}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tb tr.on td{background:#eef8f6}
+table.tb tr:hover td{background:#f6fbfb}
+
+/* ---------- 图区 ---------- */
+.canvasbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 8px;box-shadow:var(--sh)}
+.canvasbox canvas{display:block;width:100%}
+.cvtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cvtop .ct{font-size:13px;font-weight:600;color:var(--teal-d)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend i.ln{height:3px;width:16px;border-radius:2px;vertical-align:3px}
+
+/* ---------- 提示条 ---------- */
+.note{
+  font-size:12.5px;color:var(--muted);background:#fafdfd;border:1px dashed var(--line);
+  border-radius:9px;padding:9px 12px;line-height:1.75;
+}
+.note.w{background:var(--warn-bg);border-color:#eed8d1;color:#8d4229}
+.note.t{background:#eef8f6;border-color:#cfe7e5;color:var(--teal-d)}
+.hint{font-size:12px;color:var(--teal-d);background:#eef8f6;border-radius:8px;padding:7px 11px;display:inline-block}
+
+/* ---------- 底栏 ---------- */
+.navbar{
+  position:fixed;left:0;right:0;bottom:0;height:76px;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+}
+.navbar button.nb{
+  font:inherit;font-size:19px;line-height:1;width:40px;height:40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);transition:.18s;
+}
+.navbar button.nb:hover{border-color:var(--teal);color:var(--teal-d);background:#f4fbfa}
+#dots{display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:#cfe4e4;border:0;padding:0;cursor:pointer;transition:.2s}
+.dot:hover{background:var(--cyan)}
+.dot.on{background:var(--teal-d);width:24px;border-radius:5px}
+.pageind{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.pageind b{color:var(--teal-d);font-size:14px}
+.progwrap{position:fixed;left:0;right:0;top:56px;height:2px;background:transparent;z-index:41}
+#prog{height:2px;background:linear-gradient(90deg,var(--teal),var(--cyan));width:0;transition:width .45s ease}
+.kbd{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;background:#fff}
+.splitnav{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.splitnav a{color:var(--ink2);text-decoration:none;padding:4px 7px;border:1px solid var(--line);border-radius:6px}
+.splitnav a:hover{color:var(--teal-d);border-color:var(--teal)}
+.splitnav a.on{color:var(--teal-d);border-color:var(--teal);background:#eef8f6;font-weight:600}
+
+/* 动效总开关 */
+body.reduce .pulse,body.reduce .flowdot,body.reduce .blink{animation:none !important}
+body.reduce .wrap>.stg{opacity:1;transform:none}
+body.reduce .scene{transition:none}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-26}}
+.flowdot{animation:flow 1.5s linear infinite}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">数模演易 · <i>赛题分析动画</i></div>
+  <div class="scene-title" id="scTitle">加载中</div>
+  <div class="tools">
+    <button class="tbtn on" id="btnFx">动效 开</button>
+    <button class="tbtn" id="btnReplay">重播本幕</button>
+  </div><div class="splitnav"><a href="./mod-p7-0.html">全局</a><a href="./mod-p7-1.html">问题一</a><a href="./mod-p7-2.html">问题二</a><a href="./mod-p7-3.html">问题三</a><a href="./mod-p7-4.html" class="on">问题四</a></div>
+</header>
+<div class="progwrap"><div id="prog"></div></div>
+<main id="stage">
+
+<!-- ===================== 第一幕 问题四概述：LCA生命周期评估 ===================== -->
+<section class="scene" id="s1" data-title="一 · 问题四概述：LCA 生命周期评估">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · LCA 生命周期评估</div>
+      <h1>把整条供应链折成一张环境影响账
+        <small>对太空电梯系统进行全生命周期评估，量化环境影响并优化运输方案。</small>
+      </h1>
+      <p class="lead">问题四要求从生命周期评估（Life Cycle Assessment, LCA）视角，对太空电梯系统的环境影响进行系统分析。从原材料获取、建造、运营、维护到退役处置，每一阶段都产生材料消耗、能源消耗、碳排放与废弃物。把这些不同量纲的影响统一折算成货币成本，才能让电梯与火箭两种运输方式在同一张账上直接比较。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="kpi"><div class="k">最优工期</div><div class="v">109.61 <u>年</u></div></div>
+      <div class="kpi g"><div class="k">电梯运量占比</div><div class="v">58.65 <u>%</u></div></div>
+      <div class="kpi w"><div class="k">火箭运量占比</div><div class="v">41.35 <u>%</u></div></div>
+      <div class="kpi b"><div class="k">LCA 维度</div><div class="v">4 <u>类</u></div></div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">LCA 生命周期评估总览图 · 从地球到月球</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>电梯路线</span>
+          <span><i style="background:#b8543a"></i>火箭路线</span>
+          <span><i style="background:#e0a04a"></i>LCA 评估节点</span>
+        </div>
+      </div>
+      <canvas id="cvOverview" height="320"></canvas>
+      <p class="note" style="margin-top:8px">太空电梯从地球表面起点延伸至同步轨道，再由转运舱接驳至月球。沿途四个 LCA 节点：建造（材料）、运营（能源）、维护（耗材）、退役（废弃物），各节点叠加环境影响。火箭路线则需每次发射消耗推进剂，环境影响随发射次数线性累积。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3>LCA 四维评估 <em>影响维度</em></h3>
+        <p><span class="badge q">材料</span><b>材料消耗</b>：钢材、碳纤维、稀土、推进剂原料的消耗量，按不可再生资源枯竭系数货币化。</p>
+        <p><span class="badge q">能源</span><b>能源消耗</b>：电网电力、推进剂燃烧、运营能耗，按热值与碳强度统一折算。</p>
+        <p><span class="badge q">碳</span><b>碳排放</b>：温室气体直接/间接排放，含平流层黑碳与高空排放。</p>
+        <p><span class="badge q">废</span><b>废弃物</b>：建造废料、退役构件、噪声与生态扰动，按边际损害成本折算。</p>
+      </div>
+      <div class="card">
+        <h3>问题四的目标 <em>优化方案配比</em></h3>
+        <p>问题四要回答的核心问题：<b>在固定成本约束下，电梯与火箭的运量配比取何值时，环境总成本最小？</b></p>
+        <p>把电梯运量占比作为决策变量，对环境总成本做单变量优化，得到鞍点：</p>
+        <div class="kpi" style="margin-top:8px"><div class="k">最优配比 · 电梯 / 火箭</div><div class="v">58.65% / 41.35%</div></div>
+        <p class="note t" style="margin-top:8px">这一点是「环境成本-工期」联合目标的鞍点：电梯再多，工期成本反超；火箭再多，排放成本反超。</p>
+      </div>
+      <div class="card">
+        <h3>评估口径 <em>从摇篮到坟墓</em></h3>
+        <p>评估范围覆盖 <b>全生命周期</b>：</p>
+        <p><span class="badge n">1</span>原材料获取 · 矿石开采与精炼</p>
+        <p><span class="badge n">2</span>建造 · 电梯缆绳、配重、舱体制造</p>
+        <p><span class="badge n">3</span>运营 · 电力、推进剂、维护</p>
+        <p><span class="badge n">4</span>退役 · 拆解、回收、处置</p>
+        <div class="note" style="margin-top:6px">每个阶段的排放与消耗都按 ISO 14040 系列标准折算到同一口径，保证可比性。</div>
+      </div>
+    </div>
+
+    <div class="quote">生命周期评估不是简单的「环保排名」，而是把建造、运营、维护、退役每一阶段的物理量，通过货币化系数统一折算成元。当所有影响都被折成同一笔账，电梯与火箭的差距就能直接相减，方案优化也就有了量化依据。</div>
+  </div>
+</section>
+
+<!-- ===================== 第二幕 LCA评估框架：四阶段流程 ===================== -->
+<section class="scene" id="s2" data-title="二 · LCA 四阶段评估框架">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · LCA 评估框架</div>
+      <h1>四阶段流程：从目标定义到结果解释
+        <small>ISO 14040 标准框架：目标与范围定义 → 清单分析 → 影响评估 → 解释。</small>
+      </h1>
+      <p class="lead">LCA 评估严格遵循 ISO 14040/14044 标准的四阶段框架：先确定目标与边界，再列清单算投入产出，然后按影响类别做特征化与货币化，最后对结果做敏感性分析与解释。每一阶段的输出是下一阶段的输入，形成闭环。</p>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">LCA 四阶段流程图 · 带动效流转</div>
+        <div class="legend">
+          <span><i style="background:#12a594"></i>目标与范围定义</span>
+          <span><i style="background:#e0a04a"></i>清单分析 (LCI)</span>
+          <span><i style="background:#146c87"></i>影响评估 (LCIA)</span>
+          <span><i style="background:#b8543a"></i>解释</span>
+          <span><i class="ln" style="background:#1e9fc4"></i>数据流</span>
+        </div>
+      </div>
+      <canvas id="cvFlow" height="340"></canvas>
+      <p class="note" style="margin-top:8px">四个阶段构成闭环：目标定义确定边界，清单分析量化投入产出，影响评估做特征化与货币化，解释阶段对结果做稳健性检查。每个箭头都有流动粒子，表示数据在阶段间传递。解释阶段会反向影响前面阶段——若结果不稳健，需回到目标定义重新界定边界。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>阶段一 · 目标与范围定义 <span class="badge q">Goal</span></h3>
+        <p>明确评估目的（比较方案、优化配比）、功能单位（运送 1 吨物资到月球）、系统边界（从地球采矿到月球投送）。</p>
+        <p>关键决策：<b>是否计入电梯缆绳的全寿期排放</b>（影响电梯的环境成本，但摊到 50 年寿命后单位成本反而最低）。</p>
+        <div class="note" style="margin-top:6px">功能单位选「1 吨·地球到月球」，避免按运力差产生口径偏差。</div>
+      </div>
+      <div class="card">
+        <h3>阶段二 · 清单分析 (LCI) <span class="badge p">Inventory</span></h3>
+        <p>对系统每一阶段列出投入产出清单：</p>
+        <p><span class="badge n">投入</span>电力 kWh、推进剂 kg、钢材 t、稀土 kg</p>
+        <p><span class="badge n">产出</span>CO₂ kg、NOx kg、固体废弃物 kg、噪声 dB·人</p>
+        <div class="note" style="margin-top:6px">电梯与火箭两套清单分开列，便于在第三阶段做特征化与对比。</div>
+      </div>
+      <div class="card">
+        <h3>阶段三 · 影响评估 (LCIA) <span class="badge q">Impact</span></h3>
+        <p>按四个影响类别（材料、能源、碳、废弃物）分别乘以特征化因子，再乘以货币化系数，得到每类影响的元值。</p>
+        <p>特征化因子参考 ExternE 与 EcoIndicator 99 数据库，在题面口径下做量纲归一。</p>
+        <div class="note" style="margin-top:6px">货币化后，不同类别的影响可直接相加，得到环境总成本。</div>
+      </div>
+      <div class="card">
+        <h3>阶段四 · 解释 <span class="badge w">Interpretation</span></h3>
+        <p>对结果做敏感性分析与稳健性检查：变化 ±20% 的关键参数（货币化系数、清单数据），看最优配比是否漂移。</p>
+        <p>核心结论：<b>58.65% 的最优占比在 ±15% 的参数扰动下保持稳定</b>，是真正的鞍点而非数值偶然。</p>
+        <div class="note w" style="margin-top:6px">这一阶段的输出回溯到阶段一，若发现边界定义有缺漏，需重新调整范围。</div>
+      </div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">电梯 vs 火箭 · 单位运量全生命周期排放对比（对数刻度）</div>
+        <div class="legend">
+          <span><i style="background:#0b6e68"></i>电梯 单位排放</span>
+          <span><i style="background:#b8543a"></i>火箭 单位排放</span>
+        </div>
+      </div>
+      <canvas id="cvLCA" height="280"></canvas>
+      <p class="note" style="margin-top:8px">纵轴取对数刻度：火箭的碳排放与平流层污染比电梯高出两到三个数量级，线性刻度会把电梯的柱子压成一条线。这正是电梯作为「绿色基线」、火箭作为「灵活补缺」的根本原因。</p>
+    </div>
+
+    <div class="grid6" id="metricGrid"></div>
+
+    <div class="quote">LCA 的价值不在算出一个数字，而在于把建造、运营、维护、退役每一阶段的物理量统一折成同一笔账。这样「减少环境影响」就不再是空泛口号，而是一组可直接算的边际成本——电网碳强度降一克，总成本降多少；火箭推进剂换一种，平流层成本降多少。</div>
+  </div>
+</section>
+
+<!-- ===================== 第三幕 环境影响数据：KPI+柱状图 ===================== -->
+<section class="scene" id="s3" data-title="三 · 环境影响数据：四维指标分解">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 环境影响数据</div>
+      <h1>四维环境影响：电梯与火箭的排放清单
+        <small>把每类影响按运量加权后做货币化，得到可直接相减的环境总成本。</small>
+      </h1>
+      <p class="lead">六个核心环境影响类别按单位运量分别列出电梯与火箭的排放数据，再乘以各自的货币化系数，得到每类影响的环境成本。火箭在碳排放、平流层污染、噪声三项指标上拉满，电梯在所有指标上都处于低位——按单位载荷算，电梯的环境成本不到火箭的 1/8。</p>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">六维环境影响雷达图 · 电梯 vs 火箭</div>
+        <div class="legend">
+          <span><i style="background:#0b6e68"></i>电梯 单位排放</span>
+          <span><i style="background:#b8543a"></i>火箭 单位排放</span>
+        </div>
+      </div>
+      <canvas id="cvRadar" height="340"></canvas>
+      <p class="note" style="margin-top:8px">雷达图把六个影响维度归一化后投影到同一极坐标上。电梯的轮廓几乎压到原点，火箭的轮廓显著外扩——尤其在碳排放、大气污染、臭氧消耗三项上差距最为悬殊。这是电梯作为基线方案、火箭作为补缺方案的根本依据。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="kpi"><div class="k">电梯单位环境成本</div><div class="v">2.31 <u>亿元</u></div></div>
+      <div class="kpi w"><div class="k">火箭单位环境成本</div><div class="v">18.74 <u>亿元</u></div></div>
+      <div class="kpi g"><div class="k">电梯 / 火箭 倍数</div><div class="v">8.1 <u>倍</u></div></div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">六维环境影响柱状图 · 单位运量货币化成本（对数刻度）</div>
+        <div class="legend" id="legBar"></div>
+      </div>
+      <canvas id="cvBars" height="320"></canvas>
+      <p class="note" style="margin-top:8px">每根柱子按影响类别分色，柱顶标注环境总成本。纯火箭柱子的高度约是纯电梯的 8 倍，混合方案介于两者之间，但接近纯电梯一侧——因为电梯承担了 58.65% 的运量，把高排放的火箭发射次数压到最低。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>电梯的环境成本结构 <em>清单分析</em></h3>
+        <table class="tb">
+          <tr><th>环节</th><th>主要排放</th><th>占比</th></tr>
+          <tr><td>建造（缆绳/配重）</td><td>钢材隐含碳</td><td class="num">32%</td></tr>
+          <tr><td>运营（电力驱动）</td><td>电网间接碳</td><td class="num">41%</td></tr>
+          <tr><td>维护（耗材替换）</td><td>纤维/稀土</td><td class="num">18%</td></tr>
+          <tr><td>退役（拆解处置）</td><td>固体废弃物</td><td class="num">9%</td></tr>
+        </table>
+        <p class="note t" style="margin-top:8px">电梯环境成本主要来自电网电力（间接碳），是后续「电网清洁化」优化建议的着力点。</p>
+      </div>
+      <div class="card">
+        <h3>火箭的环境成本结构 <em>清单分析</em></h3>
+        <table class="tb">
+          <tr><th>环节</th><th>主要排放</th><th>占比</th></tr>
+          <tr><td>推进剂燃烧</td><td>CO₂ + 高空黑碳</td><td class="num">58%</td></tr>
+          <tr><td>制造（壳体复用）</td><td>合金隐含碳</td><td class="num">19%</td></tr>
+          <tr><td>运营（发射场）</td><td>噪声 + 大气</td><td class="num">15%</td></tr>
+          <tr><td>退役（落区）</td><td>残骸污染</td><td class="num">8%</td></tr>
+        </table>
+        <p class="note w" style="margin-top:8px">火箭环境成本集中在发射燃烧这一步，是后续「推进剂替换」与「运量调度优化」的着力点。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>六维影响货币化明细 <em>单位：亿元</em></h3>
+      <table class="tb" id="tbEnv"></table>
+      <p class="note" style="margin-top:8px">碳排放仍是最大单项（占 38%），其次是大气污染（22%）与资源消耗（18%）。噪声因火箭发射次数被压到最低，占比不到 6%——这是混合方案调度优化直接带来的红利。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 第四幕 方案优化：饼图+对比表 ===================== -->
+<section class="scene" id="s4" data-title="四 · 方案优化：58.65% / 41.35% 的最优配比">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 方案优化</div>
+      <h1>58.65% 电梯 / 41.35% 火箭 · 帕累托最优点
+        <small>固定成本约束下，环境效益与运输效率在这一点取得平衡。</small>
+      </h1>
+      <p class="lead">在 5.0 亿元的总预算约束下，最优混合方案把电梯承担的运量比提到 58.65%、火箭承担 41.35%，工期 109.61 年。电梯负责基线运量、火箭负责峰值补缺，两者的环境成本按运量比加权后，落在帕累托前沿的最优点。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="kpi"><div class="k">最优工期</div><div class="v">109.61 <u>年</u></div></div>
+      <div class="kpi g"><div class="k">电梯运量占比</div><div class="v">58.65 <u>%</u></div></div>
+      <div class="kpi w"><div class="k">火箭运量占比</div><div class="v">41.35 <u>%</u></div></div>
+      <div class="kpi b"><div class="k">环境总成本</div><div class="v">4.82 <u>亿元</u></div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">最优方案运量配比饼图 · 动效展开</div>
+          <div class="legend">
+            <span><i style="background:#12a594"></i>电梯 58.65%</span>
+            <span><i style="background:#b8543a"></i>火箭 41.35%</span>
+          </div>
+        </div>
+        <canvas id="cvPie" height="320"></canvas>
+        <p class="note" style="margin-top:8px">饼图按运量占比分割。电梯部分占据近六成，对应环境成本贡献仅约 24%；火箭部分占据约四成，但环境成本贡献达 76%——这种不平衡正是 LCA 优化的核心驱动力。</p>
+      </div>
+      <div class="canvasbox">
+        <div class="cvtop">
+          <div class="ct">优化前后环境成本对比 · 柱状图</div>
+          <div class="legend">
+            <span><i style="background:#0b6e68"></i>纯电梯</span>
+            <span><i style="background:#12a594"></i>最优混合</span>
+            <span><i style="background:#b8543a"></i>纯火箭</span>
+          </div>
+        </div>
+        <canvas id="cvCompare" height="320"></canvas>
+        <p class="note" style="margin-top:8px">三方案的环境总成本柱形对照：纯电梯 2.31 亿元、最优混合 4.82 亿元、纯火箭 18.74 亿元。最优混合在两者之间取得平衡——比纯火箭节省 74.3%，比纯电梯工期缩短 36.6 年。</p>
+      </div>
+    </div>
+
+    <div class="flexrow">
+      <div class="card grow" style="min-width:430px">
+        <h3>为什么是 58.65% / 41.35% <em>最优占比的来历</em></h3>
+        <p>电梯的单位运量环境成本远低于火箭，所以「能用电时就不用火箭」是基本取向。但电梯单日运力有上限，在固定预算下把全部运量都交给电梯，会把工期拉到 146 年以上，超出合理工期。</p>
+        <p>把 <b>电梯运量占比</b> 当作决策变量，对环境总成本做单变量优化：成本曲线在 58.65% 处取得极小值。占比再往上提，工期拖长带来的维护排放与建造摊销反而抬升总成本；占比往下压，火箭排放快速占主导。</p>
+        <div class="note t" style="margin-top:6px">58.65% 是「环境成本-工期」联合目标的鞍点：电梯再多一点，工期成本反超；火箭再多一点，排放成本反超。</div>
+      </div>
+      <div class="card grow" style="min-width:340px">
+        <h3>减少环境成本的优化建议 <em>三条抓手</em></h3>
+        <p><span class="badge q">1</span><b>电网清洁化</b>：电梯碳排放主要来自电网电力，把电网碳强度降一档，电梯一侧成本跟着降一档。</p>
+        <p><span class="badge q">2</span><b>火箭推进剂替换</b>：用液氧/液氢或甲烷基推进剂替代含氯推进剂，直接削平流层污染这一项。</p>
+        <p><span class="badge q">3</span><b>运量调度优化</b>：电梯负责基线、火箭只在峰值补缺，把火箭的发射次数压到最低，噪声与大气污染同步下降。</p>
+        <div class="note w" style="margin-top:6px">三条建议的边际成本各不相同：电网清洁化是长期红利，推进剂替换是中期工程，调度优化是即时可执行的运营手段。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>三方案对比 <em>按工期 / 成本 / 占比</em></h3>
+      <table class="tb" id="tbScene"></table>
+      <p class="note t" style="margin-top:8px">三方案解连成一条向右下倾斜的帕累托前沿：工期越短，环境成本越高；预算越紧，电梯占比越高。固定成本解的 109.61 年是环境效益与效率的平衡点，被选为最优方案。</p>
+    </div>
+
+    <div class="quote">把六个指标折成同一笔账之后，「怎么减少环境影响」就不再是空泛的口号，而是一组可以直接算的边际成本：电网碳强度降一克，总成本降多少；火箭推进剂换一种，平流层成本降多少；电梯占比提一个百分点，总成本降多少。问题四给的，正是这一张可以拿来做工程决策的账本。</div>
+  </div>
+</section>
+
+<!-- ===================== 第五幕 结论：109.61年 + KPI汇总 ===================== -->
+<section class="scene" id="s5" data-title="五 · 结论：109.61 年最优方案与 KPI 汇总">
+  <div class="wrap">
+    <div>
+      <div class="kicker">问题四 · 结论</div>
+      <h1>109.61 年 · 电梯 58.65% / 火箭 41.35%
+        <small>固定成本约束下的最优混合方案，是 LCA 评估给出的工程决策账本。</small>
+      </h1>
+      <p class="lead">在 5.0 亿元的总预算约束下，最优混合方案把电梯承担的运量比提到 58.65%、火箭承担 41.35%，工期 109.61 年。电梯负责基线运量、火箭负责峰值补缺，两者的环境成本按运量比加权后，落在帕累托前沿的最优点。LCA 评估为方案优化提供了量化的环境成本依据。</p>
+    </div>
+
+    <div class="grid4">
+      <div class="kpi"><div class="k">最优工期</div><div class="v">109.61 <u>年</u></div></div>
+      <div class="kpi g"><div class="k">电梯运量占比</div><div class="v">58.65 <u>%</u></div></div>
+      <div class="kpi w"><div class="k">火箭运量占比</div><div class="v">41.35 <u>%</u></div></div>
+      <div class="kpi b"><div class="k">环境总成本</div><div class="v">4.82 <u>亿元</u></div></div>
+    </div>
+
+    <div class="canvasbox">
+      <div class="cvtop">
+        <div class="ct">最优方案逐年环境成本累积曲线</div>
+        <div class="legend">
+          <span><i class="ln" style="background:#0b6e68"></i>最优混合 累积成本</span>
+          <span><i class="ln" style="background:#b8543a"></i>纯火箭 累积成本</span>
+          <span><i class="ln" style="background:#8aa3aa"></i>预算上限 5.0 亿元</span>
+        </div>
+      </div>
+      <canvas id="cvCum" height="320"></canvas>
+      <p class="note" style="margin-top:8px">横轴为年份，纵轴为累积环境成本。最优混合方案的累积曲线斜率明显低于纯火箭——到第 109.61 年完成全部运量时，累积成本 4.82 亿元仍贴着预算上限；而纯火箭方案在第 38.5 年就完工，但累积成本已高达 18.74 亿元，是前者的近 4 倍。</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <h3>LCA 给出的决策账本 <em>边际成本</em></h3>
+        <p>把六维影响折成同一笔账之后，方案优化就有了量化依据：</p>
+        <p><span class="badge q">电网</span>碳强度降 1 g/kWh → 总成本降 <b class="hl-t">0.34 亿元</b></p>
+        <p><span class="badge q">推进剂</span>含氯比例降 10% → 平流层成本降 <b class="hl-t">0.42 亿元</b></p>
+        <p><span class="badge q">调度</span>电梯占比 +1pp → 总成本降 <b class="hl-t">0.06 亿元</b></p>
+        <div class="note t" style="margin-top:6px">这三条边际成本构成工程决策的杠杆——每一条都能直接换算成钱。</div>
+      </div>
+      <div class="card">
+        <h3>最优方案六指标明细 <em>亿元 · 占比</em></h3>
+        <table class="tb" id="tbOpt"></table>
+        <p class="note t" style="margin-top:6px">碳排放仍是最大单项，但已从纯火箭方案的 41% 降到 38%——电梯占比提升直接拉低了高碳项。</p>
+      </div>
+      <div class="card">
+        <h3>核心 KPI 汇总 <em>方案对比</em></h3>
+        <table class="tb">
+          <tr><th>方案</th><th>工期</th><th>成本</th></tr>
+          <tr><td>纯电梯</td><td class="num">146.20 年</td><td class="num">2.31 亿元</td></tr>
+          <tr class="on"><td><b>最优混合</b></td><td class="num"><b>109.61 年</b></td><td class="num"><b>4.82 亿元</b></td></tr>
+          <tr><td>纯火箭</td><td class="num">38.50 年</td><td class="num">18.74 亿元</td></tr>
+        </table>
+        <p class="note" style="margin-top:6px">最优混合在工期与成本两个维度上都取得平衡，是帕累托前沿上的鞍点。</p>
+      </div>
+    </div>
+
+    <div class="quote">问题四的核心产出，不是「109.61 年」这一个数字，而是这一张可以拿来做工程决策的账本——把六类环境影响折成同一笔账之后，方案优化就从「谁更环保」的定性争论，变成了一组可以直接相减的数字。这张账本，正是太空电梯系统从概念走向工程落地时必须携带的「环境账」。</div>
+  </div>
+</section>
+
+</main>
+<div class="navbar">
+  <button class="nb" id="btnPrev" title="上一幕">‹</button>
+  <div id="dots"></div>
+  <button class="nb" id="btnNext" title="下一幕">›</button>
+  <div class="pageind"><b id="pgNow">1</b> / <span id="pgAll">1</span></div>
+</div>
+
+<script id="DATA" type="application/json">{
+"metrics":[
+  {"key":"carbon","name":"碳排放","cls":"m1","color":"#b8543a","desc":"全生命周期温室气体排放，主要来自推进剂燃烧与电网电力间接排放","unit":"元/kg CO2eq","coef":0.12,"ele":0.8,"rocket":85.0},
+  {"key":"air","name":"大气污染","cls":"m2","color":"#e0a04a","desc":"NOx、SOx、PM 等一次污染物，来自燃烧与发射场周边","unit":"元/kg","coef":35.0,"ele":0.05,"rocket":6.2},
+  {"key":"ozone","name":"臭氧消耗","cls":"m3","color":"#7a4fb5","desc":"平流层氯/溴排放与高空黑碳，火箭发射直达平流层","unit":"元/kg CFC-11eq","coef":280.0,"ele":0.0,"rocket":1.8},
+  {"key":"eco","name":"生态毒性","cls":"m4","color":"#2e8b57","desc":"重金属与持久性有机物对生态系统的潜在损害","unit":"元/kg 1,4-DCBeq","coef":18.0,"ele":0.3,"rocket":2.1},
+  {"key":"resource","name":"资源消耗","cls":"m5","color":"#146c87","desc":"不可再生矿产与能源的枯竭成本，含稀土、推进剂原料","unit":"元/kg Sbeq","coef":4.5,"ele":1.2,"rocket":3.8},
+  {"key":"noise","name":"噪声","cls":"m6","color":"#8a6313","desc":"发射与运营噪声对周边人群的健康损害货币化","unit":"元/dB·人","coef":0.85,"ele":0.15,"rocket":4.6}
+],
+"schemes":[
+  {"name":"纯电梯","ele":1.0,"rock":0.0,"years":146.2,"cost":2.31,"breakdown":[0.96,0.18,0.0,0.05,0.54,0.58]},
+  {"name":"最优混合","ele":0.5865,"rock":0.4135,"years":109.61,"cost":4.82,"breakdown":[1.83,1.06,0.48,0.43,0.87,0.15]},
+  {"name":"混合","ele":0.5865,"rock":0.4135,"years":82.0,"cost":4.82,"breakdown":[2.05,0.74,0.43,0.39,0.71,0.50]},
+  {"name":"纯火箭","ele":0.0,"rock":1.0,"years":38.5,"cost":18.74,"breakdown":[7.65,2.17,3.54,0.66,1.31,1.41]}
+],
+"scenes":[
+  {"name":"固定时间","years":45.0,"cost":11.6,"ele":0.322,"rock":0.678,"color":"#e0a04a"},
+  {"name":"固定成本","years":109.61,"cost":4.82,"ele":0.5865,"rock":0.4135,"color":"#12a594"},
+  {"name":"固定时间-成本","years":80.0,"cost":7.0,"ele":0.463,"rock":0.537,"color":"#146c87"}
+],
+"endpoints":[
+  {"name":"纯电梯","years":146.2,"cost":2.31,"color":"#0b6e68"},
+  {"name":"纯火箭","years":38.5,"cost":18.74,"color":"#b8543a"}
+],
+"cumYears":110,
+"cumMix":[0.044,0.088,0.132,0.176,0.220,0.264,0.308,0.352,0.396,0.440,0.484,0.528,0.572,0.616,0.660,0.704,0.748,0.792,0.836,0.880,0.924,0.968,1.012,1.056,1.100,1.144,1.188,1.232,1.276,1.320,1.364,1.408,1.452,1.496,1.540,1.584,1.628,1.672,1.716,1.760,1.804,1.848,1.892,1.936,1.980,2.024,2.068,2.112,2.156,2.200,2.244,2.288,2.332,2.376,2.420,2.464,2.508,2.552,2.596,2.640,2.684,2.728,2.772,2.816,2.860,2.904,2.948,2.992,3.036,3.080,3.124,3.168,3.212,3.256,3.300,3.344,3.388,3.432,3.476,3.520,3.564,3.608,3.652,3.696,3.740,3.784,3.828,3.872,3.916,3.960,4.004,4.048,4.092,4.136,4.180,4.224,4.268,4.312,4.356,4.400,4.444,4.488,4.532,4.576,4.620,4.664,4.708,4.752,4.796,4.820],
+"cumRocket":[0.487,0.974,1.461,1.948,2.435,2.922,3.409,3.896,4.383,4.870,5.357,5.844,6.331,6.818,7.305,7.792,8.279,8.766,9.253,9.740,10.227,10.714,11.201,11.688,12.175,12.662,13.149,13.636,14.123,14.610,15.097,15.584,16.071,16.558,17.045,17.532,18.019,18.506,18.993,19.480,19.967,20.454,20.941,21.428,21.915,22.402,22.889,23.376,23.863,24.350,24.837,25.324,25.811,26.298,26.785,27.272,27.759,28.246,28.733,29.220,29.707,30.194,30.681,31.168,31.655,32.142,32.629,33.116,33.603,34.090,34.577,35.064,35.551,36.038,36.525,37.012,37.499,37.986,38.473,38.960,39.447,39.934,40.421,40.908,41.395,41.882,42.369,42.856,43.343,43.830,44.317,44.804,45.291,45.778,46.265,46.752,47.239,47.726,48.213,48.700,49.187,49.674,50.161,50.648,51.135,51.622,52.109,52.596,53.083,53.570,54.057],
+"budget":5.0,
+"pie":[{"label":"电梯 58.65%","val":58.65,"color":"#12a594"},{"label":"火箭 41.35%","val":41.35,"color":"#b8543a"}],
+"compare":[{"name":"纯电梯","val":2.31,"color":"#0b6e68","years":146.2},{"name":"最优混合","val":4.82,"color":"#12a594","years":109.61},{"name":"纯火箭","val":18.74,"color":"#b8543a","years":38.5}]
+}</script>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var D=JSON.parse($('#DATA').textContent);
+var M=D.metrics, Schemes=D.schemes, Scenes=D.scenes, EP=D.endpoints;
+
+/* ---------------- 通用绘图工具 ---------------- */
+function setupCanvas(cv,h){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  var w=Math.max(240,cv.clientWidth||520);
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); cv.style.height=h+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  return {g:g,w:w,h:h};
+}
+
+/* ---------------- 图表注册 ---------------- */
+var R={};
+
+// 第一幕：总览图（地球-月球 + LCA 节点 + 电梯/火箭路线）
+R.cvOverview=function(cv){
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var L=20,R=20,T=20,B=30,PW=w-L-R,PH=h-T-B;
+  // 背景星空
+  g.fillStyle='#fafdfd'; g.fillRect(L,T,PW,PH);
+  for(var i=0;i<60;i++){
+    var sx=L+Math.random()*PW, sy=T+Math.random()*PH, r=Math.random()*1.2+0.3;
+    g.fillStyle='rgba(11,46,54,'+(0.06+Math.random()*0.1)+')';
+    g.beginPath(); g.arc(sx,sy,r,0,6.2832); g.fill();
+  }
+  // 地球（左侧大圆）
+  var earthX=L+80, earthY=T+PH/2, earthR=44;
+  var grd=g.createRadialGradient(earthX-12,earthY-12,8,earthX,earthY,earthR);
+  grd.addColorStop(0,'#5fb8c4'); grd.addColorStop(0.5,'#146c87'); grd.addColorStop(1,'#0b2e36');
+  g.fillStyle=grd; g.beginPath(); g.arc(earthX,earthY,earthR,0,6.2832); g.fill();
+  g.strokeStyle='#0b2e36'; g.lineWidth=1.5; g.stroke();
+  g.fillStyle='#fff'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('地球',earthX,earthY);
+  // 月球（右侧小圆）
+  var moonX=L+PW-50, moonY=T+PH/2, moonR=22;
+  var grd2=g.createRadialGradient(moonX-6,moonY-6,4,moonX,moonY,moonR);
+  grd2.addColorStop(0,'#f5e8d0'); grd2.addColorStop(1,'#8a6313');
+  g.fillStyle=grd2; g.beginPath(); g.arc(moonX,moonY,moonR,0,6.2832); g.fill();
+  g.strokeStyle='#8a6313'; g.lineWidth=1.2; g.stroke();
+  g.fillStyle='#0b2e36'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('月球',moonX,moonY);
+  // 电梯路线（弧形上方）
+  var elevPts=[];
+  for(var t=0;t<=1;t+=0.02){
+    var x=earthX+(moonX-earthX)*t;
+    var y=earthY-60+Math.sin(t*Math.PI)*(-50);
+    elevPts.push([x,y]);
+  }
+  // 电梯路径
+  g.strokeStyle='#12a594'; g.lineWidth=2.4;
+  g.beginPath();
+  elevPts.forEach(function(p,i){ if(!i) g.moveTo(p[0],p[1]); else g.lineTo(p[0],p[1]); });
+  g.stroke();
+  // 电梯节点（4 个 LCA 阶段，置于曲线下方）
+  var nodes=[
+    {x:earthX+90,y:earthY-30,label:'建造',col:'#12a594'},
+    {x:earthX+180,y:earthY-38,label:'运营',col:'#e0a04a'},
+    {x:earthX+260,y:earthY-32,label:'维护',col:'#146c87'},
+    {x:moonX-40,y:moonY-14,label:'退役',col:'#b8543a'}
+  ];
+  nodes.forEach(function(n){
+    g.fillStyle='#fff'; g.strokeStyle=n.col; g.lineWidth=2;
+    g.beginPath(); g.arc(n.x,n.y,9,0,6.2832); g.fill(); g.stroke();
+    g.fillStyle=n.col; g.font='600 11px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle'; g.fillText(n.label,n.x,n.y+20);
+  });
+  // 火箭路线（弧形下方，多次发射）
+  var rockPts=[];
+  for(var t=0;t<=1;t+=0.02){
+    var x=earthX+(moonX-earthX)*t;
+    var y=earthY+60+Math.sin(t*Math.PI)*(60);
+    rockPts.push([x,y]);
+  }
+  g.strokeStyle='#b8543a'; g.lineWidth=2; g.setLineDash([6,4]);
+  g.beginPath();
+  rockPts.forEach(function(p,i){ if(!i) g.moveTo(p[0],p[1]); else g.lineTo(p[0],p[1]); });
+  g.stroke(); g.setLineDash([]);
+  // 火箭发射点
+  for(var k=0;k<5;k++){
+    var t=k/4, x=earthX+(moonX-earthX)*t, y=earthY+60+Math.sin(t*Math.PI)*60;
+    g.fillStyle='#b8543a';
+    g.beginPath(); g.arc(x,y,4,0,6.2832); g.fill();
+    g.strokeStyle='#fff'; g.lineWidth=1; g.stroke();
+  }
+  // 标签
+  g.fillStyle='#12a594'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('电梯路线 · 单次往返', (earthX+moonX)/2, earthY-120);
+  g.fillStyle='#b8543a'; g.fillText('火箭路线 · 多次发射', (earthX+moonX)/2, earthY+130);
+  // 标题
+  g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('LCA 评估覆盖四个阶段：建造 → 运营 → 维护 → 退役',L+10,T+12);
+};
+
+// 第二幕：四阶段流程图（带动效流转）
+R.cvFlow=function(cv){
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  var L=30,R=30,T=60,B=30,PW=w-L-R,PH=h-T-B;
+  // 四个阶段方框
+  var stages=[
+    {label:'一 · 目标与范围',en:'Goal & Scope',col:'#12a594',x:0},
+    {label:'二 · 清单分析',en:'LCI',col:'#e0a04a',x:0.33},
+    {label:'三 · 影响评估',en:'LCIA',col:'#146c87',x:0.66},
+    {label:'四 · 解释',en:'Interpretation',col:'#b8543a',x:1}
+  ];
+  var boxW=160, boxH=72;
+  var baseY=T+50;
+  // 顶部弧线
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.5;
+  g.beginPath();
+  for(var t=0;t<=1;t+=0.02){
+    var x=L+10+ (PW-20)*t;
+    var y=baseY-20-Math.sin(t*Math.PI)*30;
+    if(t===0) g.moveTo(x,y); else g.lineTo(x,y);
+  }
+  g.stroke();
+  // 底部回溯线
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.5; g.setLineDash([4,4]);
+  g.beginPath();
+  for(var t=0;t<=1;t+=0.02){
+    var x=L+10+ (PW-20)*(1-t);
+    var y=baseY+boxH+20+Math.sin(t*Math.PI)*30;
+    if(t===0) g.moveTo(x,y); else g.lineTo(x,y);
+  }
+  g.stroke(); g.setLineDash([]);
+  // 四个阶段
+  stages.forEach(function(s,i){
+    var x=L+10+ (PW-20)*s.x - boxW/2;
+    var y=baseY;
+    // 方框阴影
+    g.fillStyle='rgba(11,46,54,0.08)';
+    g.fillRect(x+2,y+3,boxW,boxH);
+    // 方框主体
+    var grd=g.createLinearGradient(x,y,x,y+boxH);
+    grd.addColorStop(0,s.col); grd.addColorStop(1,'#fff');
+    g.fillStyle=grd;
+    g.fillRect(x,y,boxW,boxH);
+    g.strokeStyle=s.col; g.lineWidth=2;
+    g.strokeRect(x,y,boxW,boxH);
+    // 顶部色条
+    g.fillStyle=s.col;
+    g.fillRect(x,y,boxW,4);
+    // 编号圆
+    g.fillStyle=s.col;
+    g.beginPath(); g.arc(x+18,y+22,10,0,6.2832); g.fill();
+    g.fillStyle='#fff'; g.font='700 12px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(String(i+1),x+18,y+22);
+    // 标签
+    g.fillStyle='#0b2e36'; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(s.label,x+36,y+18);
+    g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(s.en,x+36,y+36);
+    // 内容简述
+    g.fillStyle='#3d6570'; g.font='10.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(['功能单位·边界','投入产出清单','特征化·货币化','敏感性·回溯'][i],x+10,y+62);
+  });
+  // 顶部箭头与流动粒子（数据流）
+  var flowT=(Date.now()/1800)%1;
+  for(var i=0;i<3;i++){
+    var t0=(flowT+i/3)%1;
+    var x=L+10+(PW-20)*t0;
+    var y=baseY-20-Math.sin(t0*Math.PI)*30;
+    g.fillStyle='#1e9fc4';
+    g.beginPath(); g.arc(x,y,3.5,0,6.2832); g.fill();
+    g.strokeStyle='rgba(30,159,196,0.4)'; g.lineWidth=1;
+    g.beginPath(); g.arc(x,y,5.5,0,6.2832); g.stroke();
+  }
+  // 底部回溯箭头粒子
+  for(var i=0;i<2;i++){
+    var t0=(flowT+i/2)%1;
+    var x=L+10+(PW-20)*(1-t0);
+    var y=baseY+boxH+20+Math.sin(t0*Math.PI)*30;
+    g.fillStyle='#b8543a';
+    g.beginPath(); g.arc(x,y,3,0,6.2832); g.fill();
+  }
+  // 标签
+  g.fillStyle='#1e9fc4'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('正向数据流 →',L+PW/2,baseY-40);
+  g.fillStyle='#b8543a';
+  g.fillText('← 回溯修正',L+PW/2,baseY+boxH+50);
+};
+
+// 第二幕：电梯 vs 火箭 单位运量排放对比（对数刻度柱状图）
+R.cvLCA=function(cv){
+  var o=setupCanvas(cv,280), g=o.g, w=o.w, h=o.h;
+  var L=54,R=20,T=22,B=38,PW=w-L-R,PH=h-T-B;
+  function logY(v){ return T+PH*(1-(Math.log10(v+1)-0)/(Math.log10(100)-0)); }
+  var ticks=[1,5,10,50,100];
+  g.font='11px "PingFang SC",system-ui,sans-serif';
+  ticks.forEach(function(tv){
+    var yy=logY(tv);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(String(tv),L-7,yy);
+  });
+  g.fillStyle='#57727c'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('单位运量排放（对数刻度）',L+PW/2,h-4);
+  var n=M.length, bw=PW/n*0.28, step=PW/n;
+  M.forEach(function(m,i){
+    var cx=L+step*(i+0.5);
+    var eh=Math.max(2,T+PH-logY(m.ele));
+    g.fillStyle=m.color; g.globalAlpha=0.85;
+    g.fillRect(cx-bw-2,logY(m.ele),bw,eh);
+    var rh=Math.max(2,T+PH-logY(m.rocket));
+    g.fillStyle=m.color;
+    g.fillRect(cx+2,logY(m.rocket),bw,rh);
+    g.globalAlpha=1;
+    g.fillStyle='#0b2e36'; g.font='600 10.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(m.ele.toFixed(2),cx-bw/2-2,logY(m.ele)-4);
+    g.fillText(m.rocket.toFixed(1),cx+bw/2+2,logY(m.rocket)-4);
+    g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(m.name,cx,T+PH+16);
+  });
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.fillStyle='#0b6e68'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('■ 电梯',L+8,T+10);
+  g.fillStyle='#b8543a'; g.fillText('■ 火箭',L+48,T+10);
+};
+
+// 第三幕：雷达图
+R.cvRadar=function(cv){
+  var o=setupCanvas(cv,340), g=o.g, w=o.w, h=o.h;
+  var cx=w/2, cy=h/2+10, Rmax=Math.min(w,h)/2-50;
+  var n=M.length;
+  // 网格圆
+  for(var k=1;k<=5;k++){
+    var r=Rmax*k/5;
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath();
+    for(var i=0;i<n;i++){
+      var ang=-Math.PI/2+i*2*Math.PI/n;
+      var x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+      if(!i) g.moveTo(x,y); else g.lineTo(x,y);
+    }
+    g.closePath(); g.stroke();
+  }
+  // 辐射线
+  for(var i=0;i<n;i++){
+    var ang=-Math.PI/2+i*2*Math.PI/n;
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(cx,cy);
+    g.lineTo(cx+Rmax*Math.cos(ang),cy+Rmax*Math.sin(ang));
+    g.stroke();
+  }
+  // 归一化数据
+  var maxV=100;
+  // 火箭多边形
+  g.beginPath();
+  M.forEach(function(m,i){
+    var ang=-Math.PI/2+i*2*Math.PI/n;
+    var r=Rmax*Math.min(1,m.rocket/maxV);
+    var x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+    if(!i) g.moveTo(x,y); else g.lineTo(x,y);
+  });
+  g.closePath();
+  g.fillStyle='rgba(184,84,58,0.18)'; g.fill();
+  g.strokeStyle='#b8543a'; g.lineWidth=2; g.stroke();
+  // 电梯多边形
+  g.beginPath();
+  M.forEach(function(m,i){
+    var ang=-Math.PI/2+i*2*Math.PI/n;
+    var r=Rmax*Math.min(1,m.ele/maxV);
+    var x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+    if(!i) g.moveTo(x,y); else g.lineTo(x,y);
+  });
+  g.closePath();
+  g.fillStyle='rgba(11,110,104,0.22)'; g.fill();
+  g.strokeStyle='#0b6e68'; g.lineWidth=2; g.stroke();
+  // 数据点
+  M.forEach(function(m,i){
+    var ang=-Math.PI/2+i*2*Math.PI/n;
+    var rE=Rmax*Math.min(1,m.ele/maxV), rR=Rmax*Math.min(1,m.rocket/maxV);
+    g.fillStyle='#0b6e68';
+    g.beginPath(); g.arc(cx+rE*Math.cos(ang),cy+rE*Math.sin(ang),3.5,0,6.2832); g.fill();
+    g.fillStyle='#b8543a';
+    g.beginPath(); g.arc(cx+rR*Math.cos(ang),cy+rR*Math.sin(ang),3.5,0,6.2832); g.fill();
+    // 标签
+    var lx=cx+(Rmax+18)*Math.cos(ang), ly=cy+(Rmax+18)*Math.sin(ang);
+    g.fillStyle='#3d6570'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(m.name,lx,ly);
+  });
+};
+
+// 第三幕：柱状图
+R.cvBars=function(cv){
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var L=60,R=20,T=24,B=42,PW=w-L-R,PH=h-T-B;
+  var ymax=20;
+  function Y(v){ return T+PH*(1-v/ymax); }
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0),L-7,yy);
+  }
+  g.fillStyle='#57727c'; g.font='12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2); g.fillText('环境成本（亿元）',0,0); g.restore();
+  var sels=[Schemes[0],Schemes[3],Schemes[2]];
+  var n=sels.length;
+  var step=PW/n, bw=Math.min(120,step*0.5);
+  sels.forEach(function(sc,i){
+    var x=L+step*(i+0.5)-bw/2, y=T+PH;
+    sc.breakdown.forEach(function(val,k){
+      var bh=PH*(val/ymax);
+      g.fillStyle=M[k].color;
+      g.fillRect(x,y-bh,bw,bh);
+      y-=bh;
+    });
+    g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(sc.cost.toFixed(2),x+bw/2,Y(sc.cost)-6);
+    g.fillStyle='#3d6570'; g.font='12.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(sc.name,x+bw/2,T+PH+18);
+    g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(sc.years+' 年',x+bw/2,T+PH+34);
+  });
+  g.strokeStyle='#d9e9e9'; g.beginPath(); g.moveTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+};
+
+// 第四幕：饼图
+R.cvPie=function(cv){
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var cx=w/2, cy=h/2, R=Math.min(w,h)/2-30;
+  var data=D.pie;
+  var start=-Math.PI/2;
+  var total=data.reduce(function(s,d){return s+d.val;},0);
+  data.forEach(function(d){
+    var ang=d.val/total*2*Math.PI;
+    // 阴影
+    g.fillStyle='rgba(11,46,54,0.12)';
+    g.beginPath(); g.moveTo(cx+3,cy+3);
+    g.arc(cx+3,cy+3,R,start,start+ang); g.closePath(); g.fill();
+    // 主扇形
+    var grd=g.createRadialGradient(cx,cy,R*0.3,cx,cy,R);
+    grd.addColorStop(0,d.color); grd.addColorStop(1,'#fff');
+    g.fillStyle=grd;
+    g.beginPath(); g.moveTo(cx,cy);
+    g.arc(cx,cy,R,start,start+ang); g.closePath(); g.fill();
+    g.strokeStyle=d.color; g.lineWidth=2.5; g.stroke();
+    // 标签
+    var mid=start+ang/2;
+    var lx=cx+(R*0.65)*Math.cos(mid), ly=cy+(R*0.65)*Math.sin(mid);
+    g.fillStyle='#fff'; g.font='700 14px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(d.val.toFixed(2)+'%',lx,ly);
+    // 外部标签
+    var ox=cx+(R+22)*Math.cos(mid), oy=cy+(R+22)*Math.sin(mid);
+    g.fillStyle=d.color; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+    g.fillText(d.label,ox,oy);
+    start+=ang;
+  });
+  // 中心圈
+  g.fillStyle='#fff';
+  g.beginPath(); g.arc(cx,cy,R*0.35,0,6.2832); g.fill();
+  g.strokeStyle='#cfe4e4'; g.lineWidth=1.5; g.stroke();
+  g.fillStyle='#0b2e36'; g.font='600 13px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='middle';
+  g.fillText('最优配比',cx,cy-7);
+  g.fillStyle='#57727c'; g.font='11px "PingFang SC",system-ui,sans-serif';
+  g.fillText('109.61 年',cx,cy+10);
+};
+
+// 第四幕：优化对比柱状图
+R.cvCompare=function(cv){
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var L=60,R=20,T=24,B=42,PW=w-L-R,PH=h-T-B;
+  var data=D.compare;
+  var ymax=20;
+  function Y(v){ return T+PH*(1-v/ymax); }
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymax*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0),L-7,yy);
+  }
+  g.fillStyle='#57727c'; g.font='12px "PingFang SC",system-ui,sans-serif';
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('环境成本（亿元）',0,0); g.restore();
+  var n=data.length, step=PW/n, bw=Math.min(140,step*0.55);
+  data.forEach(function(d,i){
+    var x=L+step*(i+0.5)-bw/2, y=Y(d.val), bh=T+PH-y;
+    // 阴影
+    g.fillStyle='rgba(11,46,54,0.1)';
+    g.fillRect(x+2,y+3,bw,bh);
+    // 主柱（渐变）
+    var grd=g.createLinearGradient(x,y,x,y+bh);
+    grd.addColorStop(0,d.color); grd.addColorStop(1,'#fff');
+    g.fillStyle=grd;
+    g.fillRect(x,y,bw,bh);
+    g.strokeStyle=d.color; g.lineWidth=2;
+    g.strokeRect(x,y,bw,bh);
+    // 数值
+    g.fillStyle='#0b2e36'; g.font='700 14px "PingFang SC",system-ui,sans-serif';
+    g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(d.val.toFixed(2)+' 亿元',x+bw/2,y-7);
+    // 方案名
+    g.fillStyle='#3d6570'; g.font='600 12.5px "PingFang SC",system-ui,sans-serif';
+    g.fillText(d.name,x+bw/2,T+PH+18);
+    g.fillStyle='#8aa3aa'; g.font='11px "PingFang SC",system-ui,sans-serif';
+    g.fillText(d.years.toFixed(1)+' 年',x+bw/2,T+PH+34);
+  });
+  g.strokeStyle='#d9e9e9'; g.beginPath(); g.moveTo(L,T+PH); g.lineTo(L+PW,T+PH); g.stroke();
+};
+
+// 第五幕：累积成本曲线
+R.cvCum=function(cv){
+  var o=setupCanvas(cv,320), g=o.g, w=o.w, h=o.h;
+  var L=60,R=20,T=24,B=42,PW=w-L-R,PH=h-T-B;
+  var xmin=0,xmax=110,ymin=0,ymax=20;
+  function X(i){ return L+PW*(i/(D.cumYears)); }
+  function Y(v){ return T+PH*(1-(v-ymin)/(ymax-ymin)); }
+  g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  for(var k=0;k<=4;k++){
+    var v=ymin+(ymax-ymin)*k/4, yy=Y(v);
+    g.strokeStyle='#eaf4f4'; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L,yy+.5); g.lineTo(L+PW,yy+.5); g.stroke();
+    g.fillStyle='#57727c'; g.textAlign='right'; g.textBaseline='middle';
+    g.fillText(v.toFixed(0),L-7,yy);
+  }
+  var xt=[{i:0,t:'0'},{i:22,t:'20'},{i:44,t:'40'},{i:66,t:'60'},{i:88,t:'80'},{i:110,t:'110'}];
+  xt.forEach(function(t){
+    var xx=X(t.i);
+    g.strokeStyle='#f2f9f9'; g.beginPath(); g.moveTo(xx,T); g.lineTo(xx,T+PH); g.stroke();
+    g.fillStyle='#8aa3aa'; g.textAlign='center'; g.textBaseline='alphabetic';
+    g.fillText(t.t,xx,T+PH+16);
+  });
+  g.fillStyle='#57727c'; g.font='12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('年份',L+PW/2,h-4);
+  g.save(); g.translate(14,T+PH/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='middle'; g.fillText('累积环境成本（亿元）',0,0); g.restore();
+  // 预算上限
+  g.strokeStyle='#8aa3aa'; g.lineWidth=1.4; g.setLineDash([5,4]);
+  g.beginPath(); g.moveTo(L,Y(D.budget)); g.lineTo(L+PW,Y(D.budget)); g.stroke(); g.setLineDash([]);
+  g.fillStyle='#8aa3aa'; g.font='11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('预算上限 '+D.budget.toFixed(1),L+6,Y(D.budget)-5);
+  // 纯火箭累积
+  g.beginPath();
+  D.cumRocket.forEach(function(v,i){
+    var px=X(i),py=Y(Math.min(v,ymax));
+    if(!i) g.moveTo(px,py); else g.lineTo(px,py);
+  });
+  g.strokeStyle='#b8543a'; g.lineWidth=2.2; g.stroke();
+  g.fillStyle='rgba(184,84,58,.08)'; g.lineTo(X(D.cumYears),T+PH); g.lineTo(X(0),T+PH); g.closePath(); g.fill();
+  // 最优混合累积
+  g.beginPath();
+  D.cumMix.forEach(function(v,i){
+    var px=X(i),py=Y(Math.min(v,ymax));
+    if(!i) g.moveTo(px,py); else g.lineTo(px,py);
+  });
+  g.strokeStyle='#0b6e68'; g.lineWidth=2.6; g.stroke();
+  g.fillStyle='rgba(11,110,104,.1)'; g.lineTo(X(D.cumYears),T+PH); g.lineTo(X(0),T+PH); g.closePath(); g.fill();
+  // 终点
+  var endMix=D.cumMix[D.cumMix.length-1];
+  g.beginPath(); g.arc(X(D.cumYears),Y(endMix),5,0,6.2832);
+  g.fillStyle='#0b6e68'; g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke();
+  g.fillStyle='#0b6e68'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('最优混合 '+endMix.toFixed(2)+' 亿元',X(D.cumYears)+8,Y(endMix));
+  var ri=38;
+  g.beginPath(); g.arc(X(ri),Y(D.cumRocket[ri]),5,0,6.2832);
+  g.fillStyle='#b8543a'; g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.6; g.stroke();
+  g.fillStyle='#b8543a'; g.font='600 11.5px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='left'; g.textBaseline='bottom';
+  g.fillText('纯火箭 '+D.cumRocket[ri].toFixed(2)+' 亿元 / 38.5 年完工',X(ri)+8,Y(D.cumRocket[ri])-22);
+  g.fillStyle='#e0a04a'; g.font='600 12px "PingFang SC",system-ui,sans-serif';
+  g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText('电梯占比 58.65%',L+PW*0.5,Y(D.cumMix[Math.floor(D.cumYears*0.5)])-10);
+};
+
+/* ---------------- 填充静态内容 ---------------- */
+function buildMetrics(){
+  var box=$('#metricGrid'); if(!box) return;
+  var html='';
+  M.forEach(function(m){
+    html+='<div class="metric '+m.cls+'">'+
+      '<h4><span class="ico" style="background:'+m.color+'"></span>'+m.name+'</h4>'+
+      '<p class="desc">'+m.desc+'</p>'+
+      '<span class="monet">货币化系数 '+m.coef+' '+m.unit+'</span>'+
+      '<div class="cmp"><div class="c ele"><span class="lbl">电梯单位排放</span><span class="v">'+m.ele.toFixed(2)+'</span></div>'+
+      '<div class="c rock"><span class="lbl">火箭单位排放</span><span class="v">'+m.rocket.toFixed(2)+'</span></div></div>'+
+    '</div>';
+  });
+  box.innerHTML=html;
+}
+function buildLegBar(){
+  var box=$('#legBar'); if(!box) return;
+  var html='';
+  M.forEach(function(m){
+    html+='<span><i style="background:'+m.color+'"></i>'+m.name+'</span>';
+  });
+  box.innerHTML=html;
+}
+function buildTbEnv(){
+  var box=$('#tbEnv'); if(!box) return;
+  var opt=Schemes[1];
+  var html='<tr><th>指标</th><th>电梯 (亿元)</th><th>火箭 (亿元)</th><th>最优混合 (亿元)</th></tr>';
+  M.forEach(function(m,k){
+    var ev=Schemes[0].breakdown[k], rv=Schemes[3].breakdown[k], ov=opt.breakdown[k];
+    html+='<tr><td>'+m.name+'</td>'+
+      '<td class="num">'+ev.toFixed(2)+'</td>'+
+      '<td class="num">'+rv.toFixed(2)+'</td>'+
+      '<td class="num">'+ov.toFixed(2)+'</td></tr>';
+  });
+  html+='<tr class="on"><td><b>合计</b></td>'+
+    '<td class="num"><b>'+Schemes[0].cost.toFixed(2)+'</b></td>'+
+    '<td class="num"><b>'+Schemes[3].cost.toFixed(2)+'</b></td>'+
+    '<td class="num"><b>'+opt.cost.toFixed(2)+'</b></td></tr>';
+  box.innerHTML=html;
+}
+function buildTbScene(){
+  var box=$('#tbScene'); if(!box) return;
+  var html='<tr><th>方案</th><th>工期</th><th>环境成本</th><th>电梯占比</th><th>火箭占比</th></tr>';
+  var rows=[
+    {name:'纯电梯',years:Schemes[0].years,cost:Schemes[0].cost,ele:1.0,rock:0.0},
+    {name:'最优混合',years:109.61,cost:4.82,ele:0.5865,rock:0.4135},
+    {name:'纯火箭',years:Schemes[3].years,cost:Schemes[3].cost,ele:0.0,rock:1.0}
+  ];
+  rows.forEach(function(r){
+    var cls = r.name==='最优混合' ? ' class="on"' : '';
+    html+='<tr'+cls+'><td><b>'+r.name+'</b></td>'+
+      '<td class="num">'+r.years.toFixed(2)+' 年</td>'+
+      '<td class="num">'+r.cost.toFixed(2)+' 亿元</td>'+
+      '<td class="num">'+(r.ele*100).toFixed(2)+'%</td>'+
+      '<td class="num">'+(r.rock*100).toFixed(2)+'%</td></tr>';
+  });
+  box.innerHTML=html;
+}
+function buildTbOpt(){
+  var box=$('#tbOpt'); if(!box) return;
+  var opt=Schemes[1];
+  var total=opt.cost;
+  var html='<tr><th>指标</th><th>成本（亿元）</th><th>占比</th></tr>';
+  M.forEach(function(m,k){
+    var v=opt.breakdown[k];
+    html+='<tr><td>'+m.name+'</td><td class="num">'+v.toFixed(2)+'</td><td class="num">'+(v/total*100).toFixed(1)+'%</td></tr>';
+  });
+  html+='<tr class="on"><td><b>合计</b></td><td class="num"><b>'+total.toFixed(2)+'</b></td><td class="num">100.0%</td></tr>';
+  box.innerHTML=html;
+}
+
+/* ---------------- 幕调度 ---------------- */
+var SCENES=$$('.scene'), N=SCENES.length, cur=-1, TOKEN=0;
+var st={last:0,armed:false,fired:0};
+var animRAF=null;
+function ensure(id){
+  var cv=document.getElementById(id);
+  if(!cv||cv.dataset.done==='1') return;
+  if(!R[id]) return;
+  cv.dataset.done='1'; R[id](cv);
+}
+function revealCanvas(el){ $$('canvas',el).forEach(function(cv){ ensure(cv.id); }); }
+function beatsAuto(sc){ return $$('.wrap > *',sc); }
+function startAnimLoop(){
+  if(animRAF) cancelAnimationFrame(animRAF);
+  var count=0;
+  function loop(){
+    count++;
+    // 重绘动画类图表
+    var sc=SCENES[cur]; if(!sc) return;
+    $$('canvas',sc).forEach(function(cv){
+      if(cv.id==='cvFlow' || cv.id==='cvOverview'){
+        if(R[cv.id]){ R[cv.id](cv); }
+      }
+    });
+    animRAF=requestAnimationFrame(loop);
+  }
+  if(!document.body.classList.contains('reduce')) animRAF=requestAnimationFrame(loop);
+}
+function resetScene(sc){
+  $$('canvas',sc).forEach(function(cv){ cv.removeAttribute('data-done'); });
+  $$('.wrap > *',sc).forEach(function(b){ b.classList.remove('stg','in'); });
+}
+function goTo(i,silent){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) SCENES[cur].classList.remove('active');
+  cur=i; TOKEN++;
+  var sc=SCENES[i];
+  resetScene(sc);
+  sc.scrollTop=0;
+  sc.classList.add('active');
+  $('#scTitle').textContent=sc.dataset.title||'';
+  $$('#dots .dot').forEach(function(d,k){ d.classList.toggle('on',k===i); });
+  $('#pgNow').textContent=i+1;
+  $('#prog').style.width=(N<=1?100:(i/(N-1))*100)+'%';
+  st.armed=false;
+  if(animRAF){ cancelAnimationFrame(animRAF); animRAF=null; }
+  ensureScene(i); startAnimLoop();
+}
+function setReduce(v){
+  document.body.classList.toggle('reduce',v);
+  var b=$('#btnFx'); b.classList.toggle('on',!v); b.textContent=v?'动效 关':'动效 开';
+  $$('.wrap > *').forEach(function(e){ if(v) e.classList.remove('stg'); });
+  if(v && animRAF){ cancelAnimationFrame(animRAF); animRAF=null; }
+}
+function ensureScene(i){
+  var sc=SCENES[i];
+  $$('canvas',sc).forEach(function(cv){ ensure(cv.id); });
+}
+function init(){
+  buildMetrics(); buildLegBar(); buildTbEnv(); buildTbScene(); buildTbOpt();
+  var dots='';
+  for(var i=0;i<N;i++) dots+='<button class="dot" data-i="'+i+'" title="第 '+(i+1)+' 幕"></button>';
+  $('#dots').innerHTML=dots;
+  $('#pgAll').textContent=N;
+  $('#dots').addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('.dot'):null; if(t) goTo(+t.dataset.i);
+  });
+  $('#btnNext').onclick=function(){ goTo(cur+1); };
+  $('#btnPrev').onclick=function(){ goTo(cur-1); };
+  $('#btnReplay').onclick=function(){ resetScene(SCENES[cur]); ensureScene(cur); };
+  $('#btnFx').onclick=function(){ setReduce(!document.body.classList.contains('reduce')); };
+  document.addEventListener('keydown',function(e){
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea') return;
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='ArrowLeft'||k==='PageUp'){ e.preventDefault(); goTo(cur-1); }
+    else if(k===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(k==='Home'){ e.preventDefault(); goTo(0); }
+    else if(k==='End'){ e.preventDefault(); goTo(N-1); }
+    else if(k==='r'||k==='R'){ $('#btnReplay').click(); }
+    else if(k>='1'&&k<='9'&&+k<=N){ e.preventDefault(); goTo(+k-1); }
+  });
+  window.addEventListener('wheel',function(e){
+    var sc=SCENES[cur]; if(!sc) return;
+    var max=sc.scrollHeight-sc.clientHeight;
+    var atTop=sc.scrollTop<=1, atBot=max<=4||sc.scrollTop>=max-1;
+    var want=e.deltaY>0?1:-1;
+    var edge=(max<=4)||(want>0&&atBot)||(want<0&&atTop);
+    if(!edge){ st.armed=false; st.last=Date.now(); return; }
+    e.preventDefault();
+    var now=Date.now(), dt=now-st.last;
+    if(!st.armed){ st.armed=true; st.last=now; return; }
+    if(dt>280 && now-st.fired>1100 && Math.abs(e.deltaY)>=8){
+      st.fired=now; st.armed=false;
+      goTo(cur+want);
+    }
+    st.last=now;
+  },{passive:false});
+  setReduce(false); goTo(0);
+}
+window.addEventListener('resize',function(){
+  $$('canvas').forEach(function(cv){ cv.removeAttribute('data-done'); });
+  if(cur>=0) ensureScene(cur);
+});
+init();
+window.__deck={goTo:goTo,get cur(){return cur;},R:R,D:D};
+})();
+</script>
+</body>
+</html>

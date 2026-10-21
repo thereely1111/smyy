@@ -1,0 +1,507 @@
+{
+  "schema_version": "1.0",
+  "artifact": "solution_map",
+  "case_id": "20261009_D题_D组",
+  "problem_id": "2026-CUMCM-D",
+  "title": "2026 年高教社杯全国大学生数学建模竞赛 D 题：时频冲突检测与消解",
+  "created_at": "2026-10-09T13:05:00+08:00",
+  "stage": "S1",
+  "status": "PARTIAL_analysis_complete_routes_pending_user_confirmation",
+  "authority_note": "本文件是建模路线设计（候选方案），不是求解结果。所有 validation_plan / sensitivity / expected_numbers 均为『建议/待执行』，没有任何数值结果被计算或验证过。模型 ID 与 analysis_v1.0.md 第 9 节逐字一致：q01=m01/m02，q02=m03/m04，q03=m05/m06，q04=m07/m08，每问恰好 2 个候选（首选最小可行 + 1 个备选）。事实 ID（F01–F17）、假设 ID（H01–H14）、待确认 ID（C1–C12）引用 analysis_v1.0.md 第 2/4/12 节与 truth/problem_contract.json。",
+  "method_library": {
+    "path": ".harness/skills/mm-1-机理识别与模型路线比较/方法库/",
+    "index": ".harness/skills/mm-1-机理识别与模型路线比较/方法库/索引.md",
+    "cards_referenced": [
+      { "method_id": "M-OPT-002", "name": "整数规划 / 混合整数线性规划（IP/MILP）", "card": "方法库/M-OPT-002.md", "used_in": ["m02", "m03", "m05", "m07"], "hard_constraint_check": "Big-M 无界需谨慎 → 本题位移域显式有界（±10Δf / ±5Δt / |γ|≤10），并用逐格点互斥约束（Σ occupancy ≤ 1）替代大 M 线性化；无固定语义的整数变量按『候选计划索引变量』显式定义。" },
+      { "method_id": "M-OPT-004", "name": "多目标优化", "card": "方法库/M-OPT-004.md", "used_in": ["m03（分层结构）"], "hard_constraint_check": "权重无依据且结论高度依赖权重时不得只报单点 → 采用词典序/ε-约束给出分层代表解，不虚构加权系数（H10）。" },
+      { "method_id": "M-OPT-007", "name": "元启发式与启发式优化", "card": "方法库/M-OPT-007.md", "used_in": ["m04", "m06", "m08"], "hard_constraint_check": "不得把一次随机运行结果声称为全局最优 → 要求多随机种子重复、报告最好/均值/方差，并与小规模精确解及解析上下界对照。" }
+    ],
+    "out_of_library_routes": [
+      { "model_id": "m01", "reason": "库内 35 张卡片无『区间相交/冲突检测』基元；最接近的 M-DET-001 面向统计异常检测，机理不匹配，不套用。" },
+      { "model_id": "m04", "reason": "冲突图/最大独立集/最小顶点覆盖在库内无对应卡片，图论部分记 null（库外），修复阶段用 M-OPT-007。" },
+      { "model_id": "m06", "reason": "同余/周期错位的解析打包无卡片对应；堆装与局部搜索部分用 M-OPT-007。" }
+    ]
+  },
+  "global_context": {
+    "task_type": "离散时空资源上的冲突检测 + 组合优化（再布置 / 装载 / 多目标分层）",
+    "objective_chain": "q01 检测（完全精确，无近似）→ q02 消解（最小化撤销与调整）→ q03 资源不变下最大化新增（装载/包装）→ q04 扩维再消解（检验新增自由度的收益）",
+    "single_source_of_truth": "占用展开与判交内核（conflict kernel）：q01 用它做检测，q02/q03/q04 用它做资源互斥约束与结果复检。该内核必须是唯一实现，禁止在各问内重复定义判交逻辑。",
+    "shared_unfolding": "S_i = B_i × T_i，其中 B_i = 连续 L_i 个频段索引（起点 s_i），T_i = ⋃_{k=0}^{n_i-1} [τ_i + k·P_i, τ_i + k·P_i + d_i)（半开区间；周期 P_i = d_i + g_i 依 C2 推荐口径①，若选②则 P_i = g_i）",
+    "shared_resource_axes": {
+      "frequency": "100 个等宽 Δf 频段，索引基准待 C1（推荐 0 基 0..99，由实测『起点 0』与『右开 100』支撑，F04/H01）",
+      "time": "基本时间单位 Δt 的整数倍；时间视野 H 题面未给（推荐 H=643 = 实测最晚占用时刻，C7/F15/H08）",
+      "grid_cells_per_plan": "L_i × d_i × n_i（实测 Σ = 16680，可作守恒校验量，data_profile.json derived_sum_timefreq_cells=16680）"
+    },
+    "shared_data_pipeline": [
+      "P1 规范化中间表：附件 1 的字符串区间（如『[80,90)』）→ (s_i, L_i, τ_i, d_i, g_i, n_i) 六列；类别由编号前缀派生（C4）；行序保留原表顺序（result1 的『序号』口径，C11/H14）",
+      "P2 占用展开：S_i 的窗口列表与（可选）位图/稀疏格点集；记录派生量 |S_i| = L_i·d_i·n_i",
+      "P3 判交内核：冲突对集合 E = {(i,j): i<j, B_i∩B_j≠∅ 且 T_i∩T_j≠∅}，返回配对、重叠频段区间、重叠时间区间（result2 交付列）",
+      "P4 方案导出：按 result2/result4（表 1 格式）与 result3 模板列导出（模板实测为仅表头空表，S3–S6）"
+    ],
+    "shared_invariants_to_check": [
+      "守恒 1：逐计划 L（占用频段数）与 n（使用次数）在任何方案后不变（F05/F09）",
+      "守恒 2：表 1 每类别『保留 + 调整 + 撤销』= 该类别计划总数（20/40/90，实测 by_class counts）",
+      "守恒 3：冲突图握手引理 Σdeg = 2|E|",
+      "互斥：任一 (b,t) 格点被占用次数 ≤ 1（无冲突定义，F06）",
+      "奇偶/对称：判交关系对 (i,j) 无序、不自反（H14）"
+    ],
+    "quality_gates_before_any_solve": [
+      "G1 单位/量纲：Δt 与 Δf 为抽象单位，所有位移必须为整数格（F03）",
+      "G2 口径冻结：C1/C2/C3 未拍板前不得对外报任何冲突对数（阻断项）",
+      "G3 边界用例单测：右开区间相接不算重叠；s+L=100 顶格合法；τ=0 起点合法；末窗口恰落在 H 上（实测 max_last_end=643）",
+      "G4 泄漏防护：q03/q04 的候选生成不得读取未被题面允许的自由度（如擅改 L/n）",
+      "G5 幂等：P1–P3 对同一输入版本必须可重跑复现（记录 input hash：附件 1 sha256 b7f905cd…）"
+    ],
+    "explicitly_out_of_scope": [
+      "本文件不给出任何已求得的冲突对数、调整方案、M 值或表 1 数值",
+      "不生成代码、不生成动画/图表/论文",
+      "不把『缓解冲突』主观指标（F14）量化为已确定目标（H13 + C9）"
+    ]
+  },
+  "questions": [
+    {
+      "question_id": "q01",
+      "title": "各类用频装备的时频冲突问题（检测）",
+      "verbs": ["检测", "给出", "统计"],
+      "depends_on": [],
+      "expected_outputs": ["result1.xlsx 全表（序号 + 冲突双方编号 + 重叠频段区间 + 重叠时间区间）", "|E| 与涉及装备数", "类别交叉矩阵 A-A/A-B/A-C/B-B/B-C/C-C", "按频段轴与时间轴的冲突密度（统计口径待 C3）"],
+      "candidate_routes": [
+        {
+          "model_id": "m01",
+          "role": "preferred_minimal_feasible",
+          "name": "时频格点集合求交 + 频段分桶扫描（精确完全枚举）",
+          "method_id": null,
+          "method_id_note": "库外：区间相交基元；理由见 method_library.out_of_library_routes",
+          "core_relation": "conflict(i,j) ⟺ (B_i ∩ B_j ≠ ∅) ∧ (T_i ∩ T_j ≠ ∅)",
+          "decision_variables": "无（纯计算，非优化）",
+          "objective": "无目标；要求输出精确、完全的冲突对集合（不漏、不重）",
+          "constraints": ["区间按半开处理（H01/H03 口径）", "周期 P 依 C2", "判交覆盖轮次依 C3", "配对无序且 i<j 去重（H14/C11）"],
+          "required_data": ["附件 1（150 行，S2，已具备）", "P1 规范化中间表（无缺失值，实测 n_missing=0）"],
+          "computation_steps": [
+            "1) P1 规范化 → (s,L,τ,d,g,n,类别)",
+            "2) 展开 B_i 与 T_i 窗口列表",
+            "3) 按频段建 100 桶倒排索引，仅对共享频段的计划对做时间求交（避免 C(150,2)=11175 全对比较中的无效比较）",
+            "4) 时间维用窗口两两求交或长度 H 的 bitset 位与",
+            "5) 输出 E 及重叠区间，按 s_i,s_j 升序（C11）写 result1",
+            "6) 统计 |E|、涉及装备数、类别交叉、每装备卷入度 Top-K"
+          ],
+          "applicability": "n≤12、K=100、H≈643 规模下完全精确可行，无需近似或停止准则；是本题最小可行模型",
+          "termination": "全部候选对枚举完毕",
+          "complexity_note": "实测频段占用较密（bands_used_by_all 接近满轴 0..99），共享频段对数可观 → 仍需时间维剪枝（窗口排序/扫描线）；复杂度量级为『共享频段对数 × 窗口对数』，非 11175×144",
+          "interpretability": "高：每个冲突对可直接给出重叠的频段区间与时间区间，与 result1 列一一对应",
+          "required_computation": "纯 Python（标准库/NumPy），无需第三方求解器；单机秒级（推断，待执行验证）",
+          "risks": [
+            "口径错则全错：C1/C2/C3 任一取错，E 整体变化（阻断）",
+            "半开/闭区间处理不当会把『相接』误判为『重叠』（边界用例 G3）",
+            "题面字面『首次使用的时间区间』与物理语义（全部轮次）不一致（C3）",
+            "result1 的『序号』语义未定义（C11）"
+          ],
+          "validation_plan": [
+            "与暴力逐格点实现（对每个 (b,t) 建占用列表再取共现对）交叉验证，两者结果集必须完全相等（待执行）",
+            "Σdeg = 2|E| 守恒校验（待执行）",
+            "随机抽 20 对人工复核重叠区间（待执行）",
+            "边界单测：[a,a+d) 与 [a+d,…) 不判交；s+L=100 顶格；τ=0；末窗口=643（待执行）"
+          ],
+          "disqualifying_conditions": [
+            "若用户口径改为『仅按首次区间判交』→ 仍可用 m01，只需改 T_i 定义（换判据不换方法）",
+            "若用户要求把检测结果作为约束内嵌进后续优化 → 改用/补充 m02 张量表示"
+          ],
+          "required_user_confirmations": ["C1", "C2", "C3", "C11", "C4"],
+          "fallback": "m02"
+        },
+        {
+          "model_id": "m02",
+          "role": "alternative",
+          "name": "0-1 占用张量 + 向量化判交（与 q02/q04 共用变量定义）",
+          "method_id": "M-OPT-002",
+          "method_id_note": "仅取其『0-1 指示变量 + 逻辑关系线性化』表示法，本问不求解",
+          "core_relation": "u[i,b,t]∈{0,1}；w_ij = 1 ⟺ Σ_b Σ_t min(u_i,b,t, u_j,b,t) ≥ 1（用辅助 z_ijbt 线性化）",
+          "decision_variables": "u[i,b,t]（数据决定，非自由）、w_ij（导出指示）",
+          "objective": "无（导出 w）",
+          "constraints": ["u 由 S_i 定义确定", "w 与重叠格点存在性等价"],
+          "required_data": ["同 m01", "稀疏格点表（仅存实际占用格点，150 计划共 16680 个计划-格点占用，实测 derived_sum_timefreq_cells=16680）"],
+          "computation_steps": ["1) 以稀疏 dict/COO 构造 u", "2) 按格点分组求共现计划对计数 c_ij", "3) w_ij = (c_ij ≥ 1)", "4) 与 m01 结果做等集比较"],
+          "applicability": "当需要把『无冲突』写成优化约束（q02/q03/q04 的逐格点互斥）时，该表示是必需的公共基础设施；纯检测任务不划算",
+          "termination": "同上，完全枚举",
+          "interpretability": "高（与 m01 等价），但变量规模若不剪枝则不可读",
+          "required_computation": "SciPy/NumPy 稀疏结构即可；若真的全量建 MILP（150×150×100×643）会爆炸 → 必须先按频段/时间剪枝，实际退化为 m01",
+          "risks": [
+            "规模失控（卡片 hard_constraints：Big-M/无界需谨慎）",
+            "把『表示法』误用为『必须建 MILP 求解』，引入不必要的求解器依赖"
+          ],
+          "validation_plan": ["与 m01 的冲突对集必须逐元素相等（等价性即验证，待执行）", "占用格点总数与 Σ L·d·n=16680 对照（待执行）"],
+          "disqualifying_conditions": ["若仅做 q01 统计而 q02 采用图/启发式路线（m04），m02 的额外投入无收益 → 用 m01 单实现 + 暴力复核"],
+          "required_user_confirmations": ["C1", "C2", "C3", "C11"],
+          "fallback": "m01"
+      ],
+      "selection_summary": {
+        "primary_model_id": "m01",
+        "primary_method_id": null,
+        "backup_model_id": "m02",
+        "backup_method_ids": ["M-OPT-002"],
+        "problem_fit": "0.95（题面动词『检测』= 精确枚举，m01 无近似无自由度）",
+        "interpretability": "0.90（输出列与 result1 逐列对应）",
+        "data_fit": "0.95（数据 100% 可解析、无缺失、规模可完全枚举）",
+        "computational_fit": "0.90（单机可完成，无求解器依赖）",
+        "validation_plan": "双实现互验（m01 vs 逐格点暴力）+ 抽样人工复核 + Σdeg=2|E| 守恒 + 边界单测（全部待执行）",
+        "key_assumptions": ["H01", "H02", "H03", "H08", "H14"],
+        "known_risks": ["口径依赖（C1/C2/C3）为阻断风险", "半开区间边界实现错误", "序号/行序口径（C11）"],
+        "reason_for_selection": "最小可行且不引入任何近似：题目只要『检测』，完全枚举即可给出可辩护的完整答案；MILP/张量在此问没有额外收益",
+        "disqualifying_conditions": ["若用户要求『检测』结果直接以约束形式进入 q02 模型 → 需同时实现 m02（表示层），但真值仍以 m01 内核为准"],
+        "required_user_confirmations": ["C1", "C2", "C3", "C4", "C11"],
+        "status": "候选，未选定（等闸门 1 拍板）"
+      }
+    },
+    {
+      "question_id": "q02",
+      "title": "时间平移 5Δt、频段平移 10Δf 约束下的时频冲突消解",
+      "verbs": ["消解", "调整/撤销", "统计并填写表 1"],
+      "depends_on": [
+        { "peer": "q01", "type": "hard", "reason": "题面『对问题 1 中检测出的时频冲突进行消解』；消解约束只需覆盖 E 内的对", "reused": "冲突对集合 E、判交内核（必须与 q01 同一实现）", "new_complexity": "决策变量（每计划选一个操作）+ 全局格点互斥约束 + 表 1 分类计数目标" },
+        { "peer": "P1/P2", "type": "data", "reason": "需要每个计划的候选位移集 D_i 与其位移后的占用展开", "reused": "P2 展开器", "new_complexity": "候选集规模从 150 扩到 150×34 档" }
+      ],
+      "expected_outputs": ["result2/result4 格式的表 1（3 类 × 未调整/调整/撤销）", "被调整装备的编号、调整方式（频段/时间）、平移量", "消解后 0 冲突的复检证据"],
+      "candidate_routes": [
+        {
+          "model_id": "m03",
+          "role": "preferred_minimal_feasible",
+          "name": "分层（词典序 / ε-约束）0-1 再布置 MILP（或 CP-SAT 等价模型）",
+          "method_id": "M-OPT-002",
+          "method_id_note": "多目标分层结构引用 M-OPT-004",
+          "core_relation": "每计划恰选一个操作 y_{i,o}∈{0,1}（Σ_o y_{i,o}=1）；O_i = {不动} ∪ {撤销} ∪ {(β,频段):|β|≤10, 位移后合法} ∪ {(θ,时间):|θ|≤5, 位移后合法}；逐格点 Σ_{i 保留且占用(b,t)} ≤ 1",
+          "decision_variables": "y[i,o]（0-1，O(150×34)）、r_i（撤销指示）、a_i（调整指示）、β_i、θ_i（由 y 导出）",
+          "objective": "按 C9 推荐顺序分层：① min Σ r_i → ② min Σ a_i → ③ min Σ_c π_c·(类别 c 的撤销+调整数)，π_A≫π_B≫π_C（F12）→ ④ min Σ(|β_i|/10 + |θ_i|/5)（C10 推荐归一）；实现建议用 ε-约束逐层固定，不用加权合并（H10，避免虚构权重）",
+          "constraints": [
+            "SOP：每计划至多一个操作（F08）",
+            "位移后必须完整落在 [0,100)×[0,H) 且各窗口互不重叠（C8/H08）",
+            "L、n 不变（F05/F09）；A/B 类 g 不变（F09）",
+            "仅要求消除 E 内冲突对（其余对原本不冲突，位移后由逐格点互斥统一保证）",
+            "未动计划参数逐字不变（守恒）"
+          ],
+          "required_data": ["附件 1 + P1/P2/P3", "q01 的 E（C6/E 集）", "表 1 模板（S3/S4/S5 列名已实测）"],
+          "computation_steps": [
+            "1) 剪枝：仅 E 内出现的计划允许变动，其余固定为『不动』（大幅缩小模型）",
+            "2) 逐计划枚举合法 D_i（上界 1+1+21+11=34 档；贴边/τ=0 计划的候选档会非对称减少）",
+            "3) 建立逐格点互斥约束（只对在任一候选方案下可能被占用的 (b,t) 建约束，避免 100×643 全网格）",
+            "4) 分层求解：第 1 层求 Σr 最小，把结果作为第 2 层的 ε 约束，依此类推",
+            "5) 解向量导出 result2/result4；并用 P3 内核复检 0 冲突"
+          ],
+          "applicability": "决策域纯离散、约束为逻辑+互斥型，MILP/CP-SAT 可给出最优性证书；前提是 |E| 与需变动计划数在求解器能力内",
+          "termination": "分支定界到 gap≤阈值；或达到用户设定的时间上限后报告上下界（阈值与上限须由用户环境确认，不得默认）",
+          "interpretability": "高：每个计划的操作可逐条解释（调频段 XΔf / 调时间 YΔt / 撤销），直接对应表 1 与 F13 的交付要求",
+          "required_computation": "MILP 求解器（python-mip / OR-Tools CP-SAT）——**是否可用由用户环境决定，属待确认事项**；CP-SAT 更贴合本题整数组与 OnlyEnforceIf 语义",
+          "risks": [
+            "可行域窄：位移上限仅 ±10Δf / ±5Δt，若 C2/C3 取全轮次口径，C 类（g=8,d=2、n=12）的周期性叠压很可能无法靠 5Δt 平移消解 → 撤销数上升（假设，待执行验证）",
+            "窄可行域导致第 1 层最优解的撤销数由『必须撤销』决定，结果对 C8/C2 高度敏感",
+            "贴边计划候选档非对称，可能人为限制可行解",
+            "求解器不可用 → 无法出证书"
+          ],
+          "validation_plan": [
+            "解向量喂回 P3 内核，冲突数必须为 0（待执行）",
+            "逐计划核对『至多一个操作』与位移量界（|β|≤10,|θ|≤5）（待执行）",
+            "表 1 守恒：每类别 保留+调整+撤销 = 20/40/90（待执行）",
+            "与平凡可行基线（撤销全部 C 类 / 撤销全部 E 中卷入计划）比较目标值（待执行）",
+            "与 m04 在同规模子实例上对照最优性与差距（待执行）",
+            "位移上限敏感性（±10→±8、±5→±3）与 C2 双口径敏感性（建议/待执行）"
+          ],
+          "result_expression_advice": "表 1 原格式 + 调整类型分解（调频段 vs 调时间 vs 撤销）+ 与 q01 的因果说明（消解了哪些冲突对）+ 分层目标值与 gap",
+          "disqualifying_conditions": [
+            "若用户环境无 MILP/CP-SAT 求解器 → 主备互换（m04 为主）",
+            "若全 150 计划实例在用户时限内 gap 过大或不可行 → 降级 m04，并用小规模精确解作基准",
+            "若 C6 允许逐次独立平移（③）→ 决策空间维数激增，需重建模型（本模型的 SOP 与候选档假设失效）"
+          ],
+          "required_user_confirmations": ["C1", "C2", "C3", "C6", "C8", "C9", "C10", "C11", "求解器可用性"],
+          "fallback": "m04"
+        },
+        {
+          "model_id": "m04",
+          "role": "alternative",
+          "name": "冲突图建模 + 分层构造启发式/局部搜索（最小顶点覆盖 → 独立集 → 位移修复）",
+          "method_id": "M-OPT-007",
+          "method_id_note": "图论部分（最小顶点覆盖/最大独立集）记 null（库外）",
+          "core_relation": "在 G=(V,E)（|V|=150）上：保留集应尽量是独立集；『最少撤销+最少调整』≈ 求最大权独立集（权重按类别优先级 π_A≫π_B≫π_C），被覆盖顶点再尝试 ±5Δt/±10Δf 位移修复，修不了则记撤销",
+          "decision_variables": "保留/撤销指示 + 每个被保留变动计划的位移（启发式赋值，非优化变量）",
+          "objective": "同 m03 的分层目标（C9），但以可行解质量而非最优性为目标；报告与下界/小规模精确解的差距",
+          "constraints": "同 m03（F08/F09/位移界/资源互斥/守恒），由修复与复检保证",
+          "required_data": ["同 m01/m03（E 集是必需输入）"],
+          "computation_steps": [
+            "1) 由 E 建冲突图（实测 |E| 未知，待执行）",
+            "2) 求保留集：贪心按类别优先级 + 卷入度排序，或整数规划的松弛/拉格朗日近似（可选）",
+            "3) 对被覆盖顶点枚举位移档做修复（先试最小幅度）",
+            "4) 局部搜索：位移替换/撤销交换/段移动，按分层目标字典序接受",
+            "5) 多随机种子重复，记录最好/均值/方差；导出与复检同 m03"
+          ],
+          "applicability": "规模不敏感、无需第三方求解器；适用于 m03 不可解或 gap 过大时；也适用于快速给出『可解释的可行方案』",
+          "termination": "改进次数上限/时间上限 + 多种子重复（卡片要求：禁止把一次随机运行当全局最优）",
+          "interpretability": "中高：保留集有『独立集』直观解释，但缺少最优性证书，『最少』的表述需谨慎",
+          "required_computation": "纯 Python，单机友好",
+          "risks": [
+            "无最优性证书 → 论文不能直接答『最少』，必须报上下界夹逼或与小规模精确解对照",
+            "局部最优导致撤销数高于 m03",
+            "独立集近似的类别优先级引入主观性（H10/H13 → C9）"
+          ],
+          "validation_plan": [
+            "复检 0 冲突（必需，待执行）",
+            "与 m03 在同规模子实例上的目标差（待执行）",
+            "稳定性：多种子最好/均值/方差与相对偏差（待执行）",
+            "下界论证：至少需撤销/调整数的松散界（如冲突图的匹配数下界）（建议/待执行）"
+          ],
+          "result_expression_advice": "与 m03 同格式；额外报告『本方案为可行解，与小规模精确解的差距为 X（待执行）』",
+          "disqualifying_conditions": [
+            "若用户要求严格最优（证书）且求解器可用 → 以 m03 为主",
+            "若 |E| 极小（待执行统计）导致问题平凡 → 两者均可，优先 m03"
+          ],
+          "required_user_confirmations": ["C1", "C2", "C3", "C6", "C8", "C9", "C10", "求解器可用性", "用户可用计算时限"],
+          "fallback": "m03"
+      ],
+      "selection_summary": {
+        "primary_model_id": "m03",
+        "primary_method_id": "M-OPT-002",
+        "backup_model_id": "m04",
+        "backup_method_ids": ["M-OPT-007", "M-OPT-004"],
+        "problem_fit": "0.90（F08–F12 是纯离散逻辑与互斥约束，MILP 可给最优性证书并直接产出表 1）",
+        "interpretability": "0.85（逐计划操作可解释；分层目标避免虚构权重）",
+        "data_fit": "0.80（数据完备，但目标优先级 C9 与幅度度量 C10 口径未定，扣分）",
+        "computational_fit": "0.60（取决于 |E| 规模与用户求解器/时限，均未知）",
+        "validation_plan": "0 冲突复检 + SOP 逐条核查 + 表 1 守恒（20/40/90）+ 平凡基线对照 + 上限/口径敏感性（全部待执行）",
+        "key_assumptions": ["H06", "H08", "H09", "H10", "H11", "H14"],
+        "known_risks": ["窄位移域导致撤销数被迫上升", "求解器不可用", "口径敏感（C2/C3/C6/C8/C9/C10）"],
+        "reason_for_selection": "题面动词『消解』+『尽可能少』+『尽量保持』构成明确的分层离散优化；MILP/CP-SAT 是给出『最少』可辩护性的最小可行主路线，且与 q01 内核复用同一真值源",
+        "disqualifying_conditions": ["用户环境无求解器或超时 → 主备互换（m04）", "C6 选 ③（逐次独立平移）→ 需重建模型"],
+        "required_user_confirmations": ["C6", "C8", "C9", "C10", "求解器可用性"],
+        "status": "候选，未选定（等闸门 1 拍板）"
+      }
+    },
+    {
+      "question_id": "q03",
+      "title": "不增加时频资源条件下可新增的 D 类用频装备（题面表述为 D 类，模板与数据均按 C 类参数）",
+      "verbs": ["新增", "最大化", "给出"],
+      "naming_note": "analysis_v1.0.md 与 problem_contract.json 已登记该命名歧义：题面第 1 页问题 3 使用『D 类』字样，但题面与附件只定义 A/B/C 三类，且 result3 模板列（序号/频段区间/时间区间）与 C 类参数模板一致；本报告统一记为『新增 C 类（题面称 D 类）』，请用户在闸门 1 确认。",
+      "depends_on": [
+        { "peer": "q01", "type": "soft", "reason": "空闲集依赖无冲突占用；题面只要求『不增加时频资源』，未声明基于 q01 还是 q02 的方案", "reused": "P3 内核（复检新增计划之间及与既有计划无冲突）", "new_complexity": "由检测/消解转为装载（bin-packing）型最大化" },
+        { "peer": "q02", "type": "hard_if_choice_②", "reason": "若 C13 选『基于 q02 消解后的方案』，则空闲集 F 由 q02 解决定；若选『基于原始 150 计划（本身有冲突）』，则资源互斥约束的定义域改变 → 需用户拍板", "reused": "q02 的保留计划集", "new_complexity": "多一层前置耦合，答案随 q02 方案不唯一" }
+      ],
+      "expected_outputs": ["result3.xlsx（序号/频段区间/时间区间）的新增计划清单", "新增数量 M 及上界/下界陈述", "新增前后资源占用率变化"],
+      "candidate_routes": [
+        {
+          "model_id": "m05",
+          "role": "preferred_minimal_feasible",
+          "name": "空闲格点上的最大基数装载 MILP（候选计划列 + 集合包装约束）",
+          "method_id": "M-OPT-002",
+          "method_id_note": "列生成思想为库外补充（卡片未含），仅作规模降级手段",
+          "core_relation": "F = (B×T) ∖ ⋃_{保留 i} S_i（∖ 为集合差，与 problem_contract.json q03.inputs 同式）；候选列 m=(s_m,τ_m) 满足 B_m ⊆ F 的时间可用频段且 S_m ⊆ F；x_m∈{0,1}；max Σ x_m s.t. 逐格点 Σ_{m∋(b,t)} x_m ≤ 1",
+          "decision_variables": "x_m（0-1，候选列集合上的选择）",
+          "objective": "max Σ_m x_m（新增装备数量 M）；不引入次级目标（避免虚构，H13）",
+          "constraints": [
+            "参数模板固定 (L=3,d=2,g=8,n=12)（C5 推荐 ①；依 result3 仅 3 列实测）",
+            "时间必须是 Δt 整数倍（F03/H07）；频段必须连续且宽度不变（F05）",
+            "各窗口与全部周期须落在 [0,H)（C7/C8/H08）",
+            "新增计划与既有保留计划、以及新增计划之间均无冲突（逐格点 ≤1）"
+          ],
+          "required_data": ["q02 的保留计划集或原始 150 计划（依 C13）", "P2 展开器", "H 的取值（C7）"],
+          "computation_steps": [
+            "1) 计算 F",
+            "2) 生成候选列：s_m ∈ [0,97]（0 基，C1），τ_m 满足整条周期序列 ⊆ F 的时间可用带；实测规模估计：候选空间上界约 98 × H（H=643 → ≈6.3×10⁴），经与已占用求交剪枝后显著减少",
+            "3) 建集合包装（set partitioning/packing）模型求解；若列数过大 → 按时间视野分段/滚动求解或列生成（fallbacks）",
+            "4) 同时给出：密度上界 M̄ = ⌊|F| / (L·d·n)⌋ = ⌊|F|/72⌋（周期占用不得重叠的必要条件）与贪心可行下界，报告间隙",
+            "5) 导出 result3 并用 P3 内核复检"
+          ],
+          "applicability": "需要回答『最多』（最大化）→ 应尽量给最优性证据；MILP + 上下界夹逼是最贴合『最多』可辩护性的最小路线",
+          "termination": "求解器 gap ≤ 阈值，或列规模触发分段/列生成后按段报告",
+          "interpretability": "高：每个 x_m=1 直接对应 result3 一行（频段区间 + 时间区间）",
+          "required_computation": "MILP/CP-SAT 求解器（待确认）；列规模是主要瓶颈",
+          "risks": [
+            "**最高风险：H 未由题面给出**（C7）→ M 的量级直接由 H 决定，答案不唯一",
+            "若 C5 不成立（新增装备可自定 L/g/n）→ 候选空间爆炸，MILP 不可行，需改打包启发式",
+            "若 C13 未拍板（基于 q02 方案 vs 原始占用）→ 空闲集定义不同，结果不可比",
+            "密度上界 ⌊|F|/72⌋ 是松弛界，可能显著松于真实最优（周期性相位约束），须在论文中说明"
+          ],
+          "validation_plan": [
+            "复检 0 冲突（新增之间 + 新增与既有之间）（待执行）",
+            "result3 行数 = 报告的 M（一致性）（待执行）",
+            "M ≥ 贪心下界、M ≤ ⌊|F|/72⌋，报告夹逼间隙（待执行）",
+            "对 H（643/650/700）与模板（C5 ①/②）双敏感性（建议/待执行）",
+            "子窗口（如前 100Δt）精确解 vs 全视野解的规模效应检查（建议/待执行）"
+          ],
+          "result_expression_advice": "报 M 的区间与所选口径；若无法证明最优，必须明写『可行下界 / 理论上界』而非『最多为 M』",
+          "disqualifying_conditions": [
+            "列数或约束数超用户算力 → 主备互换（m06）",
+            "若 C7 未定 → 只能给『按 H 参数化的族解』，不得报单一 M"
+          ],
+          "required_user_confirmations": ["C1", "C2", "C3", "C5", "C7", "C8", "C13", "求解器可用性"],
+          "fallback": "m06"
+        },
+        {
+          "model_id": "m06",
+          "role": "alternative",
+          "name": "周期结构解析打包 + 贪心堆装（First-Fit）/ 局部搜索增数",
+          "method_id": "M-OPT-007",
+          "method_id_note": "解析（同余/周期错位）部分记 null（库外）",
+          "core_relation": "C 类占用是『3 段 × 每 10Δt 内 2Δt』的周期小块（依 C2：P=d+g=10Δt）→ 利用 τ mod P 的相位错位在相同频段带上堆叠多个计划；首次适应 + 局部交换增数",
+          "decision_variables": "每个新增计划的 (s, τ) 及相位分配（构造性赋值）",
+          "objective": "最大化可放置计划数（可行解，非证书）",
+          "constraints": "同 m05（模板、整数 Δt、边界、互斥）",
+          "required_data": ["同 m05", "F 的频段-时间可用直方图（实测频段轴覆盖接近满轴 0..99，频段维度余量可能集中于时间维空档）"],
+          "computation_steps": [
+            "1) 对每个频段带 b 统计其空闲时间集合；2) 计算同一频段带内可容纳的相位数（≈ ⌊可用时间 / P⌋ 的细化）；3) First-Fit 装入；4) 局部搜索（交换 τ、迁移 s）增数；5) 多种子重复"
+          ],
+          "applicability": "规模友好，易给大规模可行下界与直观解释；适合 H 很大或列数爆炸的情形",
+          "termination": "连续若干次改进无提升即停 + 多种子统计",
+          "interpretability": "中高：相位错位的构造性解释直观，但『最多』无法证明",
+          "required_computation": "纯 Python",
+          "risks": [
+            "无最优性证书 → 不能直接回答『最多』，必须与 m05 子窗口精确解或上界对照",
+            "贪心依赖扫描顺序 → 结果方差，须多种子",
+            "若 C2 选 ②（P=g=8），相位结构改变，构造公式需重写"
+          ],
+          "validation_plan": ["与 m05 在子窗口上的精确解对照（待执行）", "与 ⌊|F|/72⌋ 上界对照（待执行）", "多种子最好/均值/方差（待执行）", "0 冲突复检（待执行）"],
+          "result_expression_advice": "报『可行下界 M_lb（解析构造）』+『上界 M_ub = ⌊|F|/72⌋』+ 间隙说明",
+          "disqualifying_conditions": ["若用户要求最优性证明且算力允许 → 用 m05"],
+          "required_user_confirmations": ["C1", "C2", "C5", "C7", "C8", "C13"],
+          "fallback": "m05"
+      ],
+      "selection_summary": {
+        "primary_model_id": "m05",
+        "primary_method_id": "M-OPT-002",
+        "backup_model_id": "m06",
+        "backup_method_ids": ["M-OPT-007"],
+        "problem_fit": "0.85（题面动词『最多』→ 需最大化 + 上界证据）",
+        "interpretability": "0.80（每个解直接对应模板行）",
+        "data_fit": "0.45（**硬门槛**：H 与新增装备参数模板未由题面给出，C5/C7 未定）",
+        "computational_fit": "0.40（候选列规模 ≈6.3×10⁴ 上界，需剪枝/分段，未知是否可解）",
+        "validation_plan": "0 冲突复检 + 行数= M + 上下界夹逼（⌊|F|/72⌋ vs 贪心下界）+ H/模板双敏感性（全部待执行）",
+        "key_assumptions": ["H07", "H08", "H12", "H13"],
+        "known_risks": ["H 未定使 M 不可报单值（最高风险）", "列爆炸", "上界松", "C13 前置耦合未定"],
+        "reason_for_selection": "『最多』需要最优性或间隙证据；MILP 装载 + 解析上界是最小且可辩护的组合；解析/贪心作为规模兜底",
+        "disqualifying_conditions": ["若用户不接受 MILP 规模或未装求解器 → 主备互换", "若 C5 选 ②（自由度放开）→ 两模型候选生成逻辑需重建"],
+        "required_user_confirmations": ["C5", "C7", "C8", "C13", "求解器可用性"],
+        "status": "候选，未选定（等闸门 1 拍板）"
+      }
+    },
+    {
+      "question_id": "q04",
+      "title": "允许部分 C 类装备调整相邻使用间隔时长（±10Δt）的冲突消解",
+      "verbs": ["消解", "调整", "统计并填写表 1", "与 q02 对照"],
+      "depends_on": [
+        { "peer": "q01", "type": "hard", "reason": "仍是消解『检测出的冲突』", "reused": "冲突对集合 E 与判交内核", "new_complexity": "每计划候选集追加间隔调整档，周期结构变为可变 → 占用展开不再是固定 P 的等差窗口" },
+        { "peer": "q02", "type": "strong_soft", "reason": "题面『在第 2 问的条件下』，即位移上限（±5Δt/±10Δf）与『至多改一个参数/撤销』的框架沿用；决策域是 q02 的超集", "reused": "m03 的模型骨架、守恒与复检", "new_complexity": "候选档从 34 → 约 34+21（|γ|≤10）；C2 口径直接改变 γ 的语义与合法域" }
+      ],
+      "expected_outputs": ["result4 格式的表 1（与 q02 同结构）", "被调整装备的调整方式（含 D 列=间隔时长）", "与 q02 的对照结论"],
+      "candidate_routes": [
+        {
+          "model_id": "m07",
+          "role": "preferred_minimal_feasible",
+          "name": "在 m03 骨架上扩展『间隔』决策档的分层 MILP（仅候选集扩容，内核不变）",
+          "method_id": "M-OPT-002",
+          "method_id_note": "分层结构同 m03，引用 M-OPT-004",
+          "core_relation": "D_i^+ = D_i(m03) ∪ D_i^γ，其中 D_i^γ = {γ ∈ [-10,10]∩ℤ : g_i+γ 合法}，且 D_i^γ **仅对 C 类开放**（F17『允许部分 C 类』）；每计划仍恰选一个操作（F08 仍成立 → 调间隔与调频段/调时间/撤销互斥）",
+          "decision_variables": "y[i,o]（扩容后的操作选择）、γ_i（导出）",
+          "objective": "同 m03 分层（C9/C10）；幅度项是否把 |γ|/10 计入由 C10 一并拍板",
+          "constraints": [
+            "SOP 与互斥同 m03",
+            "L、n、d 不变（F05/F09）；仅 C 类的 g 可变（F17）",
+            "γ 合法域待 C12（推荐 ①：g' = g+γ ≥ 1 且为 Δt 整数倍；备选 ②：允许 g'=0，半开区间下首尾相接不算自重叠）",
+            "g'>g 会拉长时间跨度，可能越出 H → 由 C7/C8 判定；g'<g 会压缩跨度"
+          ],
+          "required_data": ["同 m03 + F17 + C12 拍板", "q02 结果（用于对照，不用于构造）"],
+          "computation_steps": [
+            "1) 对 C 类计划按 γ ∈ [-10,10] 重算周期 P' = d + g + γ，展开新窗口并裁掉越界候选",
+            "2) 扩容候选档（C 类 90 × 21 档上界），其余类不变",
+            "3) 分层求解同 m03；4) 复检 + 与 q02 目标值单调性对照（q04 决策域 ⊇ q02 → 各层目标值不应变差）"
+          ],
+          "applicability": "与 q02 同构，最大化复用已设计的 MILP 骨架，便于两问对照解释；前提是 C 类候选扩容后规模仍可解",
+          "termination": "同 m03（gap/时间上限由用户环境确认）",
+          "interpretability": "高：结果可直接解释为『通过把间隔时长调 Δ 消解了哪些冲突』；关键机理：C 类周期由 P=10Δt 变为 P'=2+g'（推荐口径下 g'=0..18 → P'=2..20），**相位可变**，比 5Δt 平移强得多的自由度（预期显著降低撤销/调整数——此为假设，待执行验证）",
+          "required_computation": "MILP/CP-SAT（待确认）；C 类 90×21 候选，规模明显大于 q02",
+          "risks": [
+            "规模膨胀（候选档 ≈ 2 倍）",
+            "题面『部分 C 类』未给数量上限 → 采用『不限量、由优化决定』口径，须在论文明写",
+            "若 C2 口径变化，γ 的语义（间隔 vs 周期）改变 → 结果不可比（阻断）",
+            "单调性检验可能被口径破坏（如幅度项计入 γ 后目标值上升）"
+          ],
+          "validation_plan": [
+            "仅 C 类出现 D 列（间隔时长）非空，A/B 类该列必须为空（待执行）",
+            "|γ| ≤ 10 逐条核对；g' 合法域符合 C12（待执行）",
+            "复检 0 冲突（待执行）",
+            "表 1 逐类别与 q02 对照，验证『撤销+调整』不增加（决策域超集的单调性）（待执行）",
+            "γ 合法域（①/②）与位移上限敏感性（建议/待执行）"
+          ],
+          "result_expression_advice": "表 1（同格式）+ q02 vs q04 对照表 + 『允许调整间隔』收益的量化解释",
+          "disqualifying_conditions": ["若 90×21 候选致不可解/超时 → 降级 m08", "若用户把『调整间隔』理解为可与平移叠加（违反 F08）→ 模型需改为多操作叠加，本骨架失效"],
+          "required_user_confirmations": ["C1", "C2", "C3", "C6", "C7", "C8", "C9", "C10", "C12", "『部分 C 类』是否有数量上限", "求解器可用性"],
+          "fallback": "m08"
+        },
+        {
+          "model_id": "m08",
+          "role": "alternative",
+          "name": "破坏-修复两阶段启发式（ALNS 风格：复用 q02 解 + 间隔调整邻域修复剩余冲突）",
+          "method_id": "M-OPT-007",
+          "method_id_note": "破坏/修复算子为卡片通用框架",
+          "core_relation": "以 q02 的可行解为起点，把仍有冲突（或因 γ 调整而新产生冲突）的计划放入『间隔调整』邻域：γ 单步 ±1 或整档替换，配合撤销回退算子；目标仍按 C9 分层评估",
+          "decision_variables": "邻域搜索中的 (操作, 位移/γ) 赋值",
+          "objective": "同 m07（分层，可行解质量导向）",
+          "constraints": "同 m07",
+          "required_data": ["q02 解（m03 或 m04 输出）+ 附件 1 + P2/P3"],
+          "computation_steps": ["1) 以 q02 解为初始；2) 破坏算子随机/定向选取冲突簇；3) 修复算子优先尝试 γ 档（最便宜消解源）；4) 分层目标接受准则；5) 多种子重复统计"],
+          "applicability": "m07 超时/不可行时的降级路线（卡片 fallbacks：构造启发式/局部搜索/MILP 小规模基准）；规模不敏感、实现路径短",
+          "termination": "时间/改进上限 + 多种子；禁止把单次运行当全局最优（卡片 hard_constraints）",
+          "interpretability": "中：邻域动作可解释，但缺最优性证书；与 q02 的对照结论需谨慎表述",
+          "required_computation": "纯 Python",
+          "risks": ["局部最优（γ 自由度大 → 空间更大）", "缺最优性证书导致『尽量少』表述不严谨", "依赖 q02 解的质量，误差传播"],
+          "validation_plan": ["0 冲突复检（待执行）", "与 m07 小规模精确解对照差距（待执行）", "多种子最好/均值/方差（待执行）", "单调性对照 q02（待执行）"],
+          "result_expression_advice": "与 m07 同格式；明确标注可行解性质与参照基准",
+          "disqualifying_conditions": ["若 m07 可解 → 优先 m07", "若 q02 未求解 → 无初始解，需先跑 m04 构造"],
+          "required_user_confirmations": ["C2", "C9", "C10", "C12", "用户可用计算时限"],
+          "fallback": "m07"
+      ],
+      "selection_summary": {
+        "primary_model_id": "m07",
+        "primary_method_id": "M-OPT-002",
+        "backup_model_id": "m08",
+        "backup_method_ids": ["M-OPT-007"],
+        "problem_fit": "0.90（与 q02 同构，仅扩维一个离散自由度，可直接给两问对照）",
+        "interpretability": "0.85（『调间隔 Δ』语义直观，收益可量化）",
+        "data_fit": "0.60（γ 合法域 C12 与『部分』含义未定；C2 口径影响 γ 语义）",
+        "computational_fit": "0.45（C 类 90 × 21 档，规模约为 q02 的 2 倍）",
+        "validation_plan": "仅 C 类 D 列非空 + |γ|≤10 + 0 冲突复检 + 与 q02 的单调性对照 + γ 合法域敏感性（全部待执行）",
+        "key_assumptions": ["H06", "H08", "H09", "H11", "C12"],
+        "known_risks": ["规模膨胀", "口径破坏单调性", "『部分 C 类』上限未定"],
+        "reason_for_selection": "复用 q02 已设计的 MILP 骨架可保证两问结果可比、实现风险最低，且『允许更多自由度』类问题仍需最优性证据支撑『尽量少』",
+        "disqualifying_conditions": ["若用户只要一个可用方案而算力受限 → m08", "若允许调整间隔的计划数被显式限制（题面未给）→ 需加基数约束（仍可 m07）"],
+        "required_user_confirmations": ["C9", "C10", "C12", "『部分 C 类』上限", "求解器可用性"],
+        "status": "候选，未选定（等闸门 1 拍板）"
+      }
+    }
+  ],
+  "cross_question_notes": {
+    "shared_kernel": "m01 的判交内核被 q02（消解约束与复检）、q03（装载可行性与复检）、q04（消解约束与复检）复用；它是全流程唯一真值源。",
+    "complexity_increments": [
+      "q01 → q02：无决策 → 每计划 34 档选择 + 全局逐格点互斥 + 分层目标",
+      "q02 → q03：消解已有冲突 → 在固定资源内做最大化装载（新增列生成与上下界论证，且引入 H 敏感性）",
+      "q02 → q04：位移域 → 位移域 ∪ 周期变形域（占用窗口族由等差变为可变周期，判交成本与候选规模上升）"
+    ],
+    "not_to_claim": [
+      "不得声称任何冲突对数、撤销/调整数、M 值已被计算",
+      "不得声称 m01 与 m02 的等价性已验证（仅为交叉验证设计）",
+      "不得声称 q04 优于 q02（单调性/收益均为待执行检验项）",
+      "不得声称 MILP 在用户环境可解（求解器可用性与时限未确认）"
+    ]
+  },
+  "handoff_to_next_stage": {
+    "gate_owner": "父编排（闸门 1 / ui_form_advanced）",
+    "blocking_confirmations": ["C2", "C3", "C7", "C5", "C1", "C9"],
+    "model_choice_items_to_present": [
+      { "question_id": "q01", "primary": "m01 时频格点集合求交 + 频段分桶扫描（精确完全枚举）", "alternative": "m02 0-1 占用张量 + 向量化判交" },
+      { "question_id": "q02", "primary": "m03 分层（词典序/ε-约束）0-1 再布置 MILP", "alternative": "m04 冲突图 + 分层构造启发式/局部搜索" },
+      { "question_id": "q03", "primary": "m05 空闲格点最大基数装载 MILP + ⌊|F|/72⌋ 上界夹逼", "alternative": "m06 周期错位解析打包 + First-Fit/局部搜索" },
+      { "question_id": "q04", "primary": "m07 m03 骨架 + 间隔决策档扩容的分层 MILP", "alternative": "m08 破坏-修复两阶段启发式（复用 q02 解）" }
+    ],
+    "environment_preconditions": ["求解器可用性（python-mip 或 OR-Tools CP-SAT）", "用户可用计算时限", "结果模板文件与附件 1 同目录可读（输入版本文已 sha256 登记）"],
+    "artifacts_of_this_stage": [
+      "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis/analysis_v1.0.md",
+      "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/truth/problem_contract.json",
+      "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/truth/solution_map.json",
+      "sub-9a891f9f-849f-4403-8c21-42c711c71cba/artifacts/20261009_D题_D组/analysis_result.json"
+    ]
+  }
+}

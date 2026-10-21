@@ -1,0 +1,22 @@
+# agent-platform JRE 21 基础镜像
+# 背景：Docker Hub / Adoptium 直连不可达，采用「TUNA 镜像下载 Temurin JRE 压缩包 +
+# 本地 Debian 底座解压」的方式离线构建。升级 JRE 时替换压缩包重跑一次即可。
+#
+# 构建（项目根目录执行）：
+#   1. curl -sSL -o /tmp/jre21.tar.gz \
+#        https://mirrors.tuna.tsinghua.edu.cn/Adoptium/21/jre/x64/linux/OpenJDK21U-jre_x64_linux_hotspot_21.0.12.1_1.tar.gz
+#   2. docker build -f docker/base/Dockerfile.jre21 -t agent-platform-jre21:21.0.12 \
+#        --build-arg JRE_TARBALL=jre21.tar.gz /tmp   # 或直接把 tarball 放进上下文目录
+FROM python:3.12-slim
+
+ARG JRE_TARBALL=jre21.tar.gz
+ENV TZ=Asia/Shanghai JAVA_HOME=/opt/java
+
+COPY ${JRE_TARBALL} /tmp/jre21.tar.gz
+RUN tar -xzf /tmp/jre21.tar.gz -C /opt \
+    && rm /tmp/jre21.tar.gz \
+    && ln -s /opt/jdk-* /opt/java \
+    && ln -sf /opt/java/bin/* /usr/local/bin/ \
+    && java -version
+
+ENTRYPOINT ["/bin/bash"]

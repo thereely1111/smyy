@@ -1,0 +1,1320 @@
+{
+  "date": "2026-10-15",
+  "source": "E:\\象数演易\\agent-platform-java\\agent-platform-java",
+  "destination": "E:\\数模演易\\smyy\\agent-platform-java",
+  "scope": "Existing tracked source files and working-tree changes under backend; retain target-only files except explicit source deletions; V54/V63 compatibility exception",
+  "files": [
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/RuntimePathEnvironmentPostProcessor.java",
+      "source_status": "??",
+      "source_sha256": "D64B1CD91ADA5EB93D32B8FA945028F24D4B80B9351AE159D48B6F5B952D7A55",
+      "target_sha256_before_this_pass": "D64B1CD91ADA5EB93D32B8FA945028F24D4B80B9351AE159D48B6F5B952D7A55",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/WorkspaceRootResolver.java",
+      "source_status": "??",
+      "source_sha256": "F8EF3C173F2046BD9EBF0404370E6779BB203EA54103A2EA875F61CF35509143",
+      "target_sha256_before_this_pass": "F8EF3C173F2046BD9EBF0404370E6779BB203EA54103A2EA875F61CF35509143",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SessionWorkProbe.java",
+      "source_status": "??",
+      "source_sha256": "18AEF559574F74F306802D6E2BA387CF3E8069746B1DC6387A393073C557160C",
+      "target_sha256_before_this_pass": "18AEF559574F74F306802D6E2BA387CF3E8069746B1DC6387A393073C557160C",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/VersionSafePostgresAgentStateStore.java",
+      "source_status": "??",
+      "source_sha256": "18B2DF4F0D881D2E4FECF9537389ABCFF94B19CC051D1C47F797CD5D2770E98E",
+      "target_sha256_before_this_pass": "18B2DF4F0D881D2E4FECF9537389ABCFF94B19CC051D1C47F797CD5D2770E98E",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/AgentAssemblyService.java",
+      "source_status": "M",
+      "source_sha256": "E75634CB09F4F3D9B566B9CA1A65CDB685086C5359F4CF3BE4A7FA56D242F9FC",
+      "target_sha256_before_this_pass": "E75634CB09F4F3D9B566B9CA1A65CDB685086C5359F4CF3BE4A7FA56D242F9FC",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/credential/ModelCredentialService.java",
+      "source_status": "M",
+      "source_sha256": "FD80B2A5683C01FE93AACC992E52281DA20826D9C9D7171A90D45F18BE6B2A9A",
+      "target_sha256_before_this_pass": "FD80B2A5683C01FE93AACC992E52281DA20826D9C9D7171A90D45F18BE6B2A9A",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/CumcmPaperDocxRenderer.java",
+      "source_status": "??",
+      "source_sha256": "A55CDB6E59E887A8D4A9E0F5162228969E3178B806F93B3676D3CE36C9C9C34C",
+      "target_sha256_before_this_pass": "A55CDB6E59E887A8D4A9E0F5162228969E3178B806F93B3676D3CE36C9C9C34C",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/MarkdownDocxRenderer.java",
+      "source_status": "??",
+      "source_sha256": "B7CDCAF4111EF526CA3B97A7D7C377772B0D4B1567A1272647030F0259F11F29",
+      "target_sha256_before_this_pass": "B7CDCAF4111EF526CA3B97A7D7C377772B0D4B1567A1272647030F0259F11F29",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/PlatformShellExecuteTool.java",
+      "source_status": "M",
+      "source_sha256": "E78A31F103312461DED08517ACD4804A986C959C61A6FC16CA454FF6F39DA1EA",
+      "target_sha256_before_this_pass": "E78A31F103312461DED08517ACD4804A986C959C61A6FC16CA454FF6F39DA1EA",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/RuntimeLocalFilesystemSpec.java",
+      "source_status": "M",
+      "source_sha256": "D30BBEF1A5E74785A7E21D321DB2EFF2DE881BD5638E0C46C525AADA410591A2",
+      "target_sha256_before_this_pass": "D30BBEF1A5E74785A7E21D321DB2EFF2DE881BD5638E0C46C525AADA410591A2",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/ShellEnvResolver.java",
+      "source_status": "??",
+      "source_sha256": "2F55AFAD5EEC1A34202B8FD9F6AB9FB890FDCBA21002E0B545464283A8700F33",
+      "target_sha256_before_this_pass": "2F55AFAD5EEC1A34202B8FD9F6AB9FB890FDCBA21002E0B545464283A8700F33",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/AgentManagementController.java",
+      "source_status": "M",
+      "source_sha256": "E17CCB1A03C7F1B420FCAD81AF8A75392B2DE552B74DB2D503F88913465F798C",
+      "target_sha256_before_this_pass": "E17CCB1A03C7F1B420FCAD81AF8A75392B2DE552B74DB2D503F88913465F798C",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/RuntimeDtos.java",
+      "source_status": "M",
+      "source_sha256": "4028FB89E314F5FEAE170B983675B082E01AA468B4E1F6F2D72AF6C42C5764AF",
+      "target_sha256_before_this_pass": "4028FB89E314F5FEAE170B983675B082E01AA468B4E1F6F2D72AF6C42C5764AF",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/SessionArtifactController.java",
+      "source_status": "M",
+      "source_sha256": "504AB5D08B1C45ECCF1A96DEDB5604A9BC8F19D1D16EA5ACD9D91533514B5D85",
+      "target_sha256_before_this_pass": "504AB5D08B1C45ECCF1A96DEDB5604A9BC8F19D1D16EA5ACD9D91533514B5D85",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/SessionExportController.java",
+      "source_status": "??",
+      "source_sha256": "F20C140B41DE49D058834659DA5F1AAAD3B634B330E37C7D982B9FA70FE85B8E",
+      "target_sha256_before_this_pass": "F20C140B41DE49D058834659DA5F1AAAD3B634B330E37C7D982B9FA70FE85B8E",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/application.yml",
+      "source_status": "M",
+      "source_sha256": "900608434621DBE636DE1AE87B4E72391B96CE171CC316F5931FC3608BDA29EA",
+      "target_sha256_before_this_pass": "900608434621DBE636DE1AE87B4E72391B96CE171CC316F5931FC3608BDA29EA",
+      "verified": true
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V54__skill_scope.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true,
+      "final_action": "compatibility exception: retained skill migration at V54"
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V63__library_space_node.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V63__skill_scope.sql",
+      "source_status": "??",
+      "source_sha256": "6D60C67D5AEB819AAB087674241579CA701C955583A60AEACEFF9A441D7C218B",
+      "target_sha256_before_this_pass": "6D60C67D5AEB819AAB087674241579CA701C955583A60AEACEFF9A441D7C218B",
+      "verified": true,
+      "final_action": "compatibility exception: retained skill migration at V54"
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V64__library_chunk_index.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V65__library_chunk_index_pk_fix.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V66__library_vectorization_rollback.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true
+    },
+    {
+      "kind": "delete",
+      "relative": "backend/src/main/resources/db/migration/V69__library_space_level_grant.sql",
+      "source_status": "D",
+      "source_sha256": null,
+      "target_sha256_before_this_pass": null,
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V70__library_space_node.sql",
+      "source_status": "??",
+      "source_sha256": "6572751DF22703800F4A87515C3F07117ADCDAB48B3F2E07C33149B338E61D20",
+      "target_sha256_before_this_pass": "6572751DF22703800F4A87515C3F07117ADCDAB48B3F2E07C33149B338E61D20",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V71__library_chunk_index.sql",
+      "source_status": "??",
+      "source_sha256": "AE97436AA896D08942372134DE2980BE74EB069A35626E17AC273629216552B4",
+      "target_sha256_before_this_pass": "AE97436AA896D08942372134DE2980BE74EB069A35626E17AC273629216552B4",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V72__library_chunk_index_pk_fix.sql",
+      "source_status": "??",
+      "source_sha256": "5BFF3CEA0650FC2922D40A598E1DDC5AAB53BE6C5B6941D44DC2EC7F5F2BB490",
+      "target_sha256_before_this_pass": "5BFF3CEA0650FC2922D40A598E1DDC5AAB53BE6C5B6941D44DC2EC7F5F2BB490",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V73__library_vectorization_rollback.sql",
+      "source_status": "??",
+      "source_sha256": "B6662DBA3F73D9438944E3CFDD1D962A8320DE405B2D57D10379D5D17920FBA9",
+      "target_sha256_before_this_pass": "B6662DBA3F73D9438944E3CFDD1D962A8320DE405B2D57D10379D5D17920FBA9",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/db/migration/V74__library_space_level_grant.sql",
+      "source_status": "??",
+      "source_sha256": "A430AB7580936C9685118B6A7B8F7EAD39D74540CA6A30BE3129D061A696F721",
+      "target_sha256_before_this_pass": "A430AB7580936C9685118B6A7B8F7EAD39D74540CA6A30BE3129D061A696F721",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/META-INF/spring.factories",
+      "source_status": "??",
+      "source_sha256": "EF37E0FF3C0EB960646FEB86F9CFA7B8F7F0E4C00F18E8C92EA970FD76E77FB5",
+      "target_sha256_before_this_pass": "EF37E0FF3C0EB960646FEB86F9CFA7B8F7F0E4C00F18E8C92EA970FD76E77FB5",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/main/resources/templates/cumcm-paper.docx",
+      "source_status": "??",
+      "source_sha256": "63DD0D70887424F87C7BE82248073A943ACF6B87A2542715CE4CDED5B856F7BD",
+      "target_sha256_before_this_pass": "63DD0D70887424F87C7BE82248073A943ACF6B87A2542715CE4CDED5B856F7BD",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/config/RuntimePathEnvironmentPostProcessorTest.java",
+      "source_status": "??",
+      "source_sha256": "2327D456F246B3B08DE9D38D8A7DD84C88CBEDB64BB20AD8C16254D4E158FCF6",
+      "target_sha256_before_this_pass": "2327D456F246B3B08DE9D38D8A7DD84C88CBEDB64BB20AD8C16254D4E158FCF6",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/config/WorkspaceRootResolverTest.java",
+      "source_status": "??",
+      "source_sha256": "B8366E3C51D249F62520E0813E9E7B2043F48F0A4E69346083B51ABFDA7234C1",
+      "target_sha256_before_this_pass": "B8366E3C51D249F62520E0813E9E7B2043F48F0A4E69346083B51ABFDA7234C1",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/MarkdownDocxRendererTest.java",
+      "source_status": "??",
+      "source_sha256": "BB063613AAF7503317D8542C5B1D074351434BAED46B40CE30AB2644268E17D8",
+      "target_sha256_before_this_pass": "BB063613AAF7503317D8542C5B1D074351434BAED46B40CE30AB2644268E17D8",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/ShellEnvResolverTest.java",
+      "source_status": "??",
+      "source_sha256": "2EF88286F7F45D1CE21487AFF59FC148EB089F30FD7F0E8CAC6A8AF10BD88DB3",
+      "target_sha256_before_this_pass": "2EF88286F7F45D1CE21487AFF59FC148EB089F30FD7F0E8CAC6A8AF10BD88DB3",
+      "verified": true
+    },
+    {
+      "kind": "copy",
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/web/SessionExportControllerTest.java",
+      "source_status": "??",
+      "source_sha256": "DFE067A186B6A44A162121BB75CB366A5BC62F7032B597CC011C6041DAB60031",
+      "target_sha256_before_this_pass": "DFE067A186B6A44A162121BB75CB366A5BC62F7032B597CC011C6041DAB60031",
+      "verified": true
+    }
+  ],
+  "compatibility_exception": "Source V63__skill_scope.sql has identical SQL to target V54__skill_scope.sql. Retained target V54 to avoid collision with existing V63__smyy_outsourced_cases.sql; source deletion of V54 and addition of V63 intentionally not mirrored.",
+  "committed_backend_dependencies_synced": [
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/AgentScopeWakeupConfig.java",
+      "sha256": "201AB05DCA4590CEBB1F8098729B94EAFF2C7257FDF3DDC92E8CDABAC1D9B51D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/AguiEventLogProperties.java",
+      "sha256": "447995A66BE85D01B234C25972B58A4CA1CB4DED10DFD508916D4B4EAAAC6B57",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/AguiIntegrationConfiguration.java",
+      "sha256": "7DCB239BEF0F726E5E5DC46CD895F809EB173208BE5F4EEAE641C0F4ACB62F01",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/ArtifactZipExecutorConfig.java",
+      "sha256": "59206AA4D293697299BDC2A881958A7462148968C0192F877F9B9BF96433809F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/DocumentPreviewProperties.java",
+      "sha256": "8F0281D742E0E9876A2AB5206AF3CF8E5A3198F0F6A53572EB2FA5AC6B72DE30",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/LibraryProperties.java",
+      "sha256": "1CC41F38E58B43DD562155DAE36F2FFBC82B6235BCD6257B6164C77E14030E08",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/PlatformAguiRuntimeContextResolver.java",
+      "sha256": "2E3D6E83B41D22CC0D2E284F340E96C32AF44B97141123207AAB1A3B0B763A46",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/StudioIntegrationConfiguration.java",
+      "sha256": "96AB6E474ACF10A9AE97176ED20B6D9854574BFCDF13158D1F1A4A64D32BA354",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/config/StudioProperties.java",
+      "sha256": "6A07BE03C7E1A9E63478B84C3080DF1978C8023C1F07606D82A6501D4E32BE8C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AgentConfig.java",
+      "sha256": "6F31A1B7479EC0AEF5D406051192931E9A6DC255A5F2E2A2509F7ED78856473D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AgentSessionExtension.java",
+      "sha256": "1FB2C11617ECADFB1DCB20A6824808B4D59D288E892CE7E573BB40004E92F314",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AgentSessionExtensionEntry.java",
+      "sha256": "B0A3F58F7846FD70B2F6626D1952E6AC2501267FFE16E9C7DAC30CB7671CA1B5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AgentSessionOwner.java",
+      "sha256": "25321E29FD65B709045716F5F960E4FD8CE4ED46FA3525FE48E88A7AC393B64D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AgentStatus.java",
+      "sha256": "AAB0C5301A40DEB3A4CE4DBC819C67EE446896DB54F8CD5B1D4E3463B0916CCD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/AguiEventRecord.java",
+      "sha256": "07F0D5FD1B0DC6DEB9F3F3F0726889EA4104477923C3338FBE8EF1080152C1C7",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/BaseEntity.java",
+      "sha256": "67DA0309BCE64997C190DB68F5CB766373287166B8B6B6048BA5FF066F394AD3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/ExternalProvider.java",
+      "sha256": "28430AD894F512D675E4E5BF34B6D42FF87F4648E010B841619F9DFB2CF837E4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/GrantPrincipalType.java",
+      "sha256": "74924D321121626E8DAF88E14977316A16FCFDD52537A10B06CC6A36C1A768CD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/Group.java",
+      "sha256": "3B98F68B597E9B0C8196DDD56E5FC98660D2781358A64E8733C85D367CCD983D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/KnowledgeBaseDocument.java",
+      "sha256": "5AF9F42B101C90BCCFE80CCFC92A4C61BDB679F1A8A3CBDD88A1E54EAC3F6C80",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/KnowledgeBaseGrant.java",
+      "sha256": "A4886261BBB2A6070068C4AD29E9EB9159DA4B79E029C84CA9DEAFE63C66487F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/KnowledgeBasePermission.java",
+      "sha256": "1E1E1DC99CE0F450BC5EADD7E60D8E8966442AF1E893B477C75CB85767346EEA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/KnowledgeBaseType.java",
+      "sha256": "6369F76321FD0B7498BAD493B58CF247B77EC9A6D9D55F07FBF2726EF28077CA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/KnowledgeDocumentStatus.java",
+      "sha256": "1F0C122B571BDFA34533C417C838A5C92CD9332D483FBD3C0409B01F366A380D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LaunchTemplate.java",
+      "sha256": "843A9A401D0020530AB99E24790725D226E82A0C450914983BBDB13B71283F5B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibraryNode.java",
+      "sha256": "FED5788EBF722900C2FB74590C870674B00F21ABBD99CC0E75802123312B2F2E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibraryNodeGrant.java",
+      "sha256": "FD3BA299EE8EC2A7C6BB5EBCA206413523F20BEDB04DA811086595C29E51F62D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibraryNodeKind.java",
+      "sha256": "1C811B5314C9F52B9866943FC2B01AA1BA537A2851846F80C889EAD7698DC9DA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibraryPermission.java",
+      "sha256": "25CC453413B90EF41010D565652B0B85D1A708B42E0218CA3E18ADCEDE9268AD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibrarySpace.java",
+      "sha256": "AA0E96B6D530C9B2DAB33C65657E0E9140B0BB816EDE8940808FFDC8B4D57A15",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/LibrarySpaceCategory.java",
+      "sha256": "F12D3BE3846ED91C6CA8FFBAFF0737C5C71ADE5C41A57F114BE5F64475A41019",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/ResourceStatus.java",
+      "sha256": "75BF19C34EAB070A684F4B0DACFACB252DC4CFA49F86886425F544613ED169EA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/Tool.java",
+      "sha256": "3D58F80D73E92F071CA8D1403F369DFE0CE145E23A21CD609D7421EA10B8C980",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/ToolExecutionMode.java",
+      "sha256": "6DB097EA5BCB9E12BD7D4851F62507121EEF7ABFECE2FDA5B7AF653095D53447",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/User.java",
+      "sha256": "F4B079CCC7F26A9B9DBDBE311D669E8D14B54463573EFA35FA7878B2DC93F7F5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/UserGroup.java",
+      "sha256": "C8370DE1CAFA929D3CDDF18392577433F208CB1508DA8E6F3D2E6499A769A0D9",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/domain/UserRole.java",
+      "sha256": "A66421FD99D40D1AF67FF26B95219B0432E865BC9709DC1A991FDF393DE29AEB",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/AguiWakeupTarget.java",
+      "sha256": "40F56814DD679E0E9D2C943E89F3D41E3BCD909864D27F51764A6A6555615F9B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/DeclarativeEndingWatchdog.java",
+      "sha256": "69F0249EE11FC804CEAAA7239290563B3E92A9654B56B2C7D32AB4ED909577A3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/HitlRecoveryGuardMiddleware.java",
+      "sha256": "F371826591AEA9D0E4CC95259A785216E0D4BF1E9E8B951BEB9C813F4F9D9E44",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/HitlTimeoutReaper.java",
+      "sha256": "9918BFBFBB679E8448B19E27A09D710480817F62894AFBE33164E76120199241",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/InboxWatchdogWakeupService.java",
+      "sha256": "5F436701D970377501BC8ACAA66E0AB78AB70CC1588DC0CED1EA0B9A35561503",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/LibraryRefHintMiddleware.java",
+      "sha256": "E580589D9E42204736E2D9B247D3DF13FD7C69FBC36AA5C13203C1464A628601",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/RunSilenceDetector.java",
+      "sha256": "6456C1B33E276CE4289549F987AE8284A4B7A88F6A469DE1C30053AAB372F103",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/ServerRunEventRecorder.java",
+      "sha256": "E205A86FDF3A7F1B5E409E6F822941AA7D6E0109F84DE3B87993295DFA26C8E4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/ServerSideRunLauncher.java",
+      "sha256": "F62531F411E680495091E7876C4B6FC9419E08A17C7EA628D82D4152648D1452",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SessionActivityMiddleware.java",
+      "sha256": "73DBF80CF7BD16FE13A18D5D793B76B40842783077A83F98B24021CE914C6577",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SessionActivityTracker.java",
+      "sha256": "69A0A9B4C4BDBC7307EC856A0EB091908CCF5B1AD842446BFD5039F7DD3CB649",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SessionAgentRegistry.java",
+      "sha256": "75C998E97629298BCD03C288151C9CA6D83A5AA636D437C01B2A1BF54680BB72",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SessionPermissionReconciler.java",
+      "sha256": "9720220CA50C9861203D1CEA12943B9D2DC568C1C1B1FD25893928E40AF532A5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/StartupHitlReconciler.java",
+      "sha256": "A9E5FF690B057D090D6645C032C86FBA18F3FCE46571C6F862BB1ADBC1CA66F3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/StartupStaleTaskCleaner.java",
+      "sha256": "F04A3097F058AF91EFA2676E644F46F711069965716A36186A61B4DD6DB9E126",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/SubagentSessionMaintenance.java",
+      "sha256": "911DF3A073D42DC76C9D1392D5E1F57C2332E6D38051B5D61C2916574B554A0A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/TaskDeliveryWatchdog.java",
+      "sha256": "A0AD0200C44C2FEBD14B1FC3154817587903DC929B0DA7789AC8CE6BD4A7253F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/TruncationResumeNudger.java",
+      "sha256": "2D023A4EBA7AF1056DE9E6F79392FDB51865D3B0D1B5F10835560F8043965CE5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/WakeupDispatcherBootstrap.java",
+      "sha256": "23943A4C722A2F3D618F713F2AD0986F4371F82563ABAEAEA606B3D7122679C9",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/harness/WakeupInterruptRegistrar.java",
+      "sha256": "45E05D380014BA32198C1C38153487EDB0EA4E304BDFB8AB082DD6E69AB51368",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/AgentSessionOwnerRepository.java",
+      "sha256": "C43CAF66D2EBE0C025B3318FBBCB478291A3F27D633548A0DA8D66E4BC16E194",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/AgentSessionProgressRepository.java",
+      "sha256": "D3238809280439D98C0BD8B8FECA24AF3C27006B5C2D0847E41ECBF0B6120D46",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/AlertChannelRepository.java",
+      "sha256": "5B30D8624E0D85BDE9728F38D1C3361661D706C0E4B6EC6F5CE4D5191218A620",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/GroupRepository.java",
+      "sha256": "664D5EE77E0D2B5F205302FBF5BB56B33CDA2EBB90AAD58F82ED039E0F0E8871",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/KnowledgeBaseDocumentRepository.java",
+      "sha256": "201004FF4808471AF3996AAF2D4ECD2269BF1858D93467001C0CC13FA6A0C096",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/KnowledgeBaseGrantRepository.java",
+      "sha256": "52B7384E0044F0D797D501F7B805B6EBA0F3A907EEC69ACA2FCF60F7401042BF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/KnowledgeBaseRepository.java",
+      "sha256": "12ECE19FDAE255501AF656C0710ABB3AC453F534C56A10B2CED69267CAB879D8",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/LibraryNodeGrantRepository.java",
+      "sha256": "50B52D3133DCC3BECD31FCDCEB846BFBD1A32BAE2A0297CA825211784BC40897",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/LibraryNodeRepository.java",
+      "sha256": "536EB9F366029DD4F54B8BA9A0F723A7378F0E60430A40B83DB784B88BBD7DC9",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/LibrarySpaceRepository.java",
+      "sha256": "08B73185E6C6B80696512E32D16AF0DB421E3378B1498EAE80EFD97260F3A97D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/ToolRepository.java",
+      "sha256": "C26213A597A5C4516617B6AA203F6C880C019B8B5CC4A1BBF63B951610B5935E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/UserGroupRepository.java",
+      "sha256": "F04EF784E0A054491D2D133AB49034EE264916A32445E066F183A7CAE49C3281",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/repository/UserRepository.java",
+      "sha256": "A7AF003D5357BE4424630CA8713C2858338FFE904314E1A99DCCFFD238329CB9",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/AgentConfigService.java",
+      "sha256": "0A5D9454E5C15923933ABA55B02871C9B6E5556AA08163CB65792AB64C2C2A43",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/AgentRuntimeService.java",
+      "sha256": "BC92A31AB8345FEC11AA059FEE58B24F65AEFA36854105223DDCF2FEE4B4448A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/AguiEventPersistenceService.java",
+      "sha256": "9779B999F17EAFA43950AA1A4940C365FDD329C88B2AC9D246C9B3F55E6A707A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/ArtifactZipService.java",
+      "sha256": "038A1CAD113E1454A79DAC79FA8250B9D7F6F5BB8ABF1AC4CCE2173FDB3D1483",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/AuthService.java",
+      "sha256": "F53EA6C5A811C3B4D0C79B3EA222AF157820F711C1593D27F385E26334B48B33",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/DocumentPreviewClient.java",
+      "sha256": "97143376323E8B697538508C5EFC7DBBA6B6021D1C11EC976046811609C3893B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/DocumentPreviewTool.java",
+      "sha256": "8E4C95EFF200F3F32AA4BB06D193C0008379D7D62C0DDFB51B48696A381C2204",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/DocumentTextExtractor.java",
+      "sha256": "1797B8B22058D39C195AA3188E0266E10CBC7C52851A9F174CBB59F47C63755B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/DownloadTicketService.java",
+      "sha256": "E1B550A3C25665A777C7920DDF6874A82B03F727AC4F5748069AEAA655B4ADE6",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/FileDebugWorkspaceManager.java",
+      "sha256": "9167DDBFA84D63755279CC7CB00BD8EC3AD17D2A973BBE769E05F9E0EF9BDA9A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/JwtService.java",
+      "sha256": "3F7ABAE0E60FFF6FCC2A680C00693177BFD99CD9E127B0FBA60DFE9E422080AE",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/KnowledgeBaseService.java",
+      "sha256": "E69333A10F5D11FD03BFEC64BF6E00415D7D8ADB5F02B3562D6D22A28E3B6AD0",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/KnowledgeChunker.java",
+      "sha256": "7697F4419BCD38AF27E4471FE271BBAB2C4E10B908A2E5C4538F1A1F10A4826C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/KnowledgeRetrievalService.java",
+      "sha256": "390D8F0C3FE0C4765303BD1FADBEF4B8B38ED8FE469DDD2278C943FD848AC81B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/KnowledgeStorageService.java",
+      "sha256": "04B7B66E94C8DB8A7F46DBD2F983FCE9EEFB4A7746E593C5E2B2DBC92B10D66E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryAccessService.java",
+      "sha256": "A6FA3D576884AF39D1A934518374C44AE4902C7FE65FFEB5D387DBB4C4510679",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryBlobStore.java",
+      "sha256": "104AB185870D3D3B3255019969EB78AAC1D27CB9EC0F8F19A57E46B40CCDAACD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryContentService.java",
+      "sha256": "7D5C15712BDE9AB7D1A0C4636FFA5F55372431FC6BD287FF84C719D7984EAEC8",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryMemberService.java",
+      "sha256": "3DD03547AA85AB145EA0DBB4B7FF46D254959368057384C45398D6663946AEE4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryNodeService.java",
+      "sha256": "6D10994D295BBAE5875EB38ECE155A2CF9C4448DBE55F8C75841E9B7D3B566F5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibraryReadTool.java",
+      "sha256": "3283896C805E081AF8E994EDE5D352196CB57459FD917B51B96CAD43CF9B4A80",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/LibrarySpaceService.java",
+      "sha256": "FFD5517B481A5BA86B2812DA1FE47B497958E1CA7A6AFE07FD8CEA213A4E3C8D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/PlatformTool.java",
+      "sha256": "FE3FE7E793534C1E6F61E63AFFE2C97182DD7FC0A3FC354055AF6E6BFCECB12C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/PlatformWebSearchTool.java",
+      "sha256": "AD44736110311E5EE4FB43B917981010A1FA0E7AABD368A742F5C03C4260F406",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/PostgresSubagentStateReader.java",
+      "sha256": "D625668179729D39A1AEAA3E7C252D826D7E5994BAB8421C7D16E6C47993924F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/PreviewTicketService.java",
+      "sha256": "76684827DECBA1B2164CE00C2C8D8856F0FD8E0D56656EA39FA4DFF46B04AFF5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionCompletionContractService.java",
+      "sha256": "82C26E22F37A8BA92C1980328F96569FFE6A67BA68091697B5A3AACB6EC65D7E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionOwnerService.java",
+      "sha256": "87FA7ED38CE453F9D06D677E6883266D2AE674F1FE0FF3A00E1DD453EE4169AF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionProgressService.java",
+      "sha256": "F7D85D92D818C12F614DF38471675E11633026C4D7DD904668C81CCDF87110C4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionRunStopCoordinator.java",
+      "sha256": "3EE39D71F1F8E149A88ED674251D62EBC21CBBBE9E15F3AC154E5021BC5BFEB3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionTranscriptService.java",
+      "sha256": "49CEFBB51BFC4E8131027F484509ABCD63686D9455A3AD0B3038F88FB4CC706F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SessionWorkspaceManager.java",
+      "sha256": "7290CE9C8CB6B95D8573AE6646968DD3BF311928A7D9CC121575F29D85A5CADE",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SkillRepositoryService.java",
+      "sha256": "23EACD1FDF7C84DD290F15D20101D73916FDBD52A94AB60C8EF934DABBB4DCEA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/SubagentReportService.java",
+      "sha256": "C94421B4729190EE55E1A8838CA9EB0DB01E5E18E03D90FAE391E2C1F748F4BE",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/TagService.java",
+      "sha256": "ACF67D82A269A78D98742F725E8E0C2915417295C13B62DEC14959815D405314",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/ToolService.java",
+      "sha256": "DBD319DCD25FF4F2540F0AA74D148D89ADEF4AFA0ABEAA2B97F53FCA891FA22C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/UserService.java",
+      "sha256": "4399AF927B07B14442C951415AF44695E412DA747F8B4F0B49847F163F44071E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/channel/AlertChannelDispatcher.java",
+      "sha256": "2DFE3C0EB49820576C25EC04B6E7E045E3D27974252AF74CED9AAE2ACBE29097",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/channel/ChannelTypeRegistry.java",
+      "sha256": "CBB1BB857188973866E347AAE8A51DB06FB113A41F6992963493CF54C5696FC2",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/credential/ModelProviderRegistry.java",
+      "sha256": "A374D7181539A9A6B1CC4A7799E9359DA80D5A34C32134938DCE96638AC7841C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/credential/VendorModelClient.java",
+      "sha256": "31A278440BC0F3363C8CBF3063CE1496D56B76B0D24CEDC06C680B58A3302015",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/notify/AlertNotifier.java",
+      "sha256": "184C8432EAD9677E98135A597BA3C38CCFCF3BA744A6F22AC5CA8ACCA432C0CC",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/notify/NotifyStreamRegistry.java",
+      "sha256": "723522166DDCE134FCF64617000E6DA6BA16BFB55DC992DD791EE232DB89557C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/service/notify/SessionAlertPushService.java",
+      "sha256": "46BFC54306D58835FBBCAACC8C8682181532E9B3B906369C6B8473C7F022A8BD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/util/RedisKeyConstants.java",
+      "sha256": "DED36E8AA1123E29A22490C24DCF357D93BDF4552589221711DE818C47BD0165",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/DocumentPreviewController.java",
+      "sha256": "8C7DE5DBFD7957EAC860FD00B46BE3B2293985C2F04C3A67986427CFA9560C11",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/DriveUploadPolicy.java",
+      "sha256": "03686397BE4AB0B0C6E75ED8D8D7D8BED1E5D90BC6ED76F0646D09ADBFF0A50C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/HomeController.java",
+      "sha256": "1CE8F12FF7F4624A62DB093B1F4C40609538C145503342E67F8E5289C0A53BA5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/KnowledgeBaseController.java",
+      "sha256": "C1F5DDB3BF404BDF3C8002C86F203694271FAD64A716F0402FD1A8494017A19B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/LibraryController.java",
+      "sha256": "C6D739B4A5FB5A51769245A72F7FD7839F3D2B0028032B1E95244077E2E67602",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/SessionSubagentController.java",
+      "sha256": "D71A9A05E535A73AF2020311B55513F29E298F5EEB02A12C770395D538C37E78",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/auth/JwtAuthFilter.java",
+      "sha256": "CB423196CDBB75B7ABE17FB6D34BF9A9FC5B8B2CCBAFCE43821F9B361EF7E6EE",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/auth/RequirePermission.java",
+      "sha256": "AEA2D6CBDB0C42D2CD5354E2066F781FFFF4468F3594BC286A7CCC0897BBBD35",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/AgentDtos.java",
+      "sha256": "D594FE4F922D855A50C0745771C31C0131EF60FC077609AB44E84A99209A6F3F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/CommonDtos.java",
+      "sha256": "FFB4A6570AEC0932596CEEFC387043191DD8E064896033DA1A8A5826210B1578",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/GroupDtos.java",
+      "sha256": "A48607C8D44D035D4BB485360DB50678B4112108F3C91794CB5ECDE551E33C22",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/LibraryDtos.java",
+      "sha256": "3AAA70373CDB87D3BF58AB71385B949FA9514990F59045D368E555E52DFC65AF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/dto/ToolDtos.java",
+      "sha256": "71A84009D219C3AF7C9127DFC8AF0D9428AA8C4E9FF93DD8E6E310F6E3C3DC45",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/java/com/tipdm/agentplatform/web/error/ApiException.java",
+      "sha256": "AE9BCB724F031A71792F74671FBAB760FF966C81AA80F901B88D98C48AAA3858",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V10__auth_users.sql",
+      "sha256": "EF61FDB84826F020A6766D28FDC09793E1B5719568AE01CCB0E95E6FB1F034C4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V11__ui_survey_tool.sql",
+      "sha256": "D50C47AFB06784F90C6B62FFF683646AEC66B500204A862C46C470FDDC8BC5C0",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V12__survey_demo_bot.sql",
+      "sha256": "4990640A2F248E880E52B7FB32EB3B14251A21A6E466F7D4A926CCBFA64040C3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V13__skill_content_and_demo.sql",
+      "sha256": "5FC837D81F03C7727B8C971BFA67AF92B8609089FCF0AB065E9DA5FB79BEB3FB",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V14__skill_demo_bot.sql",
+      "sha256": "5746BF9C142FB54B17733E90666EB8336FA00CE9A8D3DE7FB4E3D2225698D613",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V15__welcome_survey.sql",
+      "sha256": "AE0082F1A16E34C84497A9D24D9619A32BCF36C103601415B22FDEA0A904B5AA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V16__agent_form.sql",
+      "sha256": "8872693C34DA46990F91D39F9EB7C08780B14B18038AC52E9DA77A855962F69F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V17__rename_survey_to_form.sql",
+      "sha256": "CC93EBAD55FF20BF0D34987743B1590FCA5BA90C03F69C56C5618689789C73EB",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V18__migrate_ui_survey_to_ui_form_advanced.sql",
+      "sha256": "F1127234C817E3C8B553621B87C33806BA26AF342265AE4CA9104B365BBC0462",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V19__survey_demo_bot_v2.sql",
+      "sha256": "C657CE291133254D9089796F7B4AB617FCB613C5E5BBFDF435286311AFA50DB9",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V1__init.sql",
+      "sha256": "40A38EC4273574970D07649F3ED24978A061774EC3D6DF4BC8C8445DD96BA8A0",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V20__rename_survey_resources_to_form.sql",
+      "sha256": "3F5DB989D949E1797BD964C62579C82165243A288D03C52CF121CDDBDAB7A69A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V21__add_file_based_to_agent_configs.sql",
+      "sha256": "DC45A6A00C13DC141082C49FF9E206C2EA2E243811C98DB7F88F63427026DD3E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V22__knowledge_base_core.sql",
+      "sha256": "2B745C84ECB42C6764115D01021A65FD0BBA433BC9CFB1F54DAE32963DC3BB74",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V23__knowledge_base_authorization.sql",
+      "sha256": "3546F4ACA1099EE00F153FEA268A3F67B0254F27DD2AEE61173E2E99435EC8C8",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V24__knowledge_base_pgvector.sql",
+      "sha256": "C7DE732CCA5931E32F5A2AB8FFEED89BBB1141D4BF2D7CD99459D65CC2554DCA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V25__knowledge_base_chunk_settings.sql",
+      "sha256": "CDFE3A84122ED73D84C7E32997E95212B425E571AB69F712BAFD7166233751FA",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V26__agent_session_owner.sql",
+      "sha256": "95D1E08B088E24B821D850FD7896183F160558497DD3E0E7703B90C48C84F5AD",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V27__agent_session_progress.sql",
+      "sha256": "939BA461A1909B408A344A52ACC0DA768EA34262F6491EEA2C5182F2DE268C86",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V28__agent_session_archive.sql",
+      "sha256": "9F74CCBCE43599F699B3B1308D7C36EC683CE7678E0E6E11BEADF412D06CE186",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V2__seed_resources.sql",
+      "sha256": "07D0179702623790E8B4ABB87AF351E8E7CEA20979F6E0DF73632C37CF8C1A7B",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V33__agent_session_extensions.sql",
+      "sha256": "F6462A2E0C789A27696F4C7D25A4292288FB00775B265D9901E25DE8512D3CC0",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V34__user_phone.sql",
+      "sha256": "7E79DE4670970695D50014AE6C782390A46648C1CEB111A46381E1FAF652FDCB",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V35__agent_session_titles.sql",
+      "sha256": "96D7685BB97976DE994DE2DC67123BFF9D3F30FD9818A1EE1A790A1642220B3F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V36__remove_seed_admin_user.sql",
+      "sha256": "6C1DF9B2BBDFCDBC4DEB37A8E8C6EEE2C7F1BD831E24D74574D4B87CBBEC7F13",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V37__agui_events.sql",
+      "sha256": "7654033E20D550E95A58D6A97797C1B58EFD3451FFBA6F47B3486A1BC35B92F1",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V3__tool_execution_mode.sql",
+      "sha256": "3CCA4329BD040C71E0CE3B3949E333C70ADDAB72435499A31D38E9E2D33D88ED",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V4__tool_ask_confirmation.sql",
+      "sha256": "86F980178934A6F2FB4315D208F3640B814C515446EC9121A5431E768E0797A0",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V5__agent_launch_templates.sql",
+      "sha256": "E7E5D509A51C184E8C677400D186C6FF55A9330DEE705967388657CA237D46F6",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V68__session_owner_deleted_at.sql",
+      "sha256": "65C040BE24151371096F169F8AAD4AF81BD4D3338C609F1A2BB167CB2DB04614",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V6__agent_plan_mode.sql",
+      "sha256": "F1A858DB6FEA886021F3E612865FB89E4AED2842AB7BDB6C1D3D6C94D5578655",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V7__agent_skill_sedimentation.sql",
+      "sha256": "DF00B73801893B28011F31AB5A0D1B39B0875013DAF6FF5A9792B09F36DFB1A3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/main/resources/db/migration/V8__agui_tools.sql",
+      "sha256": "DA52107F1E52AFB82380F62B49AA3A0D4BA468C82AC7717663633EB567A94776",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/config/DeletedSessionRunRejectedTest.java",
+      "sha256": "8165D89B9038687C5482B0660C6E2871534AD9D558CAB07C06E227775C0CA530",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/config/PlatformAguiRuntimeContextResolverTest.java",
+      "sha256": "21FBE56A430AD1529AC96D1F13B5BB54E8DA4EA0C1D86C674D379E326AD8EA0D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/config/ProgressWatchdogPropertiesConsistencyTest.java",
+      "sha256": "EA7FB3E183F82EADEA27E3C14DDD80CEBBC32E77F97DA406F427DDB976CE6203",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/domain/AgentSessionExtensionTest.java",
+      "sha256": "F8E187F8E05E3D96F9FD8B6E16E7594D273F394DB1B18A9C18817F1511CEF8CB",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/AguiWakeupTargetTest.java",
+      "sha256": "D57D46F13D39F48FB330142625A8B88315333B2EB3FAAFC32A111987D8EA26DF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/HitlRecoveryGuardMiddlewareTest.java",
+      "sha256": "EDA9FE3AB64814E147819E7843DE49C88C9C04987B09F36319662024D6F32AD5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/HitlTimeoutReaperTest.java",
+      "sha256": "6D43DE340A4C26FC3DB80DA6CCE0A1BF94B02EE1AB041D9EB7B2B4F798B9101E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/InboxWatchdogWakeupServiceTest.java",
+      "sha256": "31E80D7AAB1F9D1E4E2FB229AF30561F65E8CB234FE595E4E87095847F2F198A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/RunSilenceDetectorTest.java",
+      "sha256": "D0194A1DAE56A1ADCF8722F00764F7D2D7B97CE8DBA1CAC7624F2B6069F9343E",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/ServerSideRunLauncherTest.java",
+      "sha256": "FD1E2EAAFBBE42DC3F43A927E56AB351CF7D3E431932A0905F8273D6385BF8EC",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/SessionPermissionReconcilerTest.java",
+      "sha256": "7AA8DDA37B85B5777F3D8414E0F8705E8F0E2FB56E1EEBD625F7DEE66655287C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/SessionRunStopperTest.java",
+      "sha256": "44BABAA28001E80DE9C29A0AFF2971D0D98674137F03F5F65BC5DCEB9A16913D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/WakeupInterruptRegistrarTest.java",
+      "sha256": "83C883FD554AEB680D9261FCEE20D997D36B77A568FEC40821AA32F1052DEE04",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/harness/WakeupTombstoneSuppressionTest.java",
+      "sha256": "513014E932330F9C9B4119F13F52996AB1495CAF3E54F171C04CF28E3E94E423",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/repository/NativeQueryReturnTypeTest.java",
+      "sha256": "D6540F56EABA22223FA160D605F635F93CD028E7025A52E6E75759CF30096999",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/AgentConfigServiceDeleteWorkspaceTest.java",
+      "sha256": "F1D96F68FBC38B3AD0CB6D6ABDF5601891D733A257741A18DB7794A7FFD99B8D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/AgentConfigServiceFileBasedGuardTest.java",
+      "sha256": "7965439BF528A68F3E120E1DA6D07357A6DEC77F70A7270F081EA617F9F8B031",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/AgentDefinitionHygieneTest.java",
+      "sha256": "27B44887130F432D6A573DF7D58E4E08C641E08824A60103605C8B7D6990B541",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/ArtifactZipServiceTest.java",
+      "sha256": "48D6FC51F92F7E1BC2E632BBE4188F3726B67C3C9F9D224418A571A319709755",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/LibraryAccessServiceGrantTest.java",
+      "sha256": "86FEAD5CDDC9A0F71C08B4E6972FE6482FE13EBE8437BAF0336195C6461FBE8F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/LibraryContentServiceFolderTest.java",
+      "sha256": "8948169BC338800166A4D9B983BAAB41CEBF5A946C0EC5908E1DA0C33AB7CCCF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/PermissionCodeCacheTest.java",
+      "sha256": "CBC085ABF2A999C1111C505423875352F4A586F8881BBDED54F2778DC0FF0EB4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/PermissionDecisionProbeTest.java",
+      "sha256": "42B12D3C6C7C04CA8D3898B59F25A4A42DCB200E439CEF33B3C2CC4D3882DBD5",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionDirDeleteDrainsAsyncWritesTest.java",
+      "sha256": "F72136899C58BF34027E340CE6FFC4F3C30C565738D9F0595A3E34F1D0A4334F",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionExtensionServiceTest.java",
+      "sha256": "3A265B9E0FF780DFDAA55B992B3E5CF872C18C22684408417FD8A84BA624A98A",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionProgressHitlAlertTest.java",
+      "sha256": "063B9EFF95AB87D1800E45AC06C38FFF8B67CCCC569818D8578FC6A2E8A050FF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionProgressWakeBudgetTest.java",
+      "sha256": "5B2D5130CD9FAD829BA798C5E3A546788B87F3DDC28F2421D734A99043A642CF",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionTranscriptServiceTest.java",
+      "sha256": "732FDAC1753E8779EF7ED16CBC8B346FB2920E722D874D3ADA830B8A35B95396",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SessionWorkspaceManagerTest.java",
+      "sha256": "B3D2294899D2C49476F20F3DDAB57F56792228315BAC4C52060060D18027C7D4",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SkillRepositoryServiceTest.java",
+      "sha256": "70F2354417AB6D37F5280CDAF0187D1956A57B8AAAA2F78CA87374A1048AE510",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SkillServiceTest.java",
+      "sha256": "3CD9B2EAA4D4F925EE1B2B9688354A25637D010D7C373231CF22F325EC9CA7F3",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SubagentDefinitionFrontmatterTest.java",
+      "sha256": "829171F13CB354AF7DFFFB4B8AB2F594AF108ABC279C2B488DC0E12E317980B7",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SubagentReportParserTest.java",
+      "sha256": "7D94DB246A0CD3A0F5340200ED96F9A0C8BD9E8D0605096206DE7B3B11647727",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/SubagentReportServiceTest.java",
+      "sha256": "92E372999F6FB4839A278B3394D176445EB6DE945969E861C81DE47111DBD27D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/channel/AlertChannelDispatcherTest.java",
+      "sha256": "19B43D0FD930B26564D01474CAC374BA27866443FD3EBE42AC6F880F65A6CB7C",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/notify/AlertNotifierTest.java",
+      "sha256": "FA6DF89A9FFEB5882196E709B4B38AE7C876D9EE548F38795E6968C850F8A29D",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/service/notify/SessionAlertPushServiceTest.java",
+      "sha256": "EF02DE2F32DDEE4D8BFADFC44477C010B300B0B140AAF8DCDAB0BED64A803E64",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/web/SessionArtifactControllerTest.java",
+      "sha256": "7856AAEB2B210624FECD5915E75F7963A9C5D16EE46367C1FD29BDD2D05CAD79",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/web/auth/JwtAuthFilterTest.java",
+      "sha256": "31441BE3FF616CFB6DA64E5079E21745BB8CDF75BDA8A13A8A238F125F322F92",
+      "verified": true
+    },
+    {
+      "relative": "backend/src/test/java/com/tipdm/agentplatform/web/error/GlobalExceptionHandlerTest.java",
+      "sha256": "35D0CCFF2F9FE84845AD54F4023B99ADCAD5F9873C5EF6EA052F36CE0AA5FCC2",
+      "verified": true
+    }
+  ],
+  "validation": {
+    "tracked_backend_files_sha256_verified": 385,
+    "duplicate_flyway_versions": 0,
+    "maven_offline_compile": "PASS",
+    "backend_startup": "NOT_RUN",
+    "database_migration": "NOT_RUN",
+    "authenticated_e2e": "NOT_RUN",
+    "current_maven_compile": "NOT_RUN_AFTER_EXTRA_SYNC_ROLLBACK"
+  },
+  "extra_sync_rollback": {
+    "status": "REVERTED",
+    "entries": 202,
+    "restored": 162,
+    "removed": 40,
+    "record": "E:\\数模演易\\smyy\\docs\\upgrade\\backend-extra-sync-rollback-20261015.json",
+    "backup": "E:\\数模演易\\smyy\\docs\\upgrade\\backend-extra-sync-backup-20261015-134932.zip"
+  }
+}

@@ -1,0 +1,12 @@
+### M-NET-002 最大流、最小割、运输与分配
+- **task_types**：容量配置、物流流量、任务指派、供需匹配。
+- **problem_signature**：存在供给、需求、容量、流量守恒或一对一匹配。
+- **core_idea**：在网络容量约束下最大化流量或最小化运输成本。
+- **inputs**：节点供需、边容量、成本、流守恒、匹配约束。
+- **outputs**：流量、瓶颈边、最小割、未满足需求、总成本。
+- **assumptions**：流量可分割或整数性已处理；容量可靠。
+- **validation**：守恒、容量、供需平衡、瓶颈敏感性。
+- **selection_tags**：`network-flow, transport, assignment, capacity`
+- **composable_with**：`M-OPT-001, M-OPT-002, M-NET-001`
+- **fallbacks**：多商品流、MILP、启发式。
+- **agent_actions**：定义节点/边 -> 检查守恒 -> 求解 -> 识别瓶颈 -> 做容量情景分析。
